@@ -9,4 +9,4 @@
 - add program for calculating equilibrium tides for Operation IceBridge
 - reorganize structure to put notebooks in directory
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.9
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.9

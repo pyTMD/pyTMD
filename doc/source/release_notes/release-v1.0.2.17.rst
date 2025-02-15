@@ -12,4 +12,4 @@
 - convert some markdown documentation to reStructuredText
 - updated EOP files to latest versions
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.17
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.17

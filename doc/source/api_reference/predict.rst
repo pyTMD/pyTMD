@@ -22,7 +22,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/predict.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/predict.py
 
 .. autofunction:: pyTMD.predict.map
 

@@ -14,7 +14,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/math.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
 
 .. autofunction:: pyTMD.math.polynomial_sum
 

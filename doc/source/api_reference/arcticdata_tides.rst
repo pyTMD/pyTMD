@@ -12,7 +12,7 @@ arcticdata_tides.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/arcticdata_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py
 
 Calling Sequence
 ################

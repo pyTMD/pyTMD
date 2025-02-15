@@ -10,4 +10,4 @@
 - ocean load tide fixes
 - update manifest files
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.3.0
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.3.0

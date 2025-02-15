@@ -16,7 +16,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/arguments.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/arguments.py
 
 .. autofunction:: pyTMD.arguments.arguments
 

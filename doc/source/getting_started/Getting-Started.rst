@@ -11,18 +11,18 @@ Ocean and load tide constituent files are available from different modeling grou
 ``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
 OTIS and ATLAS formatted data use  binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
 They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
-Arctic Ocean models can be downloaded from the NSF ArcticData server using the `arcticdata_tides.py <https://github.com/tsutterley/pyTMD/blob/main/scripts/arcticdata_tides.py>`_ program.
-CATS2008 can be downloaded from the US Antarctic Program (USAP) using the `usap_cats_tides.py <https://github.com/tsutterley/pyTMD/blob/main/scripts/usap_cats_tides.py>`_ program.
+Arctic Ocean models can be downloaded from the NSF ArcticData server using the `arcticdata_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py>`_ program.
+CATS2008 can be downloaded from the US Antarctic Program (USAP) using the `usap_cats_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/usap_cats_tides.py>`_ program.
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
 GOT formatted data use ascii files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
-The FES models can be downloaded using the `aviso_fes_tides.py <https://github.com/tsutterley/pyTMD/blob/main/scripts/aviso_fes_tides.py>`_ program for users registered with AVISO.
+The FES models can be downloaded using the `aviso_fes_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/aviso_fes_tides.py>`_ program for users registered with AVISO.
 
 Model Database
 ##############
 
 ``pyTMD`` comes parameterized with models for the prediction of tidal elevations and currents.
-All presently available models are stored within a `JSON database <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/data/database.json>`_:
+All presently available models are stored within a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 
 .. code-block:: python
 
@@ -107,7 +107,7 @@ Programs
 ########
 
 For users wanting to compute tide corrections for use with numpy arrays or pandas dataframes
-`pyTMD.compute <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/compute.py>`_
+`pyTMD.compute <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py>`_
 is the place to start.
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
 compute the corresponding tidal elevation or currents.
@@ -120,8 +120,8 @@ compute the corresponding tidal elevation or currents.
 
 
 For users wanting to calculate tidal elevations or currents for a series of files, the
-`compute_tidal_elevations.py <https://github.com/tsutterley/pyTMD/blob/main/scripts/compute_tidal_elevations.py>`_ and
-`compute_tidal_currents.py <https://github.com/tsutterley/pyTMD/blob/main/scripts/compute_tidal_currents.py>`_ programs
+`compute_tidal_elevations.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_tidal_elevations.py>`_ and
+`compute_tidal_currents.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_tidal_currents.py>`_ programs
 cover most use cases.  They take an input file (in csv, netCDF4, HDF5, parquet or geotiff formats) and compute the tidal
 elevations or currents (zonal and meridional) for each point.
 
@@ -208,21 +208,21 @@ Spatial Coordinates
 The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in latitude and longitude.
 ``pyTMD`` uses `pyproj <https://pypi.org/project/pyproj/>`_ to convert from different coordinate systems and datums.
 Some regional tide models are projected in a different coordinate system.
-These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/data/database.json>`_:
+These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. PROJ, WKT, or EPSG code) can be used.
-For all cases with projected models, ``pyTMD`` will `convert from latitude and longitude to the model coordinate system <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/crs.py>`_ to calculate the local tidal constants.
+For all cases with projected models, ``pyTMD`` will `convert from latitude and longitude to the model coordinate system <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/crs.py>`_ to calculate the local tidal constants.
 
 Interpolation
 #############
 
 For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from `scipy <https://docs.scipy.org/doc/scipy/reference/interpolate.html>`_
-along with a built-in `bilinear <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/interpolate.py>`_ interpolation routine.
+along with a built-in `bilinear <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ interpolation routine.
 The default interpolator uses a `biharmonic spline <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RectBivariateSpline.html>`_
 function to interpolate from the model coordinate system to the output coordinates.
 There are options to use nearest and linear interpolators with the
 `regular grid <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ function.
 For coastal or near-grounded points, the model can be extrapolated using a
-`nearest-neighbor <https://github.com/tsutterley/pyTMD/blob/main/pyTMD/interpolate.py>`_ routine.
+`nearest-neighbor <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 The extrapolation cutoff can be set to any distance in kilometers, but should be used with caution in cases such as narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.

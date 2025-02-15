@@ -38,3 +38,8 @@
     padding-right: 8px;
     max-width: 100%;
 }
+
+/* caption positions for tables and figures */
+.docutils caption {
+    caption-side: bottom;
+}

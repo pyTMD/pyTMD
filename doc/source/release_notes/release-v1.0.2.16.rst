@@ -10,4 +10,4 @@
 - updated documentation and jupyter notebooks
 - deprecation updates to fix warnings
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.16
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.16

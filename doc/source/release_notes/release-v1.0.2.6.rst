@@ -8,4 +8,4 @@
 - use difference in leap seconds in ``calculate_tide_correction`` function
 - update testing routines
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.6
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.6

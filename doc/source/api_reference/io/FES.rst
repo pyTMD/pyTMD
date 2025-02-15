@@ -23,7 +23,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/io/FES.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/FES.py
 
 .. autofunction:: pyTMD.io.FES.extract_constants
 

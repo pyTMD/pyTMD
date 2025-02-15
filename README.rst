@@ -9,14 +9,14 @@ pyTMD
 |conda-forge|
 |zenodo|
 
-.. |License| image:: https://img.shields.io/github/license/tsutterley/pyTMD
-   :target: https://github.com/tsutterley/pyTMD/blob/main/LICENSE
+.. |License| image:: https://img.shields.io/github/license/pyTMD/pyTMD
+   :target: https://github.com/pyTMD/pyTMD/blob/main/LICENSE
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/pytmd/badge/?version=latest
    :target: https://pytmd.readthedocs.io/en/latest/?badge=latest
 
-.. |Coverage Status| image:: https://codecov.io/gh/tsutterley/pyTMD/branch/main/graph/badge.svg
-   :target: https://codecov.io/gh/tsutterley/pyTMD
+.. |Coverage Status| image:: https://codecov.io/gh/pyTMD/pyTMD/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/pyTMD/pyTMD
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/pyTMD.svg
    :target: https://pypi.python.org/pypi/pyTMD/
@@ -60,7 +60,7 @@ Development version from GitHub:
 
 .. code-block:: bash
 
-   python3 -m pip install git+https://github.com/tsutterley/pyTMD.git
+   python3 -m pip install git+https://github.com/pyTMD/pyTMD.git
 
 Dependencies
 ############
@@ -89,9 +89,9 @@ Download
 ########
 
 | The program homepage is:
-| https://github.com/tsutterley/pyTMD
+| https://github.com/pyTMD/pyTMD
 | A zip archive of the latest version is available directly at:
-| https://github.com/tsutterley/pyTMD/archive/main.zip
+| https://github.com/pyTMD/pyTMD/archive/main.zip
 
 Alternative Software
 ####################
@@ -115,7 +115,7 @@ Contributing
 ############
 
 This project contains work and contributions from the `scientific community <./CONTRIBUTORS.rst>`_.
-If you would like to contribute to the project, please have a look at the `open issues <https://github.com/tsutterley/pyTMD/issues>`_ and `discussions board <https://github.com/tsutterley/pyTMD/discussions>`_.
+If you would like to contribute to the project, please have a look at the `open issues <https://github.com/pyTMD/pyTMD/issues>`_ and `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_.
 
 Credits
 #######

@@ -9,7 +9,7 @@ usap_cats_tides.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/usap_cats_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/usap_cats_tides.py
 
 Calling Sequence
 ################

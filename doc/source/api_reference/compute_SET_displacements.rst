@@ -9,7 +9,7 @@ compute_SET_displacements.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/compute_SET_displacements.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_SET_displacements.py
 
 Calling Sequence
 ################

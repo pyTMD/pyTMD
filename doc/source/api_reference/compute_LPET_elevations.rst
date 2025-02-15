@@ -8,7 +8,7 @@ compute_LPET_elevation.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/compute_LPET_elevations.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_LPET_elevations.py
 
 Calling Sequence
 ################

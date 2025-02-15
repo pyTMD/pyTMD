@@ -9,7 +9,7 @@ aviso_fes_tides.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/aviso_fes_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/aviso_fes_tides.py
 
 Calling Sequence
 ################

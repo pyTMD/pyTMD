@@ -15,4 +15,4 @@
 - ``test``: NSIDC no longer requires authentication headers
 - ``test``: added test for model definition files
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.4.0
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.4.0

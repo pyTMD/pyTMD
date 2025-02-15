@@ -17,7 +17,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/io/ATLAS.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/ATLAS.py
 
 .. autofunction:: pyTMD.io.ATLAS.extract_constants
 

@@ -7,7 +7,7 @@ crs
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/crs.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/crs.py
 
 General Attributes and Methods
 ==============================

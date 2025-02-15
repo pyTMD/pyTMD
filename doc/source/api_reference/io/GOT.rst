@@ -19,7 +19,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/io/GOT.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/GOT.py
 
 .. autofunction:: pyTMD.io.GOT.extract_constants
 

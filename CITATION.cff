@@ -31,7 +31,7 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.5555395
     description: Zenodo Archive
-repository-code: 'https://github.com/tsutterley/pyTMD'
+repository-code: 'https://github.com/pyTMD/pyTMD'
 url: 'https://pytmd.readthedocs.io'
 repository: 'https://pypi.org/project/pyTMD'
 repository-artifact: 'https://anaconda.org/conda-forge/pytmd'

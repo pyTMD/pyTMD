@@ -11,4 +11,4 @@
 - Prevent ``ComplexWarning`` for fill values when calculating amplitudes
 - Prevent ``numpy`` DeprecationWarning for ``np.bool``, ``np.int`` and ``np.float``
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.18
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.18

@@ -8,4 +8,4 @@
 - use ``netrc`` within utilities for backup authentication
 - add utilities for parsing date strings in form ``"time-units since yyyy-mm-dd hh:mm:ss"``
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.12
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.12

@@ -29,7 +29,7 @@ The ``pyTMD`` installation uses the ``gdal-config`` routines to set the GDAL pac
 Installation
 ############
 
-``pyTMD`` is available for download from the `GitHub repository <https://github.com/tsutterley/pyTMD>`_,
+``pyTMD`` is available for download from the `GitHub repository <https://github.com/pyTMD/pyTMD>`_,
 the `Python Package Index (pypi) <https://pypi.org/project/pyTMD/>`_,
 and from `conda-forge <https://anaconda.org/conda-forge/pytmd>`_.
 
@@ -50,7 +50,7 @@ To use the development repository, please fork ``pyTMD`` into your own account a
 
 .. code-block:: bash
 
-    git clone https://github.com/tsutterley/pyTMD.git
+    git clone https://github.com/pyTMD/pyTMD.git
 
 ``pyTMD`` can then be installed within the package directory using ``pip``:
 
@@ -69,4 +69,4 @@ The development version of ``pyTMD`` can also be installed directly from GitHub 
 
 .. code-block:: bash
 
-    python3 -m pip install --user git+https://github.com/tsutterley/pyTMD.git
+    python3 -m pip install --user git+https://github.com/pyTMD/pyTMD.git

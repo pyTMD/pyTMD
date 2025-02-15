@@ -8,4 +8,4 @@
 - Will compare the python and matlab versions for most Antarctic station sites
 - Added macos to testing strategy and upgraded linux tests to 20.04
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.7
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.7

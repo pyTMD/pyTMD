@@ -55,13 +55,13 @@ Contribute
 
     .. grid-item-card::  Discussions
       :text-align: center
-      :link: https://github.com/tsutterley/pyTMD/discussions
+      :link: https://github.com/pyTMD/pyTMD/discussions
 
       :material-outlined:`forum;5em`
 
     .. grid-item-card::  Issues
       :text-align: center
-      :link: https://github.com/tsutterley/pyTMD/issues
+      :link: https://github.com/pyTMD/pyTMD/issues
 
       :material-outlined:`bug_report;5em`
 

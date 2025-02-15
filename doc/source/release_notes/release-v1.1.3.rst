@@ -6,4 +6,4 @@
 - ``refactor``: use f-strings for ascii and verbose output
 - ``chore``: automatic time and bulletin updates
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.1.3
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.1.3

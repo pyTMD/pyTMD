@@ -9,4 +9,4 @@
 - bug fixes for nearest-neighbors and bilinear interpolations
 - documentation updates
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.3.1
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.3.1

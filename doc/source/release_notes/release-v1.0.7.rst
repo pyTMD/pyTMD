@@ -11,4 +11,4 @@
 - ``refactor``: use ``pypi`` versions of ICESat-2 and ATM1b tools
 - ``docs``: add paragraph about delta times
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.7
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.7

@@ -18,7 +18,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/io/IERS.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/IERS.py
 
 .. autofunction:: pyTMD.io.IERS.extract_coefficients
 

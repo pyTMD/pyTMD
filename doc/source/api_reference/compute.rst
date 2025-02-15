@@ -39,7 +39,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/compute.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py
 
 .. autofunction:: pyTMD.compute.corrections
 

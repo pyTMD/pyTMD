@@ -13,4 +13,4 @@
 - ``chore``: update mean pole table
 - ``chore``: update finals file
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.1.2
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.1.2

@@ -14,6 +14,6 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/solve/constants.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/solve/constants.py
 
 .. autofunction:: pyTMD.solve.constants

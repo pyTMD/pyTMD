@@ -7,4 +7,4 @@
 - update reduce OTIS files for python3 and projections
 - adjust dimensions of input coordinates to be iterable
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.13
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.13

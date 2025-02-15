@@ -10,7 +10,7 @@ compute_tidal_elevations.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/compute_tidal_elevations.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_tidal_elevations.py
 
 Calling Sequence
 ################

@@ -6,7 +6,7 @@ Retrieves tide model parameters for named tide models and from model definition 
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/io/model.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/model.py
 
 General Attributes and Methods
 ==============================

@@ -8,4 +8,4 @@
 - use ``numpy`` masked arrays with ATLAS compact grids
 - update jupyter notebooks for new models
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.14
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.14

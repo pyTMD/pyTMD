@@ -15,7 +15,7 @@ Calling Sequence
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/astro.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/astro.py
 
 .. autofunction:: pyTMD.astro.mean_longitudes
 

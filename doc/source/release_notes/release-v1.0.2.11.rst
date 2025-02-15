@@ -12,4 +12,4 @@
 - add comparison test for FES models
 - add wrapper function test to perth3 workflow
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.11
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.11

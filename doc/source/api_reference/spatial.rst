@@ -25,7 +25,7 @@ Reading a HDF5 file
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/spatial.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/spatial.py
 
 General Methods
 ===============

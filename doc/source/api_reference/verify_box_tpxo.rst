@@ -7,7 +7,7 @@ verify_box_tpxo.py
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/scripts/verify_box_tpxo.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/verify_box_tpxo.py
 
 Calling Sequence
 ################

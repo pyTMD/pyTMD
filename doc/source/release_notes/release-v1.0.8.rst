@@ -10,4 +10,4 @@
 - ``fix``: place some imports behind try/except statements
 - ``fix``: include tools import
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.8
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.8

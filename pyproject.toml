@@ -55,8 +55,8 @@ classifiers=[
 [project.urls]
 Homepage = "https://pytmd.readthedocs.io"
 Documentation = "https://pytmd.readthedocs.io"
-Repository = "https://github.com/tsutterley/pyTMD"
-Issues = "https://github.com/tsutterley/pyTMD/issues"
+Repository = "https://github.com/pyTMD/pyTMD"
+Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
 doc = ["docutils", "fontconfig", "freetype", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]

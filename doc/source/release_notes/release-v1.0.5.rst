@@ -10,4 +10,4 @@
 - ``feat``: add tide program for ATL10 freeboard files
 - ``feat``: added function to calculate a tidal time series
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.5
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.5

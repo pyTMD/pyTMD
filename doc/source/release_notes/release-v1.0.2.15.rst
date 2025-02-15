@@ -7,4 +7,4 @@
 - calculate tide scripts can read and write to geotiff
 - ATL03 and ATL06 long period equilibrium tide programs
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.0.2.15
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.0.2.15

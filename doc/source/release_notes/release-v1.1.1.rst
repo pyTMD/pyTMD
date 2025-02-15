@@ -5,4 +5,4 @@
 - ``fix``: invert current masks for OTIS/ATLAS
 - ``fix``: add encoding to reading leap second files
 
-.. __: https://github.com/tsutterley/pyTMD/releases/tag/1.1.1
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/1.1.1
