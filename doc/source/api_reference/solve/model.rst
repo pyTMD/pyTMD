@@ -6,7 +6,7 @@ Class for estimating tidal constituents using hydrodynamic modeling
 
 `Source code`__
 
-.. __: https://github.com/tsutterley/pyTMD/blob/main/pyTMD/solve/model.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/solve/model.py
 
 General Attributes and Methods
 ==============================
