@@ -20,6 +20,7 @@ The available examples include:
    ../notebooks/Plot-Antarctic-Tide-Range
    ../notebooks/Plot-Arctic-Ocean-Map
    ../notebooks/Plot-ATLAS-Compact
+   ../notebooks/Plot-Earth-Orientation-Parameters
    ../notebooks/Plot-Ocean-Pole-Tide-Map
    ../notebooks/Plot-Ross-Ice-Shelf-Map
    ../notebooks/Plot-Tidal-Spectra
@@ -81,6 +82,12 @@ The available examples include:
 
 .. grid:: 1 2 4 4
 
+    .. grid-item-card::  Plot Earth Orientation
+      :text-align: center
+      :img-top: ../_assets/EOP.png
+      :link: ../notebooks/Plot-Earth-Orientation-Parameters.html
+      :link-alt: Plots X and Y pole positions over time
+
     .. grid-item-card::  Plot Ocean Pole Tide Map
       :text-align: center
       :img-top: ../_assets/ocean_pole_tide_map.png
@@ -99,13 +106,13 @@ The available examples include:
       :link: ../notebooks/Plot-Tidal-Spectra.html
       :link-alt: Plots tidal potential amplitude spectra for constituents
 
+.. grid:: 1 2 4 4
+
     .. grid-item-card::  Plot Tide Forecasts
       :text-align: center
       :img-top: ../_assets/tide_forecasts.png
       :link: ../notebooks/Plot-Tide-Forecasts.html
       :link-alt: Plots a weekly forecast of tidal displacements at a given location
-
-.. grid:: 1 2 4 4
 
     .. grid-item-card::  Plot Tide Form Factor
       :text-align: center
