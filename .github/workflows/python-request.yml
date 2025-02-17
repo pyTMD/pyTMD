@@ -81,13 +81,9 @@ jobs:
             --aws-region=${{ secrets.AWS_REGION_NAME }}
     - name: Upload coverage to Codecov
       if: steps.secrets.outputs.accessible == 'true'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        flags: unittests
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
         fail_ci_if_error: true
         verbose: true
     - name: Archive code coverage results
