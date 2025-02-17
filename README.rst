@@ -15,7 +15,7 @@ pyTMD
 .. |Documentation Status| image:: https://readthedocs.org/projects/pytmd/badge/?version=latest
    :target: https://pytmd.readthedocs.io/en/latest/?badge=latest
 
-.. |Coverage Status| image:: https://codecov.io/gh/pyTMD/pyTMD/branch/main/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/pyTMD/pyTMD/graph/badge.svg?token=TX5RPZCWUB 
    :target: https://codecov.io/gh/pyTMD/pyTMD
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/pyTMD.svg
