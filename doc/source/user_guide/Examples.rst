@@ -23,6 +23,7 @@ The available examples include:
    ../notebooks/Plot-Earth-Orientation-Parameters
    ../notebooks/Plot-Ocean-Pole-Tide-Map
    ../notebooks/Plot-Ross-Ice-Shelf-Map
+   ../notebooks/Plot-Solid-Earth-Tides
    ../notebooks/Plot-Tidal-Spectra
    ../notebooks/Plot-Tide-Forecasts
    ../notebooks/Plot-Tide-Form-Factor
@@ -100,13 +101,19 @@ The available examples include:
       :link: ../notebooks/Plot-Ross-Ice-Shelf-Map.html
       :link-alt: Creates an animation of hourly tidal elevations for the Ross Ice Shelf
 
+    .. grid-item-card::  Plot Solid Earth Tides
+      :text-align: center
+      :img-top: ../_assets/solid_earth_tides.png
+      :link: ../notebooks/Plot-Solid-Earth-Tides.html
+      :link-alt: Creates a global animation of hourly solid Earth tides
+
+.. grid:: 1 2 4 4
+
     .. grid-item-card::  Plot Tidal Spectra
       :text-align: center
       :img-top: ../_assets/tidal_spectra.png
       :link: ../notebooks/Plot-Tidal-Spectra.html
       :link-alt: Plots tidal potential amplitude spectra for constituents
-
-.. grid:: 1 2 4 4
 
     .. grid-item-card::  Plot Tide Forecasts
       :text-align: center
