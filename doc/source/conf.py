@@ -75,6 +75,7 @@ pygments_style = 'native'
 bibtex_bibfiles = ['_assets/pytmd-refs.bib']
 bibtex_default_style = 'plain'
 plot_html_show_formats = False
+numfig = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -83,6 +84,11 @@ html_short_title = metadata["Name"]
 html_show_sourcelink = False
 html_show_sphinx = True
 html_show_copyright = True
+
+numfig_format = {
+    'figure': 'Figure %s:',
+    'table': 'Table %s:',
+}
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
