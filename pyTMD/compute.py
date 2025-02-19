@@ -1427,7 +1427,7 @@ def SET_displacements(
     nt = len(ts)
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
 
     # convert input coordinates to cartesian
     X, Y, Z = pyTMD.spatial.to_cartesian(lon, lat,
