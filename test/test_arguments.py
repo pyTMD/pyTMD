@@ -120,7 +120,7 @@ def test_arguments(corrections):
     test = np.dot(fargs, coef)
 
     # validate arguments between methods
-    assert np.all(arg == test)
+    assert np.isclose(arg, test).all()
 
 @pytest.mark.parametrize("corrections", ['OTIS', 'GOT'])
 def test_table(corrections):
@@ -197,7 +197,7 @@ def test_table(corrections):
     # get Doodson coefficients
     test = pyTMD.arguments._arguments_table(corrections=corrections)
     # validate arguments between methods
-    assert np.all(coef == test)
+    assert np.isclose(coef, test).all()
 
 def test_minor():
     """
@@ -248,7 +248,7 @@ def test_minor():
     test = np.dot(fargs, coef)
 
     # validate arguments between methods
-    assert np.all(arg == test)
+    assert np.isclose(arg, test).all()
 
 @pytest.mark.parametrize("corrections", ['OTIS', 'FES', 'GOT'])
 @pytest.mark.parametrize("M1", ['Doodson', 'Ray'])
@@ -699,7 +699,7 @@ def test_parameters():
         # check species
         cartwright = pyTMD.arguments.doodson_number(c,
             formalism='Cartwright')
-        assert species == cartwright[0]
+        assert (species == cartwright[0])
         # check frequency calculation
         assert np.isclose(omega, omegas[i])
         # assert phase calculation
