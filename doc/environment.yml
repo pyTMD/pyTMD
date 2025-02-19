@@ -15,7 +15,6 @@ dependencies:
   - pip
   - python>=3.6
   - python-dateutil
-  - pyyaml
   - scipy
   - setuptools_scm
   - sphinx

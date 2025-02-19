@@ -3,14 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - cartopy
-  - gdal
-  - h5py
   - ipyleaflet
   - ipywidgets
   - jplephem
   - lxml
   - matplotlib
-  - mpi4py
   - netCDF4
   - notebook
   - numpy
@@ -19,7 +16,6 @@ dependencies:
   - pyproj
   - python>=3.6
   - python-dateutil
-  - pyyaml
   - scipy>=1.10.1
   - setuptools_scm
   - timescale>=0.0.3
