@@ -8,8 +8,8 @@ PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
-    PyEphem: Astronomical Ephemeris for Python
-        https://rhodesmill.org/pyephem/
+    jplephem: Astronomical Ephemeris for Python
+        https://pypi.org/project/jplephem/
 
 REFERENCES:
     Jean Meeus, Astronomical Algorithms, 2nd edition, 1998.

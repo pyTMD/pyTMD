@@ -2,8 +2,7 @@
 crs
 ===
 
-- Coordinates Reference System (CRS) routines
-- Gravitational and ellipsoidal parameters :cite:p:`HofmannWellenhof:2006hy` :cite:p:`Petit:2010tp`
+- Coordinates Reference System (CRS) class
 
 `Source code`__
 
@@ -15,6 +14,3 @@ General Attributes and Methods
 .. autoclass:: pyTMD.crs
    :members:
    :private-members:
-
-.. autoclass:: pyTMD.datum
-   :members:

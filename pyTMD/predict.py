@@ -70,7 +70,7 @@ import numpy as np
 import pyTMD.arguments
 import pyTMD.astro
 import pyTMD.math
-from pyTMD.crs import datum
+import pyTMD.spatial
 import timescale.time
 
 __all__ = [
@@ -1265,7 +1265,7 @@ def ocean_pole_tide(
     return dxt
 
 # get IERS parameters
-_iers = datum(ellipsoid='IERS', units='MKS')
+_iers = pyTMD.spatial.datum(ellipsoid='IERS', units='MKS')
 
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
 def solid_earth_tide(

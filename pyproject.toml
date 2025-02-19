@@ -60,7 +60,7 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
 doc = ["docutils", "fontconfig", "freetype", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
-all = ["cartopy", "gdal", "h5py", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "mpi4py", "notebook", "pandas", "pyyaml"]
+all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "oct2py", "boto3"]
 
 [tool.setuptools.packages.find]
@@ -86,13 +86,7 @@ omit = [
     "setup.py",
     "conf.py",
     "scripts/*",
-    "pyTMD/calc_astrol_longitudes.py",
-    "pyTMD/check_points.py",
     "pyTMD/compute_tide_corrections.py",
-    "pyTMD/convert_crs.py",
-    "pyTMD/convert_ll_xy.py",
-    "pyTMD/load_constituent.py",
-    "pyTMD/load_nodal_corrections.py",
     "test/_coefficients_to_json.py",
     "test/_def_to_json.py",
     "providers/*.py",

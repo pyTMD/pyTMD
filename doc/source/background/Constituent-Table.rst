@@ -3,7 +3,7 @@ Major Tidal Constituents
 
 .. _tab-1:
 
-.. csv-table:: Constituent Table
+.. csv-table:: Tidal Constituents
    :file: ../_assets/constituents.csv
    :header-rows: 1
 
