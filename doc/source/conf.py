@@ -38,6 +38,7 @@ release = f"v{version}"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "matplotlib.sphinxext.plot_directive",
     "myst_nb",
     "numpydoc",
     'sphinxcontrib.bibtex',
@@ -73,6 +74,7 @@ numpydoc_show_class_members = False
 pygments_style = 'native'
 bibtex_bibfiles = ['_assets/pytmd-refs.bib']
 bibtex_default_style = 'plain'
+plot_html_show_formats = False
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -154,7 +154,6 @@ For models with multiple constituent files, the files can be found using a ``glo
     * ``type``: ``z`` or ``u,v``
     * ``version``: tide model version
 
-
 Programs
 ########
 
@@ -169,7 +168,6 @@ compute the corresponding tidal elevation or currents.
     >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
     >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
 
-
 Time
 ####
 
@@ -178,7 +176,6 @@ For ocean, load and equilibrium tide programs, the epoch is 1992-01-01T00:00:00.
 For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 ``pyTMD`` uses the ``timescale`` library to convert different time formats to the necessary time format of a given program.
 ``timescale`` can also parse date strings describing the units and epoch of relative times, or the calendar date of measurement for geotiff formats.
-
 
 Spatial Coordinates
 ###################

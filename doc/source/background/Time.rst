@@ -33,3 +33,8 @@ Universal Time (UT1) is based on the rotation of the Earth, which varies irregul
 Dynamic Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
 Delta times (TT - UT1) can be added to Universal Time (UT1) values to convert to Dynamic Time (TT) values.
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
+
+.. plot:: ./background/deltatime.py
+    :show-source-link: False
+    :caption: Delta times between Dynamic Time (TT) and Universal Time (UT1)
+    :align: center
