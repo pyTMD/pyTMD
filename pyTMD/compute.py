@@ -960,7 +960,7 @@ def LPT_displacements(
 
     # validate input arguments
     assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert ELLIPSOID.upper() in pyTMD._ellipsoids
+    assert ELLIPSOID.upper() in pyTMD.spatial._ellipsoids
     assert CONVENTION.isdigit() and CONVENTION in timescale.eop._conventions
     # determine input data type based on variable dimensions
     if not TYPE:
@@ -999,7 +999,7 @@ def LPT_displacements(
     # degrees to radians
     dtr = np.pi/180.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # tidal love/shida numbers appropriate for the load tide
     hb2 = 0.6207
     lb2 = 0.0836
@@ -1167,7 +1167,7 @@ def OPT_displacements(
 
     # validate input arguments
     assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert ELLIPSOID.upper() in pyTMD._ellipsoids
+    assert ELLIPSOID.upper() in pyTMD.spatial._ellipsoids
     assert CONVENTION.isdigit() and CONVENTION in timescale.eop._conventions
     assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
     # determine input data type based on variable dimensions
@@ -1214,7 +1214,7 @@ def OPT_displacements(
     # degrees to radians
     dtr = np.pi/180.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # mean equatorial gravitational acceleration [m/s^2]
     ge = 9.7803278
     # density of sea water [kg/m^3]

@@ -24,14 +24,9 @@ import pyTMD.utilities
 import pyTMD.version
 from pyTMD import io
 from pyTMD import solve
-from pyTMD.crs import (
-    crs,
-    datum,
-    _ellipsoids
-)
+from pyTMD.crs import crs
 
 # Deprecated functions
-from pyTMD.check_points import check_points
 from pyTMD.compute_tide_corrections import (
     compute_corrections,
     compute_tide_corrections,
@@ -40,8 +35,6 @@ from pyTMD.compute_tide_corrections import (
     compute_OPT_corrections,
     compute_SET_corrections,
 )
-import pyTMD.eop
-import pyTMD.time
 
 # get semantic version from setuptools-scm
 __version__ = pyTMD.version.version

@@ -103,44 +103,6 @@ Presently, the following models and their directories are parameterized within `
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
 Note that any alternatively defined model will have to fit the file standard of a currently supported model.
 
-Programs
-########
-
-For users wanting to compute tide corrections for use with numpy arrays or pandas dataframes
-`pyTMD.compute <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py>`_
-is the place to start.
-These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
-compute the corresponding tidal elevation or currents.
-
-.. code-block:: python
-
-    >>> import pyTMD
-    >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
-    >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
-
-
-For users wanting to calculate tidal elevations or currents for a series of files, the
-`compute_tidal_elevations.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_tidal_elevations.py>`_ and
-`compute_tidal_currents.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/compute_tidal_currents.py>`_ programs
-cover most use cases.  They take an input file (in csv, netCDF4, HDF5, parquet or geotiff formats) and compute the tidal
-elevations or currents (zonal and meridional) for each point.
-
-.. code-block:: bash
-
-    compute_tidal_elevations.py --directory <path_to_tide_models> --tide CATS2008 \
-        --format HDF5 --variables t_sec lat lon h_cor --projection 4326 \
-        --epoch 'seconds since 1970-01-01T00:00:00' --verbose --mode 0o775 \
-        input_file.H5 output_file.H5
-
-    compute_tidal_elevations.py --directory <path_to_tide_models> --tide CATS2008 \
-        --format geotiff --projection 3031 --type grid --epoch '2000-01-01T12:00:00' \
-        --verbose --mode 0o775 input_file.tif output_file.tif
-
-    compute_tidal_currents.py --directory <path_to_tide_models> --tide CATS2008 \
-        --format HDF5 --variables t_sec lat lon h_cor --projection 4326 \
-        --epoch 'seconds since 1970-01-01T00:00:00' --verbose --mode 0o775 \
-        input_file.H5 output_file.H5
-
 Definition Files
 ################
 
@@ -191,6 +153,22 @@ For models with multiple constituent files, the files can be found using a ``glo
     * ``scale``: scaling factor for converting to output units
     * ``type``: ``z`` or ``u,v``
     * ``version``: tide model version
+
+
+Programs
+########
+
+`pyTMD.compute <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py>`_ calculates tide predictions for use
+with numpy arrays or pandas dataframes.
+These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
+compute the corresponding tidal elevation or currents.
+
+.. code-block:: python
+
+    >>> import pyTMD
+    >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
+    >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='spline', FILL_VALUE=np.nan)
+
 
 Time
 ####

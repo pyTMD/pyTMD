@@ -148,18 +148,6 @@ Project Details
 .. toctree::
     :maxdepth: 1
     :hidden:
-    :caption: Use Cases
-
-    api_reference/compute_LPET_elevations.rst
-    api_reference/compute_LPT_displacements.rst
-    api_reference/compute_OPT_displacements.rst
-    api_reference/compute_SET_displacements.rst
-    api_reference/compute_tidal_currents.rst
-    api_reference/compute_tidal_elevations.rst
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
     :caption: Project Details
 
     project/Contributors.rst

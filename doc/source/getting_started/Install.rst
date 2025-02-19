@@ -9,22 +9,10 @@ Dependencies
 OS-specific package management systems (e.g. ``apt`` or ``homebrew``),
 ``conda`` or from source:
 
-- `GDAL <https://gdal.org/index.html>`_
-- `GEOS <https://trac.osgeo.org/geos>`_
 - `PROJ <https://proj.org/>`_
-- `HDF5 <https://www.hdfgroup.org>`_
 - `netCDF <https://www.unidata.ucar.edu/software/netcdf>`_
 - `libxml2 <http://xmlsoft.org/>`_
 - `libxslt <http://xmlsoft.org/XSLT/>`_
-
-The version of GDAL used within ``pyTMD`` will match the version of the installed C program.
-The path to the C program that will be used with ``pyTMD`` is given by:
-
-.. code-block:: bash
-
-    gdal-config --datadir
-
-The ``pyTMD`` installation uses the ``gdal-config`` routines to set the GDAL package version.
 
 Installation
 ############

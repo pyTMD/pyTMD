@@ -2,26 +2,8 @@
 spatial
 =======
 
-Utilities for reading, writing and operating on spatial data
-
- - Can read netCDF4, HDF5, (cloud optimized) geotiff or (geo)parquet files
-
-Calling Sequence
-----------------
-
-Reading a netCDF4 file
-
-.. code-block:: python
-
-    import pyTMD.spatial
-    dinput = pyTMD.spatial.from_netCDF4(path_to_netCDF4_file)
-
-Reading a HDF5 file
-
-.. code-block:: python
-
-    import pyTMD.spatial
-    dinput = pyTMD.spatial.from_HDF5(path_to_HDF5_file)
+- Spatial transformation routines
+- Gravitational and ellipsoidal parameters :cite:p:`HofmannWellenhof:2006hy` :cite:p:`Petit:2010tp`
 
 `Source code`__
 
@@ -30,46 +12,10 @@ Reading a HDF5 file
 General Methods
 ===============
 
-
-.. autofunction:: pyTMD.spatial.case_insensitive_filename
-
 .. autofunction:: pyTMD.spatial.data_type
 
-.. autofunction:: pyTMD.spatial.from_file
-
-.. autofunction:: pyTMD.spatial.from_ascii
-
-.. autofunction:: pyTMD.spatial.from_netCDF4
-
-.. autofunction:: pyTMD.spatial.from_HDF5
-
-.. autofunction:: pyTMD.spatial.from_geotiff
-
-.. autofunction:: pyTMD.spatial.from_parquet
-
-.. autofunction:: pyTMD.spatial.to_file
-
-.. autofunction:: pyTMD.spatial.to_ascii
-
-.. autofunction:: pyTMD.spatial.to_netCDF4
-
-.. autofunction:: pyTMD.spatial._drift_netCDF4
-
-.. autofunction:: pyTMD.spatial._grid_netCDF4
-
-.. autofunction:: pyTMD.spatial._time_series_netCDF4
-
-.. autofunction:: pyTMD.spatial.to_HDF5
-
-.. autofunction:: pyTMD.spatial.to_geotiff
-
-.. autofunction:: pyTMD.spatial.to_parquet
-
-.. autofunction:: pyTMD.spatial.expand_dims
-
-.. autofunction:: pyTMD.spatial.default_field_mapping
-
-.. autofunction:: pyTMD.spatial.inverse_mapping
+.. autoclass:: pyTMD.spatial.datum
+   :members:
 
 .. autofunction:: pyTMD.spatial.convert_ellipsoid
 

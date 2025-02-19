@@ -116,7 +116,7 @@ def test_load_pole_tide_displacements(TYPE):
     dtr = np.pi/180.0
     atr = np.pi/648000.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # tidal love number appropriate for the load tide
     hb2 = 0.6207
 
@@ -278,7 +278,7 @@ def test_ocean_pole_tide(METHOD):
     dtr = np.pi/180.0
     atr = np.pi/648000.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid='IERS', units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid='IERS', units='MKS')
     # universal constant of gravitation for test [m^3/(kg*s^2)]
     G = 6.673e-11
     # mean equatorial gravitational acceleration [m/s^2]
@@ -400,7 +400,7 @@ def test_predict_ocean_pole_tide(METHOD):
     # degrees to radians
     dtr = np.pi/180.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid='IERS', units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid='IERS', units='MKS')
     # mean equatorial gravitational acceleration [m/s^2]
     ge = 9.7803278
     # density of sea water [kg/m^3]
@@ -538,7 +538,7 @@ def test_ocean_pole_tide_displacements(TYPE, METHOD):
     dtr = np.pi/180.0
     atr = np.pi/648000.0
     # earth and physical parameters for ellipsoid
-    units = pyTMD.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # mean equatorial gravitational acceleration [m/s^2]
     ge = 9.7803278
     # density of sea water [kg/m^3]
