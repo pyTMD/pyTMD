@@ -42,6 +42,7 @@ UPDATE HISTORY:
     Updated 02/2025: add option to make doodson numbers strings
         add Doodson number convention for converting 11 to E
         add Doodson (1921) table for coefficients missing from Cartwright tables
+        add function to convert from Cartwright number to constituent ID
     Updated 12/2024: added function to calculate tidal aliasing periods
     Updated 11/2024: allow variable case for Doodson number formalisms
         fix species in constituent parameters for complex tides
@@ -102,6 +103,7 @@ __all__ = [
     "_constituent_parameters",
     "_love_numbers",
     "_parse_tide_potential_table",
+    "_to_constituent_id",
     "_to_doodson_number",
     "_to_extended_doodson",
     "_from_doodson_number",
@@ -115,7 +117,8 @@ def arguments(
     ):
     """
     Calculates the nodal corrections for tidal constituents
-    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty` :cite:p:`Foreman:1989dt` :cite:p:`Egbert:2002ge`
+    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
+    :cite:p:`Foreman:1989dt` :cite:p:`Egbert:2002ge`
 
     Parameters
     ----------
@@ -181,7 +184,8 @@ def minor_arguments(
     ):
     """
     Calculates the nodal corrections for minor tidal constituents
-    in order to infer their values :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
+    in order to infer their values
+    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
     :cite:p:`Foreman:1989dt` :cite:p:`Egbert:2002ge`
 
 
@@ -484,7 +488,8 @@ def nodal(
     ):
     """
     Calculates the nodal corrections for tidal constituents
-    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty` :cite:p:`Foreman:1989dt` :cite:p:`Ray:1999vm`
+    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
+    :cite:p:`Foreman:1989dt` :cite:p:`Ray:1999vm`
 
     Calculates factors for compound tides using recursion
 
@@ -1265,7 +1270,8 @@ def aliasing_period(
 
 def _arguments_table(**kwargs):
     """
-    Arguments table for tidal constituents :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
+    Arguments table for tidal constituents
+    :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
 
     Parameters
     ----------
@@ -1302,7 +1308,8 @@ def _arguments_table(**kwargs):
 
 def _minor_table(**kwargs):
     """
-    Arguments table for minor tidal constituents :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
+    Arguments table for minor tidal constituents
+    :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
 
     Returns
     -------
@@ -1417,7 +1424,8 @@ def _love_numbers(
     ):
     """
     Compute the body tide Love/Shida numbers for a given
-    frequency :cite:p:`Wahr:1981ea` :cite:p:`Wahr:1981if` :cite:p:`Mathews:1995go`
+    frequency :cite:p:`Wahr:1981ea` :cite:p:`Wahr:1981if`
+    :cite:p:`Mathews:1995go`
 
     Parameters
     ----------
@@ -1538,6 +1546,75 @@ def _parse_tide_potential_table(table: str | pathlib.Path):
         CTE[i] = np.array(tuple(line.split()[:11]), dtype=dtype)
     # return the table values
     return CTE
+
+def _to_constituent_id(coef: list | np.ndarray, **kwargs):
+    """
+    Converts Cartwright numbers into a tidal constituent ID
+
+    Parameters
+    ----------
+    coef: list or np.ndarray
+        Doodson coefficients (Cartwright numbers) for constituent
+    corrections: str, default 'GOT'
+        use coefficients from OTIS, FES or GOT models
+    arguments: int, default 7
+        Number of astronomical arguments to use
+    file: str or pathlib.Path, default `coefficients.json`
+        JSON file of Doodson coefficients
+    raise_error: bool, default True
+        Raise exception if constituent is unsupported
+
+    Returns
+    -------
+    c: str
+        tidal constituent ID
+    """
+    # set default keyword arguments
+    kwargs.setdefault('corrections', 'GOT')
+    kwargs.setdefault('arguments', 7)
+    kwargs.setdefault('file', _coefficients_table)
+    kwargs.setdefault('raise_error', True)
+
+    # verify list of coefficients
+    N = int(kwargs['arguments'])
+    assert (N == 6) or (N == 7)
+    # assert length and verify list
+    coef = np.copy(coef[:N]).tolist()
+
+    # verify coefficients table path
+    table = pathlib.Path(kwargs['file']).expanduser().absolute()
+    # modified Doodson coefficients for constituents
+    # using 7 index variables: tau, s, h, p, n, pp, k
+    # tau: mean lunar time
+    # s: mean longitude of moon
+    # h: mean longitude of sun
+    # p: mean longitude of lunar perigee
+    # n: mean longitude of ascending lunar node
+    # pp: mean longitude of solar perigee
+    # k: 90-degree phase
+    with table.open(mode='r', encoding='utf8') as fid:
+        coefficients = json.load(fid)
+
+    # # Without p'
+    # coefficients['sa'] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    # coefficients['sta'] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]
+    # set s1 coefficients
+    if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
+        coefficients['s1'] = [1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 1.0]
+    # separate dictionary into keys and values
+    coefficients_keys = list(coefficients.keys()) 
+    # truncate coefficient values to number of arguments
+    coefficients_values = np.array(list(coefficients.values()))
+    coefficients_values = coefficients_values[:,:N].tolist()
+    # get constituent ID from Doodson coefficients
+    try:
+        i = coefficients_values.index(coef)
+    except ValueError:
+        if kwargs['raise_error']:
+            raise ValueError('Unsupported constituent')
+    else:
+        # return constituent id
+        return coefficients_keys[i]
 
 def _to_doodson_number(coef: list | np.ndarray, **kwargs):
     """

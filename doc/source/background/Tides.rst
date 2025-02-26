@@ -12,6 +12,11 @@ A secondary tidal effect, known as load tides, is due to the elastic response of
 Tidal oscillations for both ocean and load tides can be decomposed into a series of tidal constituents (or partial tides) of particular frequencies that are associated with the relative positions of the sun, moon and Earth.
 These tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-1`].
 
+.. plot:: ./background/spectra.py
+    :show-source-link: False
+    :caption: Tidal spectra from :cite:t:`Cartwright:1973em`
+    :align: center
+
 The amplitude and phase of major constituents are provided by ocean tide models, which can be used for tidal predictions.
 Ocean tide models are typically one of following categories:
 1) empirically adjusted models,

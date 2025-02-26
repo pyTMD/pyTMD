@@ -6,6 +6,7 @@ Verify nodal corrections match prior estimates
 
 UPDATE HISTORY:
     Updated 02/2025: add Doodson (1921) table with missing coefficients
+        add check for converting from coefficients to constituent ID
     Updated 11/2024: moved normalize_angle test to test_math.py
     Updated 10/2024: add comparisons for formatted Doodson numbers
         add function to parse tide potential tables
@@ -839,6 +840,30 @@ def test_extended():
     # check values
     for key,val in exp.items():
         assert val == obs[key]
+        # check constituent IDs from coefficients
+        coefficients = pyTMD.arguments._from_extended_doodson(val)
+        c = pyTMD.arguments._to_constituent_id(coefficients,
+            corrections='GOT', arguments=6)
+        assert c == key
+
+def test_constituent_id():
+    """
+    Tests the conversion of Doodson number to constituent ID
+    """
+    # constituents array (not all are included in tidal program)
+    cindex = ['sa', 'ssa', 'mm', 'msf', 'mf', 'mtm', 'alpha1', '2q1', 'sigma1',
+        'q1', 'rho1', 'o1', 'tau1', 'm1', 'chi1', 'pi1', 'p1', 's1', 'k1',
+        'psi1', 'phi1', 'theta1', 'j1', 'oo1', '2n2', 'mu2', 'n2', 'nu2', 'm2a',
+        'm2', 'm2b', 'lambda2', 'l2', 't2', 's2', 'r2', 'k2', 'eta2', 'eps2',
+        '2sm2', 'm3', 'mk3', 's3', 'mn4', 'm4', 'ms4', 'mk4', 's4', 's5', 'm6',
+        's6', 's7', 's8', 'm8', 'mks2', 'msqm', 'n4', 'z0']
+    # test conversion of conversion to constituent ID
+    for i, exp in enumerate(cindex):
+        # get observed values for constituents
+        print(exp)
+        coef = pyTMD.arguments.coefficients_table(exp, corrections='GOT')    
+        c = pyTMD.arguments._to_constituent_id(coef[:,0], corrections='GOT')
+        assert (c == exp)
 
 def test_parse_tables():
     """

@@ -1,8 +1,9 @@
 """
-test_model.py (09/2024)
+test_model.py (02/2025)
 Tests the reading of model definition files
 
 UPDATE HISTORY:
+    Updated 02/2025: added function to try to parse bathymetry files
     Updated 09/2024: drop support for the ascii definition file format
         fix parsing of TPXO8-atlas-nc constituents
         using new JSON dictionary format for model projections
@@ -712,6 +713,14 @@ def test_parse_FES_currents(MODEL):
     constituents = [pyTMD.io.model.parse_file(f) for f in m.model_file['v']]
     assert (m.constituents == constituents)
 
+# parameterize model bathymetry files
+@pytest.mark.parametrize("FILE", ["ba.HAMTIDE.nc","grid_tpxo10atlas_v2.nc"])
+def test_parse_bathymetry(FILE):
+    """Verifies that model bathymetry files are parsed correctly
+    """
+    constituents = pyTMD.io.model.parse_file(FILE)
+    assert constituents is None
+
 # parameterize model
 @pytest.mark.parametrize("MODEL", pyTMD.io.model.GOT())
 def test_parse_GOT_elevation(MODEL):
@@ -724,6 +733,9 @@ def test_parse_GOT_elevation(MODEL):
         constituents = ['mf','mm','mt','node','sa','ssa']
     else:
         constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1','m4']
+    # extend list with third degree constituents
+    if MODEL in ('GOT5.6','GOT5.6_extrapolated'):
+        constituents.extend(["l2'", "m1'", 'm3', "n2'"])
     # verify that all constituents exist
     assert all(c in m.constituents for c in constituents)
 

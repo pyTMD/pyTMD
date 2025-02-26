@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2025: add RHO to rho1 to known mappable constituents
+        add more known constituents to string parser function
     Updated 11/2024: added property for Extended Doodson numbers
     Updated 10/2024: added property for the shape of constituent fields
     Updated 09/2024: add more known constituents to string parser function
@@ -240,22 +241,63 @@ class constituents:
         """
         # list of tidal constituents (not all are included in tidal program)
         # include negative look-behind and look-ahead for complex cases
-        cindex = [r'(?<!s)sa','ssa','mm','msf',r'mt(?!m)(?!ide)','mf','alpha1',
-            '2q1','sigma1',r'(?<!2)q1','rho1',r'(?<!rh)(?<!o)(?<!s)o1','tau1',
-            'm1','chi1','pi1',r'(?<!al)p1','s1','k1','psi1','phi1','beta1',
-            'theta1','j1','oo1','2n2','mu2',r'(?<!2)n2','nu2',
-            r'(?<!2s)(?<!l)(?<!la)(?<!ga)m2(?!a)(?!b)','m2a','m2b','lambda2',
-            r'(?<!de)l2',r'(?<!be)t2',r'(?<!mn)(?<!mk)(?<!ep)s2(?!0)','alpha2',
-            'beta2','delta2','gamma2','r2','k2',r'(?<!b)eta2','mns2','2sm2',
-            'm3','mk3','s3','mn4','m4','ms4','mk4','so1',r'(?<!m)s4','s5','m6',
-            's6','s7','s8','m8','mks2','msqm','mtm',r'(?<!m)n4','eps2','ups1',
-            'z0','node']
+        cindex = ['z0','node','sa','ssa','sta','msqm','mtm',
+            r'mf(?![a|b|n])',r'mm(?![un])',r'msf(?![a|b])',r'mt(?![m|ide])',
+            '2q1','alpha1','beta1','chi1','j1','psi1','phi1','pi1','sigma1',
+            'rho1','tau1','theta1','oo1','so1','ups1','q1','s1',
+            r'(?<!rh)o1(?!n)',r'm1(?![a|b])',r'(?<![al|oo|])p1',r'k1(?!n)',
+            '2sm2','alpha2','beta2','delta2','eps2','gamma2','k2','lambda2',
+            'm2a','m2b','mks2','mns2','mu2','r2',
+            r'(?<![ms])2n2',r'(?<![b|z])eta2',r'(?<!de)l2(?![a|b])',
+            r'(?<![ga|la])m2(?![a|b|n])',r'(?<![mmu|ms])n2',r'(?<![ms])nu2',
+            r'(?<![mn|mk|mnu|ep])s2(?![0|r|m])',r'(?<![be])t2',
+            'm3','mk3','mk4','mn4','ms4','s3','m4','n4','s4',
+            's5','m6','s6','s7','s8','m8',
+        ]
         # compile regular expression
         # adding GOT prime nomenclature for 3rd degree constituents
-        rx = re.compile(r'(' + '|'.join(cindex) + r')(\')?', re.IGNORECASE)
+        rx = re.compile(
+            r'(?<![\d|j|k|l|m|n|o|p|q|r|s|t|u])(?<![|\(|\)])(' + 
+            r'|'.join(cindex) + r')(?![|\(|\)])(?![\d])(?![+|-])(\')?',
+            re.IGNORECASE
+        )
         # check if tide model is a simple regex case
         if rx.search(constituent):
             return "".join(rx.findall(constituent)[0]).lower()
+        # regular expression pattern for finding constituent names
+        # include negative look-behind and look-ahead for complex cases
+        patterns = (r'node|alpha|beta|chi|delta|eps|eta|gamma|lambda|muo|mu|'
+            r'nu|pi|psi|phi|rho\d|sigma|tau|theta|ups|zeta|e3|f\d|jk|jo|jp|'
+            r'jq|j|kb|kjq|kj|kmsn|km|kn|ko|kpq|kp|kq|kso|ks|k\d|lb|'
+            r'(?<!de)l\d|ma|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|mks|mk|'
+            r'mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|mnu|mn|'
+            r'mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|msm|'
+            r'msnk|msnu|msn|mso|msp|msqm|mst|ms(?!q)|mtm|mt(?![m|ide])|'
+            r'(?<![2s|l|la|ga])m[1-9]|na|nb|nkms|nkm|nkp|nks|nk|'
+            r'nmks|nmk|nmls|nm|no|np|nq|nsk|nso|ns|(?<!m)n\d|(?<!l)oa|ob|ok|'
+            r'ojm|oj|omg|om(?![0|ega])|ook|oop|oo\d|opk|opq|op|oq|os|'
+            r'(?<![rh|o|s|tpx])o\d|pjrho|pk|pmn|pm|po|pqo|(?<![al|e])p\d|qj|'
+            r'qk|qms|qm|qp|qs|q\d|rp|r\d|(?<!s)sa|sf|skm|skn|sk|sl(?!ev)|smk|'
+            r'smn|sm|snk|snmk|snm|snu|sn|so|sp|(?<!m)sq|ssa|sta|st(?!a)|'
+            r'(?<![ep|fe|m|mn|mk])s\d|ta|tk|(?<![curren|be])t\d|z\d')
+        # full regular expression pattern for extracting complex and compound
+        # constituents with GOT prime nomenclature for 3rd degree terms
+        cases = re.compile(r'(\d+)?(\(\w+\))?(\+|\-|\')?(node|alpha|beta|chi|'
+            r'delta|eps|eta|gamma|lambda|muo|mu|nu|pi|psi|phi|rho|sigma|tau|'
+            r'theta|ups|zeta|e|f|jk|jo|jp|jq|j|kb|kjq|kj|kmsn|km|kn|ko|kpq|'
+            r'kp|kq|kso|ks|k|lb|l|ma|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|'
+            r'mks|mk|mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|'
+            r'mnu|mn|mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|'
+            r'msm|msnk|msnu|msn|mso|msp|msqm|mst|ms|mtm|mt|m|na|nb|nkms|nkm|'
+            r'nkp|nks|nk|nmks|nmk|nmls|nm|no|np|nq|nsk|nso|ns|n|oa|ob|ok|ojm|'
+            r'oj|omg|om|ook|oop|oo|opk|opq|op|oq|os|o|pjrho|pk|pmn|pm|po|pqo|p|'
+            r'qj|qk|qms|qm|qp|qs|q|rp|r|sa|sf|skm|skn|sk|sl|smk|smn|sm|snk|'
+            r'snmk|snm|snu|sn|so|sp|sq|ssa|sta|st|s|ta|tk|t|z)?(\d+)?(\(\w+\))?'
+            r'(\d+)?(\+\+|\+|\-\-|\-|a|b|k|m|nk|ns|n|r|s)?(\d+)?(\')?',
+            re.IGNORECASE)
+        # check if tide model is a regex case for compound tides
+        if re.search(patterns, constituent, re.IGNORECASE):
+            return "".join(cases.findall(constituent)[0]).lower()
         # known remapped cases
         mapping = [('2n','2n2'), ('alp1', 'alpha1'), ('alp2', 'alpha2'),
             ('bet1', 'beta1'), ('bet2', 'beta2'), ('del2', 'delta2'),
