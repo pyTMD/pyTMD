@@ -38,7 +38,8 @@ subfig = fig.subfigures(2, 1, hspace=0.05)
 ax1 = subfig[0].subplots(ncols=1)
 ax2 = subfig[1].subplots(ncols=3, sharey='row')
 ax2[0].sharey(ax1)
-# set y limits of the main plot
+# set x and y limits of the main plot
+ax1.set_xlim(-0.1, 2.18)
 ax1.set_ylim(1e-3, 3e2)
 
 # major constituents to label for each species
@@ -96,12 +97,12 @@ for i, ax in enumerate(ax2):
     ax.get_yaxis().set_tick_params(which='both', direction='in', color=plot_colors[i])
     # stronger linewidth on frame
     for key,val in ax.spines.items():
-        val.set_linewidth(2.0)
+        val.set_linewidth(1.5)
         val.set_color(plot_colors[i])
 # set ticks
 ax1.get_xaxis().set_tick_params(which='both', direction='in')
 ax1.get_yaxis().set_tick_params(which='both', direction='in')
-[val.set_linewidth(2.0) for key,val in ax1.spines.items()]
+[val.set_linewidth(1.5) for key,val in ax1.spines.items()]
 # # add x and y labels
 ax1.set_ylabel('Amplitude [cm]')
 ax2[0].set_ylabel('Amplitude [cm]')
