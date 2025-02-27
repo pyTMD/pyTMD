@@ -34,10 +34,10 @@ This section provides background information on the theoretical concepts used in
 .. toctree::
     :hidden:
     :maxdepth: 1
+    :numbered:
     :caption: Background
 
     ./Tides.rst
-    ./Constituent-Table.rst
     ./Reference-Systems.rst
     ./Time.rst
     ./Glossary.rst

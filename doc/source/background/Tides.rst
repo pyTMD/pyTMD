@@ -29,21 +29,21 @@ In this model, the oceanic surface instantaneously responds to the tide-producin
 The potential amplitudes of each constituent can be calculated using equilibrium tide theory, and their relative amplitudes are useful for inferring unmodeled constituents :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
 Inferrence is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
-Additional care is needed when inferring diurnal constituents due to a resonance in this band from the free core notation (FCN) of the Earth :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx`.
+Additional care is needed when inferring diurnal constituents due to a resonance in this band from the free core notation (FCN) of the Earth :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:p:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (`S`), moon (`H`), lunar perigree (`P`), ascending lunar node (`N`) and solar perigree (`Ps`), which are used in combination with the lunar hour angle (\ |tau|\ ) in a six-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua`.
+For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (`S`), moon (`H`), lunar perigree (`P`), ascending lunar node (`N`) and solar perigree (`Ps`), which are used in combination with the lunar hour angle (\ |tau|\ ) and the extended Doodson number (`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua` :cite:p:`Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 
 .. math::
     :label: 1
 
-    \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps
+    \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
 ``pyTMD`` stores these coefficients in an easily accessible `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
-Together these coefficients and additional nodal corrections (`f` and `u`) can be used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and allow for the accurate determination of the tidal amplitudes :cite:p:`Schureman:1958ty` :cite:p:`Dietrich:1980ua`.
-In addition, the amplitudes of minor constituents can be estimated using inferrence methods :cite:p:`Schureman:1958ty` :cite:p:`Ray:2017jx`.
+Together these coefficients and additional nodal corrections (`f` and `u`) are used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal amplitudes :cite:p:`Schureman:1958ty` :cite:p:`Dietrich:1980ua`.
+After the determination of the major constituents, the amplitudes of minor constituents can be estimated using inferrence methods :cite:p:`Schureman:1958ty` :cite:p:`Ray:2017jx`.
 
 
 Solid Earth Tides
@@ -99,5 +99,10 @@ The time-dependent offsets from the reference rotation pole position, are then c
 
     m_1(t) &= x_p(t) - \bar{x}_s(t)\\
     m_2(t) &= -(y_p(t) - \bar{y}_s(t))
+
+.. plot:: ./background/polar-motion.py
+    :show-source-link: False
+    :caption: Polar motion estimates from the IERS
+    :align: center
 
 .. |tau|    unicode:: U+1D70F .. MATHEMATICAL ITALIC SMALL TAU

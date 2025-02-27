@@ -76,6 +76,7 @@ bibtex_bibfiles = ['_assets/pytmd-refs.bib']
 bibtex_default_style = 'plain'
 plot_html_show_formats = False
 numfig = True
+numfig_secnum_depth = 1
 
 # -- Options for HTML output -------------------------------------------------
 

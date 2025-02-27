@@ -43,6 +43,7 @@ UPDATE HISTORY:
         add Doodson number convention for converting 11 to E
         add Doodson (1921) table for coefficients missing from Cartwright tables
         add function to convert from Cartwright number to constituent ID
+        added option to compute climatologically affected terms without p'
     Updated 12/2024: added function to calculate tidal aliasing periods
     Updated 11/2024: allow variable case for Doodson number formalisms
         fix species in constituent parameters for complex tides
@@ -118,7 +119,7 @@ def arguments(
     """
     Calculates the nodal corrections for tidal constituents
     :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
-    :cite:p:`Foreman:1989dt` :cite:p:`Egbert:2002ge`
+    :cite:p:`Foreman:1989dt` :cite:p:`Pugh:2014di`
 
     Parameters
     ----------
@@ -130,6 +131,8 @@ def arguments(
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
         use nodal corrections from OTIS, FES or GOT models
+    climate_solar_perigee: bool, default True
+        compute climatologically affected terms without p'
     M1: str, default 'perth5'
         coefficients to use for M1 tides
 
@@ -149,6 +152,7 @@ def arguments(
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('climate_solar_perigee', False)
     kwargs.setdefault('M1', 'perth5')
 
     # set function for astronomical longitudes
@@ -165,6 +169,8 @@ def arguments(
     # convert from hours solar time into mean lunar time in degrees
     tau = 15.0*hour - s + h
     # variable for multiples of 90 degrees (Ray technical note 2017)
+    # full expansion of Equilibrium Tide includes some negative cosine
+    # terms and some sine terms (Pugh and Woodworth, 2014)
     k = 90.0 + np.zeros((nt))
 
     # determine equilibrium arguments
@@ -341,6 +347,7 @@ def coefficients_table(
     """
     Doodson table coefficients for tidal constituents
     :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
+    :cite:p:`Pugh:2014di`
 
     Parameters
     ----------
@@ -348,6 +355,8 @@ def coefficients_table(
         tidal constituent IDs
     corrections: str, default 'OTIS'
         use coefficients from OTIS, FES or GOT models
+    climate_solar_perigee: bool, default False
+        compute climatologically affected terms without p'
     file: str or pathlib.Path, default `coefficients.json`
         JSON file of Doodson coefficients
 
@@ -358,6 +367,7 @@ def coefficients_table(
     """
     # set default keyword arguments
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('climate_solar_perigee', False)
     kwargs.setdefault('file', _coefficients_table)
 
     # verify coefficients table path
@@ -374,9 +384,11 @@ def coefficients_table(
     with table.open(mode='r', encoding='utf8') as fid:
         coefficients = json.load(fid)
 
-    # # Without p'
-    # coefficients['sa'] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
-    # coefficients['sta'] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]
+    # compute climatologically affected terms without p'
+    # following Pugh and Woodworth (2014)
+    if kwargs['climate_solar_perigee']:
+        coefficients['sa'] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+        coefficients['sta'] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]
     # set s1 coefficients
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
         coefficients['s1'] = [1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 1.0]
