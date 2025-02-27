@@ -34,13 +34,14 @@ CTE = pyTMD.arguments._parse_tide_potential_table(table)
 
 # create figure and subplots
 fig = plt.figure(num=1, figsize=(13,5))
-subfig = fig.subfigures(2, 1, hspace=0.05)
+subfig = fig.subfigures(2, 1, hspace=0.05, height_ratios=(1.0, 2.0))
 ax1 = subfig[0].subplots(ncols=1)
 ax2 = subfig[1].subplots(ncols=3, sharey='row')
-ax2[0].sharey(ax1)
-# set x and y limits of the main plot
-ax1.set_xlim(-0.1, 2.18)
-ax1.set_ylim(1e-3, 3e2)
+# ax2[0].sharey(ax1)
+# set x and y limits
+ax1.set_xlim(-0.06, 2.14)
+ax1.set_ylim(1e-3, 2e2)
+ax2[0].set_ylim(1e-3, 2e2)
 
 # major constituents to label for each species
 major = []
@@ -79,13 +80,13 @@ for i, line in enumerate(CTE):
             break
 
 # create inset axes and set ticks
-plot_colors = ['mediumseagreen', 'darkorchid', 'darkorange']
+plot_colors = ['k', 'k', 'k']
 labels = ['Long-Period', 'Diurnal', 'Semi-Diurnal']
 for i, ax in enumerate(ax2):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     ax1.indicate_inset(bounds=(xmin, ymin, xmax-xmin, ymax-ymin),
-        inset_ax=ax, facecolor=plot_colors[i], alpha=0.25,
+        inset_ax=ax, facecolor=plot_colors[i], alpha=0.15,
         edgecolor=plot_colors[i], zorder=0)
     # add labels to inset axes
     prop = dict(size=12, weight='bold', color=plot_colors[i])
@@ -104,12 +105,12 @@ ax1.get_xaxis().set_tick_params(which='both', direction='in')
 ax1.get_yaxis().set_tick_params(which='both', direction='in')
 [val.set_linewidth(1.5) for key,val in ax1.spines.items()]
 # # add x and y labels
-ax1.set_ylabel('Amplitude [cm]')
-ax2[0].set_ylabel('Amplitude [cm]')
-ax2[1].set_xlabel('Frequency [cpd]')
+ax1.set_ylabel('Amplitude [cm]', fontsize=10)
+ax2[0].set_ylabel('Amplitude [cm]', fontsize=10)
+ax2[1].set_xlabel('Frequency [cpd]', fontsize=10)
 # set titles
-ax1.set_title(f'Tidal Spectra')
+ax1.set_title(f'Tidal Spectra', fontsize=12)
 # adjust subplots
-subfig[0].subplots_adjust(left=0.05,right=0.995,bottom=0.0,top=0.90,wspace=0.05)
-subfig[1].subplots_adjust(left=0.05,right=0.995,bottom=0.175,top=0.95,wspace=0.05)
+subfig[0].subplots_adjust(left=0.048,right=0.9975,bottom=0.0,top=0.85)
+subfig[1].subplots_adjust(left=0.048,right=0.9975,bottom=0.12,top=0.975,wspace=0.05)
 plt.show()
