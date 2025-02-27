@@ -82,12 +82,17 @@ for i, line in enumerate(CTE):
 # create inset axes and set ticks
 plot_colors = ['k', 'k', 'k']
 labels = ['Long-Period', 'Diurnal', 'Semi-Diurnal']
+connector_visibility = [False, True, False, True]
 for i, ax in enumerate(ax2):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
-    ax1.indicate_inset(bounds=(xmin, ymin, xmax-xmin, ymax-ymin),
+    inset_rectangle, inset_connectors = ax1.indicate_inset(
+        bounds=(xmin, ymin, xmax-xmin, ymax-ymin),
         inset_ax=ax, facecolor=plot_colors[i], alpha=0.15,
         edgecolor=plot_colors[i], zorder=0)
+    # set visibility of connectors
+    for j, vis in enumerate(connector_visibility):
+        inset_connectors[j].set_visible(vis)
     # add labels to inset axes
     prop = dict(size=12, weight='bold', color=plot_colors[i])
     at = offsetbox.AnchoredText(labels[i], loc=2, pad=0,
