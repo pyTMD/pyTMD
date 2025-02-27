@@ -94,10 +94,14 @@ for i, ax in enumerate(ax2):
     # set ticks for inset axes
     ax.get_xaxis().set_tick_params(which='both', direction='in', color=plot_colors[i])
     ax.get_yaxis().set_tick_params(which='both', direction='in', color=plot_colors[i])
-    [val.set_color(plot_colors[i]) for key,val in ax.spines.items()]
+    # stronger linewidth on frame
+    for key,val in ax.spines.items():
+        val.set_linewidth(2.0)
+        val.set_color(plot_colors[i])
 # set ticks
 ax1.get_xaxis().set_tick_params(which='both', direction='in')
 ax1.get_yaxis().set_tick_params(which='both', direction='in')
+[val.set_linewidth(2.0) for key,val in ax1.spines.items()]
 # # add x and y labels
 ax1.set_ylabel('Amplitude [cm]')
 ax2[0].set_ylabel('Amplitude [cm]')
