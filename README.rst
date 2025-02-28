@@ -22,7 +22,7 @@ pyTMD
    :target: https://anaconda.org/conda-forge/pytmd
 
 .. |commits-since| image:: https://img.shields.io/github/commits-since/pyTMD/pyTMD/latest
-   :target: https://github.com/pyTMD/pyTMD/releases
+   :target: https://github.com/pyTMD/pyTMD/releases/latest
 
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5555395.svg
    :target: https://doi.org/10.5281/zenodo.5555395

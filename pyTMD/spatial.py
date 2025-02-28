@@ -141,6 +141,7 @@ _units = ['MKS', 'CGS']
 class datum:
     """
     Class for gravitational and ellipsoidal parameters
+    :cite:p:`HofmannWellenhof:2006hy`
 
     Parameters
     ----------
@@ -515,7 +516,7 @@ class datum:
         setattr(self, key, value)
 
 def convert_ellipsoid(
-        phi1: np.ndarray,
+        lat1: np.ndarray,
         h1: np.ndarray,
         a1: float,
         f1: float,
@@ -530,7 +531,7 @@ def convert_ellipsoid(
 
     Parameters
     ----------
-    phi1: np.ndarray
+    lat1: np.ndarray
         latitude of input ellipsoid in degrees
     h1: np.ndarray
         height above input ellipsoid in meters
@@ -550,50 +551,50 @@ def convert_ellipsoid(
 
     Returns
     -------
-    phi2: np.ndarray
+    lat2: np.ndarray
         latitude of output ellipsoid in degrees
     h2: np.ndarray
         height above output ellipsoid in meters
     """
-    if (len(phi1) != len(h1)):
-        raise ValueError('phi and h have incompatible dimensions')
+    if (len(lat1) != len(h1)):
+        raise ValueError('lat and h have incompatible dimensions')
     # semiminor axis of input and output ellipsoid
     b1 = (1.0 - f1)*a1
     b2 = (1.0 - f2)*a2
     # initialize output arrays
-    npts = len(phi1)
-    phi2 = np.zeros((npts))
+    npts = len(lat1)
+    lat2 = np.zeros((npts))
     h2 = np.zeros((npts))
     # for each point
     for N in range(npts):
-        # force phi1 into range -90 <= phi1 <= 90
-        if (np.abs(phi1[N]) > 90.0):
-            phi1[N] = np.sign(phi1[N])*90.0
+        # force lat1 into range -90 <= lat1 <= 90
+        if (np.abs(lat1[N]) > 90.0):
+            lat1[N] = np.sign(lat1[N])*90.0
         # handle special case near the equator
-        # phi2 = phi1 (latitudes congruent)
+        # lat2 = lat1 (latitudes congruent)
         # h2 = h1 + a1 - a2
-        if (np.abs(phi1[N]) < eps):
-            phi2[N] = np.copy(phi1[N])
+        if (np.abs(lat1[N]) < eps):
+            lat2[N] = np.copy(lat1[N])
             h2[N] = h1[N] + a1 - a2
         # handle special case near the poles
-        # phi2 = phi1 (latitudes congruent)
+        # lat2 = lat1 (latitudes congruent)
         # h2 = h1 + b1 - b2
-        elif ((90.0 - np.abs(phi1[N])) < eps):
-            phi2[N] = np.copy(phi1[N])
+        elif ((90.0 - np.abs(lat1[N])) < eps):
+            lat2[N] = np.copy(lat1[N])
             h2[N] = h1[N] + b1 - b2
         # handle case if latitude is within 45 degrees of equator
-        elif (np.abs(phi1[N]) <= 45):
-            # convert phi1 to radians
-            phi1r = phi1[N] * np.pi/180.0
-            sinphi1 = np.sin(phi1r)
-            cosphi1 = np.cos(phi1r)
+        elif (np.abs(lat1[N]) <= 45):
+            # convert lat1 to radians
+            lat1r = lat1[N] * np.pi/180.0
+            sinlat1 = np.sin(lat1r)
+            coslat1 = np.cos(lat1r)
             # prevent division by very small numbers
-            cosphi1 = np.copy(eps) if (cosphi1 < eps) else cosphi1
+            coslat1 = np.copy(eps) if (coslat1 < eps) else coslat1
             # calculate tangent
-            tanphi1 = sinphi1 / cosphi1
-            u1 = np.arctan(b1 / a1 * tanphi1)
-            hpr1sin = b1 * np.sin(u1) + h1[N] * sinphi1
-            hpr1cos = a1 * np.cos(u1) + h1[N] * cosphi1
+            tanlat1 = sinlat1 / coslat1
+            u1 = np.arctan(b1 / a1 * tanlat1)
+            hpr1sin = b1 * np.sin(u1) + h1[N] * sinlat1
+            hpr1cos = a1 * np.cos(u1) + h1[N] * coslat1
             # set initial value for u2
             u2 = np.copy(u1)
             # setup constants
@@ -601,7 +602,7 @@ def convert_ellipsoid(
             k1 = a2 * hpr1cos
             k2 = b2 * hpr1sin
             # perform newton-raphson iteration to solve for u2
-            # cos(u2) will not be close to zero since abs(phi1) <= 45
+            # cos(u2) will not be close to zero since abs(lat1) <= 45
             for i in range(0, itmax+1):
                 cosu2 = np.cos(u2)
                 fu2 = k0 * np.sin(u2) + k1 * np.tan(u2) - k2
@@ -614,25 +615,25 @@ def convert_ellipsoid(
                     if (np.abs(delta) < eps):
                         break
             # convert latitude to degrees and verify values between +/- 90
-            phi2r = np.arctan(a2 / b2 * np.tan(u2))
-            phi2[N] = phi2r*180.0/np.pi
-            if (np.abs(phi2[N]) > 90.0):
-                phi2[N] = np.sign(phi2[N])*90.0
+            lat2r = np.arctan(a2 / b2 * np.tan(u2))
+            lat2[N] = lat2r*180.0/np.pi
+            if (np.abs(lat2[N]) > 90.0):
+                lat2[N] = np.sign(lat2[N])*90.0
             # calculate height
-            h2[N] = (hpr1cos - a2 * np.cos(u2)) / np.cos(phi2r)
+            h2[N] = (hpr1cos - a2 * np.cos(u2)) / np.cos(lat2r)
         # handle final case where latitudes are between 45 degrees and pole
         else:
-            # convert phi1 to radians
-            phi1r = phi1[N] * np.pi/180.0
-            sinphi1 = np.sin(phi1r)
-            cosphi1 = np.cos(phi1r)
+            # convert lat1 to radians
+            lat1r = lat1[N] * np.pi/180.0
+            sinlat1 = np.sin(lat1r)
+            coslat1 = np.cos(lat1r)
             # prevent division by very small numbers
-            cosphi1 = np.copy(eps) if (cosphi1 < eps) else cosphi1
+            coslat1 = np.copy(eps) if (coslat1 < eps) else coslat1
             # calculate tangent
-            tanphi1 = sinphi1 / cosphi1
-            u1 = np.arctan(b1 / a1 * tanphi1)
-            hpr1sin = b1 * np.sin(u1) + h1[N] * sinphi1
-            hpr1cos = a1 * np.cos(u1) + h1[N] * cosphi1
+            tanlat1 = sinlat1 / coslat1
+            u1 = np.arctan(b1 / a1 * tanlat1)
+            hpr1sin = b1 * np.sin(u1) + h1[N] * sinlat1
+            hpr1cos = a1 * np.cos(u1) + h1[N] * coslat1
             # set initial value for u2
             u2 = np.copy(u1)
             # setup constants
@@ -640,7 +641,7 @@ def convert_ellipsoid(
             k1 = b2 * hpr1sin
             k2 = a2 * hpr1cos
             # perform newton-raphson iteration to solve for u2
-            # sin(u2) will not be close to zero since abs(phi1) > 45
+            # sin(u2) will not be close to zero since abs(lat1) > 45
             for i in range(0, itmax+1):
                 sinu2 = np.sin(u2)
                 fu2 = k0 * np.cos(u2) + k1 / np.tan(u2) - k2
@@ -653,15 +654,15 @@ def convert_ellipsoid(
                     if (np.abs(delta) < eps):
                         break
             # convert latitude to degrees and verify values between +/- 90
-            phi2r = np.arctan(a2 / b2 * np.tan(u2))
-            phi2[N] = phi2r*180.0/np.pi
-            if (np.abs(phi2[N]) > 90.0):
-                phi2[N] = np.sign(phi2[N])*90.0
+            lat2r = np.arctan(a2 / b2 * np.tan(u2))
+            lat2[N] = lat2r*180.0/np.pi
+            if (np.abs(lat2[N]) > 90.0):
+                lat2[N] = np.sign(lat2[N])*90.0
             # calculate height
-            h2[N] = (hpr1sin - b2 * np.sin(u2)) / np.sin(phi2r)
+            h2[N] = (hpr1sin - b2 * np.sin(u2)) / np.sin(lat2r)
 
     # return the latitude and height
-    return (phi2, h2)
+    return (lat2, h2)
 
 def compute_delta_h(
         lat: np.ndarray,

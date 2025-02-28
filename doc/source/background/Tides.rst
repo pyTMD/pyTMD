@@ -37,7 +37,8 @@ For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (`S`), 
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 
 .. math::
-    :label: 1
+    :label: 1.1
+    :name: eq:1.1
 
     \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
@@ -69,7 +70,8 @@ Alternatively, the permanent tide components can be added back in order to calcu
 The radial difference in terms of latitude between the mean-tide and tide-free systems is:
 
 .. math::
-    :label: 2
+    :label: 1.2
+    :name: eq:1.2
 
     \delta r(\varphi) = -0.120582 \left(\frac{3}{2} sin^2 \varphi - \frac{1}{2} \right)
 
@@ -77,15 +79,16 @@ The radial difference in terms of latitude between the mean-tide and tide-free s
 Pole Tides
 ----------
 
-Load and ocean pole tides are driven by variations in the Earth's figure axis (e.g. Chandler wobble and annual variations) :cite:p:`Wahr:1985gr` :cite:p:`Desai:2002ev` :cite:p:`Agnew:2015kw`.
-These pole tides are due to Earth's ellipsoidal shape shifting as the rotation axis of the Earth
-moves with respect to the mean pole location, and for the case of ocean pole tides the centripetal effects of polar motion on the ocean :cite:p:`Desai:2002ev` :cite:p:`Desai:2015jr`.
-The formalism for estimating the pole tides is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
+Over time, the rotation axis of the Earth shifts with respect to its mean pole location due to Chandler wobble, annual variations and other processes :cite:p:`Wahr:1985gr` :cite:p:`Desai:2002ev` :cite:p:`Agnew:2015kw`.
+Load and ocean pole tides are driven by these variations, the corresponding elastic response, and for the case of ocean pole tides the centripetal effects of polar motion on the ocean :cite:p:`Desai:2002ev` :cite:p:`Desai:2015jr`.
+These variations are centimeter scale in both the vertical and horizontal, and should be taken into account when comparing observations over periods longer than two months.
+The formalism for estimating the pole tides within ``pyTMD`` is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
 ``pyTMD`` uses the ``timescale`` library for reading the Earth Orientation Parameters (EOPs) necessary for computing load pole and ocean pole tide variations.
 The currently accepted formalism for estimating the reference position of the Earth's figure axis at a given date is the `IERS 2018 secular pole model <https://iers-conventions.obspm.fr/chapter7.php>`_:
 
 .. math::
-    :label: 3
+    :label: 1.3
+    :name: eq:1.3
 
     \bar{x}_s(t) &= 0.055 + 0.001677(t - 2000.0)\\
     \bar{y}_s(t) &= 0.3205 + 0.00346(t - 2000.0)
@@ -95,7 +98,8 @@ The time-dependent offsets from the reference rotation pole position, are then c
 
 
 .. math::
-    :label: 4
+    :label: 1.4
+    :name: eq:1.4
 
     m_1(t) &= x_p(t) - \bar{x}_s(t)\\
     m_2(t) &= -(y_p(t) - \bar{y}_s(t))

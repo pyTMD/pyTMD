@@ -6,7 +6,8 @@ The Modified Julian Day (MJD) differs from the Julian Day by reducing the number
 The MJD is calculated from the Julian Day by
 
 .. math::
-    :label: 5
+    :label: 3.1
+    :name: eq:3.1
 
     MJD = JD - 2400000.5
 
@@ -14,7 +15,8 @@ The start of the Modified Julian Day calendar is 1858-11-17T00:00:00.
 Time in Julian centuries (36525 days) are calculated relative to noon on January 1, 2000 (2000-01-01T12:00:00).
 
 .. math::
-    :label: 6
+    :label: 3.2
+    :name: eq:3.2
 
     T = \frac{JD - 2451545.0}{36525}
 
@@ -38,3 +40,10 @@ Delta times (TT - UT1) can be added to Universal Time (UT1) values to convert to
     :show-source-link: False
     :caption: Delta times between Dynamic Time (TT) and Universal Time (UT1)
     :align: center
+
+Sidereal Time
+-------------
+
+Sidereal time is based on the rotation of the Earth with respect to the fixed stars in the sky.
+There is a slight difference between a sidereal day and a solar day due to the Earth's rotation about the Sun.
+As the Earth rotates 360 degrees in approximately 23 hours, 56 minutes and 4 seconds, the difference between a mean sidereal day and solar day is about 3 minutes and 56 seconds.
