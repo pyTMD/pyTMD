@@ -131,7 +131,7 @@ def arguments(
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
         use nodal corrections from OTIS, FES or GOT models
-    climate_solar_perigee: bool, default True
+    climate_solar_perigee: bool, default False
         compute climatologically affected terms without p'
     M1: str, default 'perth5'
         coefficients to use for M1 tides
@@ -1289,6 +1289,8 @@ def _arguments_table(**kwargs):
     ----------
     corrections: str, default 'OTIS'
         use arguments from OTIS, FES or GOT models
+    climate_solar_perigee: bool, default False
+        compute climatologically affected terms without p'
 
     Returns
     -------
@@ -1297,6 +1299,7 @@ def _arguments_table(**kwargs):
     """
     # set default keyword arguments
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('climate_solar_perigee', False)
 
     # constituents array (not all are included in tidal program)
     cindex = ['sa', 'ssa', 'mm', 'msf', 'mf', 'mt', 'alpha1', '2q1', 'sigma1',

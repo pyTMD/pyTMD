@@ -7,6 +7,7 @@ Verify nodal corrections match prior estimates
 UPDATE HISTORY:
     Updated 02/2025: add Doodson (1921) table with missing coefficients
         add check for converting from coefficients to constituent ID
+        add check for climatologically affected constituents (sa and sta)
     Updated 11/2024: moved normalize_angle test to test_math.py
     Updated 10/2024: add comparisons for formatted Doodson numbers
         add function to parse tide potential tables
@@ -124,12 +125,18 @@ def test_arguments(corrections):
     assert np.isclose(arg, test).all()
 
 @pytest.mark.parametrize("corrections", ['OTIS', 'GOT'])
-def test_table(corrections):
+@pytest.mark.parametrize("climate_solar_perigee", [False, True])
+def test_table(corrections, climate_solar_perigee):
     """
     Compare Doodson coefficients tables
     """
     coef = np.zeros((7, 60))
-    coef[:,0] = [0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0] # Sa
+    # adjust climatologically affected constituents
+    if climate_solar_perigee:
+        coef[:,0] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0] # Sa
+    else:
+        coef[:,0] = [0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0] # Sa
+    # constituents
     coef[:,1] = [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0] # Ssa
     coef[:,2] = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0] # Mm
     coef[:,3] = [0.0, 2.0, -2.0, 0.0, 0.0, 0.0, 0.0] # MSf
@@ -196,7 +203,33 @@ def test_table(corrections):
     coef[:,59] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # z0
 
     # get Doodson coefficients
-    test = pyTMD.arguments._arguments_table(corrections=corrections)
+    test = pyTMD.arguments._arguments_table(
+        corrections=corrections,
+        climate_solar_perigee=climate_solar_perigee
+    )
+    # validate arguments between methods
+    assert np.isclose(coef, test).all()
+
+@pytest.mark.parametrize("climate_solar_perigee", [False, True])
+def test_climate_solar_perigee(climate_solar_perigee):
+    """
+    Compare Doodson coefficients tables for Sa and Sta
+    """
+    # climatologically affected constituents
+    coef = np.zeros((7, 2))
+    if climate_solar_perigee:
+        # compute climatologically affected terms without p'
+        # following Pugh and Woodworth (2014)
+        coef[:,0] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0] # Sa
+        coef[:,1] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0] # Sta
+    else:
+        # compute climatologically affected terms with p'
+        coef[:,0] = [0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0] # Sa
+        coef[:,1] = [0.0, 0.0, 3.0, 0.0, 0.0, -1.0, 0.0] # Sta
+    # get Doodson coefficients
+    test = pyTMD.arguments.coefficients_table(['sa','sta'],
+        climate_solar_perigee=climate_solar_perigee
+    )
     # validate arguments between methods
     assert np.isclose(coef, test).all()
 
@@ -860,7 +893,6 @@ def test_constituent_id():
     # test conversion of conversion to constituent ID
     for i, exp in enumerate(cindex):
         # get observed values for constituents
-        print(exp)
         coef = pyTMD.arguments.coefficients_table(exp, corrections='GOT')    
         c = pyTMD.arguments._to_constituent_id(coef[:,0], corrections='GOT')
         assert (c == exp)
