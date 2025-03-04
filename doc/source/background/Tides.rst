@@ -30,7 +30,7 @@ While the equilibrium condition is seldom satisfied for shorter period tides, so
 In addition, using the relative amplitudes from equilibrium theory is useful for inferring unmodeled constituents :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
 Inferrence is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
-Additional care is needed when inferring diurnal constituents due to a resonance in this band from the free core notation (FCN) of the Earth :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
+However, a resonance in the diurnal band from the Earth's free core notation (FCN) can complicate inferring some diurnal constituents :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:p:`Doodson:1921kt` for the prediction of ocean and load tides. 
