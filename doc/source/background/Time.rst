@@ -5,8 +5,9 @@ Time can be measured using a variety of different scales.
 ``pyTMD`` uses the ``timescale`` library to manage the conversions between these different time scales.
 A uniform time scales expresses dates as the count of time elapsed since a reference epoch.
 The Julian Day (JD) is the continuous count of days starting at noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
+It is a time system that allows a simple computation for the number of days between two epochs.
 The Modified Julian Day (MJD) differs from the Julian Day by reducing the number of digits for modern periods, and by beginning at midnight.
-The MJD is calculated from the Julian Day by
+The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the Julian Day by
 
 .. math::
     :label: 3.1
@@ -14,8 +15,7 @@ The MJD is calculated from the Julian Day by
 
     MJD = JD - 2400000.5
 
-The start of the Modified Julian Day calendar is 1858-11-17T00:00:00.
-Time in Julian centuries (36525 days) are calculated relative to noon on January 1, 2000 (2000-01-01T12:00:00).
+Julian centuries (36525 days) are used for celestial calculations, and are fixed relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
     :label: 3.2
@@ -40,7 +40,7 @@ The Earth's rate of rotation is unpredictable and is measured through astronomic
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
 
 Terrestrial Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
-Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, sun and moon, but is with respect to the solar system barycenter :cite:p:`Kaplan:2005kj`.
+Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, sun and moon, but is with respect to the solar system barycenter (SSB) :cite:p:`Kaplan:2005kj`.
 TDB and TT are both dynamic timescales, with differences owing to relativistic effects.
 Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to convert to Dynamic Time (TT).
 
