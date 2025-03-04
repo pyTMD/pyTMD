@@ -29,7 +29,7 @@ ut1_utc = tt_tai + tai_gps + gps_utc - tt_ut1
 # create figure
 fig, ax = plt.subplots(num=1, nrows=2, sharex=True, figsize=(6, 6))
 # plot UT1-UTC and TT-UT1
-ax[0].plot(ts.year, ts.ut1_utc, '.', ms=0.5, c='0.4')
+ax[0].plot(ts.year, ut1_utc, '.', ms=0.5, c='0.4')
 ax[1].plot(ts.year, tt_ut1, '0.4')
 # plot leap seconds
 plot_colors = iter(plt.cm.rainbow(np.linspace(0, 1, n_leaps)))
