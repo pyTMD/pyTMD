@@ -36,7 +36,7 @@ Standards
 
 `Tables of delta times <https://github.com/pyTMD/timescale/blob/main/timescale/data/merged_deltat.data>`_ are used to convert between dynamic terrestrial (TT) and universal (UT1) times :cite:p:`Meeus:1991vh`.
 Universal Time (UT1) is effectively the mean solar time and is based on the true, irregular rotation of the Earth :cite:p:`Kaplan:2005kj`.
-The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly very long baseline interferometry (VLBI).
+The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly from very long baseline interferometry (VLBI).
 Terrestrial Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
 Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, sun and moon, but is with respect to the solar system barycenter :cite:p:`Kaplan:2005kj`.
 TDB and TT are both dynamic timescales, with differences owing to relativistic effects.
