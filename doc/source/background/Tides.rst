@@ -33,7 +33,7 @@ Additional care is needed when inferring diurnal constituents due to a resonance
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:p:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (`S`), moon (`H`), lunar perigree (`P`), ascending lunar node (`N`) and solar perigree (`Ps`), which are used in combination with the lunar hour angle (\ |tau|\ ) and the extended Doodson number (`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua` :cite:p:`Pugh:2014di`.
+For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (:math:`S`), moon (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua` :cite:p:`Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 
 .. math::
@@ -43,7 +43,7 @@ Each constituent has a particular "Doodson number" describing the polynomial coe
     \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
 ``pyTMD`` stores these coefficients in an easily accessible `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
-Together these coefficients and additional nodal corrections (`f` and `u`) are used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal amplitudes :cite:p:`Schureman:1958ty` :cite:p:`Dietrich:1980ua`.
+Together these coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal amplitudes :cite:p:`Schureman:1958ty` :cite:p:`Dietrich:1980ua`.
 After the determination of the major constituents, the amplitudes of minor constituents can be estimated using inferrence methods :cite:p:`Schureman:1958ty` :cite:p:`Ray:2017jx`.
 
 
@@ -57,7 +57,7 @@ The total gravitational potential at a position on the Earth's surface due to a 
 Analytical approximate positions for the sun and moon can be calculated within ``pyTMD``, and high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 
 Within ``pyTMD``, the tidal deformation of the Earth is modeled using the Load Love/Shida numbers formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:p:`Mathews:1997js`.
-Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (*h*), gravitational potential (*k*) and horizontal displacement (*l*).
+Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`).
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1981ea`.
 However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances in the diurnal and semi-diurnal bands :cite:p:`Wahr:1981ea`.
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:p:`Mathews:1997js`.
@@ -108,5 +108,3 @@ The time-dependent offsets from the reference rotation pole position, are then c
     :show-source-link: False
     :caption: Polar motion estimates from the IERS
     :align: center
-
-.. |tau|    unicode:: U+1D70F .. MATHEMATICAL ITALIC SMALL TAU
