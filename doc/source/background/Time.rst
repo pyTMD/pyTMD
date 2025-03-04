@@ -29,15 +29,16 @@ Standards
 ``timescale`` and ``pyTMD`` are reliant on the International Earth Rotation Service (IERS) for the schedule of leap seconds and estimates of delta times.
 `Tables of leap seconds <https://github.com/pyTMD/timescale/blob/main/timescale/data/leap-seconds.list>`_ are used to convert between GPS, LORAN and TAI times.
 
-- TAI time: International Atomic Time which is computed as the weighted average of several hundred atomic clocks.
-- UTC time: Coordinated Universal Time which is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
+- TAI time: International Atomic Time uses SI seconds and is computed as the weighted average of several hundred atomic clocks.
+- UTC time: Coordinated Universal Time also uses SI seconds, but is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
 - GPS time: Atomic timing system for the Global Positioning System constellation of satellites monitored by the United States Naval Observatory (USNO). GPS time and UTC time were equal on January 6, 1980. TAI time is ahead of GPS time by 19 seconds.
 - LORAN time: Atomic timing system for the Loran-C chain transmitter sites used in terrestrial radionavigation. LORAN time and UTC time were equal on January 1, 1958. TAI time is ahead of LORAN time by 10 seconds.
 
 `Tables of delta times <https://github.com/pyTMD/timescale/blob/main/timescale/data/merged_deltat.data>`_ are used to convert between dynamic terrestrial (TT) and universal (UT1) times :cite:p:`Meeus:1991vh`.
-Universal Time (UT1) is based on the rotation of the Earth, which varies irregularly, and so UT1 is adjusted periodically.
+Universal Time (UT1) is effectively the mean solar time and is based on the true, irregular rotation of the Earth :cite:p:`Kaplan:2005kj`.
+The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly very long baseline interferometry (VLBI).
 Terrestrial Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
-Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, sun and moon, but is with respect to the solar system barycenter.
+Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, sun and moon, but is with respect to the solar system barycenter :cite:p:`Kaplan:2005kj`.
 TDB and TT are both dynamic timescales, with differences owing to relativistic effects.
 Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to convert to Dynamic Time (TT).
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
