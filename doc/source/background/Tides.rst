@@ -26,7 +26,8 @@ Ocean tide models are typically one of following categories:
 
 Under the equilibrium theory of tides, the Earth is a spherical body with a uniform distribution of water over its surface :cite:p:`Doodson:1921kt`.
 In this model, the oceanic surface instantaneously responds to the tide-producing forces of the moon and sun, and is not influenced by inertia, currents or the irregular distribution of land :cite:p:`Schureman:1958ty`.
-The potential amplitudes of each constituent can be calculated using equilibrium tide theory, and their relative amplitudes are useful for inferring unmodeled constituents :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`.
+While the equilibrium condition is seldom satisfied for shorter period tides, some of the longest period ocean tides are often assumed to be a simple equilibrium response to the tidal force :cite:p:`Proudman:1960jj` :cite:p:`Ray:2014fu`. 
+In addition, using the relative amplitudes from equilibrium theory is useful for inferring unmodeled constituents :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
 Inferrence is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
 Additional care is needed when inferring diurnal constituents due to a resonance in this band from the free core notation (FCN) of the Earth :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
@@ -79,7 +80,8 @@ The radial difference in terms of latitude between the mean-tide and tide-free s
 Pole Tides
 ----------
 
-Over time, the rotation axis of the Earth shifts with respect to its mean pole location due to Chandler wobble, annual variations and other processes :cite:p:`Wahr:1985gr` :cite:p:`Desai:2002ev` :cite:p:`Agnew:2015kw`.
+The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celestial pole, and rotates about it once every 26,000 years :cite:p:`Kantha:2000vo`.
+Superimposed on this long-term precession, the rotation axis of the Earth shifts with respect to its mean pole location due to nutations, Chandler wobble and other processes :cite:p:`Wahr:1985gr` :cite:p:`Desai:2002ev` :cite:p:`Agnew:2015kw`.
 Load and ocean pole tides are driven by these variations, the corresponding elastic response, and for the case of ocean pole tides the centripetal effects of polar motion on the ocean :cite:p:`Desai:2002ev` :cite:p:`Desai:2015jr`.
 These variations are centimeter scale in both the vertical and horizontal, and should be taken into account when comparing observations over periods longer than two months.
 The formalism for estimating the pole tides within ``pyTMD`` is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
