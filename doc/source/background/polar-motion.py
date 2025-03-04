@@ -46,7 +46,6 @@ ax2.axvline(0, color='0.4', ls='--', lw=0.5)
 # add axis labels
 ax2.set_xlabel('X Pole [asec]', fontsize=10)
 ax2.set_ylabel('Y Pole [asec]', fontsize=10, labelpad=3)
-labels = ['a)', 'b)']
 at = offsetbox.AnchoredText('c)',
     loc=2, pad=0.0, borderpad=0.5, frameon=False,
     prop=dict(size=12,weight='bold',color='k'))
@@ -61,10 +60,10 @@ ax2.set_aspect('equal')
 ax2.set_aspect('equal')
 
 # Add colorbar with a colorbar axis
-# Add an ax2es at position rect [left, bottom, width, height]
+# Add an axes at position rect [left, bottom, width, height]
 cbar_ax = subfig[1].add_axes([0.12, 0.085, 0.87, 0.04])
 # extend = add extension triangles to upper and lower bounds
-# options: neither, both, min, max2
+# options: neither, both, min, max
 cbar = subfig[1].colorbar(sc, cax=cbar_ax, extend='neither',
     drawedges=False, orientation='horizontal')
 # rasterized colorbar to remove lines

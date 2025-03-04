@@ -353,7 +353,8 @@ def delaunay_arguments(MJD: np.ndarray):
     return (l, lp, F, D, N)
 
 def mean_obliquity(MJD: np.ndarray):
-    """Mean obliquity of the ecliptic :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
+    """Mean obliquity of the ecliptic :cite:p:`Capitaine:2003fx`
+    :cite:p:`Capitaine:2003fw`
 
     Parameters
     ----------
@@ -402,7 +403,8 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
 def solar_approximate(MJD, **kwargs):
     """
     Computes approximate positional coordinates of the sun in an
-    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh` :cite:p:`Montenbruck:1989uk`
+    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh`
+    :cite:p:`Montenbruck:1989uk`
 
     Parameters
     ----------
@@ -446,7 +448,8 @@ def solar_approximate(MJD, **kwargs):
 def solar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     Computes positional coordinates of the sun in an Earth-centric,
-    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh` :cite:p:`Park:2021fa`
+    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh`
+    :cite:p:`Park:2021fa`
 
     Parameters
     ----------
@@ -522,7 +525,8 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
 def lunar_approximate(MJD, **kwargs):
     """
     Computes approximate positional coordinates of the moon in an
-    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh` :cite:p:`Montenbruck:1989uk`
+    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh`
+    :cite:p:`Montenbruck:1989uk`
 
     Parameters
     ----------
@@ -600,7 +604,8 @@ def lunar_approximate(MJD, **kwargs):
 def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     Computes positional coordinates of the moon in an Earth-centric,
-    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh` :cite:p:`Park:2021fa`
+    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh`
+    :cite:p:`Park:2021fa`
 
     Parameters
     ----------
@@ -643,7 +648,8 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
 
 def gast(T: float | np.ndarray):
     """Greenwich Apparent Sidereal Time (GAST)
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw` :cite:p:`Petit:2010tp`
+    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
+    :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -666,7 +672,8 @@ def gast(T: float | np.ndarray):
 def itrs(T: float | np.ndarray):
     """
     International Terrestrial Reference System (ITRS)
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw` :cite:p:`Petit:2010tp`:
+    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
+    :cite:p:`Petit:2010tp`:
     An Earth-centered Earth-fixed (ECEF) coordinate system
     combining the Earth's true equator and equinox of date,
     the Earth's rotation with respect to the stars, and the
