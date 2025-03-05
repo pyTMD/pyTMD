@@ -30,11 +30,11 @@ While the equilibrium condition is seldom satisfied for shorter period tides, so
 In addition, using the relative amplitudes from equilibrium theory is useful for inferring unmodeled constituents :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
 Inferrence is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
-However, a resonance in the diurnal band from the Earth's free core notation (FCN) can complicate inferring some diurnal constituents :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
+However, for tides in the diurnal band a resonance from the Earth's free core notation (FCN) can complicate inferring some constituents :cite:p:`Wahr:1981if` :cite:p:`Ray:2017jx` :cite:p:`Agnew:2018ih`.
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:p:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, ``pyTMD.astro`` calculates the longitudes of the sun (:math:`S`), moon (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua` :cite:p:`Pugh:2014di`.
+For any given time, ``pyTMD.astro`` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt` :cite:p:`Dietrich:1980ua` :cite:p:`Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 
 .. math::

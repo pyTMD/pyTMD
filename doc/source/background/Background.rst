@@ -25,6 +25,15 @@ This section provides background information on the theoretical concepts used in
 
       :material-outlined:`schedule;5em`
 
+    .. grid-item-card::  Astronomy
+      :text-align: center
+      :link: ./Astronomy.html
+
+      :material-outlined:`bedtime;5em`
+
+.. grid:: 2 2 4 4
+    :padding: 0
+
     .. grid-item-card::  Glossary
       :text-align: center
       :link: ./Glossary.html
@@ -40,4 +49,5 @@ This section provides background information on the theoretical concepts used in
     ./Tides.rst
     ./Reference-Systems.rst
     ./Time.rst
+    ./Astronomy.rst
     ./Glossary.rst
