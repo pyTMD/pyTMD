@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (03/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -16,6 +16,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 11/2024: moved three generic mathematical functions to math.py
     Updated 07/2024: made a wrapper function for normalizing angles
         make number of days to convert days since an epoch to MJD variables
@@ -107,8 +108,7 @@ _century = 36525.0
 # PURPOSE: compute the basic astronomical mean longitudes
 def mean_longitudes(
         MJD: np.ndarray,
-        MEEUS: bool = False,
-        ASTRO5: bool = False
+        **kwargs
     ):
     r"""
     Computes the basic astronomical mean longitudes:
@@ -120,10 +120,13 @@ def mean_longitudes(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    MEEUS: bool, default False
-        use additional coefficients from Meeus Astronomical Algorithms
-    ASTRO5: bool, default False
-        use Meeus Astronomical coefficients as implemented in ``ASTRO5``
+    method: str, default 'Cartwright'
+        method for calculating mean longitudes
+
+            - ``'Cartwright'``: use coefficients from David Cartwright
+            - ``'Meeus'``: use coefficients from Meeus Astronomical Algorithms
+            - ``'ASTRO5'``: use Meeus Astronomical coefficients from ``ASTRO5``
+            - ``'IERS'``: convert from IERS Delaunay arguments
 
     Returns
     -------
@@ -138,7 +141,17 @@ def mean_longitudes(
     PP: np.ndarray
         longitude of solar perigee (degrees)
     """
-    if MEEUS:
+    # set default keyword arguments
+    kwargs.setdefault('method', 'Cartwright')
+    # check for deprecated method
+    if kwargs.get('MEEUS'):
+        warnings.warn("Deprecated argument", DeprecationWarning)
+        kwargs['method'] = 'Meeus'
+    elif kwargs.get('ASTRO5'):
+        warnings.warn("Deprecated argument", DeprecationWarning)
+        kwargs['method'] = 'ASTRO5'
+    # compute the mean longitudes
+    if (kwargs['method'] == 'Meeus'):
         # convert from MJD to days relative to 2000-01-01T12:00:00
         T = MJD - _mjd_j2000
         # mean longitude of moon
@@ -159,7 +172,7 @@ def mean_longitudes(
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
         PP = 282.94 + (1.7192 * T)/_century
-    elif ASTRO5:
+    elif (kwargs['method'] == 'ASTRO5'):
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000)/_century
         # mean longitude of moon (p. 338)
@@ -179,6 +192,22 @@ def mean_longitudes(
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
         PP = 282.94 + 1.7192 * T
+    elif (kwargs['method'] == 'IERS'):
+        # compute the Delaunay arguments (IERS conventions)
+        l, lp, F, D, omega = delaunay_arguments(MJD)
+        # degrees to radians
+        dtr = np.pi/180.0
+        # convert to Doodson arguments
+        # mean longitude of moon
+        S = (F + omega)/dtr
+        # mean longitude of sun
+        H = (F + omega - D)/dtr
+        # longitude of lunar perigee
+        P = (F + omega - l)/dtr
+        # longitude of ascending lunar node
+        N = omega/dtr
+        # longitude of solar perigee
+        PP = (-lp + F - D + omega)/dtr
     else:
         # Formulae for the period 1990--2010 were derived by David Cartwright
         # convert from MJD to days relative to 2000-01-01T12:00:00
@@ -199,6 +228,7 @@ def mean_longitudes(
     H = normalize_angle(H)
     P = normalize_angle(P)
     N = normalize_angle(N)
+    PP = normalize_angle(PP)
     # return as tuple
     return (S, H, P, N, PP)
 

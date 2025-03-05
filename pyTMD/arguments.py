@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 arguments.py
-Written by Tyler Sutterley (02/2025)
+Written by Tyler Sutterley (03/2025)
 Calculates the nodal corrections for tidal constituents
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -39,6 +39,7 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: add option to make doodson numbers strings
         add Doodson number convention for converting 11 to E
         add Doodson (1921) table for coefficients missing from Cartwright tables
@@ -157,10 +158,13 @@ def arguments(
 
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
-    ASTRO5 = kwargs['corrections'] not in ('OTIS','ATLAS','TMD3','netcdf')
+    if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # convert from Modified Julian Dates into Ephemeris Time
     s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
-        ASTRO5=ASTRO5)
+        method=method)
 
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
@@ -221,10 +225,13 @@ def minor_arguments(
     dtr = np.pi/180.0
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
-    ASTRO5 = kwargs['corrections'] not in ('OTIS','ATLAS','TMD3','netcdf')
+    if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # convert from Modified Julian Dates into Ephemeris Time
     s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
-        ASTRO5=ASTRO5)
+        method=method)
 
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
@@ -1216,13 +1223,16 @@ def frequency(
     kwargs.setdefault('M1', 'perth5')
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
-    ASTRO5 = kwargs['corrections'] not in ('OTIS','ATLAS','TMD3','netcdf')
+    if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # Modified Julian Dates at J2000
     MJD = np.array([51544.5, 51544.55])
     # time interval in seconds
     deltat = 86400.0*(MJD[1] - MJD[0])
     # calculate the mean longitudes of the sun and moon
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, ASTRO5=ASTRO5)
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method=method)
 
     # number of temporal values
     nt = len(np.atleast_1d(MJD))

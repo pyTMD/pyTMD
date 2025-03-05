@@ -15,18 +15,25 @@ The rates of change of these arguments are the fundamental frequencies of the as
 
     * - Argument
       - Description
+      - Period
     * - :math:`\tau`
       - lunar hour angle
+      - 1.03505 days
     * - :math:`S`
       - mean longitude of the moon
+      - 27.32158 days
     * - :math:`H`
       - mean longitude of the sun
+      - 365.2549 days
     * - :math:`P`
       - lunar perigree
+      - 8.847 years
     * - :math:`N`
       - ascending lunar node
+      - 18.61 years
     * - :math:`Ps`
       - solar perigree
+      - 21,000 years
 
 The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`) :cite:p:`Kantha:2000vo`.
 
@@ -35,6 +42,46 @@ The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`
     :name: eq:4.1
 
     \tau = t - S + H
+
+When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as the fundamental variables :cite:p:`Woolard:1953wp` :cite:p:`Capitaine:2003fx` :cite:p:`Petit:2010tp` .
+
+.. list-table:: Delaunay Arguments
+    :header-rows: 1
+
+    * - Argument
+      - Description
+      - Period
+    * - :math:`\gamma`
+      - mean sidereal time
+      - 0.99727 days
+    * - :math:`l`
+      - mean anomaly of the moon
+      - 27.5545 days
+    * - :math:`l'`
+      - mean anomaly of the sun
+      - 365.2596 days
+    * - :math:`F`
+      - mean argument of latitude of the moon
+      - 27.2122 days
+    * - :math:`D`
+      - mean elongation of the moon from the sun
+      - 29.5306 days
+    * - :math:`\Omega`
+      - ascending lunar node
+      - 18.61 years
+      
+These arguments can be calculated from Doodson arguments using the following relationships:
+
+.. math::
+    :label: 4.2
+    :name: eq:4.2
+
+    \gamma &= \tau + S \\
+    l &= S - P \\
+    l' &= h - Ps \\
+    F &= S - N \\
+    D &= S - H \\
+    \Omega &= N \\
 
 Nutation
 --------

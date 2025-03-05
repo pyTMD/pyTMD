@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 predict.py
-Written by Tyler Sutterley (02/2025)
+Written by Tyler Sutterley (03/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -20,6 +20,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: verify dimensions of harmonic constants
     Updated 11/2024: use Love numbers for long-period tides when inferring
         move body tide Love/Shida numbers to arguments module
@@ -963,12 +964,15 @@ def equilibrium_tide(
 
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
-    ASTRO5 = kwargs['corrections'] not in ('OTIS','ATLAS','TMD3','netcdf')
+    if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # convert from Modified Julian Dates into Ephemeris Time
     MJD = t + _mjd_tide
     # compute principal mean longitudes
     s, h, p, N, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
-        ASTRO5=ASTRO5)
+        method=method)
     # convert to negative mean longitude of the ascending node (N')
     n = pyTMD.math.normalize_angle(360.0 - N)
     # determine equilibrium arguments

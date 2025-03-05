@@ -11,7 +11,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.astro
-    S,H,P,N,PP = pyTMD.astro.mean_longitudes(MJD, ASTRO5=True)
+    S,H,P,N,PP = pyTMD.astro.mean_longitudes(MJD)
 
 `Source code`__
 

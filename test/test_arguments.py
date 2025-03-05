@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 u"""
-test_arguments.py (02/2025)
+test_arguments.py (03/2025)
 Verify arguments table matches prior arguments array
 Verify nodal corrections match prior estimates
 
 UPDATE HISTORY:
+    Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: add Doodson (1921) table with missing coefficients
         add check for converting from coefficients to constituent ID
         add check for climatologically affected constituents (sa and sta)
@@ -32,10 +33,14 @@ def test_arguments(corrections):
     # use a random set of modified Julian days
     MJD = np.random.randint(58000, 61000, size=10)
     # set function for astronomical longitudes
-    ASTRO5 = corrections not in ('OTIS','ATLAS','TMD3','netcdf')
+    # use ASTRO5 routines if not using an OTIS type model
+    if corrections in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # convert from Modified Julian Dates into Ephemeris Time
     s, h, p, omega, pp = pyTMD.astro.mean_longitudes(MJD,
-        ASTRO5=ASTRO5)
+        method=method)
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
     # initial time conversions
@@ -240,7 +245,7 @@ def test_minor():
     # use a random set of modified Julian days
     MJD = np.random.randint(58000, 61000, size=10)
     # convert from Modified Julian Dates into Ephemeris Time
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD)
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='Cartwright')
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
     # initial time conversions
@@ -294,8 +299,7 @@ def test_nodal(corrections, M1):
     # set function for astronomical longitudes
     ASTRO5 = corrections not in ('OTIS','ATLAS','TMD3','netcdf')
     # convert from Modified Julian Dates into Ephemeris Time
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD,
-        ASTRO5=ASTRO5)
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
 
@@ -710,8 +714,7 @@ def test_parameters():
     # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
     MJD = np.atleast_1d(48622.0)
     # convert from Modified Julian Dates into Ephemeris Time
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD,
-        ASTRO5=False)
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='Cartwright')
     # initial time conversions
     hour = 24.0*np.mod(MJD, 1)
     # convert from hours solar time into mean lunar time in degrees

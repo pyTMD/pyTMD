@@ -1,5 +1,5 @@
 """
-test_solid_earth.py (01/2025)
+test_solid_earth.py (03/2025)
 Tests the steps for calculating the solid earth tides
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 03/2025: added test for comparing mean longitudes
     Updated 01/2025: added function to get JPL ephemerides file from AWS
     Updated 11/2024: moved normalize_angle and polynomial_sum to math.py
     Updated 07/2024: use normalize_angle from pyTMD astro module
@@ -135,6 +136,27 @@ def test_frequency_dependence_long_period():
     # assert matching
     assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
 
+def test_mean_longitudes():
+    """Test that mean longitudes match between functions
+    """
+    MJD = 55414.0
+    # Meeus method from Astronomical Algorithms
+    s1, h1, p1, N1, PP1 = pyTMD.astro.mean_longitudes(MJD, method='Meeus')
+    # Meeus methods as implemented in ASTRO5
+    s2, h2, p2, N2, PP2 = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
+    assert np.isclose(s1, s2).all()
+    assert np.isclose(h1, h2).all()
+    assert np.isclose(p1, p2).all()
+    assert np.isclose(N1, N2).all()
+    assert np.isclose(PP1, PP2).all()
+    # converted from Delaunay arguments in IERS
+    s3, h3, p3, N3, PP3 = pyTMD.astro.mean_longitudes(MJD, method='IERS')
+    assert np.isclose(s1, s3).all()
+    assert np.isclose(h1, h3).all()
+    assert np.isclose(p1, p3).all()
+    assert np.isclose(N1, N3).all()
+    assert np.isclose(PP1, PP3).all()
+
 def test_phase_angles():
     """Test that longitudes and phase angles match between functions
     """
@@ -142,7 +164,7 @@ def test_phase_angles():
     dtr = np.pi/180.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - 51544.5)/36525.0
-    s, h, p, N, PP = pyTMD.astro.mean_longitudes(MJD, ASTRO5=True)
+    s, h, p, N, PP = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
     PR = dtr*pyTMD.math.polynomial_sum(np.array([0.0, 1.396971278,
         3.08889e-4, 2.1e-8, 7.0e-9]), T)
     TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD)

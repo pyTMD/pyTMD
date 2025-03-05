@@ -14,7 +14,7 @@ def frequency(arguments):
     # time interval in seconds
     deltat = 86400.0*(MJD[1] - MJD[0])
     # calculate the mean longitudes of the sun and moon
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, ASTRO5=True)
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
     # initial time conversions
     hour = 24.0*np.mod(MJD, 1)
     # convert from hours solar time into mean lunar time in degrees
