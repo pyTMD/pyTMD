@@ -10,16 +10,16 @@ The Modified Julian Day (MJD) differs from the Julian Day by reducing the number
 The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the Julian Day by
 
 .. math::
-    :label: 4.1
-    :name: eq:4.1
+    :label: 3.1
+    :name: eq:3.1
 
     MJD = JD - 2400000.5
 
 Julian centuries (36525 days) are used for celestial calculations, and are fixed relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
-    :label: 4.2
-    :name: eq:4.2
+    :label: 3.2
+    :name: eq:3.2
 
     T = \frac{JD - 2451545.0}{36525}
 

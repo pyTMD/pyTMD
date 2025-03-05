@@ -58,7 +58,7 @@ The total gravitational potential at a position on the Earth's surface due to a 
 Analytical approximate positions for the sun and moon can be calculated within ``pyTMD``, and high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 
 Within ``pyTMD``, the tidal deformation of the Earth is modeled using the Load Love/Shida numbers formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:p:`Mathews:1997js`.
-Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`).
+Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1981ea`.
 However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances in the diurnal and semi-diurnal bands :cite:p:`Wahr:1981ea`.
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:p:`Mathews:1997js`.

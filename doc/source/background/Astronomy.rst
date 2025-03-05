@@ -31,7 +31,14 @@ The rates of change of these arguments are the fundamental frequencies of the as
 The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`) :cite:p:`Kantha:2000vo`.
 
 .. math::
-    :label: 3.1
-    :name: eq:3.1
+    :label: 4.1
+    :name: eq:4.1
 
     \tau = t - S + H
+
+Nutation
+--------
+
+:term:`Nutation` is the periodic oscillation of the Earth's rotation axis around its mean position.
+Nutation is often split into two components, the nutation in longitude and the nutation in obliquity.
+The angle between the equator and the orbital plane of Earth around the Sun (the :term:`Ecliptic`) defines the inclination of the Earth's rotation axis (obliquity of the ecliptic).
