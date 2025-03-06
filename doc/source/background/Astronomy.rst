@@ -35,7 +35,7 @@ The rates of change of these arguments are the fundamental frequencies of the as
       - solar perigree
       - 21,000 years
 
-The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`) :cite:p:`Kantha:2000vo`.
+The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
 
 .. math::
     :label: 4.1
