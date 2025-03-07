@@ -18,4 +18,4 @@ dependencies:
   - python-dateutil
   - scipy>=1.10.1
   - setuptools_scm
-  - timescale>=0.0.3
+  - timescale>=0.0.8

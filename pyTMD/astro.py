@@ -17,6 +17,8 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 03/2025: changed argument for method calculating mean longitudes
+        split ICRS rotation matrix from the ITRS function 
+        added function to correct for aberration effects
     Updated 11/2024: moved three generic mathematical functions to math.py
     Updated 07/2024: made a wrapper function for normalizing angles
         make number of days to convert days since an epoch to MJD variables
@@ -66,7 +68,8 @@ from pyTMD.utilities import (
     from_jpl_ssd
 )
 # attempt imports
-jplephem_spk = import_dependency('jplephem.spk')
+jplephem = import_dependency('jplephem')
+jplephem.spk = import_dependency('jplephem.spk')
 
 __all__ = [
     "mean_longitudes",
@@ -83,11 +86,13 @@ __all__ = [
     "gast",
     "itrs",
     "_eqeq_complement",
+    "_icrs_rotation_matrix",
     "_frame_bias_matrix",
     "_nutation_angles",
     "_nutation_matrix",
     "_polar_motion_matrix",
     "_precession_matrix",
+    "_correct_aberration",
     "_parse_table_5_2e",
     "_parse_table_5_3a",
     "_parse_table_5_3b",
@@ -487,6 +492,8 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
         Modified Julian Day (MJD) of input date
     kernel: str or pathlib.Path
         Path to JPL ephemerides kernel file
+    include_aberration: bool, default False
+        Correct for aberration effects
 
     Returns
     -------
@@ -495,27 +502,41 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     # set default keyword arguments
     kwargs.setdefault('kernel', _default_kernel)
+    kwargs.setdefault('include_aberration', False)
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # download kernel file if not currently existing
     if not pathlib.Path(kwargs['kernel']).exists():
         from_jpl_ssd(kernel=None, local=kwargs['kernel'])
     # read JPL ephemerides kernel
-    SPK = jplephem_spk.SPK.open(kwargs['kernel'])
+    SPK = jplephem.spk.SPK.open(kwargs['kernel'])
     # segments for computing position of the sun
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 10 SUN
     SSB_to_Sun = SPK[0, 10]
+    xyz_10, vel_10 = SSB_to_Sun.compute_and_differentiate(ts.tt)
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 3 EARTH BARYCENTER
     SSB_to_EMB = SPK[0, 3]
+    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt)
     # segment 3 EARTH BARYCENTER -> segment 399 EARTH
     EMB_to_Earth = SPK[3, 399]
-    # compute the position of the sun relative to the Earth in meters
+    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt)
+    # compute the position of the sun relative to the Earth
     # Earth_to_Sun = Earth_to_EMB + EMB_to_SSB + SSB_to_Sun
     #              = -EMB_to_Earth - SSB_to_EMB + SSB_to_Sun
-    x, y, z = 1e3*(SSB_to_Sun.compute(ts.tt) - SSB_to_EMB.compute(ts.tt) -
-        EMB_to_Earth.compute(ts.tt))
+    if kwargs['include_aberration']:
+        # astronomical unit in kilometers
+        AU = 149597870.700
+        # position in astronomical units
+        position = (xyz_10 - xyz_399 - xyz_3)/AU
+        # velocity in astronomical units per day
+        velocity = (vel_399 + vel_3 - vel_10)/AU
+        # correct for aberration and convert to meters
+        x, y, z = _correct_aberration(position, velocity)
+    else:
+        # convert positions from kilometers to meters
+        x, y, z = 1e3*(xyz_10 - xyz_399 - xyz_3)
     # rotate to cartesian (ECEF) coordinates
-    rot_z = itrs((ts.ut1 - _jd_j2000)/ts.century)
+    rot_z = itrs((ts.utc - _jd_j2000)/ts.century)
     X = rot_z[0,0,:]*x + rot_z[0,1,:]*y + rot_z[0,2,:]*z
     Y = rot_z[1,0,:]*x + rot_z[1,1,:]*y + rot_z[1,2,:]*z
     Z = rot_z[2,0,:]*x + rot_z[2,1,:]*y + rot_z[2,2,:]*z
@@ -643,6 +664,8 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
         Modified Julian Day (MJD) of input date
     kernel: str or pathlib.Path
         Path to JPL ephemerides kernel file
+    include_aberration: bool, default False
+        Correct for aberration effects
 
     Returns
     -------
@@ -651,25 +674,42 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     # set default keyword arguments
     kwargs.setdefault('kernel', _default_kernel)
+    kwargs.setdefault('include_aberration', False)
     # download kernel file if not currently existing
     if not pathlib.Path(kwargs['kernel']).exists():
         from_jpl_ssd(kernel=None, local=kwargs['kernel'])
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # read JPL ephemerides kernel
-    SPK = jplephem_spk.SPK.open(kwargs['kernel'])
+    SPK = jplephem.spk.SPK.open(kwargs['kernel'])
     # segments for computing position of the moon
+    # segment 0 SOLAR SYSTEM BARYCENTER -> segment 3 EARTH BARYCENTER
+    SSB_to_EMB = SPK[0, 3]
+    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt)
     # segment 3 EARTH BARYCENTER -> segment 399 EARTH
     EMB_to_Earth = SPK[3, 399]
+    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt)
     # segment 3 EARTH BARYCENTER -> segment 301 MOON
     EMB_to_Moon = SPK[3, 301]
-    # compute the position of the moon relative to the Earth in meters
+    xyz_301, vel_301 = EMB_to_Moon.compute_and_differentiate(ts.tt)
+    # compute the position of the moon relative to the Earth
     # Earth_to_Moon = Earth_to_EMB + EMB_to_Moon
     #               = -EMB_to_Earth + EMB_to_Moon
-    x, y, z = 1e3*(EMB_to_Moon.compute(ts.tt) - EMB_to_Earth.compute(ts.tt))
+    if kwargs['include_aberration']:
+        # astronomical unit in kilometers
+        AU = 149597870.700
+        # position in astronomical units
+        position = (xyz_301 - xyz_399)/AU
+        # velocity in astronomical units per day
+        velocity = (vel_3 + vel_399 - vel_301)/AU
+        # correct for aberration and convert to meters
+        x, y, z = _correct_aberration(position, velocity)
+    else:
+        # convert positions from kilometers to meters
+        x, y, z = 1e3*(xyz_301 - xyz_399)
     # rotate to cartesian (ECEF) coordinates
-    # use UT1 time as input to itrs rotation function
-    rot_z = itrs((ts.ut1 - _jd_j2000)/ts.century)
+    # use UTC time as input to itrs rotation function
+    rot_z = itrs((ts.utc - _jd_j2000)/ts.century)
     X = rot_z[0,0,:]*x + rot_z[0,1,:]*y + rot_z[0,2,:]*z
     Y = rot_z[1,0,:]*x + rot_z[1,1,:]*y + rot_z[1,2,:]*z
     Z = rot_z[2,0,:]*x + rot_z[2,1,:]*y + rot_z[2,2,:]*z
@@ -699,7 +739,10 @@ def gast(T: float | np.ndarray):
     eqeq = dpsi*np.cos(epsilon + deps) + c
     return np.mod(ts.st + eqeq/24.0, 1.0)
 
-def itrs(T: float | np.ndarray):
+def itrs(
+        T: float | np.ndarray,
+        include_polar_motion: bool = True
+    ):
     """
     International Terrestrial Reference System (ITRS)
     :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
@@ -713,28 +756,16 @@ def itrs(T: float | np.ndarray):
     ----------
     T: np.ndarray
         Centuries since 2000-01-01T12:00:00
+    include_polar_motion: bool, default True
+        Include polar motion in the rotation matrix
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
-    # convert dynamical time to modified Julian days
-    MJD = ts.tt - _jd_mjd
-    # estimate the mean obliquity
-    epsilon = mean_obliquity(MJD)
-    # estimate the nutation in longitude and obliquity
-    dpsi, deps = _nutation_angles(T)
-    # estimate the rotation matrices
-    M1 = _precession_matrix(ts.T)
-    M2 = _nutation_matrix(epsilon, epsilon + deps, dpsi)
-    M3 = _frame_bias_matrix()
-    M4 = _polar_motion_matrix(ts.T)
-    # calculate the combined rotation matrix for
-    # M1: precession
-    # M2: nutation
-    # M3: frame bias
-    # M4: polar motion
-    M = np.einsum('ijt...,jkt...,kl...,lmt...->imt...', M1, M2, M3, M4)
-    # compute the Greenwich Apparent Sidereal Time
-    # use UT1 time as input to gast function
+    # get the rotation matrix for transforming from ICRS to ITRS
+    M = _icrs_rotation_matrix(T,
+        include_polar_motion=include_polar_motion
+    )
+    # compute Greenwich Apparent Sidereal Time
     GAST = rotate(ts.tau*gast(T), 'z')
     R = np.einsum('ijt...,jkt->ikt...', GAST, M)
     # return the combined rotation matrix
@@ -797,6 +828,49 @@ def _eqeq_complement(T: float | np.ndarray):
         ts.T*np.dot(j1['Cc'], np.cos(arg1)))
     # return the complementary terms
     return complement
+
+def _icrs_rotation_matrix(
+        T: float | np.ndarray,
+        include_polar_motion: bool = True
+    ):
+    """
+    Rotation matrix for tranforming from the
+    International Celestial Reference System (ICRS)
+    to the International Terrestrial Reference System (ITRS)
+    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
+    :cite:p:`Petit:2010tp`:
+
+    Parameters
+    ----------
+    T: np.ndarray
+        Centuries since 2000-01-01T12:00:00
+    include_polar_motion: bool, default True
+        Include polar motion in the rotation matrix
+    """
+    # create timescale from centuries relative to 2000-01-01T12:00:00
+    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    # convert dynamical time to modified Julian days
+    MJD = ts.tt - _jd_mjd
+    # estimate the mean obliquity
+    epsilon = mean_obliquity(MJD)
+    # estimate the nutation in longitude and obliquity
+    dpsi, deps = _nutation_angles(T)
+    # estimate the rotation matrices
+    M1 = _precession_matrix(ts.T)
+    M2 = _nutation_matrix(epsilon, epsilon + deps, dpsi)
+    M3 = _frame_bias_matrix()
+    # calculate the combined rotation matrix for
+    # M1: precession
+    # M2: nutation
+    # M3: frame bias
+    M = np.einsum('ijt...,jkt...,kl...->ilt...', M1, M2, M3)
+    # add polar motion to the combined rotation matrix
+    if include_polar_motion:
+        # M4: polar motion
+        M4 = _polar_motion_matrix(ts.T)
+        M = np.einsum('ijt...,jkt...->ikt...', M, M4)
+    # return the combined rotation matrix
+    return M
 
 def _frame_bias_matrix():
     """
@@ -875,7 +949,7 @@ def _nutation_matrix(
         psi: float | np.ndarray
     ):
     """
-    Nutation rotation matrix
+    Nutation rotation matrix :cite:p:`Kaplan:1989cf`
 
     Parameters
     ----------
@@ -929,6 +1003,8 @@ def _polar_motion_matrix(T: float | np.ndarray):
 def _precession_matrix(T: float | np.ndarray):
     """
     Precession rotation matrix
+    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
+    :cite:p:`Lieske:1977ug`
 
     Parameters
     ----------
@@ -979,6 +1055,45 @@ def _precession_matrix(T: float | np.ndarray):
         np.cos(-OMEGA)*np.cos(EPS)
     # return the rotation matrix
     return P
+
+def _correct_aberration(position, velocity):
+    """
+    Correct a relative position for aberration effects
+    :cite:p:`Kaplan:1989cf`
+
+    Parameters
+    ----------
+    position: np.ndarray
+        Position vector in astronomical units
+    velocity: np.ndarray
+        Velocity vector in astronomical units per day
+    """
+    # number of seconds per day
+    day = 86400.0
+    # speed of light in meters per second
+    c = 299792458.0
+    # astronomical unit in meters
+    AU = 149597870700.0
+    # speed of light in AU/day (i.e. one light day)
+    c_prime = c * day / AU
+    # total distance
+    distance = np.sqrt(np.sum(position*position, axis=0))
+    tau = distance / c_prime
+    # speed
+    speed = np.sqrt(np.sum(velocity*velocity, axis=0))
+    beta = speed / c_prime
+    # Kaplan et al. (1989) eq. 16
+    # (use divide function to avoid error if denominator is zero)
+    cosD = np.divide(np.sum(position*velocity, axis=0), distance*speed)
+    # calculate adjustments
+    gamma = np.sqrt(1.0 - beta * beta)
+    f1 = beta * cosD
+    f2 = (1.0 + f1 / (1.0 + gamma)) * tau
+    # correct for aberration of light travel time (eq. 17)
+    u = (gamma*position + f2*velocity)/(1.0 + f1)
+    # return corrected position converted to meters
+    x, y, z = u * AU
+    return (x, y, z)
 
 def _parse_table_5_2e():
     """Parse table with expressions for Greenwich Sidereal Time

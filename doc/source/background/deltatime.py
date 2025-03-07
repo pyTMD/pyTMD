@@ -16,20 +16,10 @@ leaps = timescale.time.get_leap_seconds(truncate=False)
 leaps = leaps[leaps > ts.gps[0]]
 n_leaps = len(leaps)
 
-# dynamic time is ahead of TAI by 32.184 seconds
-tt_tai = 32.184
-# TAI time is ahead of GPS by 19 seconds
-tai_gps = 19.0
-# convert from dynamic time to TAI
-TAI = np.atleast_1d(ts.tt - 2444244.5)*ts.day - tt_tai
-gps_utc = timescale.time.count_leap_seconds(TAI - tai_gps)
-# recalculate UT1-UTC (seconds)
-ut1_utc = tt_tai + tai_gps + gps_utc - tt_ut1
-
 # create figure
 fig, ax = plt.subplots(num=1, nrows=2, sharex=True, figsize=(6, 6))
 # plot UT1-UTC and TT-UT1
-ax[0].plot(ts.year, ut1_utc, '.', ms=0.5, c='0.4')
+ax[0].plot(ts.year, ts.ut1_utc, '.', ms=0.5, c='0.4')
 ax[1].plot(ts.year, tt_ut1, '0.4')
 # plot leap seconds
 plot_colors = iter(plt.cm.rainbow(np.linspace(0, 1, n_leaps)))

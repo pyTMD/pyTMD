@@ -22,6 +22,6 @@ dependencies:
   - sphinxcontrib-bibtex
   - sphinx-design
   - sphinx_rtd_theme
-  - timescale>=0.0.3
+  - timescale>=0.0.8
   - pip:
     - ..

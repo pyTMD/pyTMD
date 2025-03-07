@@ -43,6 +43,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.astro._eqeq_complement
 
+.. autofunction:: pyTMD.astro._icrs_rotation_matrix
+
 .. autofunction:: pyTMD.astro._frame_bias_matrix
 
 .. autofunction:: pyTMD.astro._nutation_angles
@@ -52,6 +54,8 @@ Calling Sequence
 .. autofunction:: pyTMD.astro._polar_motion_matrix
 
 .. autofunction:: pyTMD.astro._precession_matrix
+
+.. autofunction:: pyTMD.astro._correct_aberration
 
 .. autofunction:: pyTMD.astro._parse_table_5_2e
 
