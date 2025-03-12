@@ -138,7 +138,7 @@ def legendre(
     ):
     """
     Computes associated Legendre functions for a particular degree
-    and order :cite:p:`Munk:1966go` :cite:p:`HofmannWellenhof:2006hy`
+    and order :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
     Parameters
     ----------
@@ -250,7 +250,7 @@ def sph_harm(
     ):
     """
     Computes the spherical harmonics for a particular degree
-    and order :cite:p:`Munk:1966go` :cite:p:`HofmannWellenhof:2006hy`
+    and order :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
     Parameters
     ----------

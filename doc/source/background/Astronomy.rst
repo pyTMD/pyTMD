@@ -7,8 +7,8 @@ Arguments
 The tide potential is a function of the position of the sun and moon with respect to the Earth.
 The complete movements of the three bodies in three dimensions are very complicated, and typically require the use of numerical :term:`Ephemerides` :cite:p:`Pugh:2014di`.
 :cite:t:`Doodson:1921kt` described the approximate positions in terms of fundamental astronomical arguments.
-Each of these arguments can be accurately calculated using polynomial expansions of time :cite:p:`Meeus:1991vh` :cite:p:`Simon:1994vo`.
-The rates of change of these arguments are the fundamental frequencies of the astronomical motions :cite:p:`Pugh:2014di` :cite:p:`Kantha:2000vo`.
+Each of these arguments can be accurately calculated using polynomial expansions of time :cite:p:`Meeus:1991vh,Simon:1994vo`.
+The rates of change of these arguments are the fundamental frequencies of the astronomical motions :cite:p:`Pugh:2014di,Kantha:2000vo`.
 
 .. list-table:: Astronomical Arguments
     :header-rows: 1
@@ -43,7 +43,7 @@ The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`
 
     \tau = t - S + H
 
-When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as the fundamental variables :cite:p:`Woolard:1953wp` :cite:p:`Capitaine:2003fx` :cite:p:`Petit:2010tp` .
+When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as the fundamental variables :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp` .
 
 .. list-table:: Delaunay Arguments
     :header-rows: 1

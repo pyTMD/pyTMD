@@ -10,4 +10,4 @@ Major Tidal Constituents
    :header-rows: 1
 
 
-From :cite:t:`Doodson:1921kt`, :cite:t:`Cartwright:1971iz` and :cite:t:`Cartwright:1973em`
+From :cite:t:`Doodson:1921kt,Cartwright:1971iz,Cartwright:1973em`

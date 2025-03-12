@@ -31,7 +31,7 @@ Glossary
         point of an orbit where a celestial body intersects the ecliptic, and the latitude coordinate is increasing
 
     Barycenter
-        center of mass of a system of bodies
+        center of mass of a system of bodies, such as the solar system or the Earth-Moon system
 
     Body Tide
         see :term:`Solid Earth Tide`
@@ -58,13 +58,13 @@ Glossary
         tidal variations of the surface of the solid Earth, frequently split into the :term:`Body Tide` and the :term:`Load Tide`
 
     Ecliptic
-        plane of the orbit of the Earth around the sun
-
-    Ephemeris
-        table of positions and velocities of a celestial body at given instances in time
+        mean plane of the orbit of the Earth around the sun
 
     Ephemerides
         plural of :term:`Ephemeris`
+
+    Ephemeris
+        table of positions and velocities of a celestial body at given instances in time
 
     Epoch
         fixed point in time used as a reference value
@@ -77,6 +77,9 @@ Glossary
 
     Equinox
         the ascending node of the Earth's orbit about the sun, and the point on the equatorial plane where it meets the ecliptic plane
+
+    Flattening
+        ratio of the difference between the semi-major and semi-minor axes of an ellipsoid to the semi-major axis
 
     Free Core Nutation
         Nearly diurnal deviations in the motion of the pole of rotation due to the resonant motion of the Earth's core relative to the mantle
@@ -144,7 +147,7 @@ Glossary
         adjustments to the amplitudes and phases of harmonic constituents to allow for periodic modulations over the 18.6-year nodal period
 
     Nutation
-        short-period oscillations in the motion of the pole of rotation
+        short-period oscillations in the motion of the pole of rotation of a freely rotating body
 
     Obliquity
         angle between the equatorial and orbital planes
@@ -170,8 +173,14 @@ Glossary
 
         see :term:`Mean Tide`, :term:`Tide-Free`, and :term:`Zero Tide`
 
+    Polar Motion
+        irregular motion of the Earth's pole of rotation relative to the Earth's crust
+
     Pole Tide
         apparent tide due to variations in the Earth's axis of rotation about its mean
+
+    Precession
+        regular conical motion of the pole of rotation of a freely rotating body
 
     Radiational Tide
         tidal constituents or components induced by the absorption and re-emission of solar radiation
@@ -220,6 +229,11 @@ Glossary
 
     Tide-Free
         model with direct and indirect permanent tidal effects removed
+
+    Vernal Equinox
+        intersection of the Earth's equatorial plane and the Earth's :term:`Ecliptic`
+
+        see :term:`Equinox` 
 
     Vertical Datum
         reference coordinate surface used for vertical positions

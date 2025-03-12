@@ -291,9 +291,8 @@ def infer_minor(
     ):
     """
     Infer the tidal values for minor constituents using their
-    relation with major constituents :cite:p:`Doodson:1941td`
-    :cite:p:`Schureman:1958ty` :cite:p:`Foreman:1989dt`
-    :cite:p:`Egbert:2002ge`
+    relation with major constituents
+    :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Egbert:2002ge`
 
     Parameters
     ----------
@@ -348,7 +347,7 @@ def _infer_short_period(
     """
     Infer the tidal values for short-period minor constituents
     using their relation with major constituents
-    :cite:p:`Egbert:2002ge` :cite:p:`Ray:1999vm`
+    :cite:p:`Egbert:2002ge,Ray:1999vm`
 
     Parameters
     ----------
@@ -480,8 +479,8 @@ def _infer_semi_diurnal(
     ):
     """
     Infer the tidal values for semi-diurnal minor constituents
-    using their relation with major constituents :cite:p:`Munk:1966go`
-    :cite:p:`Ray:1999vm` :cite:p:`Cartwright:1971iz`
+    using their relation with major constituents
+    :cite:p:`Munk:1966go,Ray:1999vm,Cartwright:1971iz`
 
     Parameters
     ----------
@@ -637,8 +636,7 @@ def _infer_diurnal(
     Infer the tidal values for diurnal minor constituents
     using their relation with major constituents taking into
     account resonance due to free core nutation
-    :cite:p:`Munk:1966go` :cite:p:`Ray:2017jx` :cite:p:`Wahr:1981if`
-    :cite:p:`Cartwright:1973em`
+    :cite:p:`Munk:1966go,Ray:2017jx,Wahr:1981if,Cartwright:1973em`
 
     Parameters
     ----------
@@ -805,7 +803,7 @@ def _infer_long_period(
     """
     Infer the tidal values for long-period minor constituents
     using their relation with major constituents
-    :cite:p:`Ray:1999vm` :cite:p:`Ray:2014fu` :cite:p:`Cartwright:1973em`
+    :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em`
 
     Parameters
     ----------
@@ -930,7 +928,7 @@ def equilibrium_tide(
     """
     Compute the long-period equilibrium tides the summation of fifteen
     tidal spectral lines from Cartwright-Tayler-Edden tables
-    :cite:p:`Cartwright:1971iz` :cite:p:`Cartwright:1973em`
+    :cite:p:`Cartwright:1971iz,Cartwright:1973em`
 
     Parameters
     ----------
@@ -1180,7 +1178,7 @@ def ocean_pole_tide(
     ):
     """
     Estimate ocean pole tide displacements in Cartesian coordinates
-    :cite:p:`Desai:2002ev` :cite:p:`Desai:2015jr` :cite:p:`Petit:2010tp`
+    :cite:p:`Desai:2002ev,Desai:2015jr,Petit:2010tp`
 
     Parameters
     ----------
@@ -1282,9 +1280,9 @@ def solid_earth_tide(
         **kwargs
     ):
     """
-    Compute the solid Earth tides due to the gravitational attraction of
-    the moon and sun :cite:p:`Mathews:1991kv` :cite:p:`Mathews:1997js`
-    :cite:p:`Ries:1992ip` :cite:p:`Wahr:1981ea`
+    Compute the solid Earth tides due to the gravitational
+    attraction of the moon and sun
+    :cite:p:`Mathews:1991kv,Mathews:1997js,Ries:1992ip,Wahr:1981ea`
 
     Parameters
     ----------

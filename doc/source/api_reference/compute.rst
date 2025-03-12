@@ -13,7 +13,7 @@ compute
   * Can use Finite Element Solution (FES) models provided by AVISO
 - Calculates long-period equilibrium tides (LPET) at points and times
 
-  * Uses the summation of fifteen tidal spectral lines from `Cartwright and Edden, (1973) <https://doi.org/10.1111/j.1365-246X.1973.tb03420.x>`_
+  * Uses the summation of fifteen tidal spectral lines from :cite:t:`Cartwright:1973em`
 - Calculates radial pole load tides (LPT) at points and times
 
   * Following `IERS Convention (2010) guidelines <https://iers-conventions.obspm.fr/chapter7.php>`_

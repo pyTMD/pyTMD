@@ -3,7 +3,7 @@ spatial
 =======
 
 - Spatial transformation routines
-- Gravitational and ellipsoidal parameters :cite:p:`HofmannWellenhof:2006hy` :cite:p:`Petit:2010tp`
+- Gravitational and ellipsoidal parameters :cite:p:`HofmannWellenhof:2006hy,Petit:2010tp`
 
 `Source code`__
 

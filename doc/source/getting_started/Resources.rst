@@ -8,6 +8,8 @@ Books and Articles
 - `NOAA - Manual of Harmonic Analysis and Prediction of Tides <https://tidesandcurrents.noaa.gov/publications/SpecialPubNo98.pdf>`_
 - `NOAA - Computer Applications of Tides in the National Ocean Survey <https://tidesandcurrents.noaa.gov/publications/SpecialPubNo98Suppl.pdf>`_
 - `NOAA - Tidal Analysis and Predictions <https://tidesandcurrents.noaa.gov/publications/Tidal_Analysis_and_Predictions.pdf>`_
+- `USNO - The IAU Resolutions on Astronomical Reference Systems <https://aa.usno.navy.mil/publications/Circular_179>`_ 
+- `USNO - The Explanatory Supplement to the Astronomical Almanac <https://aa.usno.navy.mil/publications/exp_supp>`_
  
 Ocean and Load Tide Resources
 #############################

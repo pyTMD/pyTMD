@@ -117,7 +117,7 @@ def mean_longitudes(
     ):
     r"""
     Computes the basic astronomical mean longitudes:
-    `S`, `H`, `P`, `N` and `PP` :cite:p:`Meeus:1991vh` :cite:p:`Simon:1994vo`
+    `S`, `H`, `P`, `N` and `PP` :cite:p:`Meeus:1991vh,Simon:1994vo`
 
     Note `N` is not `N'`, i.e. `N` is decreasing with time.
 
@@ -254,10 +254,10 @@ def doodson_arguments(
         equinox: bool = False,
         apply_correction: bool = True,
     ):
-    """
+    r"""
     Computes astronomical phase angles for the six Doodson
-    Arguments: `tau`, `S`, `H`, `P`, and `N'`, and `Ps`
-    :cite:p:`Doodson:1921kt` :cite:p:`Meeus:1991vh`
+    Arguments: :math:`\tau`, `S`, `H`, `P`, and `N'`, and `Ps`
+    :cite:p:`Doodson:1921kt,Meeus:1991vh`
 
     Parameters
     ----------
@@ -336,7 +336,7 @@ def delaunay_arguments(MJD: np.ndarray):
     """
     Computes astronomical phase angles for the five primary Delaunay
     Arguments of Nutation: `l`, `l'`, `F`, `D`, and `N`
-    :cite:p:`Meeus:1991vh` :cite:p:`Petit:2010tp` :cite:p:`Capitaine:2003fx`
+    :cite:p:`Meeus:1991vh,Petit:2010tp,Capitaine:2003fx`
 
     Parameters
     ----------
@@ -388,8 +388,8 @@ def delaunay_arguments(MJD: np.ndarray):
     return (l, lp, F, D, N)
 
 def mean_obliquity(MJD: np.ndarray):
-    """Mean obliquity of the ecliptic :cite:p:`Capitaine:2003fx`
-    :cite:p:`Capitaine:2003fw`
+    """Mean obliquity of the ecliptic
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw`
 
     Parameters
     ----------
@@ -410,7 +410,7 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     """
     Wrapper function for calculating the positional coordinates
     of the sun in an Earth-centric, Earth-Fixed (ECEF) frame
-    :cite:p:`Meeus:1991vh` :cite:p:`Montenbruck:1989uk` :cite:p:`Park:2021fa`
+    :cite:p:`Meeus:1991vh,Montenbruck:1989uk,Park:2021fa`
 
     Parameters
     ----------
@@ -438,8 +438,8 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
 def solar_approximate(MJD, **kwargs):
     """
     Computes approximate positional coordinates of the sun in an
-    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh`
-    :cite:p:`Montenbruck:1989uk`
+    Earth-centric, Earth-Fixed (ECEF) frame
+    :cite:p:`Meeus:1991vh,Montenbruck:1989uk`
 
     Parameters
     ----------
@@ -483,8 +483,8 @@ def solar_approximate(MJD, **kwargs):
 def solar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     Computes positional coordinates of the sun in an Earth-centric,
-    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh`
-    :cite:p:`Park:2021fa`
+    Earth-Fixed (ECEF) frame using JPL ephemerides
+    :cite:p:`Meeus:1991vh,Park:2021fa`
 
     Parameters
     ----------
@@ -548,7 +548,7 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     """
     Wrapper function for calculating the positional coordinates
     of the moon in an Earth-centric, Earth-Fixed (ECEF) frame
-    :cite:p:`Meeus:1991vh` :cite:p:`Montenbruck:1989uk` :cite:p:`Park:2021fa`
+    :cite:p:`Meeus:1991vh,Montenbruck:1989uk,Park:2021fa`
 
     Parameters
     ----------
@@ -576,8 +576,8 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
 def lunar_approximate(MJD, **kwargs):
     """
     Computes approximate positional coordinates of the moon in an
-    Earth-centric, Earth-Fixed (ECEF) frame :cite:p:`Meeus:1991vh`
-    :cite:p:`Montenbruck:1989uk`
+    Earth-centric, Earth-Fixed (ECEF) frame
+    :cite:p:`Meeus:1991vh,Montenbruck:1989uk`
 
     Parameters
     ----------
@@ -655,8 +655,8 @@ def lunar_approximate(MJD, **kwargs):
 def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     """
     Computes positional coordinates of the moon in an Earth-centric,
-    Earth-Fixed (ECEF) frame using JPL ephemerides :cite:p:`Meeus:1991vh`
-    :cite:p:`Park:2021fa`
+    Earth-Fixed (ECEF) frame using JPL ephemerides
+    :cite:p:`Meeus:1991vh,Park:2021fa`
 
     Parameters
     ----------
@@ -718,8 +718,7 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
 
 def gast(T: float | np.ndarray):
     """Greenwich Apparent Sidereal Time (GAST)
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
-    :cite:p:`Petit:2010tp`
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
 
     Parameters
     ----------
@@ -745,8 +744,8 @@ def itrs(
     ):
     """
     International Terrestrial Reference System (ITRS)
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
-    :cite:p:`Petit:2010tp`:
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
+
     An Earth-centered Earth-fixed (ECEF) coordinate system
     combining the Earth's true equator and equinox of date,
     the Earth's rotation with respect to the stars, and the
@@ -774,7 +773,7 @@ def itrs(
 def _eqeq_complement(T: float | np.ndarray):
     """
     Compute complementary terms of the equation of the equinoxes
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw` :cite:p:`Petit:2010tp`
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
 
     Parameters
     ----------
@@ -837,8 +836,7 @@ def _icrs_rotation_matrix(
     Rotation matrix for tranforming from the
     International Celestial Reference System (ICRS)
     to the International Terrestrial Reference System (ITRS)
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
-    :cite:p:`Petit:2010tp`:
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`:
 
     Parameters
     ----------
@@ -874,7 +872,9 @@ def _icrs_rotation_matrix(
 
 def _frame_bias_matrix():
     """
-    Frame bias rotation matrix
+    Frame bias rotation matrix for converting from a dynamical
+    reference system to the International Celestial Reference
+    System (ICRS) :cite:p:`Petit:2010tp`:
     """
     # arcseconds to radians
     atr = np.pi/648000.0
@@ -949,7 +949,7 @@ def _nutation_matrix(
         psi: float | np.ndarray
     ):
     """
-    Nutation rotation matrix :cite:p:`Kaplan:1989cf`
+    Nutation rotation matrix :cite:p:`Kaplan:1989cf,Petit:2010tp`
 
     Parameters
     ----------
@@ -991,7 +991,10 @@ def _polar_motion_matrix(T: float | np.ndarray):
     atr = np.pi/648000.0
     # convert to MJD from centuries relative to 2000-01-01T12:00:00
     MJD = T*_century + _mjd_j2000
+    # correct longitude origin for Terrestrial Intermediate Origin (TIO)
+    # this correction is negligible for most applications
     sprime = -4.7e-5*T
+    # calculate the polar motion for the given dates
     px, py = timescale.eop.iers_polar_motion(MJD)
     # calculate the rotation matrices
     M1 = rotate(py*atr,'x')
@@ -1003,8 +1006,7 @@ def _polar_motion_matrix(T: float | np.ndarray):
 def _precession_matrix(T: float | np.ndarray):
     """
     Precession rotation matrix
-    :cite:p:`Capitaine:2003fx` :cite:p:`Capitaine:2003fw`
-    :cite:p:`Lieske:1977ug`
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Lieske:1977ug`
 
     Parameters
     ----------
@@ -1099,7 +1101,7 @@ def _parse_table_5_2e():
     """Parse table with expressions for Greenwich Sidereal Time
     provided in `Chapter 5
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
-    of :cite:p:`Petit:2010tp`
+    of :cite:t:`Petit:2010tp`
     """
     table_5_2e = get_data_path(['data','tab5.2e.txt'])
     with table_5_2e.open(mode='r', encoding='utf8') as f:
@@ -1127,7 +1129,7 @@ def _parse_table_5_3a():
     """Parse table with IAU 2000A lunisolar and planetary components
     of nutation in longitude provided in `Chapter 5
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
-    of :cite:p:`Petit:2010tp`
+    of :cite:t:`Petit:2010tp`
     """
     table_5_3a = get_data_path(['data','tab5.3a.txt'])
     with table_5_3a.open(mode='r', encoding='utf8') as f:
@@ -1155,7 +1157,7 @@ def _parse_table_5_3b():
     """Parse table with IAU 2000A lunisolar and planetary components
     of nutation in obliquity provided in `Chapter 5
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
-    of :cite:p:`Petit:2010tp`
+    of :cite:t:`Petit:2010tp`
     """
     table_5_3b = get_data_path(['data','tab5.3b.txt'])
     with table_5_3b.open(mode='r', encoding='utf8') as f:

@@ -2,7 +2,7 @@
 ellipse
 =======
 
-- Expresses the amplitudes and phases for the `u` and `v` components in terms of four ellipse parameters using `Foreman's formula <https://www.sciencedirect.com/science/article/pii/0309170889900171>`_
+- Expresses the amplitudes and phases for the `u` and `v` components in terms of four ellipse parameters using Foreman's formula :cite:p:`Foreman:1989dt`
 
 Calling Sequence
 ----------------

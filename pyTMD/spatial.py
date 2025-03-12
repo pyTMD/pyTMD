@@ -943,7 +943,7 @@ def _moritz_iterative(
     ):
     """
     Convert from cartesian coordinates to geodetic coordinates
-    using the iterative solution of :cite:p:`HofmannWellenhof:2006hy`
+    using the iterative solution of :cite:t:`HofmannWellenhof:2006hy`
 
     Parameters
     ----------
@@ -1003,7 +1003,7 @@ def _bowring_iterative(
     ):
     """
     Convert from cartesian coordinates to geodetic coordinates using
-    the iterative solution of :cite:p:`Bowring:1976jh` :cite:p:`Bowring:1985du`
+    the iterative solution of :cite:t:`Bowring:1976jh,Bowring:1985du`
 
     Parameters
     ----------
@@ -1069,7 +1069,7 @@ def _zhu_closed_form(
     ):
     """
     Convert from cartesian coordinates to geodetic coordinates
-    using the closed-form solution of :cite:p:`Zhu:1993ja`
+    using the closed-form solution of :cite:t:`Zhu:1993ja`
 
     Parameters
     ----------

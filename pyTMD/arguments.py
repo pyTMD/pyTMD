@@ -119,8 +119,7 @@ def arguments(
     ):
     """
     Calculates the nodal corrections for tidal constituents
-    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
-    :cite:p:`Foreman:1989dt` :cite:p:`Pugh:2014di`
+    :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Pugh:2014di`
 
     Parameters
     ----------
@@ -195,8 +194,7 @@ def minor_arguments(
     """
     Calculates the nodal corrections for minor tidal constituents
     in order to infer their values
-    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
-    :cite:p:`Foreman:1989dt` :cite:p:`Egbert:2002ge`
+    :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Egbert:2002ge`
 
 
     Parameters
@@ -353,8 +351,7 @@ def coefficients_table(
     ):
     """
     Doodson table coefficients for tidal constituents
-    :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
-    :cite:p:`Pugh:2014di`
+    :cite:p:`Doodson:1921kt,Doodson:1941td,Pugh:2014di`
 
     Parameters
     ----------
@@ -507,8 +504,7 @@ def nodal(
     ):
     """
     Calculates the nodal corrections for tidal constituents
-    :cite:p:`Doodson:1941td` :cite:p:`Schureman:1958ty`
-    :cite:p:`Foreman:1989dt` :cite:p:`Ray:1999vm`
+    :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Ray:1999vm`
 
     Calculates factors for compound tides using recursion
 
@@ -1198,7 +1194,8 @@ def frequency(
         **kwargs
     ):
     """
-    Calculates the angular frequency for tidal constituents :cite:p:`Ray:1999vm`
+    Calculates the angular frequency for tidal constituents
+    :cite:p:`Ray:1999vm`
 
     Parameters
     ----------
@@ -1293,7 +1290,7 @@ def aliasing_period(
 def _arguments_table(**kwargs):
     """
     Arguments table for tidal constituents
-    :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
+    :cite:p:`Doodson:1921kt,Doodson:1941td`
 
     Parameters
     ----------
@@ -1334,7 +1331,7 @@ def _arguments_table(**kwargs):
 def _minor_table(**kwargs):
     """
     Arguments table for minor tidal constituents
-    :cite:p:`Doodson:1921kt` :cite:p:`Doodson:1941td`
+    :cite:p:`Doodson:1921kt,Doodson:1941td`
 
     Returns
     -------
@@ -1449,8 +1446,7 @@ def _love_numbers(
     ):
     """
     Compute the body tide Love/Shida numbers for a given
-    frequency :cite:p:`Wahr:1981ea` :cite:p:`Wahr:1981if`
-    :cite:p:`Mathews:1995go`
+    frequency :cite:p:`Wahr:1981ea,Wahr:1981if,Mathews:1995go`
 
     Parameters
     ----------
@@ -1532,8 +1528,7 @@ _ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
 
 def _parse_tide_potential_table(table: str | pathlib.Path):
-    """Parse tables of tide-generating potential from
-    :cite:p:`Cartwright:1971iz` and :cite:p:`Cartwright:1973em`
+    """Parse tables of tide-generating potential
 
     Parameters
     ----------
