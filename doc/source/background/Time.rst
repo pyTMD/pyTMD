@@ -1,13 +1,13 @@
 Time
 ####
 
-Time can be measured using a variety of different scales.
-``pyTMD`` uses the ``timescale`` library to manage the conversions between different time scales.
+Time can be measured using a variety of different scales and standards.
+``pyTMD`` uses the ``timescale`` library to manage the conversions between some of the more common time scales.
 A uniform time scale expresses dates as the count of time elapsed since a reference epoch.
-The Julian Day (JD) is one such system, and is the continuous count of days starting at noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
-It is a time system that allows a simple computation for the number of days between two epochs, which is convenient for astronomical purposes.
-The Modified Julian Day (MJD) differs from the Julian Day by reducing the number of digits for modern periods, and also by beginning at midnight.
-The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the Julian Day by
+The Julian Day (JD) is one such scale, and is the continuous count of days from noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
+The JD time system simplifies the calculation of the number of days between two epochs, and thus is convenient for astronomical purposes.
+The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight and 2) reducing the total number of digits for modern periods.
+The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the JD by
 
 .. math::
     :label: 3.1
@@ -15,7 +15,7 @@ The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be cal
 
     MJD = JD - 2400000.5
 
-Julian centuries (36525 days) are used for celestial calculations, and are fixed relative to the J2000 epoch (2000-01-01T12:00:00).
+Julian centuries (36525 days) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
     :label: 3.2
@@ -26,14 +26,15 @@ Julian centuries (36525 days) are used for celestial calculations, and are fixed
 Standards
 ---------
 
-``timescale`` and ``pyTMD`` are reliant on the International Earth Rotation Service (IERS) for the schedule of leap seconds and estimates of delta times.
+``timescale`` and ``pyTMD`` are both reliant on the International Earth Rotation Service (IERS) for the schedule of leap seconds and estimates of delta times.
 `Tables of leap seconds <https://github.com/pyTMD/timescale/blob/main/timescale/data/leap-seconds.list>`_ are used to convert from GPS, LORAN and TAI times.
 
 - TAI time: International Atomic Time uses SI seconds and is computed as the weighted average of several hundred atomic clocks.
-- UTC time: Coordinated Universal Time also uses SI seconds, but is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
 - GPS time: Atomic timing system for the Global Positioning System constellation of satellites monitored by the United States Naval Observatory (USNO). GPS time and UTC time were equal on January 6, 1980. TAI time is ahead of GPS time by 19 seconds.
 - LORAN time: Atomic timing system for the Loran-C chain transmitter sites used in terrestrial radionavigation. LORAN time and UTC time were equal on January 1, 1958. TAI time is ahead of LORAN time by 10 seconds.
+- UTC time: Coordinated Universal Time also uses SI seconds, but is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
 
+Solar time is based on the position of the sun in the sky and is used for civil timekeeping.
 Universal Time (UT1) is effectively the mean solar time and is based on the true, irregular rotation of the Earth :cite:p:`Kaplan:2005kj`.
 The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly from very long baseline interferometry (VLBI).
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
@@ -65,16 +66,25 @@ Because the rotation rate of Earth is variable, both sidereal time and Universal
 For every meridian, there is a local sidereal time, which is calculated with respect to an :term:`Equinox`. 
 
 Greenwich Mean Sidereal Time (GMST) is the angle between the Greenwich meridian and the average position of the :term:`Vernal Equinox`.
-GMST is calculated using 
+GMST is calculated in ``pyTMD`` using the revised IAU 2000 precession model :cite:p:`Capitaine:2005hw,Urban:2013vl`.
+Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the Vernal Equinox due to :term:`Nutation` using the "equation of the equinoxes" (:math:`E_e`).
 
 .. math::
     :label: 3.3
     :name: eq:3.3
 
-    GMST = 24110.54841 + 8640184.812866 T + 0.093104 T^2 - 0.0000062 T^3 
+    GAST = GMST + E_e
 
-where :math:`T` is Julian centuries in UT1 time [:ref:`Equation 3.2 <eq:3.2>`].
-Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the Vernal Equinox due to :term:`Nutation` using the "equation of the equinoxes".
+The "equation of the equinoxes" describes the difference between the positions of the true (:math:`\Upsilon_T`) and mean (:math:`\Upsilon_M`) equinoxes of date, and is calculated using the following equations:
+
+.. math::
+    :label: 3.4
+    :name: eq:3.4
+
+    E_e &= \Upsilon_T - \Upsilon_M \\
+    &= \Delta\psi\cos{\varepsilon} + \sum_k (C'_k \sin{A_k} + S'_k \cos{A_k})
+
+where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is the obliquity of the ecliptic, and the series expansion of "complementary terms" describe the combined effects of precession and nutation :cite:p:`Kaplan:2005kj,Petit:2010tp,Urban:2013vl` .
 
 Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longitudinal position in degrees East from the Greenwich meridian.
 

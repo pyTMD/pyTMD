@@ -89,3 +89,10 @@ Nutation
 :term:`Nutation` is the periodic oscillation of the Earth's rotation axis around its mean position.
 Nutation is often split into two components, the nutation in longitude and the nutation in obliquity.
 The angle between the equator and the orbital plane of Earth around the Sun (the :term:`Ecliptic`) defines the inclination of the Earth's rotation axis (obliquity of the ecliptic).
+
+Ephemerides
+-----------
+
+``pyTMD`` can calculate the positions of the sun and moon relative to the Earth using approximate relations or use the ``jplephem`` package to read `JPL Ephemerides <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
+Ephemerides are tables of values that give the positions of astronomical objects at a given time.
+

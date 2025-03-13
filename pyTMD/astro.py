@@ -874,7 +874,7 @@ def _frame_bias_matrix():
     """
     Frame bias rotation matrix for converting from a dynamical
     reference system to the International Celestial Reference
-    System (ICRS) :cite:p:`Petit:2010tp`:
+    System (ICRS) :cite:p:`Petit:2010tp,Urban:2013vl`:
     """
     # arcseconds to radians
     atr = np.pi/648000.0
