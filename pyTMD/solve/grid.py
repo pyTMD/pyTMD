@@ -22,10 +22,10 @@ PYTHON DEPENDENCIES:
         https://pyproj4.github.io/pyproj/
 
 PROGRAM DEPENDENCIES:
-    crs.py: Coordinate Reference System (CRS) routines
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 03/2025: use refactored datum class in spatial module
     Updated 05/2024: make subscriptable and allow item assignment
     Written 02/2024
 """
@@ -33,8 +33,7 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.ndimage
-from pyTMD.crs import datum
-from pyTMD.spatial import scale_factors
+from pyTMD.spatial import datum, scale_factors
 from pyTMD.utilities import import_dependency
 
 # attempt imports
