@@ -37,13 +37,14 @@ import numpy as np
 import scipy.sparse.linalg
 import pyTMD.solve.grid as fdgrid
 import pyTMD.solve.model as model
+from pyTMD.math import polynomial_sum
 from pyTMD.utilities import reify
 
 class forward(model):
     """
     Class for estimating non-linear parameters using a finite
     difference model with a Crank-Nicolson scheme
-    :cite:p:`Egbert:2002ge` :cite:p:`Primeau:2007ie`
+    :cite:p:`Egbert:2002ge,Primeau:2007ie`
 
     Parameters
     ----------
@@ -142,7 +143,7 @@ class forward(model):
             self._z0 = z0[self._iob].copy()
         # allocate fields for the currents and heights
         if self.iscomplex:
-            th = self.polynomial_sum(self._pc, self.t)
+            th = polynomial_sum(self._pc, self.t)
             self._u = u0.real*np.cos(th) - u0.imag*np.sin(th)
             self._v = v0.real*np.cos(th) - v0.imag*np.sin(th)
             self._z = z0.real*np.cos(th) - z0.imag*np.sin(th)
@@ -169,21 +170,6 @@ class forward(model):
             input field to be converted
         """
         return scipy.sparse.spdiags(M.flatten(), 0, M.size, M.size)
-
-    def polynomial_sum(self, c: list | np.ndarray, t: np.ndarray):
-        """
-        Calculates the sum of a polynomial function of time
-
-        Parameters
-        ----------
-        c: list or np.ndarray
-            leading coefficient of polynomials of increasing order
-        t: np.ndarray
-            delta time
-        """
-        # convert time to array if importing a single value
-        t = np.atleast_1d(t)
-        return np.sum([ci * (t ** i) for i, ci in enumerate(c)], axis=0)
 
     def _linear_operators(self):
         """Create the operators for the finite difference model
@@ -358,7 +344,7 @@ class forward(model):
         """
         # enforce open boundary conditions for currents and heights
         if self.iscomplex and self.has_ob:
-            th = self.polynomial_sum(self._pc, self.t)
+            th = polynomial_sum(self._pc, self.t)
             self._u[self._iob] = self._u0.real*np.cos(th) - \
                 self._u0.imag*np.sin(th)
             self._v[self._iob] = self._v0.real*np.cos(th) - \

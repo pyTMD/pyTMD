@@ -49,8 +49,8 @@ def response(
         **kwargs: dict
     ):
     """
-    Estimate tidal constituents using the response method :cite:p:`Munk:1966go`
-    :cite:p:`Groves:1975ky` :cite:p:`Zetler:1975uv` :cite:p:`Cartwright:1990ck`
+    Estimate tidal constituents using the response method
+    :cite:p:`Munk:1966go,Groves:1975ky,Zetler:1975uv,Cartwright:1990ck`
 
     Parameters
     ----------
@@ -113,7 +113,8 @@ def _gravitational(
         **kwargs: dict
     ):
     """
-    Estimate gravitational tides using the response method :cite:p:`Munk:1966go`
+    Estimate gravitational tides using the response method
+    :cite:p:`Munk:1966go`
 
     Parameters
     ----------
@@ -180,7 +181,8 @@ def _radiational(
         **kwargs: dict
     ):
     """
-    Estimate radiational tides using the response method :cite:p:`Munk:1966go`
+    Estimate radiational tides using the response method
+    :cite:p:`Munk:1966go`
 
     Parameters
     ----------
