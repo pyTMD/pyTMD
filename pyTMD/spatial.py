@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 spatial.py
-Written by Tyler Sutterley (02/2025)
+Written by Tyler Sutterley (03/2025)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 03/2025: add more ellipsoidal parameters to datum class
     Updated 02/2025: major refactor to move io routines out of this module
     Updated 12/2024: add latitude and longitude as potential dimension names
     Updated 11/2024: added function to calculate the altitude and azimuth
@@ -133,15 +134,16 @@ def data_type(x: np.ndarray, y: np.ndarray, t: np.ndarray) -> str:
     else:
         raise ValueError('Unknown data type')
 
-_ellipsoids = ['CLK66', 'GRS67', 'GRS80', 'WGS72', 'WGS84', 'ATS77',
-    'NAD27', 'NAD83', 'INTER', 'KRASS', 'MAIRY', 'HGH80', 'TOPEX',
-    'EGM96', 'IERS']
+_ellipsoids = ['CLK66', 'CLK80', 'GRS67', 'GRS80', 'WGS60', 'WGS66', 'WGS72',
+    'WGS84', 'ATS77', 'NAD27', 'NAD83', 'INTER', 'KRASS', 'SGS90',
+    'AIRY', 'MAIRY', 'HLMRT', 'HOUGH', 'HGH80', 'MERIT', 'TOPEX',
+    'EGM96', 'IAG75', 'IAU64', 'IAU76', 'IERS89', 'IERS']
 _units = ['MKS', 'CGS']
 
 class datum:
     """
     Class for gravitational and ellipsoidal parameters
-    :cite:p:`HofmannWellenhof:2006hy`
+    :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`
 
     Parameters
     ----------
@@ -149,9 +151,12 @@ class datum:
         Reference ellipsoid name
 
             - ``'CLK66'``: Clarke 1866
+            - ``'CLK80'``: Clarke 1880
             - ``'GRS67'``: Geodetic Reference System 1967
             - ``'GRS80'``: Geodetic Reference System 1980
             - ``'HGH80'``: Hughes 1980 Ellipsoid
+            - ``'WGS60'``: World Geodetic System 1960
+            - ``'WGS66'``: World Geodetic System 1966
             - ``'WGS72'``: World Geodetic System 1972
             - ``'WGS84'``: World Geodetic System 1984
             - ``'ATS77'``: Quasi-earth centred ellipsoid for ATS77
@@ -159,9 +164,18 @@ class datum:
             - ``'NAD83'``: North American Datum 1983
             - ``'INTER'``: International
             - ``'KRASS'``: Krassovsky (USSR)
-            - ``'MAIRY'``: Modified Airy (Ireland 1965/1975)
+            - ``'SGS90'``: Soviet Geodetic System 1990
+            - ``'HLMRT'``: Helmert 1906 Ellipsoid
+            - ``'HOUGH'``: Hough 1960 Ellipsoid
+            - ``'AIRY'``: Airy (1830)
+            - ``'MAIRY'``: Modified Airy (1849)
+            - ``'MERIT'``: MERIT 1983 ellipsoid
             - ``'TOPEX'``: TOPEX/POSEIDON ellipsoid
             - ``'EGM96'``: EGM 1996 gravity model
+            - ``'IAG75'``: International Association of Geodesy (1975)
+            - ``'IAU64'``: International Astronomical Union (1964)
+            - ``'IAU76'``: International Astronomical Union (1976)
+            - ``'IERS89'``: IERS Numerical Standards (1989)
             - ``'IERS'``: IERS Numerical Standards (2010)
     units: str, default `MKS`
         Output units
@@ -205,6 +219,11 @@ class datum:
             self.a_axis = 6378206.4# [m] semimajor axis of the ellipsoid
             self.flat = 1.0/294.9786982# flattening of the ellipsoid
 
+        elif (self.name == 'CLK80'):
+            # Clarke 1880
+            self.a_axis = 6378249.145# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/293.465# flattening of the ellipsoid
+
         elif self.name in ('GRS80', 'NAD83'):
             # Geodetic Reference System 1980
             # North American Datum 1983
@@ -214,11 +233,20 @@ class datum:
 
         elif (self.name == 'GRS67'):
             # Geodetic Reference System 1967
-            # International Astronomical Union (IAU ellipsoid)
             self.a_axis = 6378160.0# [m] semimajor axis of the ellipsoid
             self.flat = 1.0/298.247167427# flattening of the ellipsoid
             self.GM = 3.98603e14# [m^3/s^2] Geocentric Gravitational Constant
             self.omega = 7292115.1467e-11# angular velocity of the Earth [rad/s]
+
+        elif (self.name == 'WGS60'):
+            # World Geodetic System 1960
+            self.a_axis = 6378165.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.30# flattening of the ellipsoid
+
+        elif (self.name == 'WGS66'):
+            # World Geodetic System 1966
+            self.a_axis = 6378145.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.25# flattening of the ellipsoid
 
         elif (self.name == 'WGS72'):
             # World Geodetic System 1972
@@ -240,20 +268,45 @@ class datum:
             self.a_axis = 6378245.0# [m] semimajor axis of the ellipsoid
             self.flat = 1.0/298.3# flattening of the ellipsoid
 
+        elif (self.name == 'SGS90'):
+            # Soviet Geodetic System 1990
+            self.a_axis = 6378136.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.2578393# flattening of the ellipsoid
+
         elif (self.name == 'INTER'):
-            # International
+            # International 1924
             self.a_axis = 6378388.0# [m] semimajor axis of the ellipsoid
             self.flat = 1/297.0# flattening of the ellipsoid
 
+        elif (self.name == 'AIRY'):
+            # Airy 1830 Ellipsoid
+            self.a_axis = 6377563.396# [m] semimajor axis of the ellipsoid
+            self.flat = 1/299.3249646# flattening of the ellipsoid
+
         elif (self.name == 'MAIRY'):
-            # Modified Airy (Ireland 1965/1975)
+            # Modified Airy 1849 Ellipsoid
             self.a_axis = 6377340.189# [m] semimajor axis of the ellipsoid
             self.flat = 1/299.3249646# flattening of the ellipsoid
 
+        elif (self.name == 'HLMRT'):
+            # Helmert 1906 Ellipsoid
+            self.a_axis = 6378200.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.3# flattening of the ellipsoid
+
+        elif (self.name == 'HOUGH'):
+            # Hough 1960 Ellipsoid
+            self.a_axis = 6378270.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/297.0# flattening of the ellipsoid
+
         elif (self.name == 'HGH80'):
-            # Hughes 1980 Ellipsoid used in some NSIDC data
+            # Hughes 1980 Ellipsoid
             self.a_axis = 6378273.0# [m] semimajor axis of the ellipsoid
             self.flat = 1.0/298.279411123064# flattening of the ellipsoid
+
+        elif (self.name == 'MERIT'):
+            # MERIT 1983 ellipsoid
+            self.a_axis = 6378137.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.257# flattening of the ellipsoid
 
         elif (self.name == 'TOPEX'):
             # TOPEX/POSEIDON ellipsoid
@@ -267,8 +320,28 @@ class datum:
             self.flat = 1.0/298.256415099# flattening of the ellipsoid
             self.GM = 3.986004415e14# [m^3/s^2]
 
+        elif (self.name == 'IAG75'):
+            # International Association of Geodesy (IAG 1975)
+            self.a_axis = 6378140.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.257# flattening of the ellipsoid
+
+        elif (self.name == 'IAU64'):
+            # International Astronomical Union (IAU 1964)
+            self.a_axis = 6378160.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.25# flattening of the ellipsoid
+
+        elif (self.name == 'IAU76'):
+            # International Astronomical Union (IAU 1964)
+            self.a_axis = 6378140.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.257# flattening of the ellipsoid
+
+        elif (self.name == 'IERS89'):
+            # IERS Numerical Standards (1989)
+            self.a_axis = 6378136.0# [m] semimajor axis of the ellipsoid
+            self.flat = 1.0/298.257# flattening of the ellipsoid
+
         elif (self.name == 'IERS'):
-            # IERS Numerical Standards
+            # IERS Numerical Standards (2010)
             self.a_axis = 6378136.6# [m] semimajor axis of the ellipsoid
             self.flat = 1.0/298.25642# flattening of the ellipsoid
 
