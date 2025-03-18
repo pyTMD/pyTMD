@@ -40,6 +40,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 03/2025: changed argument for method calculating mean longitudes
+        add 1066A neutral and stable Earth models to Love number calculation
     Updated 02/2025: add option to make doodson numbers strings
         add Doodson number convention for converting 11 to E
         add Doodson (1921) table for coefficients missing from Cartwright tables
@@ -1456,6 +1457,8 @@ def _love_numbers(
         Earth model to use for Love numbers
 
             - '1066A'
+            - '1066A-N' (neutral)
+            - '1066A-S' (stable)
             - 'PEM-C'
             - 'C2'
             - 'PREM'
@@ -1477,6 +1480,16 @@ def _love_numbers(
         h0, h1 = np.array([6.03e-1, -2.46e-3])
         k0, k1 = np.array([2.98e-1, -1.23e-3])
         l0, l1 = np.array([8.42e-2, 7.81e-5])
+    elif (model == '1066A-N'):
+        fcn = 1.0021716
+        h0, h1 = np.array([6.03e-1, -2.46e-3])
+        k0, k1 = np.array([2.98e-1, -1.24e-3])
+        l0, l1 = np.array([8.42e-2, 7.82e-5])
+    elif (model == '1066A-S'):
+        fcn = 1.0021708
+        h0, h1 = np.array([6.03e-1, -2.46e-3])
+        k0, k1 = np.array([2.98e-1, -1.24e-3])
+        l0, l1 = np.array([8.42e-2, 7.83e-5])
     elif (model == 'PEM-C'):
         fcn = 1.0021771
         h0, h1 = np.array([6.02e-1, -2.46e-3])
