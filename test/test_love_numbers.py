@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 u"""
-test_love_numbers.py (11/2024)
-Verify Love numbers correspond to those from Wahr et al. (1981)
+test_love_numbers.py (03/2025)
+Verify Body Tide Love numbers for different constituents
 
 UPDATE HISTORY:
+    Updated 03/2025: added ratio check for different models
     Updated 11/2024: moved love number calculator to arguments
     Written 09/2024
 """
@@ -52,3 +53,46 @@ def test_love_numbers():
         assert np.isclose(h2, v[0], atol=15e-4)
         assert np.isclose(k2, v[1], atol=15e-4)
         assert np.isclose(l2, v[2], atol=15e-4)
+
+@pytest.mark.parametrize("model", ['1066A-N', 'PEM-C', 'C2'])
+def test_love_number_ratios(model):
+    """
+    Tests the calculation of body tide Love numbers compared
+    with the values from J. Wahr (1979)
+    """
+    # expected values for each model
+    exp = {'1066A-N': {}, 'PEM-C': {}, 'C2': {}}
+    # expected values (1066A Neutral)
+    exp['1066A-N']['m1'] = (0.995, 0.997, 1.001)
+    exp['1066A-N']['p1'] = (0.964, 0.963, 1.010)
+    exp['1066A-N']['k1'] = (0.862, 0.859, 1.032)
+    exp['1066A-N']['psi1'] = (1.554, 1.564, 0.875)
+    exp['1066A-N']['phi1'] = (1.098, 1.101, 0.979)
+    exp['1066A-N']['j1'] = (1.013, 1.013, 0.998)
+    # expected values (PEM-C)
+    exp['PEM-C']['m1'] = (0.995, 0.997, 1.001)
+    exp['PEM-C']['p1'] = (0.964, 0.963, 1.008)
+    exp['PEM-C']['k1'] = (0.862, 0.859, 1.031)
+    exp['PEM-C']['psi1'] = (1.557, 1.567, 0.876)
+    exp['PEM-C']['phi1'] = (1.096, 1.097, 0.979)
+    exp['PEM-C']['j1'] = (1.013, 1.013, 0.998)
+    # expected values (C2)
+    exp['C2']['m1'] = (0.997, 0.997, 1.001)
+    exp['C2']['p1'] = (0.965, 0.963, 1.008)
+    exp['C2']['k1'] = (0.865, 0.862, 1.031)
+    exp['C2']['psi1'] = (1.565, 1.574, 0.877)
+    exp['C2']['phi1'] = (1.098, 1.101, 0.979)
+    exp['C2']['j1'] = (1.013, 1.013, 0.998)
+    # frequency of the o1 tidal constituent
+    omega = pyTMD.arguments.frequency('o1')
+    # calculate Love numbers for o1
+    ho1, ko1, lo1=pyTMD.arguments._love_numbers(omega, model=model)
+    # for each tidal constituent
+    for c, v in exp[model].items():
+        # calculate Love numbers
+        omega, = pyTMD.arguments.frequency(c)
+        h2, k2, l2 = pyTMD.arguments._love_numbers(omega, model=model)
+        # check Love numbers
+        assert np.isclose(h2/ho1, v[0], atol=25e-4)
+        assert np.isclose(k2/ko1, v[1], atol=25e-4)
+        assert np.isclose(l2/lo1, v[2], atol=25e-4)
