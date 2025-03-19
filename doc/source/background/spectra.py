@@ -1,9 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.offsetbox as offsetbox
-# import tide programs
 import pyTMD.astro
 import pyTMD.arguments
+import matplotlib.pyplot as plt
+import matplotlib.offsetbox as offsetbox
 
 def frequency(arguments):
     """

@@ -1446,8 +1446,8 @@ def _love_numbers(
         model: str = 'PREM'
     ):
     """
-    Compute the body tide Love/Shida numbers for a given
-    frequency :cite:p:`Wahr:1981ea,Wahr:1981if,Mathews:1995go`
+    Compute the body tide Love/Shida numbers for a given frequency
+    :cite:p:`Wahr:1979vx,Wahr:1981ea,Wahr:1981if,Mathews:1995go`
 
     Parameters
     ----------
