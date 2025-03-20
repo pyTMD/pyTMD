@@ -41,6 +41,7 @@ REFERENCES:
 UPDATE HISTORY:
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
+        use string mapping to remap non-numeric Doodson numbers
     Updated 02/2025: add option to make doodson numbers strings
         add Doodson number convention for converting 11 to E
         add Doodson (1921) table for coefficients missing from Cartwright tables
@@ -1592,6 +1593,8 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
         Doodson coefficients (Cartwright numbers) for constituent
     corrections: str, default 'GOT'
         use coefficients from OTIS, FES or GOT models
+    climate_solar_perigee: bool, default False
+        use climatologically affected terms without p'
     arguments: int, default 7
         Number of astronomical arguments to use
     file: str or pathlib.Path, default `coefficients.json`
@@ -1606,6 +1609,7 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
     """
     # set default keyword arguments
     kwargs.setdefault('corrections', 'GOT')
+    kwargs.setdefault('climate_solar_perigee', False)
     kwargs.setdefault('arguments', 7)
     kwargs.setdefault('file', _coefficients_table)
     kwargs.setdefault('raise_error', True)
@@ -1630,9 +1634,11 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
     with table.open(mode='r', encoding='utf8') as fid:
         coefficients = json.load(fid)
 
-    # # Without p'
-    # coefficients['sa'] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
-    # coefficients['sta'] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]
+    # use climatologically affected terms without p'
+    # following Pugh and Woodworth (2014)
+    if kwargs['climate_solar_perigee']:
+        coefficients['sa'] = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+        coefficients['sta'] = [0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]
     # set s1 coefficients
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
         coefficients['s1'] = [1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 1.0]
@@ -1677,14 +1683,15 @@ def _to_doodson_number(coef: list | np.ndarray, **kwargs):
     # add 5 to values following Doodson convention (prevent negatives)
     coef[1:] += 5
     # check for unsupported constituents
-    if (np.any(coef < 0) or np.any(coef > 11)) and kwargs['raise_error']:
+    if (np.any(coef < 0) or np.any(coef > 12)) and kwargs['raise_error']:
         raise ValueError('Unsupported constituent')
-    elif (np.any(coef < 0) or np.any(coef > 11)):
+    elif (np.any(coef < 0) or np.any(coef > 12)):
         return None
-    elif np.any(coef == 10) or np.any(coef == 11):
-        # convert coefficients to strings
-        # replace 10 with X and 11 with E (Doodson convention)
-        DO = [str(v).replace('10','X').replace('11','E') for v in coef]
+    elif np.any(coef >= 10) and np.all(coef <= 12):
+        # replace 10 to 12 with Doodson convention values
+        # X: 10, E: 11, T: 12
+        digits = '0123456789XET'
+        DO = [digits[v] for v in coef]
         # convert to Doodson number
         return np.str_('{0}{1}{2}.{3}{4}{5}'.format(*DO))
     else:
@@ -1731,9 +1738,13 @@ def _from_doodson_number(DO: str | float | np.ndarray, **kwargs):
         Doodson coefficients (Cartwright numbers) for constituent
     """
     # convert from Doodson number to Cartwright numbers
-    # replace 10 with X and 11 with E (Doodson convention)
-    coef = np.array([c.replace('X', '10').replace('E', '11')
-        for c in re.findall(r'\w', str(DO).zfill(7))], dtype=int)
+    # convert to string and verify length
+    DO = str(DO).zfill(7)
+    # replace 10 to 12 with Doodson convention values
+    # X: 10, E: 11, T: 12
+    digits = '0123456789XET'
+    # find alphanumeric characters in Doodson number
+    coef = np.array([digits.index(c) for c in re.findall(r'\w', DO)], dtype=int)
     # remove 5 from values following Doodson convention
     coef[1:] -= 5
     return coef

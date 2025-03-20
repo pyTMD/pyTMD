@@ -19,6 +19,7 @@ UPDATE HISTORY:
     Updated 03/2025: changed argument for method calculating mean longitudes
         split ICRS rotation matrix from the ITRS function 
         added function to correct for aberration effects
+        added function to calculate equation of time
     Updated 11/2024: moved three generic mathematical functions to math.py
     Updated 07/2024: made a wrapper function for normalizing angles
         make number of days to convert days since an epoch to MJD variables
@@ -395,6 +396,11 @@ def mean_obliquity(MJD: np.ndarray):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    epsilon: np.ndarray
+        mean obliquity of the ecliptic (radians)
     """
     # arcseconds to radians
     atr = np.pi/648000.0
@@ -404,6 +410,44 @@ def mean_obliquity(MJD: np.ndarray):
     epsilon0 = np.array([84381.406, -46.836769, -1.831e-4,
         2.00340e-4, -5.76e-07, -4.34e-08])
     return atr*polynomial_sum(epsilon0, T)
+
+def equation_of_time(MJD: np.ndarray):
+    """Approximate calcuation of the difference between apparent and
+    mean solar times :cite:p:`Meeus:1991vh,Urban:2013vl`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    E: np.ndarray
+        equation of time (radians)
+    """
+    # degrees to radians
+    dtr = np.pi/180.0
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000)/_century
+    # mean longitude of sun (degrees)
+    mean_longitude = np.array([280.46645, 36000.7697489,
+        3.0322222e-4, 2.0e-8, -6.54e-9])
+    H = polynomial_sum(mean_longitude, T)
+    # mean anomaly of the sun (degrees)
+    mean_anomaly = np.array([357.5291092, 35999.0502909,
+        -0.0001536, 1.0/24490000.0])
+    lp = polynomial_sum(mean_anomaly, T)
+    # take the modulus of each and convert to radians
+    H = dtr*normalize_angle(H)
+    lp = dtr*normalize_angle(lp)
+    # ecliptic longitude of the sun (radians)
+    lambda_sun = H + 1.915*dtr*np.sin(lp) + 0.020*dtr*np.sin(2.0*lp)
+    # calculate the equation of time (degrees)
+    E = -1.915*np.sin(lp) - 0.020*np.sin(2.0*lp) + \
+        2.466*np.sin(2.0*lambda_sun) - \
+        0.053*np.sin(4.0*lambda_sun)
+    # convert to radians
+    return dtr*E
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
 def solar_ecef(MJD: np.ndarray, **kwargs):

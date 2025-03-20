@@ -25,6 +25,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.astro.mean_obliquity
 
+.. autofunction:: pyTMD.astro.equation_of_time
+
 .. autofunction:: pyTMD.astro.solar_ecef
 
 .. autofunction:: pyTMD.astro.solar_approximate
