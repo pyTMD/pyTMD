@@ -70,7 +70,7 @@ When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as th
       - ascending lunar node
       - 18.61 years
       
-These arguments can be calculated from Doodson arguments using the following relationships:
+From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:
 
 .. math::
     :label: 4.2
@@ -81,7 +81,19 @@ These arguments can be calculated from Doodson arguments using the following rel
     l' &= h - Ps \\
     F &= S - N \\
     D &= S - H \\
-    \Omega &= N \\
+    \Omega &= N = -N' \\
+
+And conversely:
+
+.. math::
+    :label: 4.3
+    :name: eq:4.3
+
+    S &= F + \Omega \\
+    H &= F + \Omega - D \\
+    P &= F + \Omega - l\\
+    N &= \Omega = -N' \\
+    Ps &= F + \Omega - l' - D
 
 Nutation
 --------
