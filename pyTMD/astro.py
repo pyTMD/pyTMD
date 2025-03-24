@@ -793,7 +793,7 @@ def itrs(
     An Earth-centered Earth-fixed (ECEF) coordinate system
     combining the Earth's true equator and equinox of date,
     the Earth's rotation with respect to the stars, and the
-    polar wobble of the crust with respect to the pole of rotation.
+    polar wobble of the crust with respect to the pole of rotation
 
     Parameters
     ----------
@@ -818,6 +818,9 @@ def _eqeq_complement(T: float | np.ndarray):
     """
     Compute complementary terms of the equation of the equinoxes
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
+
+    These include the combined effects of precession and nutation
+    :cite:p:`Kaplan:2005kj,Petit:2010tp,Urban:2013vl`
 
     Parameters
     ----------
@@ -880,7 +883,7 @@ def _icrs_rotation_matrix(
     Rotation matrix for tranforming from the
     International Celestial Reference System (ICRS)
     to the International Terrestrial Reference System (ITRS)
-    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`:
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
 
     Parameters
     ----------
@@ -918,7 +921,7 @@ def _frame_bias_matrix():
     """
     Frame bias rotation matrix for converting from a dynamical
     reference system to the International Celestial Reference
-    System (ICRS) :cite:p:`Petit:2010tp,Urban:2013vl`:
+    System (ICRS) :cite:p:`Petit:2010tp,Urban:2013vl`
     """
     # arcseconds to radians
     atr = np.pi/648000.0
@@ -993,7 +996,8 @@ def _nutation_matrix(
         psi: float | np.ndarray
     ):
     """
-    Nutation rotation matrix :cite:p:`Kaplan:1989cf,Petit:2010tp`
+    Nutation rotation matrix
+    :cite:p:`Kaplan:1989cf,Petit:2010tp`
 
     Parameters
     ----------
@@ -1025,6 +1029,7 @@ def _nutation_matrix(
 def _polar_motion_matrix(T: float | np.ndarray):
     """
     Polar motion (Earth Orientation Parameters) rotation matrix
+    :cite:p:`Petit:2010tp,Urban:2013vl`
 
     Parameters
     ----------
@@ -1067,38 +1072,38 @@ def _precession_matrix(T: float | np.ndarray):
     # lunisolar precession
     phi0 = np.array([0.0, 5038.481507, -1.0790069,
         -1.14045e-3, 1.32851e-4, -9.51e-8])
-    PSI = atr*polynomial_sum(phi0, T)
+    psi = atr*polynomial_sum(phi0, T)
     # inclination of moving equator on fixed ecliptic
     omega0 = np.array([epsilon0, -2.5754e-2, 5.12623e-2,
         -7.72503e-3, -4.67e-7, 3.337e-7])
-    OMEGA = atr*polynomial_sum(omega0, T)
+    omega = atr*polynomial_sum(omega0, T)
     # planetary precession
     chi0 = np.array([0.0, 10.556403, -2.3814292,
         -1.21197e-3, 1.70663e-4, -5.60e-8])
-    CHI = atr*polynomial_sum(chi0, T)
+    chi = atr*polynomial_sum(chi0, T)
     # compute elements of precession rotation matrix
     P = np.zeros((3,3,len(np.atleast_1d(T))))
-    P[0,0,:] = np.cos(CHI)*np.cos(-PSI) - \
-        np.sin(-PSI)*np.sin(CHI)*np.cos(-OMEGA)
-    P[0,1,:] = np.cos(CHI)*np.sin(-PSI)*np.cos(EPS) + \
-        np.sin(CHI)*np.cos(-OMEGA)*np.cos(-PSI)*np.cos(EPS) - \
-        np.sin(EPS)*np.sin(CHI)*np.sin(-OMEGA)
-    P[0,2,:] = np.cos(CHI)*np.sin(-PSI)*np.sin(EPS) + \
-        np.sin(CHI)*np.cos(-OMEGA)*np.cos(-PSI)*np.sin(EPS) + \
-        np.cos(EPS)*np.sin(CHI)*np.sin(-OMEGA)
-    P[1,0,:] = -np.sin(CHI)*np.cos(-PSI) - \
-        np.sin(-PSI)*np.cos(CHI)*np.cos(-OMEGA)
-    P[1,1,:] = -np.sin(CHI)*np.sin(-PSI)*np.cos(EPS) + \
-        np.cos(CHI)*np.cos(-OMEGA)*np.cos(-PSI)*np.cos(EPS) - \
-        np.sin(EPS)*np.cos(CHI)*np.sin(-OMEGA)
-    P[1,2,:] = -np.sin(CHI)*np.sin(-PSI)*np.sin(EPS) + \
-        np.cos(CHI)*np.cos(-OMEGA)*np.cos(-PSI)*np.sin(EPS) + \
-        np.cos(EPS)*np.cos(CHI)*np.sin(-OMEGA)
-    P[2,0,:] = np.sin(-PSI)*np.sin(-OMEGA)
-    P[2,1,:] = -np.sin(-OMEGA)*np.cos(-PSI)*np.cos(EPS) - \
-        np.sin(EPS)*np.cos(-OMEGA)
-    P[2,2,:] = -np.sin(-OMEGA)*np.cos(-PSI)*np.sin(EPS) + \
-        np.cos(-OMEGA)*np.cos(EPS)
+    P[0,0,:] = np.cos(chi)*np.cos(-psi) - \
+        np.sin(-psi)*np.sin(chi)*np.cos(-omega)
+    P[0,1,:] = np.cos(chi)*np.sin(-psi)*np.cos(EPS) + \
+        np.sin(chi)*np.cos(-omega)*np.cos(-psi)*np.cos(EPS) - \
+        np.sin(EPS)*np.sin(chi)*np.sin(-omega)
+    P[0,2,:] = np.cos(chi)*np.sin(-psi)*np.sin(EPS) + \
+        np.sin(chi)*np.cos(-omega)*np.cos(-psi)*np.sin(EPS) + \
+        np.cos(EPS)*np.sin(chi)*np.sin(-omega)
+    P[1,0,:] = -np.sin(chi)*np.cos(-psi) - \
+        np.sin(-psi)*np.cos(chi)*np.cos(-omega)
+    P[1,1,:] = -np.sin(chi)*np.sin(-psi)*np.cos(EPS) + \
+        np.cos(chi)*np.cos(-omega)*np.cos(-psi)*np.cos(EPS) - \
+        np.sin(EPS)*np.cos(chi)*np.sin(-omega)
+    P[1,2,:] = -np.sin(chi)*np.sin(-psi)*np.sin(EPS) + \
+        np.cos(chi)*np.cos(-omega)*np.cos(-psi)*np.sin(EPS) + \
+        np.cos(EPS)*np.cos(chi)*np.sin(-omega)
+    P[2,0,:] = np.sin(-psi)*np.sin(-omega)
+    P[2,1,:] = -np.sin(-omega)*np.cos(-psi)*np.cos(EPS) - \
+        np.sin(EPS)*np.cos(-omega)
+    P[2,2,:] = -np.sin(-omega)*np.cos(-psi)*np.sin(EPS) + \
+        np.cos(-omega)*np.cos(EPS)
     # return the rotation matrix
     return P
 
