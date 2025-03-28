@@ -156,7 +156,7 @@ def spline(
         degree of the bivariate spline in the x-dimension
     ky: int, default 1
         degree of the bivariate spline in the y-dimension
-    kwargs: dict
+    **kwargs: dict
         additional arguments for ``scipy.interpolate.RectBivariateSpline``
 
     Returns
@@ -244,7 +244,7 @@ def regulargrid(
             - ``'slinear'``
             - ``'cubic'``
             - ``'quintic'``
-    kwargs: dict
+    **kwargs: dict
         additional arguments for ``scipy.interpolate.RegularGridInterpolator``
 
     Returns

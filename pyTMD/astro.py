@@ -465,7 +465,7 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
 
             - ``'approximate'``: low-resolution ephemerides
             - ``'JPL'``: computed ephemerides from JPL kernels
-    kwargs: dict
+    **kwargs: dict
         Keyword options for ephemeris calculation
 
     Returns
@@ -603,7 +603,7 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
 
             - ``'approximate'``: low-resolution ephemerides
             - ``'JPL'``: computed ephemerides from JPL kernels
-    kwargs: dict
+    **kwargs: dict
         Keyword options for ephemeris calculation
 
     Returns

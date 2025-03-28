@@ -983,13 +983,13 @@ class model:
             Latitude point in degrees
         append_node: bool, default False
             Append equilibrium amplitudes for node tides
-        kwargs: dict
+        **kwargs: dict
             Keyword arguments for extracting constants
 
         Returns
         -------
         amp: np.ndarray
-            Tidal amplitude in meters
+            Tidal amplitude
         ph: np.ndarray
             Tidal phase in degrees
         c: list
@@ -1061,7 +1061,7 @@ class model:
         ----------
         append_node: bool, default False
             Append equilibrium amplitudes for node tides
-        kwargs: dict
+        **kwargs: dict
             Keyword arguments for reading constants
         """
         # import tide model functions
@@ -1139,7 +1139,7 @@ class model:
             Longitude point in degrees
         lat: np.ndarray
             Latitude point in degrees
-        kwargs: dict
+        **kwargs: dict
             Keyword arguments for interpolating constants
 
         Returns
@@ -1233,7 +1233,7 @@ def extract_constants(lon: np.ndarray, lat: np.ndarray, m, **kwargs):
         Latitude point in degrees
     m: obj
         ``model`` class object
-    kwargs: dict
+    **kwargs: dict
         Keyword arguments for extracting constants
 
     Returns
@@ -1262,7 +1262,7 @@ def read_constants(m, **kwargs):
     ----------
     m: obj
         ``model`` class object
-    kwargs: dict
+    **kwargs: dict
         Keyword arguments for reading constants
 
     Returns
@@ -1291,7 +1291,7 @@ def interpolate_constants(lon: np.ndarray, lat: np.ndarray, m, **kwargs):
         Latitude point in degrees
     m: obj
         ``model`` class object
-    kwargs: dict
+    **kwargs: dict
         Keyword arguments for extracting constants
 
     Returns

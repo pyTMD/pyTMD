@@ -311,7 +311,7 @@ def tide_elevations(
     Returns
     -------
     tide: np.ndarray
-        tidal elevation at coordinates and time in meters
+        tidal elevation in meters
     """
 
     # check that tide directory is accessible
@@ -531,7 +531,12 @@ def tide_currents(
     Returns
     -------
     tide: dict
-        tidal currents at coordinates and times
+        tidal currents in cm/s
+
+        u: np.ndarray
+            horizontal transport velocities
+        v: np.ndarray
+            vertical transport velocities
     """
 
     # check that tide directory is accessible

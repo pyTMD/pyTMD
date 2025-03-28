@@ -158,7 +158,7 @@ class crs:
             Input y-coordinates
         EPSG: int or str, default 4326 (WGS84 Latitude/Longitude)
             input (``'F'``) or output (``'B'``) coordinate system
-        kwargs: dict
+        **kwargs: dict
             Keyword arguments for the transformation
 
         Returns

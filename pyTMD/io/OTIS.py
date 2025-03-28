@@ -1002,9 +1002,10 @@ def read_atlas_grid(input_file: str | pathlib.Path):
     pmask: np.ndarray
         global mask
     local: dict
-        dictionary of local tidal solutions for grid variables
+        local tidal solutions for grid variables
 
-            - ``'depth'``: model bathymetry
+        depth: np.ndarray
+            model bathymetry
     """
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
@@ -1241,9 +1242,10 @@ def read_atlas_elevation(
     h: float
         global tidal elevation
     local: dict
-        dictionary of local tidal solutions for elevation variables
+        local tidal solutions for elevation variables
 
-            - ``'z'``: tidal elevation
+        z: np.ndarray
+            tidal elevation
     """
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
@@ -1400,10 +1402,12 @@ def read_atlas_transport(
     v: np.ndarray
         global meridional zonal transport
     local: dict
-        dictionary of local tidal solutions for transport variables
+        local tidal solutions for transport variables
 
-            - ``'u'``: zonal tidal transport
-            - ``'v'``: meridional zonal transport
+        u: np.ndarray
+            zonal tidal transport
+        v: np.ndarray
+            meridional zonal transport
     """
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
@@ -1514,7 +1518,7 @@ def create_atlas_mask(
     mz: np.ndarray
         global land/water mask
     local: dict
-        dictionary of local tidal solutions
+        local tidal solutions
     variable: str or NoneType, default None
         key for variable within each local solution
 
@@ -1641,7 +1645,7 @@ def combine_atlas_model(
     pmask: np.ndarray
         global mask
     local: dict
-        dictionary of local tidal solutions
+        local tidal solutions
     variable: str or NoneType, default None
         key for variable within each local solution
 
