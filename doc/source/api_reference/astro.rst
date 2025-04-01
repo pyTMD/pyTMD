@@ -23,6 +23,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.astro.delaunay_arguments
 
+.. autofunction:: pyTMD.astro.schureman_arguments
+
 .. autofunction:: pyTMD.astro.mean_obliquity
 
 .. autofunction:: pyTMD.astro.equation_of_time

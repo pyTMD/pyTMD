@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 arguments.py
-Written by Tyler Sutterley (03/2025)
+Written by Tyler Sutterley (04/2025)
 Calculates the nodal corrections for tidal constituents
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -39,6 +39,8 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 04/2025: convert longitudes p and n to radians within nodal function
+        use schureman arguments function to get nodal variables for FES models
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
         use string mapping to remap non-numeric Doodson numbers
@@ -246,11 +248,14 @@ def minor_arguments(
     fargs = np.c_[tau, s, h, p, n, pp, k]
     arg = np.dot(fargs, _minor_table())
 
+    # convert mean longitudes to radians
+    P = p*dtr
+    N = n*dtr
     # determine nodal corrections f and u
-    sinn = np.sin(n*dtr)
-    cosn = np.cos(n*dtr)
-    sin2n = np.sin(2.0*n*dtr)
-    cos2n = np.cos(2.0*n*dtr)
+    sinn = np.sin(N)
+    cosn = np.cos(N)
+    sin2n = np.sin(2.0*N)
+    cos2n = np.cos(2.0*N)
 
     # nodal factor corrections for minor constituents
     f = np.ones((nt, 20))
@@ -290,17 +295,7 @@ def minor_arguments(
 
     if kwargs['corrections'] in ('FES',):
         # additional astronomical terms for FES models
-        II = np.arccos(0.913694997 - 0.035692561*np.cos(n*dtr))
-        at1 = np.arctan(1.01883*np.tan(n*dtr/2.0))
-        at2 = np.arctan(0.64412*np.tan(n*dtr/2.0))
-        xi = -at1 - at2 + n*dtr
-        xi = np.arctan2(np.sin(xi), np.cos(xi))
-        nu = at1 - at2
-        I2 = np.tan(II/2.0)
-        Ra1 = np.sqrt(1.0 - 12.0*(I2**2)*np.cos(2.0*(p - xi)) + 36.0*(I2**4))
-        P2 = np.sin(2.0*(p - xi))
-        Q2 = 1.0/(6.0*(I2**2)) - np.cos(2.0*(p - xi))
-        R = np.arctan(P2/Q2)
+        II, xi, R, Ra, nu, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
 
         # nodal factor corrections for minor constituents
         f[:,0] = np.sin(II)*(np.cos(II/2.0)**2)/0.38 # 2Q1
@@ -315,7 +310,7 @@ def minor_arguments(
         f[:,12] = f[:,11] # mu2
         f[:,13] = f[:,11] # nu2
         f[:,14] = f[:,11] # lambda2
-        f[:,15] = f[:,11]*Ra1 # L2
+        f[:,15] = f[:,11]/Ra # L2
         f[:,18] = f[:,11] # eps2
         f[:,19] = np.power(np.sin(II),2.0)/0.1565 # eta2
 
@@ -544,16 +539,23 @@ def nodal(
 
     # degrees to radians
     dtr = np.pi/180.0
+    # convert longitudes to radians
+    N = dtr*n
+    P = dtr*p
     # trigonometric factors for nodal corrections
-    sinn = np.sin(n*dtr)
-    cosn = np.cos(n*dtr)
-    sin2n = np.sin(2.0*n*dtr)
-    cos2n = np.cos(2.0*n*dtr)
-    sin3n = np.sin(3.0*n*dtr)
-    sinp  = np.sin(p*dtr)
-    cosp  = np.cos(p*dtr)
-    sin2p = np.sin(2.0*p*dtr)
-    cos2p = np.cos(2.0*p*dtr)
+    sinn = np.sin(N)
+    cosn = np.cos(N)
+    sin2n = np.sin(2.0*N)
+    cos2n = np.cos(2.0*N)
+    sin3n = np.sin(3.0*N)
+    sinp  = np.sin(P)
+    cosp  = np.cos(P)
+    sin2p = np.sin(2.0*P)
+    cos2p = np.cos(2.0*P)
+    # compute additional angles for FES models
+    if FES_TYPE:
+        # additional astronomical terms for FES models
+        II, xi, nu, R, Ra, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
 
     # set constituents to be iterable
     if isinstance(constituents, str):
@@ -567,47 +569,34 @@ def nodal(
     # nodal angle correction
     u = np.zeros((nt, nc))
 
-    # additional astronomical terms for FES models
-    II = np.arccos(0.913694997 - 0.035692561*np.cos(n*dtr))
-    at1 = np.arctan(1.01883*np.tan(n*dtr/2.0))
-    at2 = np.arctan(0.64412*np.tan(n*dtr/2.0))
-    xi = -at1 - at2 + n*dtr
-    xi = np.arctan2(np.sin(xi), np.cos(xi))
-    nu = at1 - at2
-    I2 = np.tan(II/2.0)
-    Ra1 = np.sqrt(1.0 - 12.0*(I2**2)*np.cos(2.0*(p - xi)) + 36.0*(I2**4))
-    P2 = np.sin(2.0*(p - xi))
-    Q2 = 1.0/(6.0*(I2**2)) - np.cos(2.0*(p - xi))
-    R = np.arctan(P2/Q2)
-    P_prime = np.sin(2.0*II)*np.sin(nu)
-    Q_prime = np.sin(2.0*II)*np.cos(nu) + 0.3347
-    nu_prime = np.arctan(P_prime/Q_prime)
-    P_sec = (np.sin(II)**2)*np.sin(2.0*nu)
-    Q_sec = (np.sin(II)**2)*np.cos(2.0*nu) + 0.0727
-    nu_sec = 0.5*np.arctan(P_sec/Q_sec)
-
     # compute standard nodal corrections f and u
     for i, c in enumerate(constituents):
         if c in ('msf','tau1','p1','theta1','lambda2','s2') and OTIS_TYPE:
             term1 = 0.0
             term2 = 1.0
         elif c in ('p1','s2') and (FES_TYPE or PERTH3_TYPE):
+            # Schureman: Table 2, Page 165
+            # Schureman: Table 2, Page 166
             term1 = 0.0
             term2 = 1.0
         elif c in ('mm','msm') and OTIS_TYPE:
             term1 = 0.0
             term2 = 1.0 - 0.130*cosn
         elif c in ('mm','msm') and FES_TYPE:
+            # Schureman: Page 164, Table 2
+            # Schureman: Page 25, Equation 73
             term1 = 0.0
             term2 = (2.0/3.0 - np.power(np.sin(II),2.0))/0.5021
         elif c in ('mm','msm'):
-            term1 = -0.0534*sin2p - 0.0219*np.sin((2.0*p-n)*dtr)
-            term2 = 1.0 - 0.1308*cosn - 0.0534*cos2p - 0.0219*np.cos((2.0*p-n)*dtr)
+            term1 = -0.0534*sin2p - 0.0219*np.sin(2.0*P - N)
+            term2 = 1.0 - 0.1308*cosn - 0.0534*cos2p - 0.0219*np.cos(2.0*P - N)
         elif c in ('mf','msqm','msp','mq','mtm') and OTIS_TYPE:
             f[:,i] = 1.043 + 0.414*cosn
             u[:,i] = dtr*(-23.7*sinn + 2.7*sin2n - 0.4*sin3n)
             continue
         elif c in ('mf','msqm','msp','mq','mt','mtm') and FES_TYPE:
+            # Schureman: Table 2, Page 164
+            # Schureman: Page 25, Equation 74
             f[:,i] = np.power(np.sin(II),2.0)/0.1578
             u[:,i] = -2.0*xi
             continue
@@ -621,8 +610,12 @@ def nodal(
             term1 = -0.018*sin2p - 0.4145*sinn - 0.040*sin2n
             term2 = 1.0 + 0.018*cos2p + 0.4145*cosn + 0.040*cos2n
         elif c in ('msf',) and FES_TYPE:
-            f[:,i] = 1.0
-            u[:,i] = (2.0*xi - 2.0*nu)
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 25, Equation 78
+            # from table 14: use f factor from m2
+            f[:,i] = np.power(np.cos(II/2.0),4.0)/0.9154
+            # from table 11: take negative of u factor from m2
+            u[:,i] = -(2.0*xi - 2.0*nu)
             continue
         elif c in ('msf',):
             # linear tide and not compound
@@ -638,7 +631,9 @@ def nodal(
             u[:,i] = dtr*(10.8*sinn - 1.3*sin2n + 0.2*sin3n)
             continue
         elif c in ('o1','so3','op2','2q1','q1','rho1','sigma1') and FES_TYPE:
-            f[:,i] = np.sin(II)*(np.cos(II/2.0)**2)/0.38
+            # Schureman: Table 2, Page 164
+            # Schureman: Page 25, Equation 75
+            f[:,i] = np.sin(II)*np.power(np.cos(II/2.0),2)/0.38
             u[:,i] = (2.0*xi - nu)
             continue
         elif c in ('q1','o1') and PERTH3_TYPE:
@@ -663,21 +658,23 @@ def nodal(
             term2 = 1.0 + 0.226*cosn
         elif c in ('m1',) and (kwargs['M1'] == 'Doodson'):
             # A. T. Doodson's coefficients for M1 tides
-            term1 = sinp + 0.2*np.sin((p-n)*dtr)
-            term2 = 2.0*cosp + 0.4*np.cos((p-n)*dtr)
+            term1 = sinp + 0.2*np.sin(P - N)
+            term2 = 2.0*cosp + 0.4*np.cos(P - N)
         elif c in ('m1',) and (kwargs['M1'] == 'Ray'):
             # R. Ray's coefficients for M1 tides (perth3)
-            term1 = 0.64*sinp + 0.135*np.sin((p-n)*dtr)
-            term2 = 1.36*cosp + 0.267*np.cos((p-n)*dtr)
+            term1 = 0.64*sinp + 0.135*np.sin(P - N)
+            term2 = 1.36*cosp + 0.267*np.cos(P - N)
         elif c in ('m1',) and (kwargs['M1'] == 'perth5'):
             # assumes M1 argument includes p
-            term1 = -0.2294*sinn - 0.3594*sin2p - 0.0664*np.sin((2.0*p-n)*dtr)
-            term2 = 1.0 + 0.1722*cosn + 0.3594*cos2p + 0.0664*np.cos((2.0*p-n)*dtr)
+            term1 = -0.2294*sinn - 0.3594*sin2p - 0.0664*np.sin(2.0*P - N)
+            term2 = 1.0 + 0.1722*cosn + 0.3594*cos2p + 0.0664*np.cos(2.0*P - N)
         elif c in ('chi1',) and OTIS_TYPE:
             term1 = -0.221*sinn
             term2 = 1.0 + 0.221*cosn
         elif c in ('chi1','theta1','j1') and FES_TYPE:
-            f[:,i] = np.sin(2.0*II) / 0.7214
+            # Schureman: Table 2, Page 164
+            # Schureman: Page 25, Equation 76
+            f[:,i] = np.sin(2.0*II)/0.7214
             u[:,i] = -nu
             continue
         elif c in ('chi1',):
@@ -690,6 +687,8 @@ def nodal(
             term1 = -0.1554*sinn + 0.0029*sin2n
             term2 = 1.0 + 0.1158*cosn - 0.0029*cos2n
         elif c in ('k1','sk3','2sk5') and FES_TYPE:
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 45, Equation 227
             temp1 = 0.8965*np.power(np.sin(2.0*II),2.0)
             temp2 = 0.6001*np.sin(2.0*II)*np.cos(nu)
             f[:,i] = np.sqrt(temp1 + temp2 + 0.1006)
@@ -709,6 +708,8 @@ def nodal(
             term1 = -0.640*sinn - 0.134*sin2n
             term2 = 1.0 + 0.640*cosn + 0.134*cos2n
         elif c in ('oo1','ups1') and FES_TYPE:
+            # Schureman: Table 2, Page 164
+            # Schureman: Page 25, Equation 77
             f[:,i] = np.sin(II)*np.power(np.sin(II/2.0),2.0)/0.01640
             u[:,i] = -2.0*xi - nu
             continue
@@ -717,6 +718,8 @@ def nodal(
             term2 = 1.0 + 0.640*cosn + 0.134*cos2n + 0.150*cos2p
         elif c in ('m2','2n2','mu2','n2','nu2','lambda2','ms4','eps2','2sm6',
                 '2sn6','mp1','mp3','sn4') and FES_TYPE:
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 25, Equation 78
             f[:,i] = np.power(np.cos(II/2.0),4.0)/0.9154
             u[:,i] = 2.0*xi - 2.0*nu
             continue
@@ -729,15 +732,17 @@ def nodal(
             term1 = -0.03731*sinn + 0.00052*sin2n
             term2 = 1.0 - 0.03731*cosn + 0.00052*cos2n
         elif c in ('l2','sl4') and OTIS_TYPE:
-            term1 = -0.25*sin2p - 0.11*np.sin((2.0*p-n)*dtr) - 0.04*sinn
-            term2 = 1.0 - 0.25*cos2p - 0.11*np.cos((2.0*p - n)*dtr) - 0.04*cosn
+            term1 = -0.25*sin2p - 0.11*np.sin(2.0*P - N) - 0.04*sinn
+            term2 = 1.0 - 0.25*cos2p - 0.11*np.cos(2.0*P - N) - 0.04*cosn
         elif c in ('l2','sl4') and FES_TYPE:
-            f[:,i] = Ra1*np.power(np.cos(II/2.0),4.0)/0.9154
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 44, Equation 215
+            f[:,i] = np.power(np.cos(II/2.0),4.0)/(0.9154*Ra)
             u[:,i] = 2.0*xi - 2.0*nu - R
             continue
         elif c in ('l2','sl4'):
-            term1 = -0.25*sin2p - 0.11*np.sin((2.0*p-n)*dtr) - 0.037*sinn
-            term2 = 1.0 - 0.25*cos2p - 0.11*np.cos((2.0*p-n)*dtr) - 0.037*cosn
+            term1 = -0.25*sin2p - 0.11*np.sin(2.0*P - N) - 0.037*sinn
+            term2 = 1.0 - 0.25*cos2p - 0.11*np.cos(2.0*P - N) - 0.037*cosn
         elif c in ('l2b',):
             # for when l2 is split into two constituents
             term1 = 0.441*sinn
@@ -746,6 +751,8 @@ def nodal(
             term1 = -0.3108*sinn - 0.0324*sin2n
             term2 = 1.0 + 0.2852*cosn + 0.0324*cos2n
         elif c in ('k2','sk4','2sk6','kp1') and FES_TYPE:
+            # Schureman: Table 2, Page 166
+            # Schureman: Page 46, Equation 235
             term1 = 19.0444 * np.power(np.sin(II),4.0)
             term2 = 2.7702 * np.power(np.sin(II),2.0) * np.cos(2.0*nu)
             f[:,i] = np.sqrt(term1 + term2 + 0.0981)
@@ -759,12 +766,14 @@ def nodal(
             term1 = -0.3108*sinn - 0.0324*sin2n
             term2 = 1.0 + 0.2853*cosn + 0.0324*cos2n
         elif c in ('gamma2',):
-            term1 = 0.147*np.sin(2.0*(n-p)*dtr)
-            term2 = 1.0 + 0.147*np.cos(2.0*(n-p)*dtr)
+            term1 = 0.147*np.sin(2.0*(N - P))
+            term2 = 1.0 + 0.147*np.cos(2.0*(N - P))
         elif c in ('delta2',):
             term1 = 0.505*sin2p + 0.505*sinn - 0.165*sin2n
             term2 = 1.0 - 0.505*cos2p - 0.505*cosn + 0.165*cos2n
         elif c in ('eta2','zeta2') and FES_TYPE:
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 25, Equation 79
             f[:,i] = np.power(np.sin(II),2.0)/0.1565
             u[:,i] = -2.0*nu
             continue
@@ -799,6 +808,8 @@ def nodal(
             term1 = -0.2495*sinn
             term2 = 1.0 + 0.1315*cosn
         elif c in ('m3',) and FES_TYPE:
+            # Schureman: Table 2, Page 166
+            # Schureman: Page 36, Equation 149
             f[:,i] = np.power(np.cos(II/2.0), 6.0) / 0.8758
             u[:,i] = (3.0*xi - 3.0*nu)
             continue
@@ -810,8 +821,8 @@ def nodal(
             term1 = -0.464*sinn - 0.052*sin2n
             term2 = 1.0 + 0.387*cosn + 0.052*cos2n
         elif c in ('l3',):
-            term1 = -0.373*sin2p - 0.164*np.sin((2.0*p-n)*dtr)
-            term2 = 1.0 - 0.373*cos2p - 0.164*np.cos((2.0*p-n)*dtr)
+            term1 = -0.373*sin2p - 0.164*np.sin(2.0*P - N)
+            term2 = 1.0 - 0.373*cos2p - 0.164*np.cos(2.0*P - N)
         elif c in ('mfdw',):
             # special test of Doodson-Warburg formula
             f[:,i] = 1.043 + 0.414*cosn

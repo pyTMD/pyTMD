@@ -16,6 +16,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 04/2025: added schureman arguments function for FES models
     Updated 03/2025: changed argument for method calculating mean longitudes
         split ICRS rotation matrix from the ITRS function 
         added function to correct for aberration effects
@@ -43,7 +44,7 @@ UPDATE HISTORY:
     Updated 07/2020: added function docstrings
     Updated 07/2018: added option ASTRO5 to use coefficients from Richard Ray
         for use with the GSFC Global Ocean Tides (GOT) model
-        added longitude of solar perigee (PP) as an additional output
+        added longitude of solar perigee (Ps) as an additional output
     Updated 09/2017: added option MEEUS to use additional coefficients
         from Meeus Astronomical Algorithms to calculate mean longitudes
     Updated 09/2017: Rewritten in Python
@@ -77,6 +78,7 @@ __all__ = [
     "phase_angles",
     "doodson_arguments",
     "delaunay_arguments",
+    "schureman_arguments",
     "mean_obliquity",
     "solar_ecef",
     "solar_approximate",
@@ -117,10 +119,10 @@ def mean_longitudes(
         **kwargs
     ):
     r"""
-    Computes the basic astronomical mean longitudes:
-    `S`, `H`, `P`, `N` and `PP` :cite:p:`Meeus:1991vh,Simon:1994vo`
+    Computes the basic astronomical mean longitudes: :math:`S`, :math:`H`,
+    :math:`P`, :math:`N` and :math:`P_s` :cite:p:`Meeus:1991vh,Simon:1994vo`
 
-    Note `N` is not `N'`, i.e. `N` is decreasing with time.
+    Note :math:`N` is not :math:`N'`, i.e. :math:`N` is decreasing with time.
 
     Parameters
     ----------
@@ -144,7 +146,7 @@ def mean_longitudes(
         mean longitude of lunar perigee (degrees)
     N: np.ndarray
         mean longitude of ascending lunar node (degrees)
-    PP: np.ndarray
+    Ps: np.ndarray
         longitude of solar perigee (degrees)
     """
     # set default keyword arguments
@@ -177,7 +179,7 @@ def mean_longitudes(
             1.55628359e-12, 4.390675353e-20, -9.26940435e-27])
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
-        PP = 282.94 + (1.7192 * T)/_century
+        Ps = 282.94 + (1.7192 * T)/_century
     elif (kwargs['method'] == 'ASTRO5'):
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000)/_century
@@ -197,7 +199,7 @@ def mean_longitudes(
         lunar_node = np.array([125.04452, -1934.136261, 2.0708e-3, 2.22222e-6])
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
-        PP = 282.94 + 1.7192 * T
+        Ps = 282.94 + 1.7192 * T
     elif (kwargs['method'] == 'IERS'):
         # compute the Delaunay arguments (IERS conventions)
         l, lp, F, D, omega = delaunay_arguments(MJD)
@@ -213,7 +215,7 @@ def mean_longitudes(
         # longitude of ascending lunar node
         N = omega/dtr
         # longitude of solar perigee
-        PP = (-lp + F - D + omega)/dtr
+        Ps = (-lp + F - D + omega)/dtr
     else:
         # Formulae for the period 1990--2010 were derived by David Cartwright
         # convert from MJD to days relative to 2000-01-01T12:00:00
@@ -228,15 +230,15 @@ def mean_longitudes(
         # mean longitude of ascending lunar node
         N = 125.0445 - 0.05295377 * T
         # solar perigee at epoch 2000
-        PP = np.full_like(T, 282.8)
+        Ps = np.full_like(T, 282.8)
     # take the modulus of each
     S = normalize_angle(S)
     H = normalize_angle(H)
     P = normalize_angle(P)
     N = normalize_angle(N)
-    PP = normalize_angle(PP)
+    Ps = normalize_angle(Ps)
     # return as tuple
-    return (S, H, P, N, PP)
+    return (S, H, P, N, Ps)
 
 # PURPOSE: computes the phase angles of astronomical means
 def phase_angles(MJD: np.ndarray):
@@ -257,8 +259,10 @@ def doodson_arguments(
     ):
     r"""
     Computes astronomical phase angles for the six Doodson
-    Arguments: :math:`\tau`, `S`, `H`, `P`, and `N'`, and `Ps`
-    :cite:p:`Doodson:1921kt,Meeus:1991vh`
+    Arguments: :math:`\tau`, :math:`S`, :math:`H`, :math:`P`, 
+    :math:`N'`, and :math:`P_s` :cite:p:`Doodson:1921kt,Meeus:1991vh`
+
+    Follows IERS conventions for the Doodson arguments :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -334,9 +338,10 @@ def doodson_arguments(
     return (TAU, S, H, P, Np, Ps)
 
 def delaunay_arguments(MJD: np.ndarray):
-    """
+    r"""
     Computes astronomical phase angles for the five primary Delaunay
-    Arguments of Nutation: `l`, `l'`, `F`, `D`, and `N`
+    Arguments of Nutation: :math:`l`, :math:`l'`, :math:`F`,
+    :math:`D`, and :math:`N`
     :cite:p:`Meeus:1991vh,Petit:2010tp,Capitaine:2003fx`
 
     Parameters
@@ -359,7 +364,7 @@ def delaunay_arguments(MJD: np.ndarray):
     """
     # arcseconds to radians
     atr = np.pi/648000.0
-    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    # convert from MJD to centuries relative to 20math00-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # 360 degrees
     circle = 1296000
@@ -387,6 +392,75 @@ def delaunay_arguments(MJD: np.ndarray):
     N = atr*normalize_angle(N, circle=circle)
     # return as tuple
     return (l, lp, F, D, N)
+
+def schureman_arguments(
+        P: np.ndarray,
+        N: np.ndarray
+    ):
+    r"""
+    Computes additional phase angles :math:`I`, :math:`\xi`, :math:`\nu`,
+    :math:`R`, :math:`R_a`, :math:`\nu'`, and :math:`\nu''` from
+    :cite:t:`Schureman:1958ty`
+
+    See the explanation of symbols in appendix of :cite:t:`Schureman:1958ty` 
+
+    Parameters
+    ----------
+    P: np.ndarray
+        mean longitude of lunar perigee (radians)
+    N: np.ndarray
+        mean longitude of ascending lunar node (radians)
+
+    Returns
+    -------
+    I: np.ndarray
+        obliquity of lunar orbit with respect to Earth's equator (radians)
+    xi: np.ndarray
+        longitude in the moon's orbit of lunar intersection (radians)
+    nu: np.ndarray
+        right ascension of lunar intersection (radians)
+    R: np.ndarray
+        term in argument for l2 constituent (radians)
+    Ra: np.ndarray
+        factor in amplitude for l2 constituent (radians)
+    nu_p: np.ndarray
+        term in argument for k1 constituent (radians)
+    nu_s: np.ndarray
+        term in argument for k2 constituent (radians)
+    """
+    # additional astronomical terms for FES models
+    # inclination of the moon's orbit to Earth's equator
+    # Schureman (page 156)
+    I = np.arccos(0.913694997 - 0.035692561*np.cos(N))
+    # longitude in the moon's orbit of lunar intersection
+    at1 = np.arctan(1.01883*np.tan(N/2.0))
+    at2 = np.arctan(0.64412*np.tan(N/2.0))
+    xi = -at1 - at2 + N
+    xi = np.arctan2(np.sin(xi), np.cos(xi))
+    # right ascension of lunar intersection
+    nu = at1 - at2
+    # mean longitude of lunar perigee reckoned from the lunar intersection
+    # Schureman (page 41)
+    p = (P - xi)
+    # Schureman (page 44) equation 214
+    P_R = np.sin(2.0*p)
+    Q_R = np.pow(np.tan(I/2.0), -2.0)/6.0 - np.cos(2.0*p)
+    R = np.arctan(P_R/Q_R)
+    # Schureman (page 44) equation 213
+    # note that Ra is normally used as an inverse (1/Ra)
+    term1 = 12.0*np.pow(np.tan(I/2.0), 2.0)*np.cos(2.0*p)
+    term2 = 36.0*np.pow(np.tan(I/2.0), 4.0)
+    Ra = np.power(1.0 - term1 + term2, -0.5)
+    # Schureman (page 45) equation 224
+    P_prime = np.sin(2.0*I)*np.sin(nu)
+    Q_prime = np.sin(2.0*I)*np.cos(nu) + 0.3347
+    nu_p = np.arctan(P_prime/Q_prime)
+    # Schureman (page 46) equation 232
+    P_sec = (np.sin(I)**2)*np.sin(2.0*nu)
+    Q_sec = (np.sin(I)**2)*np.cos(2.0*nu) + 0.0727
+    nu_s = 0.5*np.arctan(P_sec/Q_sec)
+    # return as tuple
+    return (I, xi, nu, R, Ra, nu_p, nu_s)
 
 def mean_obliquity(MJD: np.ndarray):
     """Mean obliquity of the ecliptic
@@ -498,14 +572,14 @@ def solar_approximate(MJD, **kwargs):
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # mean longitude of solar perigee (radians)
-    PP = ts.deg2rad*(282.94 + 1.7192 * ts.T)
+    Ps = ts.deg2rad*(282.94 + 1.7192 * ts.T)
     # mean anomaly of the sun (radians)
     solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
     M = ts.deg2rad*polynomial_sum(solar_anomaly, ts.T)
     # series expansion for mean anomaly in solar radius (meters)
     r_sun = 1e9*(149.619 - 2.499*np.cos(M) - 0.021*np.cos(2.0*M))
     # series expansion for ecliptic longitude of the sun (radians)
-    lambda_sun = PP + M + ts.asec2rad*(6892.0*np.sin(M) + 72.0*np.sin(2.0*M))
+    lambda_sun = Ps + M + ts.asec2rad*(6892.0*np.sin(M) + 72.0*np.sin(2.0*M))
     # ecliptic latitude is equal to 0 within 1 arcminute
     # obliquity of the J2000 ecliptic (radians)
     epsilon_j2000 = 23.43929111*ts.deg2rad

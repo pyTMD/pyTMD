@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 u"""
-test_arguments.py (03/2025)
+test_arguments.py (04/2025)
 Verify arguments table matches prior arguments array
 Verify nodal corrections match prior estimates
 
 UPDATE HISTORY:
-    Updated 03/2025: changed argument for method calculating mean longitudes
+    Updated 04/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: add Doodson (1921) table with missing coefficients
         add check for converting from coefficients to constituent ID
         add check for climatologically affected constituents (sa and sta)
@@ -297,9 +297,12 @@ def test_nodal(corrections, M1):
     # use a random set of modified Julian days
     MJD = np.random.randint(58000, 61000, size=10)
     # set function for astronomical longitudes
-    ASTRO5 = corrections not in ('OTIS','ATLAS','TMD3','netcdf')
+    if corrections in ('OTIS','ATLAS','TMD3','netcdf'):
+        method = 'Cartwright'
+    else:
+        method = 'ASTRO5'
     # convert from Modified Julian Dates into Ephemeris Time
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method=method)
     # number of temporal values
     nt = len(np.atleast_1d(MJD))
 
@@ -512,9 +515,9 @@ def test_nodal(corrections, M1):
         xi[xi > np.pi] -= 2.0*np.pi
         nu = at1 - at2
         I2 = np.tan(II/2.0)
-        Ra1 = np.sqrt(1.0 - 12.0*(I2**2)*np.cos(2.0*(p - xi)) + 36.0*(I2**4))
-        P2 = np.sin(2.0*(p - xi))
-        Q2 = 1.0/(6.0*(I2**2)) - np.cos(2.0*(p - xi))
+        Ra1 = np.sqrt(1.0 - 12.0*(I2**2)*np.cos(2.0*(dtr*p - xi)) + 36.0*(I2**4))
+        P2 = np.sin(2.0*(dtr*p - xi))
+        Q2 = 1.0/(6.0*(I2**2)) - np.cos(2.0*(dtr*p - xi))
         R = np.arctan(P2/Q2)
         P_prime = np.sin(2.0*II)*np.sin(nu)
         Q_prime = np.sin(2.0*II)*np.cos(nu) + 0.3347
@@ -527,7 +530,7 @@ def test_nodal(corrections, M1):
         f[:,0] = 1.0 # Sa
         f[:,1] = 1.0 # Ssa
         f[:,2] = (2.0/3.0 - np.power(np.sin(II),2.0))/0.5021 # Mm
-        f[:,3] = 1.0 # MSf
+        f[:,3] = np.power(np.cos(II/2.0),4.0)/0.9154 # MSf
         f[:,4] = np.power(np.sin(II),2.0)/0.1578  # Mf
         f[:,7] = np.sin(II)*(np.cos(II/2.0)**2)/0.38 # 2Q1
         f[:,8] = f[:,7] # sigma1
@@ -600,7 +603,7 @@ def test_nodal(corrections, M1):
         u[:,0] = 0.0 # Sa
         u[:,1] = 0.0 # Ssa
         u[:,2] = 0.0 # Mm
-        u[:,3] = (2.0*xi - 2.0*nu)/dtr # MSf
+        u[:,3] = -(2.0*xi - 2.0*nu)/dtr # MSf
         u[:,4] = -2.0*xi/dtr # Mf
         u[:,7] = (2.0*xi - nu)/dtr # 2Q1
         u[:,8] = u[:,7] # sigma1
