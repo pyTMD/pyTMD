@@ -295,8 +295,7 @@ def minor_arguments(
 
     if kwargs['corrections'] in ('FES',):
         # additional astronomical terms for FES models
-        II, xi, R, Ra, nu, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
-
+        II, xi, nu, R, Ra, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
         # nodal factor corrections for minor constituents
         f[:,0] = np.sin(II)*(np.cos(II/2.0)**2)/0.38 # 2Q1
         f[:,1] = f[:,0] # sigma1
