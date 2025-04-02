@@ -97,21 +97,38 @@ def test_fundamental_arguments():
 def test_schureman_arguments():
     """Test that the phase angles match expected outputs
     """
-    ts = timescale.time.Timescale(51544.0 + 32/86400.0)
+    delta_times = np.array([-3155673600.0, 0.0])
+    ts = timescale.from_deltatime(delta_times, epoch=(2000,1,1,0,0,0))
     dtr = np.pi/180.0
     # calculate mean longitudes
-    s, h, p, n, ps = pyTMD.astro.mean_longitudes(ts.MJD + ts.tt_ut1, method='ASTRO5')
-    # convert longitudes to radians
-    P = dtr*p
-    N = dtr*n
+    s, h, p, n, ps = pyTMD.astro.mean_longitudes(
+        ts.MJD + ts.tt_ut1, method='ASTRO5')
+    s_expected = np.array([4.83493587, 3.69552497])
+    h_expected = np.array([4.89022967, 4.88647091])
+    p_expected = np.array([5.83611763, 1.45381785])
+    n_expected = np.array([4.52313201, 2.18290001])
+    assert np.isclose(s*dtr, s_expected).all()
+    assert np.isclose(h*dtr, h_expected).all()
+    assert np.isclose(p*dtr, p_expected).all()
+    assert np.isclose(n*dtr, n_expected).all()
     # calculate Schureman arguments
-    II, xi, nu, R, Ra1, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
-    np.isclose(xi, 0.19203231321420278)
-    np.isclose(R, 0.10104533494633117)
-    np.isclose(Ra1, 1.1723204500596927)
-    np.isclose(nu, 0.20721813091600161)
-    np.isclose(nu_prime, 0.13805659123725886)
-    np.isclose(nu_sec, 0.132258440531486)
+    # convert mean longitudes to radians
+    II, xi, nu, Qa, Qu, Ra, Ru, nu_prime, nu_sec = \
+        pyTMD.astro.schureman_arguments(dtr*p, dtr*n)
+    II_expected = np.array([0.40166890, 0.36476632])
+    xi_expected = np.array([-0.20894666, 0.19203231])
+    Ru_expected = np.array([-0.14529701, 0.10104533])
+    Ra_expected = 1.0/np.array([0.7873131, 1.17232045])
+    nu_expected = np.array([-0.22723534, 0.20721813])
+    nu_p_expected = np.array([-0.15525636, 0.13805659])
+    nu_s_expected = np.array([-0.15460551, 0.13225844])
+    assert np.isclose(II, II_expected, atol=1e-5).all()
+    assert np.isclose(xi, xi_expected, atol=1e-5).all()
+    assert np.isclose(nu, nu_expected, atol=1e-5).all()
+    assert np.isclose(Ra, Ra_expected, atol=1e-5).all()
+    assert np.isclose(Ru, Ru_expected, atol=1e-5).all()
+    assert np.isclose(nu_prime, nu_p_expected, atol=1e-5).all()
+    assert np.isclose(nu_sec, nu_s_expected, atol=1e-5).all()
 
 def test_precession_matrix():
     """Test that the precession matrix matches expected outputs

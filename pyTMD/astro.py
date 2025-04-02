@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (03/2025)
+Written by Tyler Sutterley (04/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,7 @@ REFERENCES:
 UPDATE HISTORY:
     Updated 04/2025: added schureman arguments function for FES models
         more outputs from schureman arguments function for M1 constituent
+        use flexible case for mean longitude method strings
     Updated 03/2025: changed argument for method calculating mean longitudes
         split ICRS rotation matrix from the ITRS function 
         added function to correct for aberration effects
@@ -160,7 +161,7 @@ def mean_longitudes(
         warnings.warn("Deprecated argument", DeprecationWarning)
         kwargs['method'] = 'ASTRO5'
     # compute the mean longitudes
-    if (kwargs['method'] == 'Meeus'):
+    if (kwargs['method'].title() == 'Meeus'):
         # convert from MJD to days relative to 2000-01-01T12:00:00
         T = MJD - _mjd_j2000
         # mean longitude of moon
@@ -181,7 +182,7 @@ def mean_longitudes(
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
         Ps = 282.94 + (1.7192 * T)/_century
-    elif (kwargs['method'] == 'ASTRO5'):
+    elif (kwargs['method'].upper() == 'ASTRO5'):
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000)/_century
         # mean longitude of moon (p. 338)
@@ -201,7 +202,7 @@ def mean_longitudes(
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
         Ps = 282.94 + 1.7192 * T
-    elif (kwargs['method'] == 'IERS'):
+    elif (kwargs['method'].upper() == 'IERS'):
         # compute the Delaunay arguments (IERS conventions)
         l, lp, F, D, omega = delaunay_arguments(MJD)
         # degrees to radians
@@ -218,7 +219,7 @@ def mean_longitudes(
         # longitude of solar perigee
         Ps = (-lp + F - D + omega)/dtr
     else:
-        # Formulae for the period 1990--2010 were derived by David Cartwright
+        # Formulae for the period 1990--2010 derived by David Cartwright
         # convert from MJD to days relative to 2000-01-01T12:00:00
         # convert from Universal Time to Dynamic Time at 2000-01-01
         T = MJD - 51544.4993
