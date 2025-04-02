@@ -40,7 +40,8 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 04/2025: convert longitudes p and n to radians within nodal function
-        use schureman arguments function to get nodal variables for FES models
+        use schureman_arguments function to get nodal variables for FES models
+        added Schureman to list of M1 options in nodal arguments 
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
         use string mapping to remap non-numeric Doodson numbers
@@ -142,6 +143,7 @@ def arguments(
 
                 - ``'Doodson'``
                 - ``'Ray'``
+                - ``'Schureman'``
                 - ``'perth5'``
 
     Returns
@@ -295,7 +297,8 @@ def minor_arguments(
 
     if kwargs['corrections'] in ('FES',):
         # additional astronomical terms for FES models
-        II, xi, nu, R, Ra, nu_p, nu_s = pyTMD.astro.schureman_arguments(P, N)
+        II, xi, nu, Qa, Qu, Ra, Ru, nu_prime, nu_sec = \
+            pyTMD.astro.schureman_arguments(P, N)
         # nodal factor corrections for minor constituents
         f[:,0] = np.sin(II)*(np.cos(II/2.0)**2)/0.38 # 2Q1
         f[:,1] = f[:,0] # sigma1
@@ -326,7 +329,7 @@ def minor_arguments(
         u[:,12] = u[:,11] # mu2
         u[:,13] = u[:,11] # nu2
         u[:,14] = (2.0*xi - 2.0*nu) # lambda2
-        u[:,15] = (2.0*xi - 2.0*nu - R)# L2
+        u[:,15] = (2.0*xi - 2.0*nu - Ru)# L2
         u[:,18] = u[:,12] # eps2
         u[:,19] = -2.0*nu # eta2
     elif kwargs['corrections'] in ('GOT',):
@@ -519,6 +522,7 @@ def nodal(
 
                 - ``'Doodson'``
                 - ``'Ray'``
+                - ``'Schureman'``
                 - ``'perth5'``
 
     Returns
@@ -554,7 +558,8 @@ def nodal(
     # compute additional angles for FES models
     if FES_TYPE:
         # additional astronomical terms for FES models
-        II, xi, nu, R, Ra, nu_p, nu_s = pyTMD.astro.schureman_arguments(P, N)
+        II, xi, nu, Qa, Qu, Ra, Ru, nu_prime, nu_sec = \
+            pyTMD.astro.schureman_arguments(P, N)
 
     # set constituents to be iterable
     if isinstance(constituents, str):
@@ -663,6 +668,12 @@ def nodal(
             # R. Ray's coefficients for M1 tides (perth3)
             term1 = 0.64*sinp + 0.135*np.sin(P - N)
             term2 = 1.36*cosp + 0.267*np.cos(P - N)
+        elif c in ('m1',) and (kwargs['M1'] == 'Schureman'):
+            # Schureman: Table 2, Page 165
+            # Schureman: Page 43, Equation 206
+            f[:,i] = np.sin(II)*np.pow(np.cos(II/2.0),2)/(0.38*Qa)
+            u[:,i] = -nu - Qu
+            continue
         elif c in ('m1',) and (kwargs['M1'] == 'perth5'):
             # assumes M1 argument includes p
             term1 = -0.2294*sinn - 0.3594*sin2p - 0.0664*np.sin(2.0*P - N)
@@ -691,7 +702,7 @@ def nodal(
             temp1 = 0.8965*np.power(np.sin(2.0*II),2.0)
             temp2 = 0.6001*np.sin(2.0*II)*np.cos(nu)
             f[:,i] = np.sqrt(temp1 + temp2 + 0.1006)
-            u[:,i] = -nu_p
+            u[:,i] = -nu_prime
             continue
         elif c in ('k1',) and PERTH3_TYPE:
             f[:,i] = 1.006 + 0.115*cosn - 0.009*cos2n
@@ -737,7 +748,7 @@ def nodal(
             # Schureman: Table 2, Page 165
             # Schureman: Page 44, Equation 215
             f[:,i] = np.power(np.cos(II/2.0),4.0)/(0.9154*Ra)
-            u[:,i] = 2.0*xi - 2.0*nu - R
+            u[:,i] = 2.0*xi - 2.0*nu - Ru
             continue
         elif c in ('l2','sl4'):
             term1 = -0.25*sin2p - 0.11*np.sin(2.0*P - N) - 0.037*sinn
@@ -755,7 +766,7 @@ def nodal(
             term1 = 19.0444 * np.power(np.sin(II),4.0)
             term2 = 2.7702 * np.power(np.sin(II),2.0) * np.cos(2.0*nu)
             f[:,i] = np.sqrt(term1 + term2 + 0.0981)
-            u[:,i] = -2.0*nu_s
+            u[:,i] = -2.0*nu_sec
             continue
         elif c in ('k2',) and PERTH3_TYPE:
             f[:,i] = 1.024 + 0.286*cosn + 0.008*cos2n
@@ -809,7 +820,7 @@ def nodal(
         elif c in ('m3',) and FES_TYPE:
             # Schureman: Table 2, Page 166
             # Schureman: Page 36, Equation 149
-            f[:,i] = np.power(np.cos(II/2.0), 6.0) / 0.8758
+            f[:,i] = np.power(np.cos(II/2.0), 6.0)/0.8758
             u[:,i] = (3.0*xi - 3.0*nu)
             continue
         elif c in ('m3','e3'):
@@ -1220,6 +1231,7 @@ def frequency(
 
                 - ``'Doodson'``
                 - ``'Ray'``
+                - ``'Schureman'``
                 - ``'perth5'``
 
     Returns
@@ -1281,6 +1293,7 @@ def aliasing_period(
 
                 - ``'Doodson'``
                 - ``'Ray'``
+                - ``'Schureman'``
                 - ``'perth5'``
 
     Returns

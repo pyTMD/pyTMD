@@ -17,6 +17,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 04/2025: added schureman arguments function for FES models
+        more outputs from schureman arguments function for M1 constituent
     Updated 03/2025: changed argument for method calculating mean longitudes
         split ICRS rotation matrix from the ITRS function 
         added function to correct for aberration effects
@@ -419,10 +420,14 @@ def schureman_arguments(
         longitude in the moon's orbit of lunar intersection (radians)
     nu: np.ndarray
         right ascension of lunar intersection (radians)
-    R: np.ndarray
-        term in argument for l2 constituent (radians)
+    Qa: np.ndarray
+        factor in amplitude for m1 constituent (radians)
+    Qu: np.ndarray
+        term in argument for m1 constituent (radians)
     Ra: np.ndarray
         factor in amplitude for l2 constituent (radians)
+    Ru: np.ndarray
+        term in argument for l2 constituent (radians)
     nu_p: np.ndarray
         term in argument for k1 constituent (radians)
     nu_s: np.ndarray
@@ -442,10 +447,16 @@ def schureman_arguments(
     # mean longitude of lunar perigee reckoned from the lunar intersection
     # Schureman (page 41)
     p = (P - xi)
+    # Schureman (page 42) equation 202
+    Q = np.arctan((5.0*np.cos(I) - 1.0)*np.tan(p)/(7.0*np.cos(I) + 1.0))
+    # Schureman (page 41) equation 197
+    Qa = np.pow(2.31 + 1.435*np.cos(2.0*p), -0.5)
+    # Schureman (page 42) equation 204
+    Qu = p - Q
     # Schureman (page 44) equation 214
     P_R = np.sin(2.0*p)
     Q_R = np.pow(np.tan(I/2.0), -2.0)/6.0 - np.cos(2.0*p)
-    R = np.arctan(P_R/Q_R)
+    Ru = np.arctan(P_R/Q_R)
     # Schureman (page 44) equation 213
     # note that Ra is normally used as an inverse (1/Ra)
     term1 = 12.0*np.pow(np.tan(I/2.0), 2.0)*np.cos(2.0*p)
@@ -460,7 +471,7 @@ def schureman_arguments(
     Q_sec = (np.sin(I)**2)*np.cos(2.0*nu) + 0.0727
     nu_s = 0.5*np.arctan(P_sec/Q_sec)
     # return as tuple
-    return (I, xi, nu, R, Ra, nu_p, nu_s)
+    return (I, xi, nu, Qa, Qu, Ra, Ru, nu_p, nu_s)
 
 def mean_obliquity(MJD: np.ndarray):
     """Mean obliquity of the ecliptic
