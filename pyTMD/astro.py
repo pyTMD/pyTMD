@@ -364,7 +364,7 @@ def delaunay_arguments(MJD: np.ndarray):
     """
     # arcseconds to radians
     atr = np.pi/648000.0
-    # convert from MJD to centuries relative to 20math00-01-01T12:00:00
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # 360 degrees
     circle = 1296000

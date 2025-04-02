@@ -295,7 +295,7 @@ def minor_arguments(
 
     if kwargs['corrections'] in ('FES',):
         # additional astronomical terms for FES models
-        II, xi, nu, R, Ra, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
+        II, xi, nu, R, Ra, nu_p, nu_s = pyTMD.astro.schureman_arguments(P, N)
         # nodal factor corrections for minor constituents
         f[:,0] = np.sin(II)*(np.cos(II/2.0)**2)/0.38 # 2Q1
         f[:,1] = f[:,0] # sigma1
@@ -554,7 +554,7 @@ def nodal(
     # compute additional angles for FES models
     if FES_TYPE:
         # additional astronomical terms for FES models
-        II, xi, nu, R, Ra, nu_prime, nu_sec = pyTMD.astro.schureman_arguments(P, N)
+        II, xi, nu, R, Ra, nu_p, nu_s = pyTMD.astro.schureman_arguments(P, N)
 
     # set constituents to be iterable
     if isinstance(constituents, str):
@@ -691,7 +691,7 @@ def nodal(
             temp1 = 0.8965*np.power(np.sin(2.0*II),2.0)
             temp2 = 0.6001*np.sin(2.0*II)*np.cos(nu)
             f[:,i] = np.sqrt(temp1 + temp2 + 0.1006)
-            u[:,i] = -nu_prime
+            u[:,i] = -nu_p
             continue
         elif c in ('k1',) and PERTH3_TYPE:
             f[:,i] = 1.006 + 0.115*cosn - 0.009*cos2n
@@ -755,7 +755,7 @@ def nodal(
             term1 = 19.0444 * np.power(np.sin(II),4.0)
             term2 = 2.7702 * np.power(np.sin(II),2.0) * np.cos(2.0*nu)
             f[:,i] = np.sqrt(term1 + term2 + 0.0981)
-            u[:,i] = -2.0*nu_sec
+            u[:,i] = -2.0*nu_s
             continue
         elif c in ('k2',) and PERTH3_TYPE:
             f[:,i] = 1.024 + 0.286*cosn + 0.008*cos2n
