@@ -1,0 +1,19 @@
+{
+    "format": "FES-netcdf",
+    "model_file": [
+        "HAMTIDE12/k1.HAMTIDE12x.nc",
+        "HAMTIDE12/k2.HAMTIDE12x.nc",
+        "HAMTIDE12/m2.HAMTIDE12x.nc",
+        "HAMTIDE12/n2.HAMTIDE12x.nc",
+        "HAMTIDE12/o1.HAMTIDE12x.nc",
+        "HAMTIDE12/p1.HAMTIDE12x.nc",
+        "HAMTIDE12/q1.HAMTIDE12x.nc",
+        "HAMTIDE12/s2.HAMTIDE12x.nc"
+    ],
+    "name": "HAMTIDE12x",
+    "reference": "https://doi.org/10.1002/2013JC009766",
+    "scale": 0.01,
+    "type": "z",
+    "variable": "tide_ocean",
+    "version": "FES2012"
+}

@@ -41,7 +41,8 @@ REFERENCES:
 UPDATE HISTORY:
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
-        added Schureman to list of M1 options in nodal arguments 
+        added Schureman to list of M1 options in nodal arguments
+        use numpy power function over using pow for consistency
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
         use string mapping to remap non-numeric Doodson numbers
@@ -671,7 +672,7 @@ def nodal(
         elif c in ('m1',) and (kwargs['M1'] == 'Schureman'):
             # Schureman: Table 2, Page 165
             # Schureman: Page 43, Equation 206
-            f[:,i] = np.sin(II)*np.pow(np.cos(II/2.0),2)/(0.38*Qa)
+            f[:,i] = np.sin(II)*np.power(np.cos(II/2.0),2)/(0.38*Qa)
             u[:,i] = -nu - Qu
             continue
         elif c in ('m1',) and (kwargs['M1'] == 'perth5'):
@@ -1309,7 +1310,7 @@ def aliasing_period(
     fs = 1.0/sampling
     # calculate the aliasing period
     period = 1.0/pyTMD.math.aliasing(f, fs)
-    # reutrn the aliasing period
+    # return the aliasing period
     return period
 
 def _arguments_table(**kwargs):

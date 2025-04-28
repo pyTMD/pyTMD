@@ -19,6 +19,7 @@ UPDATE HISTORY:
     Updated 04/2025: added schureman arguments function for FES models
         more outputs from schureman arguments function for M1 constituent
         use flexible case for mean longitude method strings
+        use numpy power function over using pow for consistency
     Updated 03/2025: changed argument for method calculating mean longitudes
         split ICRS rotation matrix from the ITRS function 
         added function to correct for aberration effects
@@ -452,17 +453,17 @@ def schureman_arguments(
     # Schureman (page 42) equation 202
     Q = np.arctan((5.0*np.cos(I) - 1.0)*np.tan(p)/(7.0*np.cos(I) + 1.0))
     # Schureman (page 41) equation 197
-    Qa = np.pow(2.31 + 1.435*np.cos(2.0*p), -0.5)
+    Qa = np.power(2.31 + 1.435*np.cos(2.0*p), -0.5)
     # Schureman (page 42) equation 204
     Qu = p - Q
     # Schureman (page 44) equation 214
     P_R = np.sin(2.0*p)
-    Q_R = np.pow(np.tan(I/2.0), -2.0)/6.0 - np.cos(2.0*p)
+    Q_R = np.power(np.tan(I/2.0), -2.0)/6.0 - np.cos(2.0*p)
     Ru = np.arctan(P_R/Q_R)
     # Schureman (page 44) equation 213
     # note that Ra is normally used as an inverse (1/Ra)
-    term1 = 12.0*np.pow(np.tan(I/2.0), 2.0)*np.cos(2.0*p)
-    term2 = 36.0*np.pow(np.tan(I/2.0), 4.0)
+    term1 = 12.0*np.power(np.tan(I/2.0), 2.0)*np.cos(2.0*p)
+    term2 = 36.0*np.power(np.tan(I/2.0), 4.0)
     Ra = np.power(1.0 - term1 + term2, -0.5)
     # Schureman (page 45) equation 224
     P_prime = np.sin(2.0*I)*np.sin(nu)

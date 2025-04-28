@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 math.py
-Written by Tyler Sutterley (01/2025)
+Written by Tyler Sutterley (04/2025)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 04/2025: use numpy power function over using pow for consistency
     Updated 01/2025: added function for fully-normalized Legendre polynomials
     Updated 12/2024: added function to calculate an aliasing frequency
     Written 11/2024
@@ -186,9 +187,9 @@ def legendre(
     Plm[3, 3, :] = 15.0*u**3
     # return values
     if singular_values:
-        return np.pow(-1.0, m)*Plm[l, m, 0]
+        return np.power(-1.0, m)*Plm[l, m, 0]
     else:
-        return np.pow(-1.0, m)*Plm[l, m, :]
+        return np.power(-1.0, m)*Plm[l, m, :]
 
 def assoc_legendre(lmax, x):
     """
