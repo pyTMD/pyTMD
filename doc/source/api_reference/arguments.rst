@@ -28,6 +28,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.arguments.nodal
 
+.. autofunction:: pyTMD.arguments.seasonal
+
 .. autofunction:: pyTMD.arguments.frequency
 
 .. autofunction:: pyTMD.arguments.aliasing_period

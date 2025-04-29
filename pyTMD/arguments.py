@@ -43,6 +43,7 @@ UPDATE HISTORY:
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
         use numpy power function over using pow for consistency
+        added option to modulate tidal constituents for seasonal effects
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
         use string mapping to remap non-numeric Doodson numbers
@@ -139,6 +140,8 @@ def arguments(
         use nodal corrections from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
         compute climatologically affected terms without p'
+    seasonal_modulation: bool, default False
+        compute seasonal modulation of the corrections
     M1: str, default 'perth5'
         coefficients to use for M1 tides
 
@@ -160,6 +163,7 @@ def arguments(
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
     kwargs.setdefault('climate_solar_perigee', False)
+    kwargs.setdefault('seasonal_modulation', False)
     kwargs.setdefault('M1', 'perth5')
 
     # set function for astronomical longitudes
@@ -188,8 +192,16 @@ def arguments(
     G = np.dot(fargs, coefficients_table(constituents, **kwargs))
 
     # set nodal corrections
-    # determine nodal corrections f and u for each model type
+    # determine modulations f and u for each model type
     pu, pf = nodal(n, p, constituents, **kwargs)
+
+    # set seasonal corrections
+    # update modulations f and u for each model type
+    if kwargs['seasonal_modulation']:
+        su, sf = seasonal(h, pp, constituents, **kwargs)
+        # adjust corrections
+        pu += su
+        pf *= sf
 
     # return values as tuple
     return (pu, pf, G)
@@ -1210,6 +1222,76 @@ def nodal(
         f[:,i] = np.sqrt(term1**2 + term2**2)
         u[:,i] = np.arctan2(term1, term2)
 
+    # return corrections for constituents
+    return (u, f)
+
+# PURPOSE: compute the seasonal modulations
+def seasonal(
+        h: np.ndarray,
+        ps: np.ndarray,
+        constituents: list | tuple | np.ndarray | str,
+        **kwargs
+    ):
+    """
+    Calculates the seasonal modulations for tidal constituents
+    :cite:p:`Ray:2022hx`
+
+    Parameters
+    ----------
+    h: np.ndarray
+        mean longitude of sun (degrees)
+    ps: np.ndarray
+        mean longitude of solar perigee (degrees)
+    constituents: list, tuple, np.ndarray or str
+        tidal constituent IDs
+
+    Returns
+    -------
+    f: np.ndarray
+        seasonal factor correction
+    u: np.ndarray
+        seasonal angle correction
+    """
+
+    # degrees to radians
+    dtr = np.pi/180.0
+    # convert longitudes to radians
+    H = dtr*h
+    Ps = dtr*ps
+    # mean anomaly of the sun
+    lp = H - Ps
+
+    # set constituents to be iterable
+    if isinstance(constituents, str):
+        constituents = [constituents]
+
+    # set seasonal modulations
+    nt = len(np.atleast_1d(h))
+    nc = len(constituents)
+    # seasonal factor correction
+    f = np.zeros((nt, nc))
+    # seasonal angle correction
+    u = np.zeros((nt, nc))
+
+    # compute seasonal modulations f and u
+    for i, c in enumerate(constituents):
+        if c in ('m2',):
+            # relative amplitudes from Ray (2022) table 1
+            ca = 0.00345
+            cb = 0.00304
+            cd = 0.00114
+            term1 = (ca + cb)*np.sin(lp) + cd*np.sin(2.0*h)
+            term2 = 1.0 - (ca - cb)*np.cos(lp) + cd*np.cos(2.0*h)
+        else:
+            # default for linear tides
+            term1 = 0.0
+            term2 = 1.0
+
+        # calculate factors for linear tides
+        # and parent waves in compound tides
+        f[:,i] = np.sqrt(term1**2 + term2**2)
+        u[:,i] = np.arctan2(term1, term2)
+        
     # return corrections for constituents
     return (u, f)
 
