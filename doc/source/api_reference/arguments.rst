@@ -26,9 +26,9 @@ Calling Sequence
 
 .. autofunction:: pyTMD.arguments.doodson_number
 
-.. autofunction:: pyTMD.arguments.nodal
+.. autofunction:: pyTMD.arguments.nodal_modulation
 
-.. autofunction:: pyTMD.arguments.seasonal
+.. autofunction:: pyTMD.arguments.group_modulation
 
 .. autofunction:: pyTMD.arguments.frequency
 

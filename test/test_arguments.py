@@ -315,7 +315,7 @@ def test_nodal(corrections, M1):
         's6', 's7', 's8', 'm8', 'mks2', 'msqm', 'mtm', 'n4', 'eps2', 'z0']
 
     # get nodal corrections
-    pu, pf = pyTMD.arguments.nodal(n, p, cindex,
+    pu, pf = pyTMD.arguments.nodal_modulation(n, p, cindex,
         corrections=corrections, M1=M1)
 
     # trigonometric factors for nodal corrections

@@ -43,7 +43,8 @@ UPDATE HISTORY:
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
         use numpy power function over using pow for consistency
-        added option to modulate tidal constituents for seasonal effects
+        added option to modulate tidal groups for e.g. seasonal effects
+        renamed nodal to nodal_modulation to parallel group_modulation
     Updated 03/2025: changed argument for method calculating mean longitudes
         add 1066A neutral and stable Earth models to Love number calculation
         use string mapping to remap non-numeric Doodson numbers
@@ -95,6 +96,7 @@ from __future__ import annotations
 import re
 import json
 import pathlib
+import warnings
 import numpy as np
 import pyTMD.astro
 from pyTMD.utilities import get_data_path
@@ -104,7 +106,8 @@ __all__ = [
     "minor_arguments",
     "coefficients_table",
     "doodson_number",
-    "nodal",
+    "nodal_modulation",
+    "group_modulation",
     "frequency",
     "aliasing_period",
     "_arguments_table",
@@ -140,8 +143,6 @@ def arguments(
         use nodal corrections from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
         compute climatologically affected terms without p'
-    seasonal_modulation: bool, default False
-        compute seasonal modulation of the corrections
     M1: str, default 'perth5'
         coefficients to use for M1 tides
 
@@ -153,17 +154,16 @@ def arguments(
     Returns
     -------
     pu: np.ndarray
-        nodal angle correction
+        nodal correction angle (radians)
     pf: np.ndarray
-        nodal factor correction
+        nodal modulation factor
     G: np.ndarray
-        phase correction in degrees
+        phase correction (degrees)
     """
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
     kwargs.setdefault('climate_solar_perigee', False)
-    kwargs.setdefault('seasonal_modulation', False)
     kwargs.setdefault('M1', 'perth5')
 
     # set function for astronomical longitudes
@@ -191,17 +191,12 @@ def arguments(
     fargs = np.c_[tau, s, h, p, n, pp, k]
     G = np.dot(fargs, coefficients_table(constituents, **kwargs))
 
-    # set nodal corrections
     # determine modulations f and u for each model type
-    pu, pf = nodal(n, p, constituents, **kwargs)
-
-    # set seasonal corrections
-    # update modulations f and u for each model type
-    if kwargs['seasonal_modulation']:
-        su, sf = seasonal(h, pp, constituents, **kwargs)
-        # adjust corrections
-        pu += su
-        pf *= sf
+    if (kwargs['corrections'] == 'group'):
+        pu, pf = group_modulation(h, n, p, pp, constituents, **kwargs)
+    else:
+        # set nodal corrections
+        pu, pf = nodal_modulation(n, p, constituents, **kwargs)
 
     # return values as tuple
     return (pu, pf, G)
@@ -228,11 +223,11 @@ def minor_arguments(
     Returns
     -------
     pu: np.ndarray
-        nodal angle correction
+        nodal correction angle (radians)
     pf: np.ndarray
-        nodal factor correction
+        nodal modulation factor
     G: np.ndarray
-        phase correction in degrees
+        phase correction (degrees)
     """
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
@@ -458,7 +453,8 @@ def doodson_number(
     kwargs.setdefault('formalism', 'Doodson')
     kwargs.setdefault('raise_error', True)
     # validate inputs
-    assert kwargs['formalism'].title() in ('Cartwright', 'Doodson','Extended'), \
+    formalisms = ('Cartwright', 'Doodson','Extended')
+    assert kwargs['formalism'].title() in formalisms, \
         f'Unknown formalism {kwargs["formalism"]}'
     # get the coefficients of coefficients
     if isinstance(constituents, str):
@@ -507,8 +503,13 @@ def doodson_number(
     # return the Doodson or Cartwright number
     return numbers
 
+def nodal(*args, **kwargs):
+    warnings.warn("Deprecated. Please use pyTMD.arguments.nodal_modulation instead",
+        DeprecationWarning)
+    return nodal_modulation(*args, **kwargs)
+
 # PURPOSE: compute the nodal corrections
-def nodal(
+def nodal_modulation(
         n: np.ndarray,
         p: np.ndarray,
         constituents: list | tuple | np.ndarray | str,
@@ -541,9 +542,9 @@ def nodal(
     Returns
     -------
     f: np.ndarray
-        nodal factor correction
+        nodal modulation factor
     u: np.ndarray
-        nodal angle correction
+        nodal correction angle (radians)
     """
     # set default keyword arguments
     kwargs.setdefault('corrections', 'OTIS')
@@ -588,7 +589,12 @@ def nodal(
 
     # compute standard nodal corrections f and u
     for i, c in enumerate(constituents):
-        if c in ('msf','tau1','p1','theta1','lambda2','s2') and OTIS_TYPE:
+        if not bool(kwargs['corrections']):
+            # no corrections to apply
+            f[:,i] = 1.0
+            u[:,i] = 0.0
+            continue
+        elif c in ('msf','tau1','p1','theta1','lambda2','s2') and OTIS_TYPE:
             term1 = 0.0
             term2 = 1.0
         elif c in ('p1','s2') and (FES_TYPE or PERTH3_TYPE):
@@ -854,91 +860,91 @@ def nodal(
         elif c in ('so1','2so3','2po1'):
             # compound tides calculated using recursion
             parents = ['o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]
             u[:,i] = -utmp[:,0]
             continue
         elif c in ('o3',):
             # compound tides calculated using recursion
             parents = ['o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3
             u[:,i] = 3.0*utmp[:,0]
             continue
         elif c in ('2k2'):
             # compound tides calculated using recursion
             parents = ['k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2
             u[:,i] = 2.0*utmp[:,0]
             continue
         elif c in ('tk1'):
             # compound tides calculated using recursion
             parents = ['k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]
             u[:,i] = -utmp[:,0]
             continue
         elif c in ('2oop1'):
             # compound tides calculated using recursion
             parents = ['oo1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2
             u[:,i] = 2.0*utmp[:,0]
             continue
         elif c in ('oq2'):
             # compound tides calculated using recursion
             parents = ['o1','q1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2oq1'):
             # compound tides calculated using recursion
             parents = ['o1','q1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('ko2'):
             # compound tides calculated using recursion
             parents = ['o1','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('opk1',):
             # compound tides calculated using recursion
             parents = ['o1','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] - utmp[:,1]
             continue
         elif c in ('2ook1',):
             # compound tides calculated using recursion
             parents = ['oo1','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('kj2',):
             # compound tides calculated using recursion
             parents = ['k1','j1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('kjq1'):
             # compound tides calculated using recursion
             parents = ['k1','j1','q1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1] * ftmp[:,2]
             u[:,i] = utmp[:,0] + utmp[:,1] - utmp[:,2]
             continue
         elif c in ('k3',):
             # compound tides calculated using recursion
             parents = ['k1','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
@@ -947,28 +953,28 @@ def nodal(
                 '2mp5','2msp7','2(ms)8','2ms8'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2
             u[:,i] = 2.0*utmp[:,0]
             continue
         elif c in ('msn2','snm2','nsm2'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2
             u[:,i] = 0.0
             continue
         elif c in ('mmun2','2mn2'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3
             u[:,i] = utmp[:,0]
             continue
         elif c in ('2sm2',):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]
             u[:,i] = -utmp[:,0]
             continue
@@ -976,7 +982,7 @@ def nodal(
                 '3mp7','2msn8','3ms5','3mp5','3ms4','3m2s2','3m2s10','2mn2s2'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3
             u[:,i] = 3.0*utmp[:,0]
             continue
@@ -984,231 +990,231 @@ def nodal(
                 '4ms10','2(mn)S10','4m2s12'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**4
             u[:,i] = 4.0*utmp[:,0]
             continue
         elif c in ('m10','4mn10','5ms12','4msn12','4mns12'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**5
             u[:,i] = 5.0*utmp[:,0]
             continue
         elif c in ('m12','5mn12','6ms14','5msn14'):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**6
             u[:,i] = 6.0*utmp[:,0]
             continue
         elif c in ('m14',):
             # compound tides calculated using recursion
             parents = ['m2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**7
             u[:,i] = 7.0*utmp[:,0]
             continue
         elif c in ('mo3','no3','mso5'):
             # compound tides calculated using recursion
             parents = ['m2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('no1','nso3'):
             # compound tides calculated using recursion
             parents = ['m2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] - utmp[:,1]
             continue
         elif c in ('mq3','nq3'):
             # compound tides calculated using recursion
             parents = ['m2','q1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2mq3',):
             # compound tides calculated using recursion
             parents = ['m2','q1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('2no3',):
             # compound tides calculated using recursion
             parents = ['m2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('2mo5','2no5','mno5','2mso7','2(ms):o9'):
             # compound tides calculated using recursion
             parents = ['m2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2mno7','3mo7'):
             # compound tides calculated using recursion
             parents = ['m2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('mk3','nk3','msk5','nsk5'):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('mnk5','2mk5','2nk5','2msk7'):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2mk3',):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('3mk7','2mnk7','2nmk7','3nk7','3msk9'):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('3msk7',):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('4mk9','3mnk9','2m2nk9','2(mn):k9','3nmk9','4msk11'):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**4 * ftmp[:,1]
             u[:,i] = 4.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('3km5',):
             # compound tides calculated using recursion
             parents = ['m2','k1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]**3
             u[:,i] = utmp[:,0] + 3.0*utmp[:,1]
             continue
         elif c in ('mk4','nk4','mks2'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('msk2','2smk4','msk6','snk6'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] - utmp[:,1]
             continue
         elif c in ('mnk6','2mk6','2msk8','msnk8'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('mnk2','2mk2'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('mkn2','nkm2'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = utmp[:,1]
             continue
         elif c in ('skm2',):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = -utmp[:,0] + utmp[:,1]
             continue
         elif c in ('3mk8','2mnk8'):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('m2(ks):2',):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]**2
             u[:,i] = utmp[:,0] + 2.0*utmp[:,1]
             continue
         elif c in ('2ms2k2',):
             # compound tides calculated using recursion
             parents = ['m2','k2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]**2
             u[:,i] = 2.0*utmp[:,0] - 2.0*utmp[:,1]
             continue
         elif c in ('mko5','msko7'):
             # compound tides calculated using recursion
             parents = ['m2','k2','o1']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1] * ftmp[:,2]
             u[:,i] = utmp[:,0] + utmp[:,1] + utmp[:,2]
             continue
         elif c in ('ml4','msl6'):
             # compound tides calculated using recursion
             parents = ['m2','l2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0] * ftmp[:,1]
             u[:,i] = utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2ml2',):
             # compound tides calculated using recursion
             parents = ['m2','l2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] - utmp[:,1]
             continue
         elif c in ('2ml6','2ml2s2','2mls4','2msl8'):
             # compound tides calculated using recursion
             parents = ['m2','l2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**2 * ftmp[:,1]
             u[:,i] = 2.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('2nmls6','3mls6','2mnls6','3ml8','2mnl8','3msl10'):
             # compound tides calculated using recursion
             parents = ['m2','l2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] + utmp[:,1]
             continue
         elif c in ('4msl12',):
             # compound tides calculated using recursion
             parents = ['m2','l2']
-            utmp, ftmp = nodal(n, p, parents, **kwargs)
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:,i] = ftmp[:,0]**4 * ftmp[:,1]
             u[:,i] = 4.0*utmp[:,0] + utmp[:,1]
             continue
@@ -1225,21 +1231,29 @@ def nodal(
     # return corrections for constituents
     return (u, f)
 
-# PURPOSE: compute the seasonal modulations
-def seasonal(
+# PURPOSE: compute the tidal group modulations
+def group_modulation(
         h: np.ndarray,
+        n: np.ndarray,
+        p: np.ndarray,
         ps: np.ndarray,
         constituents: list | tuple | np.ndarray | str,
         **kwargs
     ):
     """
-    Calculates the seasonal modulations for tidal constituents
-    :cite:p:`Ray:2022hx`
+    Calculates the generalized modulations for tidal groups
+    :cite:p:`Ray:1999vm,Ray:2022hx`
+
+    Uses the default nodal modulations for unsupported tidal groups
 
     Parameters
     ----------
     h: np.ndarray
         mean longitude of sun (degrees)
+    n: np.ndarray
+        mean longitude of ascending lunar node (degrees)
+    p: np.ndarray
+        mean longitude of lunar perigee (degrees)
     ps: np.ndarray
         mean longitude of solar perigee (degrees)
     constituents: list, tuple, np.ndarray or str
@@ -1248,15 +1262,17 @@ def seasonal(
     Returns
     -------
     f: np.ndarray
-        seasonal factor correction
+        modulation factor
     u: np.ndarray
-        seasonal angle correction
+        angle correction (radians)
     """
 
     # degrees to radians
     dtr = np.pi/180.0
     # convert longitudes to radians
     H = dtr*h
+    Np = -dtr*n
+    P = dtr*p
     Ps = dtr*ps
     # mean anomaly of the sun
     lp = H - Ps
@@ -1265,34 +1281,238 @@ def seasonal(
     if isinstance(constituents, str):
         constituents = [constituents]
 
-    # set seasonal modulations
+    # set group modulations
     nt = len(np.atleast_1d(h))
     nc = len(constituents)
-    # seasonal factor correction
+    # group factor correction
     f = np.zeros((nt, nc))
-    # seasonal angle correction
+    # group angle correction
     u = np.zeros((nt, nc))
 
-    # compute seasonal modulations f and u
+    # compute group modulations f and u
     for i, c in enumerate(constituents):
-        if c in ('m2',):
-            # relative amplitudes from Ray (2022) table 1
-            ca = 0.00345
-            cb = 0.00304
-            cd = 0.00114
-            term1 = (ca + cb)*np.sin(lp) + cd*np.sin(2.0*h)
-            term2 = 1.0 - (ca - cb)*np.cos(lp) + cd*np.cos(2.0*h)
+        if c in ('mm',):
+            term1 = -0.0137*np.sin(-2.0*H+2.0*P-Np) + \
+                0.1912*np.sin(-2.0*H + 2.0*P) - \
+                0.0125*np.sin(-2.0*H + 2.0*P + Np) - \
+                0.0657*np.sin(-Np) - \
+                0.0653*np.sin(Np) - \
+                0.0534*np.sin(2.0*P) - \
+                0.0219*np.sin(2.0*P + Np) - \
+                0.0139*np.sin(2.0*H)
+            term2 = 1.0 + 0.0137*np.cos(2.0*H - 2.0*P - Np) + \
+                0.1912*np.cos(-2.0*H + 2.0*P) - \
+                0.0125*np.cos(-2.0*H + 2.0*P + Np) - \
+                0.1309*np.cos(Np) - \
+                0.0534*np.cos(2.0*P) - \
+                0.0219*np.cos(2.0*P + Np) - \
+                0.0139*np.cos(2.0*H)
+        elif c in ('mf',):
+            term1 = 0.0875*np.sin(-2.0*H) + \
+                0.0432*np.sin(-2.0*P) + \
+                0.4145*np.sin(Np) + \
+                0.0387*np.sin(2.0*Np)
+            term2 = 1.0 + 0.0875*np.cos(2.0*H) + \
+                0.0432*np.cos(2.0*P) + \
+                0.4145*np.cos(Np) + \
+                0.0387*np.cos(2.0*Np)
+        elif c in ('mt',):
+            term1 = 0.0721*np.sin(-2.0*H) + \
+                0.1897*np.sin(-2.0*H + 2.0*P) + \
+                0.0784*np.sin(-2.0*H + 2.0*P + Np) + \
+                0.4146*np.sin(Np)
+            term2 = 1.0 + 0.0721*np.cos(2.0*H) + \
+                0.1897*np.cos(-2.0*H + 2.0*P) + \
+                0.0784*np.cos(-2.0*H + 2.0*P + Np) + \
+                0.4146*np.cos(Np)
+        elif c in ('mq',):
+            term1 = 1.207*np.sin(-2.0*H + 2.0*P) + \
+                0.497*np.sin(-2.0*H + 2.0*P + Np) + \
+                0.414*np.sin(Np)
+            term2 = 1.0 + 1.207*np.cos(-2.0*H + 2.0*P) + \
+                0.497*np.cos(-2.0*H + 2.0*P + Np) + \
+                0.414*np.cos(Np)
+        elif c in ('2q1',):
+            term1 = 0.1886*np.sin(-Np) + \
+                0.2274*np.sin(2.0*H - 2.0*P - Np) + \
+                1.2086*np.sin(2.0*H - 2.0*P)
+            term2 = 1.0 + 0.1886*np.cos(Np) + \
+                0.2274*np.cos(2.0*H - 2.0*P - Np) + \
+                1.2086*np.cos(2.0*H - 2.0*P)
+        elif c in ('sigma1',):
+            term1 = 0.1561*np.sin(-2.0*H + 2.0*P - Np) - \
+                0.1882*np.sin(Np) + \
+                0.7979*np.sin(-2.0*H + 2.0*P) + \
+                0.0815*np.sin(lp)
+            term2 = 1.0 + 0.1561*np.cos(-2.0*H + 2.0*P - Np) + \
+                0.1882*np.cos(Np) + \
+                0.8569*np.cos(-2.0*H + 2.0*P) + \
+                0.0538*np.cos(lp) 
+        elif c in ('q1',):
+            term1 = 0.1886*np.sin(-Np) + \
+                0.0359*np.sin(2.0*H - 2.0*P - Np) + \
+                0.1901*np.sin(2.0*H - 2.0*P)
+            term2 = 1.0 + 0.1886*np.cos(Np) + \
+                0.0359*np.cos(2.0*H - 2.0*P - Np) + \
+                0.1901*np.cos(2.0*H - 2.0*P)
+        elif c in ('o1',):
+            term1 = -0.0058*np.sin(-2*Np) + \
+                0.1886*np.sin(-Np) - \
+                0.0065*np.sin(2.0*P) - \
+                0.0131*np.sin(2.0*H)
+            term2 = 1.0 - 0.0058*np.cos(2*Np) + \
+                0.1886*np.cos(Np) - \
+                0.0065*np.cos(2*P) - \
+                0.0131*np.cos(2.0*H)
+        elif c in ('m1',):
+            term1 = 0.0941*np.sin(-2.0*H) + \
+                0.0664*np.sin(-2.0*P - Np) + \
+                0.3594*np.sin(-2.0*P) + \
+                0.2008*np.sin(Np) + \
+                0.1910*np.sin(2.0*H - 2.0*P) + \
+                0.0422*np.sin(2.0*H - 2.0*P + Np)
+            term2 = 1.0 + 0.0941*np.cos(2.0*H) + \
+                0.0664*np.cos(2.0*P + Np) + \
+                0.3594*np.cos(2.0*P) + \
+                0.2008*np.cos(Np) + \
+                0.1910*np.cos(2.0*H - 2.0*P) + \
+                0.0422*np.cos(2.0*H-2.0*P+Np)
+        elif c in ('k1',):
+            term1 = -0.0184*np.sin(-3.0*H + Ps) + \
+                0.0036*np.sin(-2.0*H - Np) + \
+                0.3166*np.sin(2.0*H) - \
+                0.0026*np.sin(H + Ps) + \
+                0.0075*np.sin(-lp) + \
+                0.1558*np.sin(Np) - \
+                0.0030*np.sin(2.0*Np) + \
+                0.0049*np.sin(lp) + \
+                0.0128*np.sin(2.0*H)
+            term2 = 1.0 - 0.0184*np.cos(-3.0*H + Ps) + \
+                0.0036*np.cos(2.0*H + Np) - \
+                0.3166*np.cos(2.0*H) + \
+                0.0026*np.cos(H + Ps) + \
+                0.0075*np.cos(lp) + \
+                0.1164*np.cos(Np) - \
+                0.0030*np.cos(2.0*Np) + \
+                0.0049*np.cos(lp) + \
+                0.0128*np.cos(2.0*H)
+        elif c in ('j1',):
+            term1 = 0.1922*np.sin(-2.0*H + 2.0*P) + \
+                0.0378*np.sin(-2.0*H + 2.0*P + Np) + \
+                0.2268*np.sin(Np) - \
+                0.0155*np.sin(2.0*P)
+            term2 = 1.0 + 0.1922*np.cos(-2.0*H + 2.0*P) + \
+                0.0378*np.cos(-2.0*H + 2.0*P + Np) + \
+                0.1701*np.cos(Np) - \
+                0.0155*np.cos(2.0*P)
+        elif c in ('oo1',):
+            term1 = 0.3029*np.sin(-2.0*H) + \
+                0.0593*np.sin(-2.0*H + Np) + \
+                0.1497*np.sin(-2.0*P) + \
+                0.6404*np.sin(Np) + \
+                0.1337*np.sin(2.0*Np)
+            term2 = 1.0 + 0.3029*np.cos(-2.0*H) + \
+                0.0593*np.cos(-2.0*H + Np) + \
+                0.1497*np.cos(-2.0*P) + \
+                0.6404*np.cos(Np) + \
+                0.1337*np.cos(2.0*Np)
+        elif c in ('eps2',):
+            term1 = 0.385*np.sin(-2.0*H + 2.0*P)
+            term2 = 1.0 + 0.385*np.cos(-2.0*H + 2.0*P)
+        elif c in ('2n2',):
+            term1 = 0.0374*np.sin(Np) + \
+                1.2064*np.sin(2.0*H - 2.0*P) - \
+                0.0139*np.sin(-lp) - \
+                0.0170*np.sin(H - 2.0*P + Ps) - \
+                0.0104*np.sin(H - P) + \
+                0.0156*np.sin(lp) - \
+                0.0448*np.sin(2.0*H - 2.0*P - Np) + \
+                0.0808*np.sin(3.0*H - 2.0*P - 4.939) + \
+                0.0369*np.sin(4.0*H - 4.0*P)
+            term2 = 1.0 - 0.0374*np.cos(Np) + \
+                1.2064*np.cos(2.0*H - 2.0*P) - \
+                0.0139*np.cos(-lp) - \
+                0.0170*np.cos(H - 2.0*P + Ps) - \
+                0.0104*np.cos(H - P) + \
+                0.0156*np.cos(lp) - \
+                0.0448*np.cos(2.0*H - 2.0*P - Np) + \
+                0.0808*np.cos(3.0*H - 2.0*P - 4.939) + \
+                0.0369*np.cos(4.0*H - 4.0*P)
+        elif c in ('mu2',):
+            term1 = -0.0115*np.sin(-3.0*H + 2.0*P + Ps) - \
+                0.0310*np.sin(-2.0*H + 2.0*P - Np) + \
+                0.8289*np.sin(-2.0*H + 2.0*P) - \
+                0.0140*np.sin(-lp) - \
+                0.0086*np.sin(-H + P) + \
+                0.0130*np.sin(-H + 2.0*P - Ps) + \
+                0.0371*np.sin(Np) + \
+                0.0670*np.sin(lp) + \
+                0.0306*np.sin(2.0*H - 2.0*P) 
+            term2 = 1.0 - 0.0115*np.cos(-3.0*H + 2.0*P + Ps) - \
+                0.0310*np.cos(-2.0*H + 2.0*P - Np) + \
+                0.8289*np.cos(-2.0*H + 2.0*P) - \
+                0.0140*np.cos(-lp) - \
+                0.0086*np.cos(-H + P) + \
+                0.0130*np.cos(-H + 2.0*P - Ps) - \
+                0.0371*np.cos(Np) + \
+                0.0670*np.cos(lp) + \
+                0.0306*np.cos(2.0*H - 2.0*P)
+        elif c in ('n2',):
+            term1 = -0.0084*np.sin(-lp) - \
+                0.0373*np.sin(-Np) + \
+                0.0093*np.sin(lp) + \
+                0.1899*np.sin(2.0*H - 2.0*P) - \
+                0.0071*np.sin(2.0*H - 2.0*P - Np)
+            term2 = 1.0 - 0.0084*np.cos(-lp) - \
+                0.0373*np.cos(Np) + \
+                0.0093*np.cos(lp) + \
+                0.1899*np.cos(2.0*H - 2.0*P) - \
+                0.0071*np.cos(2.0*H - 2.0*P - Np)
+        elif c in ('m2',):
+            term1 = -0.0030*np.sin(-2.0*H + 2.0*P) - \
+                0.0373*np.sin(-Np) + \
+                0.0065*np.sin(lp) + \
+                0.0011*np.sin(2*H)
+            term2 = 1.0 - 0.0030*np.cos(-2.0*H + 2.0*P) - \
+                0.0373*np.cos(Np) - \
+                0.0004*np.cos(lp) + \
+                0.0011*np.cos(2*H)
+        elif c in ('l2',):
+            term1 = 0.2609*np.sin(-2.0*H + 2.0*P) - \
+                0.0370*np.sin(-Np) - \
+                0.2503*np.sin(2.0*P) - \
+                0.1103*np.sin(2.0*P + Np) - \
+                0.0491*np.sin(2.0*H) - \
+                0.0230*np.sin(2.0*H + Np)
+            term2 = 1.0 + 0.2609*np.cos(-2.0*H + 2.0*P) - \
+                0.0370*np.cos(Np) - \
+                0.2503*np.cos(2.0*P) - \
+                0.1103*np.cos(2.0*P + Np) - \
+                0.0491*np.cos(2.0*H) - \
+                0.0230*np.cos(2.0*H + Np)
+        elif c in ('s2',):
+            term1 = 0.0585*np.sin(-lp) - \
+                0.0084*np.sin(lp) + \
+                0.2720*np.sin(2.0*H) + \
+                0.0811*np.sin(2.0*H + Np) + \
+                0.0088*np.sin(2.0*H + 2.0*Np)
+            term2 = 1.0 + 0.0585*np.cos(-lp) - \
+                0.0084*np.cos(lp) + \
+                0.2720*np.cos(2.0*H) + \
+                0.0811*np.cos(2.0*H + Np) + \
+                0.0088*np.cos(2.0*H + 2.0*Np)
         else:
-            # default for linear tides
-            term1 = 0.0
-            term2 = 1.0
+            # calculate default nodal modulations for constituent
+            utmp, ftmp = nodal_modulation(n, p, c, **kwargs)
+            f[:,i] = ftmp[:,0]
+            u[:,i] = utmp[:,0]
+            continue
 
-        # calculate factors for linear tides
-        # and parent waves in compound tides
+        # calculate factors for group
         f[:,i] = np.sqrt(term1**2 + term2**2)
         u[:,i] = np.arctan2(term1, term2)
         
-    # return corrections for constituents
+    # return corrections for groups
     return (u, f)
 
 def frequency(
