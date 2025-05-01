@@ -12,7 +12,6 @@ Ocean and load tide constituent files are available from different modeling grou
 OTIS and ATLAS formatted data use  binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
 They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
 Arctic Ocean models can be downloaded from the NSF ArcticData server using the `arcticdata_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py>`_ program.
-CATS2008 can be downloaded from the US Antarctic Program (USAP) using the `usap_cats_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/usap_cats_tides.py>`_ program.
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
 GOT formatted data use ascii files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
