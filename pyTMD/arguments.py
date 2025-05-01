@@ -1502,7 +1502,8 @@ def group_modulation(
                 0.0811*np.cos(2.0*H + Np) + \
                 0.0088*np.cos(2.0*H + 2.0*Np)
         else:
-            # calculate default nodal modulations for constituent
+            # unsupported tidal group
+            # calculate default nodal modulation
             utmp, ftmp = nodal_modulation(n, p, c, **kwargs)
             f[:,i] = ftmp[:,0]
             u[:,i] = utmp[:,0]
