@@ -1024,11 +1024,12 @@ def _frame_bias_matrix():
     """
     # arcseconds to radians
     atr = np.pi/648000.0
+    # frame bias rotation matrix
+    B = np.zeros((3,3))
     xi0  = -0.0166170*atr
     eta0 = -0.0068192*atr
     da0  = -0.01460*atr
-    # compute elements of the frame bias matrix
-    B = np.zeros((3,3))
+    # off-diagonal elements of the frame bias matrix
     B[0,1] = da0
     B[0,2] = -xi0
     B[1,0] = -da0

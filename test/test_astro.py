@@ -151,12 +151,16 @@ def test_nutation_matrix():
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - 51544.5)/36525.0
     expected = np.array([
-        [ 9.99998100e-01, -1.78795448e-03, -7.76914888e-04],
-        [ 1.78795449e-03,  9.99998402e-01, -6.84570121e-07],
-        [ 7.76914871e-04, -7.04519640e-07,  9.99999698e-01]
+        [ 9.99999999e-01, -3.89161321e-05, -1.68713594e-05],
+        [ 3.89155170e-05,  9.99999999e-01, -3.64564011e-05],
+        [ 1.68727781e-05,  3.64557445e-05,  9.99999999e-01]
     ])
-    P = pyTMD.astro._precession_matrix(T)
-    assert np.isclose(expected, P[:,:,0]).all()
+    # estimate the mean obliquity
+    epsilon = pyTMD.astro.mean_obliquity(MJD)
+    # estimate the nutation in longitude and obliquity
+    dpsi, deps = pyTMD.astro._nutation_angles(T)
+    N = pyTMD.astro._nutation_matrix(epsilon, epsilon + deps, dpsi)
+    assert np.isclose(expected, N[:,:,0]).all()
 
 def test_frame_bias_matrix():
     """Test that the frame bias matrix matches expected outputs
@@ -168,6 +172,20 @@ def test_frame_bias_matrix():
     ])
     B = pyTMD.astro._frame_bias_matrix()
     assert np.isclose(expected, B).all()
+
+def test_icrs_rotation_matrix():
+    """Test that the ICRS rotation matrix matches expected outputs
+    """
+    MJD = 54465.0
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - 51544.5)/36525.0
+    expected = np.array([
+        [ 9.99998016e-01, -1.82694176e-03, -7.93705916e-04],
+        [ 1.82691285e-03,  9.99998331e-01, -3.71379871e-05],
+        [ 7.93772440e-04,  3.56878819e-05,  9.99999684e-01]
+    ])
+    M = pyTMD.astro._icrs_rotation_matrix(T, include_polar_motion=False)
+    assert np.isclose(expected, M[:,:,0], atol=1e-7).all()
 
 def test_mean_obliquity():
     """Test that the mean obliquity values matches expected outputs
