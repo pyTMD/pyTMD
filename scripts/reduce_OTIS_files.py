@@ -20,6 +20,8 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
     pyproj: Python interface to PROJ library
         https://pypi.org/project/pyproj/
+    timescale: Python tools for time and astronomical calculations
+        https://pypi.org/project/timescale/
 
 PROGRAM DEPENDENCIES:
     io/model.py: retrieves tide model parameters for named tide models

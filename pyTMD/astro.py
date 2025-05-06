@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (04/2025)
+Written by Tyler Sutterley (05/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -10,12 +10,15 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     jplephem: Astronomical Ephemeris for Python
         https://pypi.org/project/jplephem/
+    timescale: Python tools for time and astronomical calculations
+        https://pypi.org/project/timescale/
 
 REFERENCES:
     Jean Meeus, Astronomical Algorithms, 2nd edition, 1998.
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 05/2025: use Barycentric Dynamical Time (TDB) for JPL ephemerides
     Updated 04/2025: added schureman arguments function for FES models
         more outputs from schureman arguments function for M1 constituent
         use flexible case for mean longitude method strings
@@ -637,6 +640,8 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     kwargs.setdefault('include_aberration', False)
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
+    # difference to convert to Barycentric Dynamical Time (TDB)
+    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # download kernel file if not currently existing
     if not pathlib.Path(kwargs['kernel']).exists():
         from_jpl_ssd(kernel=None, local=kwargs['kernel'])
@@ -645,13 +650,13 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     # segments for computing position of the sun
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 10 SUN
     SSB_to_Sun = SPK[0, 10]
-    xyz_10, vel_10 = SSB_to_Sun.compute_and_differentiate(ts.tt)
+    xyz_10, vel_10 = SSB_to_Sun.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 3 EARTH BARYCENTER
     SSB_to_EMB = SPK[0, 3]
-    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt)
+    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # segment 3 EARTH BARYCENTER -> segment 399 EARTH
     EMB_to_Earth = SPK[3, 399]
-    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt)
+    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # compute the position of the sun relative to the Earth
     # Earth_to_Sun = Earth_to_EMB + EMB_to_SSB + SSB_to_Sun
     #              = -EMB_to_Earth - SSB_to_EMB + SSB_to_Sun
@@ -812,18 +817,20 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
         from_jpl_ssd(kernel=None, local=kwargs['kernel'])
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
+    # difference to convert to Barycentric Dynamical Time (TDB)
+    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # read JPL ephemerides kernel
     SPK = jplephem.spk.SPK.open(kwargs['kernel'])
     # segments for computing position of the moon
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 3 EARTH BARYCENTER
     SSB_to_EMB = SPK[0, 3]
-    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt)
+    xyz_3, vel_3 = SSB_to_EMB.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # segment 3 EARTH BARYCENTER -> segment 399 EARTH
     EMB_to_Earth = SPK[3, 399]
-    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt)
+    xyz_399, vel_399 = EMB_to_Earth.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # segment 3 EARTH BARYCENTER -> segment 301 MOON
     EMB_to_Moon = SPK[3, 301]
-    xyz_301, vel_301 = EMB_to_Moon.compute_and_differentiate(ts.tt)
+    xyz_301, vel_301 = EMB_to_Moon.compute_and_differentiate(ts.tt, tdb2=tdb2)
     # compute the position of the moon relative to the Earth
     # Earth_to_Moon = Earth_to_EMB + EMB_to_Moon
     #               = -EMB_to_Earth + EMB_to_Moon
@@ -859,8 +866,10 @@ def gast(T: float | np.ndarray):
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    # difference to convert to Barycentric Dynamical Time (TDB)
+    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # convert dynamical time to modified Julian days
-    MJD = ts.tt - _jd_mjd
+    MJD = ts.tt + tdb2 - _jd_mjd
     # estimate the mean obliquity
     epsilon = mean_obliquity(MJD)
     # estimate the nutation in longitude and obliquity
@@ -982,8 +991,10 @@ def _icrs_rotation_matrix(
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    # difference to convert to Barycentric Dynamical Time (TDB)
+    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # convert dynamical time to modified Julian days
-    MJD = ts.tt - _jd_mjd
+    MJD = ts.tt + tdb2 - _jd_mjd
     # estimate the mean obliquity
     epsilon = mean_obliquity(MJD)
     # estimate the nutation in longitude and obliquity
@@ -1050,8 +1061,10 @@ def _nutation_angles(T: float | np.ndarray):
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    # difference to convert to Barycentric Dynamical Time (TDB)
+    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # convert dynamical time to modified Julian days
-    MJD = ts.tt - _jd_mjd
+    MJD = ts.tt + tdb2 - _jd_mjd
     # get the fundamental arguments in radians
     l, lp, F, D, Om = delaunay_arguments(MJD)
     # non-polynomial terms in the equation of the equinoxes

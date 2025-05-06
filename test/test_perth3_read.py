@@ -13,6 +13,8 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
     boto3: Amazon Web Services (AWS) SDK for Python
         https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+    timescale: Python tools for time and astronomical calculations
+        https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
     Updated 09/2024: drop support for the ascii definition file format

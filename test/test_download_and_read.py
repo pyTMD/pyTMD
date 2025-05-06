@@ -17,6 +17,8 @@ PYTHON DEPENDENCIES:
         https://oct2py.readthedocs.io/en/latest/
     boto3: Amazon Web Services (AWS) SDK for Python
         https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+    timescale: Python tools for time and astronomical calculations
+        https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
     Updated 12/2024: create test files from matlab program for comparison
