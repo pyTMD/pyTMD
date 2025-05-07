@@ -1162,7 +1162,7 @@ def nodal_modulation(
             f[:,i] = ftmp[:,0]**3 * ftmp[:,1]
             u[:,i] = 3.0*utmp[:,0] + utmp[:,1]
             continue
-        elif c in ('m2(ks):2',):
+        elif c in ('m2(ks)2',):
             # compound tides calculated using recursion
             parents = ['m2','k2']
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
