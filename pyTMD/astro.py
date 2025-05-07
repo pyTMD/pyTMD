@@ -866,10 +866,8 @@ def gast(T: float | np.ndarray):
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
-    # difference to convert to Barycentric Dynamical Time (TDB)
-    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
     # convert dynamical time to modified Julian days
-    MJD = ts.tt + tdb2 - _jd_mjd
+    MJD = ts.tt - _jd_mjd
     # estimate the mean obliquity
     epsilon = mean_obliquity(MJD)
     # estimate the nutation in longitude and obliquity
