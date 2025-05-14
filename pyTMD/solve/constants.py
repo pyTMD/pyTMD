@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 u"""
 constants.py
-Written by Tyler Sutterley (09/2024)
+Written by Tyler Sutterley (05/2025)
 Routines for estimating the harmonic constants for ocean tides
 
 REFERENCES:
     G. D. Egbert and S. Erofeeva, "Efficient Inverse Modeling of Barotropic
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
+    M. G. G. Foreman, J. Y. Cherniawsky, and V. A. Ballantyne,
+        "Versatile Harmonic Tidal Analysis: Improvements and Applications",
+        Journal of Atmospheric and Oceanic Technology, (2009).
+    R. D. Ray, "A global ocean tide model from TOPEX/POSEIDON altimetry:
+        GOT99.2", NASA Technical Memorandum 209478, (1999).   
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -20,6 +25,7 @@ PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
 
 UPDATE HISTORY:
+    Updated 05/2025: added option to include higher order polynomials
     Updated 09/2024: added bounded options for least squares solvers
     Updated 08/2024: use nodal arguments for all non-OTIS model type cases
     Updated 01/2024: moved to solve subdirectory
@@ -37,18 +43,22 @@ __all__ = [
     'constants'
 ]
 
+# number of days between MJD and the tide epoch (1992-01-01T00:00:00)
+_mjd_tide = 48622.0
+
 def constants(t: float | np.ndarray,
         ht: np.ndarray,
         constituents: str | list | np.ndarray,
         deltat: float | np.ndarray = 0.0,
         corrections: str = 'OTIS',
         solver: str = 'lstsq',
+        order: int = 0,
         bounds: tuple = (-np.inf, np.inf),
         max_iter: int | None = None
     ):
     """
     Estimate the harmonic constants for an elevation time series
-    :cite:p:`Egbert:2002ge,Ray:1999vm`
+    :cite:p:`Egbert:2002ge,Foreman:2009bg,Ray:1999vm`
 
     Parameters
     ----------
@@ -70,6 +80,8 @@ def constants(t: float | np.ndarray,
         - ``'gelss'``: singular value decomposition (SVD)
         - ``'gelsd'``: SVD with divide and conquer method
         - ``'bvls'``: bounded-variable least-squares
+    order: int, default 0
+        degree of the polynomial to add to fit
     bounds: tuple, default (None, None)
         Lower and upper bounds on parameters for ``'bvls'``
     max_iter: int or None, default None
@@ -90,19 +102,23 @@ def constants(t: float | np.ndarray,
     nc = len(constituents)
     if (nt <= 2*nc):
         raise ValueError('Not enough values for fit')
+    # check that the height time series is a 1D array
+    ht = np.atleast_1d(ht.flatten())
     # check that the number of time values matches the number of height values
-    if (nt != len(np.atleast_1d(ht))):
+    if (nt != len(ht)):
         raise ValueError('Dimension mismatch between input variables')
 
     # load the nodal corrections
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + 48622.0, constituents,
+    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide, constituents,
         deltat=deltat, corrections=corrections)
 
     # create design matrix
     M = []
-    # add constant term for mean
-    M.append(np.ones_like(t))
+    # build polynomial functions for design matrix
+    for o in range(order+1):
+        # add polynomial term
+        M.append(np.power(t, o))
     # add constituent terms
     for k,c in enumerate(constituents):
         if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
@@ -132,10 +148,15 @@ def constants(t: float | np.ndarray,
     # calculate amplitude and phase for each constituent
     amp = np.zeros((nc))
     ph = np.zeros((nc))
-    # skip over the first indice in the fit (constant term)
+    # for each constituent
     for k,c in enumerate(constituents):
-        amp[k] = np.abs(1j*p[2*k+2] + p[2*k+1])
-        ph[k] = np.arctan2(-p[2*k+2], p[2*k+1])
+        # indices for the sine and cosine terms
+        # skip over the polynomial terms
+        isin = 2*k + order + 2
+        icos = 2*k + order + 1
+        # calculate amplitude and phase
+        amp[k] = np.abs(1j*p[isin] + p[icos])
+        ph[k] = np.arctan2(-p[isin], p[icos])
     # convert phase to degrees
     phase = ph*180.0/np.pi
     phase[phase < 0] += 360.0
