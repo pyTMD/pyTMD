@@ -97,13 +97,14 @@ def constants(t: float | np.ndarray,
     # check if input constituents is a string
     if isinstance(constituents, str):
         constituents = [constituents]
+    # verify height and time variables
+    t = np.ravel(t)
+    ht = np.ravel(ht)
     # check that there are enough values for a time series fit
-    nt = len(np.atleast_1d(t))
+    nt = len(t)
     nc = len(constituents)
     if (nt <= 2*nc):
         raise ValueError('Not enough values for fit')
-    # check that the height time series is a 1D array
-    ht = np.atleast_1d(ht.flatten())
     # check that the number of time values matches the number of height values
     if (nt != len(ht)):
         raise ValueError('Dimension mismatch between input variables')
