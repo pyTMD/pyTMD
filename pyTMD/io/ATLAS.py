@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 ATLAS.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (05/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from OTIS tide models for
@@ -55,6 +55,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 05/2025: added option to select constituents to read from model
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added crop and bounds keywords for trimming model data
@@ -161,6 +162,8 @@ def extract_constants(
             - ``'U'``: horizontal depth-averaged transport
             - ``'v'``: vertical transport velocities
             - ``'V'``: vertical depth-averaged transport
+    constituents: list or None, default None
+        Specify constituents to read from model
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list or NoneType, default None
@@ -197,6 +200,7 @@ def extract_constants(
     """
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
+    kwargs.setdefault('constituents', None)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
     kwargs.setdefault('buffer', None)
@@ -220,6 +224,16 @@ def extract_constants(
     if isinstance(model_files, (str, pathlib.Path)):
         warnings.warn("Tide model is entered as a string")
         model_files = [model_files]
+
+    # reduce list of model files to constituents
+    if kwargs['constituents'] is not None:
+        # verify that constituents is a list
+        if isinstance(kwargs['constituents'], str):
+            kwargs['constituents'] = [kwargs['constituents']]
+        # filter model files to constituents
+        model_files = [model_file for i, model_file in enumerate(model_files) if
+            pyTMD.io.constituents.parse(model_file) in kwargs['constituents']
+        ]
 
     # check that grid file is accessible
     grid_file = pathlib.Path(grid_file).expanduser()
@@ -412,6 +426,8 @@ def read_constants(
             - ``'U'``: horizontal depth-averaged transport
             - ``'v'``: vertical transport velocities
             - ``'V'``: vertical depth-averaged transport
+    constituents: list or None, default None
+        Specify constituents to read from model
     compressed: bool, default False
         Input files are gzip compressed
     crop: bool, default False
@@ -428,6 +444,7 @@ def read_constants(
     """
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
+    kwargs.setdefault('constituents', None)
     kwargs.setdefault('compressed', True)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
@@ -437,6 +454,16 @@ def read_constants(
     if isinstance(model_files, (str, pathlib.Path)):
         warnings.warn("Tide model is entered as a string")
         model_files = [model_files]
+
+    # reduce list of model files to constituents
+    if kwargs['constituents'] is not None:
+        # verify that constituents is a list
+        if isinstance(kwargs['constituents'], str):
+            kwargs['constituents'] = [kwargs['constituents']]
+        # filter model files to constituents
+        model_files = [model_file for i, model_file in enumerate(model_files) if
+            pyTMD.io.constituents.parse(model_file) in kwargs['constituents']
+        ]
 
     # check that grid file is accessible
     grid_file = pathlib.Path(grid_file).expanduser()

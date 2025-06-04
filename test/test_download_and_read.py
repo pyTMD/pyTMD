@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_download_and_read.py (12/2024)
+test_download_and_read.py (06/2025)
 Tests that CATS2008 data can be downloaded from the US Antarctic Program (USAP)
 Tests that AOTIM-5-2018 data can be downloaded from the NSF ArcticData server
 Tests the read program to verify that constituents are being extracted
@@ -21,6 +21,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 06/2025: subset to specific constituents when reading model
     Updated 12/2024: create test files from matlab program for comparison
     Updated 09/2024: drop support for the ascii definition file format
         use model class attributes for file format and corrections
@@ -478,17 +479,12 @@ class Test_CATS2008:
         station_ph.data[station_ph.mask] = station_ph.fill_value
 
         # extract amplitude and phase from tide model
-        amp,ph,cons = model.extract_constants(station_lon, station_lat)
-        # reorder constituents of model and convert amplitudes to cm
-        model_amp = np.ma.zeros((antarctic_stations,len(constituents)))
-        model_ph = np.ma.zeros((antarctic_stations,len(constituents)))
-        for i,c in enumerate(constituents):
-            j, = [j for j,val in enumerate(cons) if (val == c)]
-            model_amp[:,i] = 100.0*amp[:,j]
-            model_ph[:,i] = ph[:,j]
+        model_amp,model_ph,cons = model.extract_constants(
+            station_lon, station_lat, constituents=constituents)
         # calculate complex constituent oscillations
+        # convert amplitudes to cm
         station_z = station_amp*np.exp(-1j*station_ph*np.pi/180.0)
-        model_z = model_amp*np.exp(-1j*model_ph*np.pi/180.0)
+        model_z = 100.0*model_amp*np.exp(-1j*model_ph*np.pi/180.0)
         # valid stations for all constituents
         valid = np.all((~station_z.mask) & (~model_z.mask), axis=1)
         invalid_list = ['Ablation Lake','Amery','Bahia Esperanza','Beaver Lake',

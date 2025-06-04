@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_perth3_read.py (09/2024)
+test_perth3_read.py (06/2025)
 Tests that GOT4.7 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to NASA PERTH3 program
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
         use model class attributes for file format and corrections
     Updated 08/2024: increased tolerance for comparing with GOT4.7 tests
@@ -96,16 +97,12 @@ def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
 def test_verify_GOT47(METHOD, CROP):
     # model parameters for GOT4.7
     model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
-    model_directory = model.model_file[0].parent
     # perth3 test program infers m4 tidal constituent
-    model_files = ['q1.d.gz','o1.d.gz','p1.d.gz','k1.d.gz','n2.d.gz',
-        'm2.d.gz','s2.d.gz','k2.d.gz','s1.d.gz']
-    model.model_file = [model_directory.joinpath(m) for m in model_files]
-    # validate model constituents
+    # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
     model.parse_constituents()
     assert model.constituents == constituents
-    # keep amplitudes in centimeters for comparison with outputs
+    # keep units consistent with test outputs
     model.scale = 1.0
 
     # read validation dataset
@@ -134,7 +131,7 @@ def test_verify_GOT47(METHOD, CROP):
 
     # extract amplitude and phase from tide model
     amp,ph,cons = model.extract_constants(lon, lat,
-        method=METHOD, crop=CROP)
+        method=METHOD, crop=CROP, constituents=constituents)
     assert all(c in constituents for c in cons)
     # calculate complex phase in radians for Euler's
     cph = -1j*ph*np.pi/180.0
@@ -167,16 +164,12 @@ def test_verify_GOT47(METHOD, CROP):
 def test_compare_GOT47(METHOD):
     # model parameters for GOT4.7
     model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
-    model_directory = model.model_file[0].parent
     # perth3 test program infers m4 tidal constituent
-    model_files = ['q1.d.gz','o1.d.gz','p1.d.gz','k1.d.gz','n2.d.gz',
-        'm2.d.gz','s2.d.gz','k2.d.gz','s1.d.gz']
-    model.model_file = [model_directory.joinpath(m) for m in model_files]
-    # validate model constituents
+    # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
     model.parse_constituents()
     assert model.constituents == constituents
-    # keep amplitudes in centimeters for comparison with outputs
+    # keep units consistent with test outputs
     model.scale = 1.0
 
     # read validation dataset
@@ -192,13 +185,14 @@ def test_compare_GOT47(METHOD):
         lon[i] = np.float64(line_contents[1])
 
     # extract amplitude and phase from tide model
-    amp1, ph1, c1 = model.extract_constants(lon, lat, method=METHOD)
+    amp1, ph1, c1 = model.extract_constants(lon, lat,
+        constituents=constituents, method=METHOD)
     # calculate complex form of constituent oscillation
     hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)
 
     # read and interpolate constituents from tide model
-    constituents = model.read_constants()
-    assert (constituents.fields == model._constituents.fields)
+    model.read_constants(constituents=constituents)
+    assert (constituents == model._constituents.fields)
     amp2, ph2 = model.interpolate_constants(lon, lat, method=METHOD)
     # calculate complex form of constituent oscillation
     hc2 = amp2*np.exp(-1j*ph2*np.pi/180.0)
@@ -215,7 +209,7 @@ def test_compare_GOT47(METHOD):
 
     # validate iteration within constituents class
     cons = iter(c1)
-    for field, hc in constituents:
+    for field, hc in model._constituents:
         # verify constituents
         assert (field == next(cons))
         assert np.ma.isMaskedArray(hc)

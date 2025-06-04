@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 GOT.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (05/2025)
 
 Reads files for Richard Ray's Global Ocean Tide (GOT) models and makes initial
     calculations to run the tide program
@@ -42,6 +42,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 05/2025: added option to select constituents to read from model
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added crop and bounds keywords for trimming model data
@@ -142,6 +143,8 @@ def extract_constants(
 
             - ``'ascii'``: traditional GOT ascii format
             - ``'netcdf'``: GOT netCDF4 format
+    constituents: list or None, default None
+        Specify constituents to read from model
     compressed: bool, default False
         Input files are gzip compressed
     crop: bool, default False
@@ -176,6 +179,7 @@ def extract_constants(
     """
     # set default keyword arguments
     kwargs.setdefault('grid', 'ascii')
+    kwargs.setdefault('constituents', None)
     kwargs.setdefault('compressed', False)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
@@ -199,6 +203,16 @@ def extract_constants(
     if isinstance(model_files, (str, pathlib.Path)):
         warnings.warn("Tide model is entered as a string")
         model_files = [model_files]
+
+    # reduce list of model files to constituents
+    if kwargs['constituents'] is not None:
+        # verify that constituents is a list
+        if isinstance(kwargs['constituents'], str):
+            kwargs['constituents'] = [kwargs['constituents']]
+        # filter model files to constituents
+        model_files = [model_file for i, model_file in enumerate(model_files) if
+            pyTMD.io.constituents.parse(model_file) in kwargs['constituents']
+        ]
 
     # adjust dimensions of input coordinates to be iterable
     ilon = np.atleast_1d(np.copy(ilon))
@@ -326,6 +340,8 @@ def read_constants(
 
             - ``'ascii'``: traditional GOT ascii format
             - ``'netcdf'``: GOT netCDF4 format
+    constituents: list or None, default None
+        Specify constituents to read from model
     compressed: bool, default False
         Input files are gzip compressed
     crop: bool, default False
@@ -342,6 +358,7 @@ def read_constants(
     """
     # set default keyword arguments
     kwargs.setdefault('grid', 'ascii')
+    kwargs.setdefault('constituents', None)
     kwargs.setdefault('compressed', False)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
@@ -351,6 +368,16 @@ def read_constants(
     if isinstance(model_files, (str, pathlib.Path)):
         warnings.warn("Tide model is entered as a string")
         model_files = [model_files]
+
+    # reduce list of model files to constituents
+    if kwargs['constituents'] is not None:
+        # verify that constituents is a list
+        if isinstance(kwargs['constituents'], str):
+            kwargs['constituents'] = [kwargs['constituents']]
+        # filter model files to constituents
+        model_files = [model_file for i, model_file in enumerate(model_files) if
+            pyTMD.io.constituents.parse(model_file) in kwargs['constituents']
+        ]
 
     # save output constituents
     constituents = pyTMD.io.constituents()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (12/2024)
+Written by Tyler Sutterley (05/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -62,6 +62,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 05/2025: added option to select constituents to read from model
     Updated 12/2024: moved check points function as compute.tide_masks
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: compute delta times based on corrections type
@@ -230,6 +231,7 @@ def tide_elevations(
         EXTRAPOLATE: bool = False,
         CUTOFF: int | float = 10.0,
         CORRECTIONS: str | None = None,
+        CONSTITUENTS: list | None = None,
         INFER_MINOR: bool = True,
         MINOR_CONSTITUENTS: list | None = None,
         APPEND_NODE: bool = False,
@@ -297,6 +299,8 @@ def tide_elevations(
         Set to ``np.inf`` to extrapolate for all points
     CORRECTIONS: str or None, default None
         Nodal correction type, default based on model
+    CONSTITUENTS: list or None, default None
+        Specify constituents to read from model
     INFER_MINOR: bool, default True
         Infer the height values for minor tidal constituents
     MINOR_CONSTITUENTS: list or None, default None
@@ -366,7 +370,8 @@ def tide_elevations(
     nt = len(ts)
 
     # read tidal constants and interpolate to grid points
-    amp, ph, c = model.extract_constants(lon, lat, type=model.type,
+    amp, ph, c = model.extract_constants(lon, lat,
+        type=model.type, constituents=CONSTITUENTS,
         crop=CROP, bounds=BOUNDS, buffer=BUFFER, method=METHOD,
         extrapolate=EXTRAPOLATE, cutoff=CUTOFF,
         append_node=APPEND_NODE, apply_flexure=APPLY_FLEXURE)
@@ -458,6 +463,7 @@ def tide_currents(
         EXTRAPOLATE: bool = False,
         CUTOFF: int | float = 10.0,
         CORRECTIONS: str | None = None,
+        CONSTITUENTS: list | None = None,
         INFER_MINOR: bool = True,
         MINOR_CONSTITUENTS: list | None = None,
         FILL_VALUE: float = np.nan,
@@ -523,6 +529,8 @@ def tide_currents(
         Set to ``np.inf`` to extrapolate for all points
     CORRECTIONS: str or None, default None
         Nodal correction type, default based on model
+    CONSTITUENTS: list or None, default None
+        Specify constituents to read from model
     INFER_MINOR: bool, default True
         Infer the height values for minor tidal constituents
     MINOR_CONSTITUENTS: list or None, default None
@@ -595,7 +603,8 @@ def tide_currents(
     # iterate over u and v currents
     for t in model.type:
         # read tidal constants and interpolate to grid points
-        amp, ph, c = model.extract_constants(lon, lat, type=t,
+        amp, ph, c = model.extract_constants(lon, lat,
+            type=t, constituents=CONSTITUENTS,
             crop=CROP, bounds=BOUNDS, buffer=BUFFER, method=METHOD,
             extrapolate=EXTRAPOLATE, cutoff=CUTOFF)
         # calculate complex phase in radians for Euler's

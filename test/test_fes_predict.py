@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_fes_predict.py (09/2024)
+test_fes_predict.py (06/2025)
 Tests that FES2014 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to FES2014 program
@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
     Updated 07/2024: add parametrize over cropping the model fields
     Updated 04/2024: use timescale for temporal operations
@@ -100,19 +101,12 @@ def test_check_FES2014():
 @pytest.mark.parametrize("CROP", [False, True])
 def test_verify_FES2014(METHOD, CROP):
     # model parameters for FES2014
-    model_directory = filepath.joinpath('fes2014','ocean_tide')
+    m = pyTMD.io.model(filepath,compressed=True).elevation('FES2014')
     # constituent files included in test
-    model_files = ['2n2.nc.gz','k1.nc.gz','k2.nc.gz','m2.nc.gz','m4.nc.gz',
-        'mf.nc.gz','mm.nc.gz','msqm.nc.gz','mtm.nc.gz','n2.nc.gz','o1.nc.gz',
-        'p1.nc.gz','q1.nc.gz','s1.nc.gz','s2.nc.gz']
-    model_file = [model_directory.joinpath(m) for m in model_files]
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
-    model_format = 'FES-netcdf'
-    corrections, _ , grid = model_format.partition('-')
-    VERSION = 'FES2014'
-    TYPE = 'z'
-    SCALE = 1.0/100.0
+    # convert units from centimeters to meters
+    m.scale = 1.0/100.0
 
     # read validation dataset
     # extract time (Modified Julian Days), latitude, longitude, and tide data
@@ -132,9 +126,8 @@ def test_verify_FES2014(METHOD, CROP):
     tide_time = file_contents['CNES'] - 15340.0
 
     # extract amplitude and phase from tide model
-    amp,ph = pyTMD.io.FES.extract_constants(longitude, latitude, model_file,
-        type=TYPE, version=VERSION, method=METHOD, compressed=True,
-        scale=SCALE, crop=CROP)
+    amp,ph,_ = m.extract_constants(longitude, latitude, 
+        constituents=c, method=METHOD, crop=CROP)
     # interpolate delta times from calendar dates to tide time
     deltat = timescale.time.interpolate_delta_time(
         timescale.time._delta_file, tide_time)
@@ -148,9 +141,9 @@ def test_verify_FES2014(METHOD, CROP):
     # predict tidal elevations at time and infer minor corrections
     tide.mask[:] = np.any(hc.mask, axis=1)
     tide.data[:] = pyTMD.predict.drift(tide_time, hc, c,
-        deltat=deltat, corrections=corrections)
+        deltat=deltat, corrections=m.corrections)
     minor = pyTMD.predict.infer_minor(tide_time, hc, c,
-        deltat=deltat, corrections=corrections)
+        deltat=deltat, corrections=m.corrections)
     tide.data[:] += minor.data[:]
 
     # will verify differences between model outputs are within tolerance
@@ -167,17 +160,12 @@ def test_verify_FES2014(METHOD, CROP):
 # PURPOSE: Tests that interpolated results are comparable
 def test_compare_FES2014(METHOD):
     # model parameters for FES2014
-    model_directory = filepath.joinpath('fes2014','ocean_tide')
+    m = pyTMD.io.model(filepath,compressed=True).elevation('FES2014')
     # constituent files included in test
-    model_files = ['2n2.nc.gz','k1.nc.gz','k2.nc.gz','m2.nc.gz','m4.nc.gz',
-        'mf.nc.gz','mm.nc.gz','msqm.nc.gz','mtm.nc.gz','n2.nc.gz','o1.nc.gz',
-        'p1.nc.gz','q1.nc.gz','s1.nc.gz','s2.nc.gz']
-    model_file = [model_directory.joinpath(m) for m in model_files]
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
-    VERSION = 'FES2014'
-    TYPE = 'z'
-    SCALE = 1.0
+    # keep units consistent with test outputs
+    m.scale = 1.0
 
     # read validation dataset
     # extract time (Modified Julian Days), latitude, longitude, and tide data
@@ -190,17 +178,15 @@ def test_compare_FES2014(METHOD):
     latitude = file_contents['Latitude']
 
     # extract amplitude and phase from tide model
-    amp1, ph1 = pyTMD.io.FES.extract_constants(longitude, latitude, model_file,
-        type=TYPE, version=VERSION, method=METHOD, compressed=True,
-        scale=SCALE)
+    amp1, ph1 = m.extract_constants(longitude, latitude,
+        constituents=c, method=METHOD)
     # calculate complex form of constituent oscillation
     hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)
 
     # read and interpolate constituents from tide model
-    constituents = pyTMD.io.FES.read_constants(model_file,
-        type=TYPE, version=VERSION, compressed=True)
-    amp2, ph2 = pyTMD.io.FES.interpolate_constants(longitude, latitude,
-        constituents, method=METHOD, scale=SCALE)
+    m.read_constants(constituents=c)
+    amp2, ph2 = m.interpolate_constants(longitude, latitude,
+        method=METHOD)
     # calculate complex form of constituent oscillation
     hc2 = amp2*np.exp(-1j*ph2*np.pi/180.0)
 
@@ -230,18 +216,18 @@ def test_compare_FES2014(METHOD):
         difference = hc1[:,i] - hc2[:,i]
         assert np.all(np.abs(difference) <= eps)
         # verify doodson numbers
-        assert (constituents.doodson_number[i] == exp[cons])
+        assert (m._constituents.doodson_number[i] == exp[cons])
         # verify cartwright numbers
-        assert np.all(constituents.cartwright_number[i] ==
+        assert np.all(m._constituents.cartwright_number[i] ==
                 pyTMD.arguments._from_doodson_number(exp[cons]))
 
     # validate iteration within constituents class
-    for field, hc in constituents:
+    for field, hc in m._constituents:
         # verify constituents
         assert np.ma.isMaskedArray(hc)
         # validate amplitude and phase functions
-        amp = constituents.amplitude(field)
-        phase = constituents.phase(field)
+        amp = m._constituents.amplitude(field)
+        phase = m._constituents.phase(field)
         assert np.ma.isMaskedArray(amp)
         assert np.ma.isMaskedArray(phase)
         # calculate complex form of constituent oscillation
