@@ -198,7 +198,7 @@ def test_compare_GOT47(METHOD):
     # calculate differences between methods
     for i, cons in enumerate(c1):
         # verify constituents
-        assert (cons == constituents.fields[i])
+        assert (cons == constituents[i])
         # calculate difference in amplitude and phase
         difference = hc1[:,i] - hc2[:,i]
         assert np.all(np.abs(difference) <= eps)
@@ -210,8 +210,8 @@ def test_compare_GOT47(METHOD):
         assert (field == next(cons))
         assert np.ma.isMaskedArray(hc)
         # validate amplitude and phase functions
-        amp = constituents.amplitude(field)
-        phase = constituents.phase(field)
+        amp = model._constituents.amplitude(field)
+        phase = model._constituents.phase(field)
         assert np.ma.isMaskedArray(amp)
         assert np.ma.isMaskedArray(phase)
         # calculate complex form of constituent oscillation

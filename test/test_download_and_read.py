@@ -503,6 +503,7 @@ class Test_CATS2008:
         RMS = np.array([1.4,2.7,1.7,3.5,2.9,7.3,5.0,1.7])
         rms = np.zeros((len(constituents)))
         for i,c in enumerate(constituents):
+            assert (c == cons[i])
             # calculate difference and rms
             difference = np.abs(station_z[valid,i] - model_z[valid,i])
             variance = np.sum(difference**2)/(2.0*nv)

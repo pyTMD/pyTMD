@@ -36,6 +36,8 @@ OPTIONS:
         ATLAS: reading a global solution with localized solutions
         TMD3: combined global or local netCDF4 solution
         OTIS: combined global or local solution
+    constituents: list or None, default None
+        Specify constituents to read from model
     apply_flexure: apply ice flexure scaling factor to constituents
 
 OUTPUTS:
@@ -400,10 +402,10 @@ def extract_constants(
 
     # read list of constituents
     if isinstance(model_file,list):
-        constituents = [read_constituents(m)[0].pop() for m in model_file]
-        nc = len(constituents)
+        cons = [read_constituents(m)[0].pop() for m in model_file]
+        nc = len(cons)
     else:
-        constituents,nc = read_constituents(model_file, grid=kwargs['grid'])
+        cons,nc = read_constituents(model_file, grid=kwargs['grid'])
     # reduce number of constituents
     if kwargs['constituents'] is not None:
         # verify that constituents is a list
@@ -418,15 +420,16 @@ def extract_constants(
     amplitude.mask = np.zeros((npts,nc), dtype=bool)
     ph = np.ma.zeros((npts,nc))
     ph.mask = np.zeros((npts,nc), dtype=bool)
+    constituents = []
     # read and interpolate each constituent
     for j in range(nc):
         # if reading a specific constituent
         if (kwargs['constituents'] is not None):
             c = kwargs['constituents'][j]
         else:
-            c = constituents[j]
-        # find index of constituent
-        i = constituents.index(c)
+            c = cons[j]
+        # find index of constituent in list
+        i = cons.index(c)
         # read constituent for type
         if (kwargs['type'] == 'z'):
             # read z constituent from elevation file
@@ -522,13 +525,15 @@ def extract_constants(
                 is_geographic=is_geographic)
         # convert units
         # amplitude and phase of the constituent
-        amplitude.data[:,i] = np.abs(hci.data)/unit_conv
-        amplitude.mask[:,i] = np.copy(hci.mask)
-        ph.data[:,i] = np.arctan2(-np.imag(hci), np.real(hci))
-        ph.mask[:,i] = np.copy(hci.mask)
+        amplitude.data[:,j] = np.abs(hci.data)/unit_conv
+        amplitude.mask[:,j] = np.copy(hci.mask)
+        ph.data[:,j] = np.arctan2(-np.imag(hci), np.real(hci))
+        ph.mask[:,j] = np.copy(hci.mask)
         # update mask to invalidate points outside model domain
-        ph.mask[:,i] |= invalid
-        amplitude.mask[:,i] |= invalid
+        ph.mask[:,j] |= invalid
+        amplitude.mask[:,j] |= invalid
+        # append constituent to list
+        constituents.append(c)
 
     # convert phase to degrees
     phase = ph*180.0/np.pi
@@ -711,9 +716,9 @@ def read_constants(
         if (kwargs['constituents'] is not None):
             c = kwargs['constituents'][j]
         else:
-            c = constituents[j]
-        # find index of constituent
-        i = constituents.index(c)
+            c = cons[j]
+        # find index of constituent in list
+        i = cons.index(c)
         if (kwargs['type'] == 'z'):
             # read constituent from elevation file
             if (kwargs['grid'] == 'ATLAS'):

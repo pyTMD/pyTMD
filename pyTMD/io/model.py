@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 model.py
-Written by Tyler Sutterley (02/2025)
+Written by Tyler Sutterley (06/2025)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 06/2025: add function for reducing list of model files
     Updated 02/2025: fixed missing grid kwarg for reading from TMD3 models 
     Updated 11/2024: use Love numbers for long-period tides in node equilibrium
     Updated 10/2024: add wrapper functions to read and interpolate constants
@@ -911,24 +912,32 @@ class model:
         # return the model dictionary
         return d
 
-    def parse_constituents(self) -> list:
+    def parse_constituents(self, **kwargs) -> list:
         """
         Parses tide model files for a list of model constituents
         """
         if isinstance(self.model_file, (str, pathlib.Path)):
             # single file elevation case
-            self.constituents = [self.parse_file(self.model_file)]
+            self.constituents = [
+                self.parse_file(self.model_file, **kwargs)
+            ]
         elif isinstance(self.model_file, list):
             # multiple file elevation case
-            self.constituents = [self.parse_file(f) for f in self.model_file]
+            self.constituents = [
+                self.parse_file(f, **kwargs) for f in self.model_file
+            ]
         elif isinstance(self.model_file, dict) and \
             isinstance(self.model_file['u'], (str, pathlib.Path)):
             # single file currents case
-            self.constituents = [self.parse_file(self.model_file['u'])]
+            self.constituents = [
+                self.parse_file(self.model_file['u'], **kwargs)
+            ]
         elif isinstance(self.model_file, dict) and \
             isinstance(self.model_file['u'], list):
             # multiple file currents case
-            self.constituents = [self.parse_file(f) for f in self.model_file['u']]
+            self.constituents = [
+                self.parse_file(f, **kwargs) for f in self.model_file['u']
+            ]
         # return the model parameters
         return self
 
@@ -967,6 +976,47 @@ class model:
         else:
             return None
 
+    def reduce_constituents(self, constituents: str | list):
+        """
+        Reduce model files to a subset of constituents
+
+        Parameters
+        ----------
+        constituents: str or list
+            List of constituents names
+        """
+        # if no constituents are specified, return self
+        if constituents is None:
+            return None
+        # verify that constituents is a list
+        if isinstance(constituents, str):
+            constituents = [constituents]
+        # parse constituents from model files
+        try:
+            self.parse_constituents(raise_error=True)
+        except ValueError as exc:
+            return None   
+        # only run for multiple files
+        if isinstance(self.model_file, list):
+            # multiple file elevation case
+            # filter model files to constituents
+            self.model_file = [self.model_file[self.constituents.index(c)]
+                for c in constituents if (c in self.constituents)
+            ]
+        elif isinstance(self.model_file, dict) and \
+            isinstance(self.model_file['u'], list):
+            # multiple file currents case
+            for key, val in self.model_file.items():
+                # reduce list of model files to constituents
+                # filter model files to constituents
+                self.model_file[key] = [val[self.constituents.index(c)]
+                    for c in constituents if (c in self.constituents)
+                ]
+        # update list of constituents
+        self.parse_constituents()
+        # return self
+        return self
+
     def extract_constants(self,
             lon: np.ndarray,
             lat: np.ndarray,
@@ -1001,6 +1051,9 @@ class model:
         kwargs.setdefault('type', self.type)
         kwargs.setdefault('append_node', False)
         kwargs.setdefault('scale', self.scale)
+        kwargs.setdefault('constituents', None)
+        # reduce constituents if specified
+        self.reduce_constituents(kwargs['constituents'])
         # read tidal constants and interpolate to grid points
         if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
             # extract model file in case of currents

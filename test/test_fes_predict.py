@@ -178,7 +178,7 @@ def test_compare_FES2014(METHOD):
     latitude = file_contents['Latitude']
 
     # extract amplitude and phase from tide model
-    amp1, ph1 = m.extract_constants(longitude, latitude,
+    amp1, ph1, c1 = m.extract_constants(longitude, latitude,
         constituents=c, method=METHOD)
     # calculate complex form of constituent oscillation
     hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)
