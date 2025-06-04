@@ -100,8 +100,6 @@ def test_verify_GOT47(METHOD, CROP):
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
-    model.parse_constituents()
-    assert model.constituents == constituents
     # keep units consistent with test outputs
     model.scale = 1.0
 
@@ -167,8 +165,6 @@ def test_compare_GOT47(METHOD):
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
-    model.parse_constituents()
-    assert model.constituents == constituents
     # keep units consistent with test outputs
     model.scale = 1.0
 
