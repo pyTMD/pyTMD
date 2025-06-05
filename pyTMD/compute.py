@@ -90,7 +90,7 @@ UPDATE HISTORY:
     Updated 06/2024: use np.clongdouble instead of np.longcomplex
     Updated 04/2024: use wrapper to importlib for optional dependencies
     Updated 02/2024: changed class name for ellipsoid parameters to datum
-    Updated 01/2024: made the inferrence of minor constituents an option
+    Updated 01/2024: made the inference of minor constituents an option
         refactored lunisolar ephemerides functions
         renamed module to compute and added tidal currents function
     Updated 12/2023: use new crs class for coordinate reprojection
@@ -400,7 +400,7 @@ def tide_elevations(
         for i in range(nt):
             TIDE = pyTMD.predict.map(ts.tide[i], hc, c,
                 deltat=deltat[i], corrections=nodal_corrections)
-            # calculate values for minor constituents by inferrence
+            # calculate values for minor constituents by inference
             if INFER_MINOR:
                 MINOR = pyTMD.predict.infer_minor(ts.tide[i], hc, c,
                     deltat=deltat[i], corrections=nodal_corrections,
@@ -415,7 +415,7 @@ def tide_elevations(
         tide.mask = np.any(hc.mask,axis=1)
         tide.data[:] = pyTMD.predict.drift(ts.tide, hc, c,
             deltat=deltat, corrections=nodal_corrections)
-        # calculate values for minor constituents by inferrence
+        # calculate values for minor constituents by inference
         if INFER_MINOR:
             minor = pyTMD.predict.infer_minor(ts.tide, hc, c,
                 deltat=deltat, corrections=nodal_corrections,
@@ -429,7 +429,7 @@ def tide_elevations(
             HC = hc[s,None,:]
             TIDE = pyTMD.predict.time_series(ts.tide, HC, c,
                 deltat=deltat, corrections=nodal_corrections)
-            # calculate values for minor constituents by inferrence
+            # calculate values for minor constituents by inference
             if INFER_MINOR:
                 MINOR = pyTMD.predict.infer_minor(ts.tide, HC, c,
                     deltat=deltat, corrections=nodal_corrections,
@@ -632,7 +632,7 @@ def tide_currents(
             for i in range(nt):
                 TIDE = pyTMD.predict.map(ts.tide[i], hc, c,
                     deltat=deltat[i], corrections=nodal_corrections)
-                # calculate values for minor constituents by inferrence
+                # calculate values for minor constituents by inference
                 if INFER_MINOR:
                     MINOR = pyTMD.predict.infer_minor(ts.tide[i], hc, c,
                         deltat=deltat[i], corrections=nodal_corrections,
@@ -647,7 +647,7 @@ def tide_currents(
             tide[t].mask = np.any(hc.mask,axis=1)
             tide[t].data[:] = pyTMD.predict.drift(ts.tide, hc, c,
                 deltat=deltat, corrections=nodal_corrections)
-            # calculate values for minor constituents by inferrence
+            # calculate values for minor constituents by inference
             if INFER_MINOR:
                 minor = pyTMD.predict.infer_minor(ts.tide, hc, c,
                     deltat=deltat, corrections=nodal_corrections,
@@ -661,7 +661,7 @@ def tide_currents(
                 HC = hc[s,None,:]
                 TIDE = pyTMD.predict.time_series(ts.tide, HC, c,
                     deltat=deltat, corrections=nodal_corrections)
-                # calculate values for minor constituents by inferrence
+                # calculate values for minor constituents by inference
                 if INFER_MINOR:
                     MINOR = pyTMD.predict.infer_minor(ts.tide, HC, c,
                         deltat=deltat, corrections=nodal_corrections,

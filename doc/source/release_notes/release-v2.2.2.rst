@@ -7,7 +7,7 @@
 * ``fix``: constituent parsing and mapping to verify ``lam2`` is not mapped to ``m2`` `(#387) <https://github.com/pyTMD/pyTMD/pull/387>`_
 * ``feat``: add more known constituent remapping cases `(#387) <https://github.com/pyTMD/pyTMD/pull/387>`_
 * ``test``: add constituent parser test `(#387) <https://github.com/pyTMD/pyTMD/pull/387>`_
-* ``docs``: add notes about inferrence `(#388) <https://github.com/pyTMD/pyTMD/pull/388>`_
+* ``docs``: add notes about inference `(#388) <https://github.com/pyTMD/pyTMD/pull/388>`_
 * ``feat``: add `Doodson (1921) <https://doi.org/10.1098/rspa.1921.0088>`_ table for amplitudes `(#388) <https://github.com/pyTMD/pyTMD/pull/388>`_
 * ``chore``: transfer ownership to `pyTMD org <https://github.com/pyTMD>`_ `(#389) <https://github.com/pyTMD/pyTMD/pull/389>`_
 * ``ci``: update codecov action `(#390) <https://github.com/pyTMD/pyTMD/pull/390>`_

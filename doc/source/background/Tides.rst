@@ -31,7 +31,7 @@ While the equilibrium condition is rarely satisfied for shorter period tides, so
 
 Using the relative amplitudes from equilibrium theory are also useful for *inferring* unmodeled constituents :cite:p:`Cartwright:1971iz,Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
-Inferrence is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
+Inference is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
 For tides in the diurnal band, a resonance from the Earth's free core notation (FCN) can complicate inferring some constituents :cite:p:`Wahr:1981if,Ray:2017jx,Agnew:2018ih`.
 This resonance affects the instantaneous elastic response of the solid Earth to tidal loading :cite:p:`Wahr:1979vx`.
 
@@ -48,7 +48,7 @@ Each constituent has a particular "Doodson number" describing the polynomial coe
 
 ``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
 Together these coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal amplitudes :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
-After the determination of the major constituents, ``pyTMD`` can estimate the amplitudes of minor constituents using inferrence methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
+After the determination of the major constituents, ``pyTMD`` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 
 
 Solid Earth Tides
