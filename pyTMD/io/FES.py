@@ -130,7 +130,7 @@ __all__ = [
 
 # versions of FES models
 _ascii_versions = ('FES1999','FES2004')
-_netcdf_versions = ('FES2012','FES2014','FES2022','EOT20','HAMTIDE11')
+_netcdf_versions = ('FES2012','FES2014','FES2022','EOT20','HAMTIDE11', "INATIDES")
 
 # PURPOSE: extract harmonic constants from tide models at coordinates
 def extract_constants(
@@ -732,7 +732,7 @@ def read_netcdf_file(
         lat = fileID.variables['lat'][:].data
         amp_key = dict(z='Ha', u='Ua', v='Va')[kwargs['type']]
         phase_key = dict(z='Hg', u='Ug', v='Vg')[kwargs['type']]
-    elif kwargs['version'] in ('FES2014','FES2022','EOT20'):
+    elif kwargs['version'] in ('FES2014','FES2022','EOT20', "INATIDES"):
         lon = fileID.variables['lon'][:].data
         lat = fileID.variables['lat'][:].data
         amp_key = dict(z='amplitude', u='Ua', v='Va')[kwargs['type']]
