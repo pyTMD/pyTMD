@@ -59,7 +59,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
-    Updated 01/2024: made the inferrence of minor constituents an option
+    Updated 01/2024: made the inference of minor constituents an option
         refactored lunisolar ephemerides functions
         deprecated in favor of refactored compute.py module
     Updated 12/2023: use new crs class for coordinate reprojection
