@@ -4,6 +4,10 @@ name: Update provider database on pull request
 
 on:
   pull_request:
+    paths:
+      - pyTMD
+      - providers
+      - .github/workflows/update-provider-database.yml
 
 jobs:
   build:
