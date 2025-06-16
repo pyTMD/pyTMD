@@ -44,7 +44,7 @@ bibliography: pytmd-refs.bib
 
 `pyTMD` is a generalized tide program that allows users to calculate both tide deflections and currents. As a tide model driver, `pyTMD` can read from a broad suite of models, and use different physics schemes in the internal calculations. Over 50 different models are presently supported within `pyTMD`, and additional models can be defined with a JSON file. The online documentation contains background information for tide modeling and multiple `Jupyter` notebooks that demonstrate core functionality.
 
-`pyTMD` was designed to be used by scientific researchers and beginners alike. It has been used in a number of scientific publications [@Freer:2023bt; @Millan:2023ju; @Sutterley:2019cl], and for the creation of several Earth observation datasets [@Smith:2024fd; @Smith:2024cv]. 
+`pyTMD` was designed to be used by beginners and scientific researchers alike. It has been used in a number of scientific publications for modeling regional tides [@Freer:2023bt; @Millan:2023ju; @Sutterley:2019cl], modeling global tides [@Gregg:2024, @Paprotny:2024], and creating several Earth observation datasets [@Smith:2024fd; @Smith:2024cv]. It has also been leveraged within larger earth-observation software packages [@Fitzpatrick:2024; @Bishop-Taylor:2025]. 
 
 # Functionality
 
