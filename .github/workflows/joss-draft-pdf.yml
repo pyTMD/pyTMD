@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - doc/source/_assets/paper.md
+      - doc/source/_assets/pytmd-refs.bib
       - .github/workflows/joss-draft-pdf.yml
 
 jobs:
