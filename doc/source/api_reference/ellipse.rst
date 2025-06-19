@@ -19,3 +19,5 @@ Calling Sequence
 .. autofunction:: pyTMD.ellipse.ellipse
 
 .. autofunction:: pyTMD.ellipse.inverse
+
+.. autofunction:: pyTMD.ellipse._xy

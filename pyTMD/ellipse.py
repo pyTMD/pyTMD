@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 ellipse.py
-Written by Tyler Sutterley (01/2024)
+Written by Tyler Sutterley (05/2025)
 Expresses the amplitudes and phases for the u and v components in terms of
     four ellipse parameters using Foreman's formula
 
@@ -25,6 +25,7 @@ REFERENCE:
         https://doi.org/10.1016/0309-1708(89)90017-1
 
 UPDATE HISTORY:
+    Updated 06/2025: added function to calculate x and y coordinates of ellipse
     Updated 01/2024: added inverse function to get currents from parameters
         use complex algebra to calculate tidal ellipse parameters
     Updated 09/2023: renamed to ellipse.py (from tidal_ellipse.py)
@@ -38,7 +39,8 @@ import numpy as np
 
 __all__ = [
     "ellipse",
-    "inverse"
+    "inverse",
+    "_xy"
 ]
 
 def ellipse(u: np.ndarray, v: np.ndarray):
@@ -56,14 +58,13 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     Returns
     -------
     umajor: np.ndarray
-        amplitude of the semimajor semi-axis
+        amplitude of the semi-major axis
     uminor: np.ndarray
-        amplitude of the semiminor semi-axis
+        amplitude of the semi-minor axis
     uincl: np.ndarray
-        angle of inclination of the northern semimajor semi-axis
+        angle of inclination of the northern semi-major axis
     uphase: np.ndarray
         phase lag of the maximum current behind the maximum tidal potential
-        of the individual constituent
     """
     # validate inputs
     u = np.atleast_1d(u)
@@ -105,14 +106,13 @@ def inverse(
     Parameters
     ----------
     umajor: np.ndarray
-        amplitude of the semimajor semi-axis
+        amplitude of the semi-major axis
     uminor: np.ndarray
-        amplitude of the semiminor semi-axis
+        amplitude of the semi-minor axis
     uincl: np.ndarray
-        angle of inclination of the northern semimajor semi-axis
+        angle of inclination of the northern semi-major axis
     uphase: np.ndarray
         phase lag of the maximum current behind the maximum tidal potential
-        of the individual constituent
 
     Returns
     -------
@@ -141,3 +141,50 @@ def inverse(
     v = -1j*(wp - np.conj(wm))
     # return values
     return (u, v)
+
+def _xy(
+        umajor: float | np.ndarray,
+        uminor: float | np.ndarray,
+        uincl: float | np.ndarray,
+        uphase: float | np.ndarray | None = None,
+        xy: tuple = (0.0, 0.0),
+        n: int | None = 1000,
+    ):
+    """
+    Calculates the x and y coordinates of the tidal ellipse
+
+    Parameters
+    ----------
+    umajor: np.ndarray
+        amplitude of the semi-major axis
+    uminor: np.ndarray
+        amplitude of the semi-minor axis
+    uincl: np.ndarray
+        angle of inclination of the northern semi-major axis
+    uphase: np.ndarray
+        phase lag of the maximum current behind the maximum tidal potential
+    xy: tuple, default (0.0, 0.0)
+        center of the ellipse (x, y)
+    n: int, default 1000
+        number of points to calculate along the ellipse
+
+    Returns
+    -------
+    x: np.ndarray
+        x coordinates of the tidal ellipse
+    y: np.ndarray
+        y coordinates of the tidal ellipse
+    """
+    # validate inputs
+    phi = uincl*np.pi/180.0
+    # calculate the angle of the ellipse
+    if uphase is not None:
+        # use the phase lag and inclination
+        th  = (uphase + uincl)*np.pi/180.0 
+    else:
+        # use a full rotation
+        th = np.linspace(0, 2*np.pi, n)
+    # calculate x and y coordinates
+    x = xy[0] + umajor*np.cos(th)*np.cos(phi) - uminor*np.sin(th)*np.sin(phi)
+    y = xy[1] + umajor*np.cos(th)*np.sin(phi) + uminor*np.sin(th)*np.cos(phi)
+    return (x, y)
