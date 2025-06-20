@@ -1090,7 +1090,7 @@ class model:
                 model_file = self.model_file
             # extract tidal constants for model type
             amp,ph = FES.extract_constants(lon, lat,
-                self.model_file, version=self.version,
+                model_file, version=self.version,
                 compressed=self.compressed, **kwargs)
             # available model constituents
             c = self.constituents
