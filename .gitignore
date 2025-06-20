@@ -42,6 +42,8 @@ wheels/
 *.egg
 .pytest_cache
 pythonenv*/
+venv/
+*build-commands.txt
 setup-miniconda-patched-environment.yml
 # OS generated files #
 ######################

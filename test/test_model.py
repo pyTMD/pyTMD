@@ -1,8 +1,9 @@
 """
-test_model.py (02/2025)
+test_model.py (06/2025)
 Tests the reading of model definition files
 
 UPDATE HISTORY:
+    Updated 06/2025: added function to check extra databases
     Updated 02/2025: added function to try to parse bathymetry files
     Updated 09/2024: drop support for the ascii definition file format
         fix parsing of TPXO8-atlas-nc constituents
@@ -791,50 +792,43 @@ def test_read_database():
     assert pyTMD.models.elevation.get('CATS2008') is not None
     assert pyTMD.models.current.get('CATS2008') is not None
 
-# PURPOSE: test reading extra model databases in file and dict format
-@pytest.mark.parametrize(
-    "extra_databases",
-    [
-        # Extra database as a JSON file
-        [filepath.joinpath("extra_database.json")],
-        # Extra database as a dictionary
-        [
-            {
-                "elevation": {
-                    "EOT20_custom": {
-                        "format": "FES-netcdf",
-                        "model_file": [
-                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
-                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
-                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
-                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
-                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
-                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
-                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
-                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
-                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
-                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
-                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
-                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
-                        ],
-                        "name": "EOT20_custom",
-                        "reference": "https://doi.org/10.17882/79489",
-                        "scale": 0.01,
-                        "type": "z",
-                        "variable": "tide_ocean",
-                        "version": "EOT20",
-                    }
-                }
-            }
-        ]
-    ],
-    ids=['file', 'dict'],
+# custom database from a JSON file
+_extra_database = filepath.joinpath("extra_database.json")
+# custom database from a dictionary
+_custom_database = dict(elevation= {
+        "EOT20_custom": {
+            "format": "FES-netcdf",
+            "model_file": [
+                "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                "EOT20/ocean_tides/T2_ocean_eot20.nc",
+            ],
+            "name": "EOT20_custom",
+            "reference": "https://doi.org/10.17882/79489",
+            "scale": 0.01,
+            "type": "z",
+            "variable": "tide_ocean",
+            "version": "EOT20",
+        }
+    }
 )
+
+# PURPOSE: test reading extra model databases in file and dict format
+@pytest.mark.parametrize("extra_databases", [_extra_database, _custom_database])
 def test_read_extra_database(extra_databases):
     """Tests that extra model databases can be read in file and dict format
     """
