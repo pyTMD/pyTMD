@@ -128,7 +128,7 @@ def load_database(extra_databases: list = []):
     with database.open(mode='r', encoding='utf-8') as fid:
         parameters = json.load(fid)
     # verify that extra_databases is iterable
-    if isinstance(extra_databases, (str, dict)):
+    if isinstance(extra_databases, (str, pathlib.Path, dict)):
         extra_databases = [extra_databases]
     # load any additional databases
     for db in extra_databases:
