@@ -790,3 +790,59 @@ def test_read_database():
     # assert that models are accessible
     assert pyTMD.models.elevation.get('CATS2008') is not None
     assert pyTMD.models.current.get('CATS2008') is not None
+
+# PURPOSE: test reading extra model databases in file and dict format
+@pytest.mark.parametrize(
+    "extra_databases",
+    [
+        # Extra database as a JSON file
+        [filepath.joinpath("extra_database.json")],
+        # Extra database as a dictionary
+        [
+            {
+                "elevation": {
+                    "EOT20_custom": {
+                        "format": "FES-netcdf",
+                        "model_file": [
+                            "EOT20/ocean_tides/2N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/J1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/K2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/M4_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MF_ocean_eot20.nc",
+                            "EOT20/ocean_tides/MM_ocean_eot20.nc",
+                            "EOT20/ocean_tides/N2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/O1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/P1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/Q1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S1_ocean_eot20.nc",
+                            "EOT20/ocean_tides/S2_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/SSA_ocean_eot20.nc",
+                            "EOT20/ocean_tides/T2_ocean_eot20.nc",
+                        ],
+                        "name": "EOT20_custom",
+                        "reference": "https://doi.org/10.17882/79489",
+                        "scale": 0.01,
+                        "type": "z",
+                        "variable": "tide_ocean",
+                        "version": "EOT20",
+                    }
+                }
+            }
+        ]
+    ],
+    ids=['file', 'dict'],
+)
+def test_read_extra_database(extra_databases):
+    """Tests that extra model databases can be read in file and dict format
+    """
+    # load default db, and default + extra db
+    db_default = pyTMD.io.load_database()
+    db_extra = pyTMD.io.load_database(extra_databases=extra_databases)
+    # verify that custom model exists in db
+    assert 'EOT20_custom' not in db_default['elevation'].keys()
+    assert 'EOT20_custom' in db_extra['elevation'].keys()
+    # verify default db is a subset of default + extra db
+    assert db_default['elevation'].items() <= db_extra['elevation'].items()
