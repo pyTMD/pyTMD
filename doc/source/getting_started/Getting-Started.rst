@@ -156,8 +156,7 @@ For models with multiple constituent files, the files can be found using a ``glo
 Programs
 ########
 
-`pyTMD.compute <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py>`_ calculates tide predictions for use
-with numpy arrays or pandas dataframes.
+``pyTMD.compute`` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
 compute the corresponding tidal elevation or currents.
 
@@ -180,16 +179,16 @@ Spatial Coordinates
 ###################
 
 The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in latitude and longitude.
-``pyTMD`` uses `pyproj <https://pypi.org/project/pyproj/>`_ to convert from different coordinate systems and datums.
+``pyTMD`` uses ``pyproj`` to convert from different coordinate systems and datums.
 Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
-For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. PROJ, WKT, or EPSG code) can be used.
+For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
 For all cases with projected models, ``pyTMD`` will `convert from latitude and longitude to the model coordinate system <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/crs.py>`_ to calculate the local tidal constants.
 
 Interpolation
 #############
 
-For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from `scipy <https://docs.scipy.org/doc/scipy/reference/interpolate.html>`_
+For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from ``scipy``
 along with a built-in `bilinear <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ interpolation routine.
 The default interpolator uses a `biharmonic spline <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RectBivariateSpline.html>`_
 function to interpolate from the model coordinate system to the output coordinates.
