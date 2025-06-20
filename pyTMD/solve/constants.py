@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constants.py
-Written by Tyler Sutterley (05/2025)
+Written by Tyler Sutterley (06/2025)
 Routines for estimating the harmonic constants for ocean tides
 
 REFERENCES:
@@ -25,6 +25,7 @@ PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
 
 UPDATE HISTORY:
+    Updated 06/2025: verify that height values are all finite
     Updated 05/2025: added option to include higher order polynomials
     Updated 09/2024: added bounded options for least squares solvers
     Updated 08/2024: use nodal arguments for all non-OTIS model type cases
@@ -100,6 +101,11 @@ def constants(t: float | np.ndarray,
     # verify height and time variables
     t = np.ravel(t)
     ht = np.ravel(ht)
+    # reduce height and time variables to finite values
+    if not np.isfinite(ht).all():
+        valid, = np.nonzero(np.isfinite(t) & np.isfinite(ht))
+        t = t[valid]
+        ht = ht[valid]
     # check that there are enough values for a time series fit
     nt = len(t)
     nc = len(constituents)

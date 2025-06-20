@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2025: add function for reducing list of model files
+        fix extra_databases to not overwrite the default database
+        add capability to use a dictionary to expand the model database
     Updated 02/2025: fixed missing grid kwarg for reading from TMD3 models 
     Updated 11/2024: use Love numbers for long-period tides in node equilibrium
     Updated 10/2024: add wrapper functions to read and interpolate constants
@@ -125,18 +127,26 @@ def load_database(extra_databases: list = []):
     # extract JSON data
     with database.open(mode='r', encoding='utf-8') as fid:
         parameters = json.load(fid)
+    # verify that extra_databases is iterable
+    if isinstance(extra_databases, (str, dict)):
+        extra_databases = [extra_databases]
     # load any additional databases
     for db in extra_databases:
         # use database parameters directly if a dictionary
         if isinstance(db, dict):
-            extra = db
+            extra_database = copy.copy(db)
         # otherwise load parameters from JSON file path
         else:
-            with open(db, 'r', encoding='utf-8') as fid:
-                extra = json.load(fid)
+            # verify that extra database file exists
+            db = pathlib.Path(db).expanduser().absolute()
+            if not db.exists():
+                raise FileNotFoundError(db)
+            # extract JSON data
+            with db.open(mode='r', encoding='utf-8') as fid:
+                extra_database = json.load(fid)
         # Add additional models to database, accounting
         # for top level elevation and current dict keys
-        for key, val in extra.items():
+        for key, val in extra_database.items():
             parameters[key].update(val)
     return DataBase(**parameters)
 
@@ -167,6 +177,8 @@ class model:
         HDF5 ``description`` attribute string for output tide heights
     directory: str, pathlib.Path or None, default None
         Working data directory for tide models
+    extra_databases: list, default []
+        Additional databases for model parameters
     file_format: str
         File format for model
     flexure: bool
@@ -215,6 +227,7 @@ class model:
         # set default keyword arguments
         kwargs.setdefault('compressed', False)
         kwargs.setdefault('verify', True)
+        kwargs.setdefault('extra_databases', [])
         # set initial attributes
         self.compressed = copy.copy(kwargs['compressed'])
         self.constituents = None
@@ -223,6 +236,8 @@ class model:
         self.directory = None
         if directory is not None:
             self.directory = pathlib.Path(directory).expanduser()
+        # set any extra databases
+        self.extra_databases = copy.copy(kwargs['extra_databases'])
         self.flexure = False
         self.format = None
         self.grid_file = None
@@ -236,7 +251,7 @@ class model:
         self.verify = copy.copy(kwargs['verify'])
         self.version = None
 
-    def elevation(self, m: str, extra_databases: list = []):
+    def elevation(self, m: str):
         """
         Create a model object from known tidal elevation models
 
@@ -244,14 +259,12 @@ class model:
         ----------
         m: str
             model name
-        extra_databases: list, default []
-            Additional databases to load
         """
         # set working data directory if unset
         if self.directory is None:
             self.directory = pathlib.Path().absolute()
         # select between known tide models
-        parameters = load_database(extra_databases=extra_databases)
+        parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
         try:
             self.from_dict(parameters['elevation'][m])
@@ -269,7 +282,7 @@ class model:
         self.validate_format()
         return self
 
-    def current(self, m: str, extra_databases: list = []):
+    def current(self, m: str):
         """
         Create a model object from known tidal current models
 
@@ -277,14 +290,12 @@ class model:
         ----------
         m: str
             model name
-        extra_databases: list, default []
-            Additional databases to load
         """
         # set working data directory if unset
         if self.directory is None:
             self.directory = pathlib.Path().absolute()
         # select between tide models
-        parameters = load_database(extra_databases=extra_databases)
+        parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
         try:
             self.from_dict(parameters['current'][m])
@@ -461,12 +472,12 @@ class model:
             return None
 
     @staticmethod
-    def formats() -> list:
+    def formats(**kwargs) -> list:
         """
         Returns list of known model formats
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known formats
         format_list = []
         for variable, models in parameters.items():
@@ -476,12 +487,12 @@ class model:
         return sorted(set(format_list))
 
     @staticmethod
-    def ocean_elevation() -> list:
+    def ocean_elevation(**kwargs) -> list:
         """
         Returns list of ocean tide elevation models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known ocean tide elevation models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -493,12 +504,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def load_elevation() -> list:
+    def load_elevation(**kwargs) -> list:
         """
         Returns list of load tide elevation models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known load tide elevation models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -508,12 +519,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def ocean_current() -> list:
+    def ocean_current(**kwargs) -> list:
         """
         Returns list of tidal current models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known ocean tide current models
         model_list = []
         for model, val in parameters['current'].items():
@@ -522,12 +533,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def OTIS() -> list:
+    def OTIS(**kwargs) -> list:
         """
         Returns list of OTIS format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known OTIS models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -537,12 +548,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def ATLAS_compact() -> list:
+    def ATLAS_compact(**kwargs) -> list:
         """
         Returns list of ATLAS compact format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known ATLAS-compact models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -552,12 +563,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def TMD3() -> list:
+    def TMD3(**kwargs) -> list:
         """
         Returns list of TMD3 format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known TMD3 models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -567,12 +578,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def ATLAS() -> list:
+    def ATLAS(**kwargs) -> list:
         """
         Returns list of ATLAS-netcdf format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known TMD3 models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -582,12 +593,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def GOT() -> list:
+    def GOT(**kwargs) -> list:
         """
         Returns list of GOT format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known GOT-ascii or GOT-netcdf models
         model_list = []
         for model, val in parameters['elevation'].items():
@@ -597,12 +608,12 @@ class model:
         return sorted(set(model_list))
 
     @staticmethod
-    def FES() -> list:
+    def FES(**kwargs) -> list:
         """
         Returns list of FES format models
         """
         # load the database of model parameters
-        parameters = load_database()
+        parameters = load_database(**kwargs)
         # extract all known FES-ascii or FES-netcdf models
         model_list = []
         for model, val in parameters['elevation'].items():
