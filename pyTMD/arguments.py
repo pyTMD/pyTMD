@@ -541,10 +541,10 @@ def nodal_modulation(
 
     Returns
     -------
-    f: np.ndarray
-        nodal modulation factor
     u: np.ndarray
         nodal correction angle (radians)
+    f: np.ndarray
+        nodal modulation factor
     """
     # set default keyword arguments
     kwargs.setdefault('corrections', 'OTIS')
