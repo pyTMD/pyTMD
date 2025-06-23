@@ -4,6 +4,7 @@ test_math.py (11/2024)
 """
 import pytest
 import numpy as np
+import pyTMD.ellipse
 import pyTMD.math
 
 def test_normalize_angle():
@@ -87,3 +88,26 @@ def test_zonal(lmax=3, x=[-1.0, -0.9, -0.8]):
         [-2.64575, -1.25012, -0.21166],
     ])
     assert np.isclose(obs[:lmax+1,0,:], expected, atol=1e-05).all()
+
+# PURPOSE: test the calculation of ellipse coordinates
+def test_ellipse_xy():
+    """test the calculation of ellipse coordinates
+    """
+    # number of points
+    npts = 30
+    # define ellipse parameters
+    umajor = 4.0 + 2.0*np.random.rand(npts)
+    uminor = 2.0 + np.random.rand(npts)
+    uincl = 180.0*np.random.rand(npts)
+    # center of the ellipse
+    xy = (10.0 - 20.0*np.random.rand(1), 10.0 - 20.0*np.random.rand(1))
+    # calculate coordinates
+    x, y = pyTMD.ellipse._xy(umajor, uminor, uincl, phase=0.0, xy=xy)
+    # verify that the coordinates match the ellipse equation
+    phi = uincl*np.pi/180.0
+    X = (x - xy[0])*np.cos(phi) + (y - xy[1])*np.sin(phi)
+    Y = -(x - xy[0])*np.sin(phi) + (y - xy[1])*np.cos(phi)
+    test = (uminor*X)**2 + (umajor*Y)**2
+    validation = (umajor*uminor)**2
+    assert np.isclose(test, validation).all()
+
