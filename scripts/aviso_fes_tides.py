@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 aviso_fes_tides.py
-Written by Tyler Sutterley (01/2025)
+Written by Tyler Sutterley (07/2025)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -24,9 +24,12 @@ COMMAND LINE OPTIONS:
         FES2012
         FES2014
         FES2022
-    --load: download load tide model outputs (FES2014)
-    --currents: download tide model current outputs (FES2012 and FES2014)
-    --extrapolated: Download extrapolated tide model outputs (FES2022)
+    --load: download load tide model outputs
+        (FES2014)
+    --currents: download tide model current outputs
+        (FES2012 and FES2014)
+    --extrapolated: Download extrapolated tide model outputs
+        (FES2014 and FES2022)
     -G, --gzip: compress output ascii and netCDF4 tide files
     -t X, --timeout X: timeout in seconds for blocking operations
     --log: output log of files downloaded
@@ -40,6 +43,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 07/2025: added extrapolation option for FES2014 tide model
     Updated 01/2025: new ocean tide directory for latest FES2022 version
         scrubbed use of pathlib.os to just use os directly
     Updated 07/2024: added list and download for FES2022 tide model
@@ -119,6 +123,7 @@ def aviso_fes_tides(MODEL: str,
             DIRECTORY=DIRECTORY,
             LOAD=LOAD,
             CURRENTS=CURRENTS,
+            EXTRAPOLATED=EXTRAPOLATED,
             GZIP=GZIP,
             MODE=MODE)
     elif MODEL in ('FES2022',):
@@ -142,6 +147,7 @@ def aviso_fes_tar(MODEL, f, logger,
         DIRECTORY: str | pathlib.Path | None = None,
         LOAD: bool = False,
         CURRENTS: bool = False,
+        EXTRAPOLATED: bool = False,
         GZIP: bool = False,
         MODE: oct = 0o775
     ):
@@ -199,6 +205,12 @@ def aviso_fes_tar(MODEL, f, logger,
     if LOAD:
         FES['FES2014'].append(['fes2014_elevations_and_load',
             'fes2014a_loadtide','load_tide.tar.xz'])
+        TAR['FES2014'].extend(['r'])
+        FLATTEN['FES2014'].extend([False])
+    if EXTRAPOLATED:
+        FES['FES2014'].append(['fes2014_elevations_and_load',
+            'fes2014b_elevations_extrapolated',
+            'ocean_tide_extrapolated.tar.xz'])
         TAR['FES2014'].extend(['r'])
         FLATTEN['FES2014'].extend([False])
     if CURRENTS:
