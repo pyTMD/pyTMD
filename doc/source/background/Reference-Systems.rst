@@ -8,7 +8,7 @@ The :math:`z` axis is aligned with the Earth's rotation axis, the :math:`x` axis
 The :math:`xy` plane is also called the equatorial plane.
 
 Geodetic coordinates (longitude :math:`\lambda`, latitude :math:`\varphi`, and height :math:`h`) are used to describe the position of a point on the Earth with respect to a defined ellipsoid.
-Changing the terrestial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
+Changing the terrestrial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
 This involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 2.1 <eq:2.1>`].
 
 .. math::

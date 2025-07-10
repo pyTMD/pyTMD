@@ -189,7 +189,7 @@ class crs:
         PROJECTION: int, str or dict
             Coordinate Reference System
         """
-        # coordinate reference system dictoinary
+        # coordinate reference system dictionary
         try:
             CRS = pyproj.CRS.from_user_input(PROJECTION)
         except (ValueError, pyproj.exceptions.CRSError):
