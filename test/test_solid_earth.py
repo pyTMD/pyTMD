@@ -1,5 +1,5 @@
 """
-test_solid_earth.py (04/2025)
+test_solid_earth.py (07/2025)
 Tests the steps for calculating the solid earth tides
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 07/2025: revert free-to-mean conversion to April 2023 version
     Updated 04/2025: moved astronomical tests to test_astro.py
     Updated 04/2024: use timescale for temporal operations
     Written 04/2023
@@ -192,9 +193,11 @@ def test_solid_earth_radial(EPHEMERIDES):
     # as using estimated ephemerides, assert within 1/2 mm
     assert np.isclose(tide_earth, tide_free, atol=5e-4).all()
     # check permanent tide offsets (additive correction in ICESat-2)
-    tide_expected = tide_earth + tide_earth_free2mean
-    predicted = 0.06029 - 0.180873*np.sin(latitudes*np.pi/180.0)**2
+    # expected results (mean-tide)
+    tide_expected = tide_earth - tide_earth_free2mean
+    # sign differences with ATLAS product: correction is subtractive
+    predicted = -0.06029 + 0.180873*np.sin(latitudes*np.pi/180.0)**2
     assert np.isclose(tide_expected, tide_mean, atol=5e-4).all()
-    assert np.isclose(tide_earth_free2mean, predicted, atol=5e-4).all()
+    assert np.isclose(-tide_earth_free2mean, predicted, atol=5e-4).all()
     assert np.isclose(tide_mean-tide_free, predicted, atol=5e-4).all()
 
