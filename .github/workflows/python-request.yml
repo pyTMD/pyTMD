@@ -6,9 +6,9 @@ name: Python on pull request
 on:
   pull_request:
     paths:
-      - pyTMD
-      - scripts
-      - test
+      - pyTMD/**
+      - scripts/**
+      - test/**
       - .github/workflows/python-request.yml
   schedule:
     # * is a special character in YAML so you have to quote this string
