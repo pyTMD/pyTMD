@@ -169,7 +169,7 @@ def map(t: float | np.ndarray,
     # return the tidal elevation after removing singleton dimensions
     return np.squeeze(ht)
 
-# PURPOSE: Predict tides at drift bouys or altimetry points
+# PURPOSE: Predict tides at drift buoys or altimetry points
 def drift(t: float | np.ndarray,
         hc: np.ndarray,
         constituents: list | np.ndarray,
@@ -1116,7 +1116,7 @@ def load_pole_tide(
     # degrees and arcseconds to radians
     dtr = np.pi/180.0
     atr = np.pi/648000.0
-    # convert time to Terrestial Time (TT)
+    # convert time to Terrestrial Time (TT)
     tt = t + _jd_tide + deltat
     # convert time to Modified Julian Days (MJD)
     MJD = tt - _jd_mjd
@@ -1233,7 +1233,7 @@ def ocean_pole_tide(
     # degrees and arcseconds to radians
     dtr = np.pi/180.0
     atr = np.pi/648000.0
-    # convert time to Terrestial Time (TT)
+    # convert time to Terrestrial Time (TT)
     tt = t + _jd_tide + deltat
     # convert time to Modified Julian Days (MJD)
     MJD = tt - _jd_mjd

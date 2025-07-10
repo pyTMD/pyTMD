@@ -503,7 +503,7 @@ def mean_obliquity(MJD: np.ndarray):
     return atr*polynomial_sum(epsilon0, T)
 
 def equation_of_time(MJD: np.ndarray):
-    """Approximate calcuation of the difference between apparent and
+    """Approximate calculation of the difference between apparent and
     mean solar times :cite:p:`Meeus:1991vh,Urban:2013vl`
 
     Parameters
@@ -975,7 +975,7 @@ def _icrs_rotation_matrix(
         include_polar_motion: bool = True
     ):
     """
-    Rotation matrix for tranforming from the
+    Rotation matrix for transforming from the
     International Celestial Reference System (ICRS)
     to the International Terrestrial Reference System (ITRS)
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
