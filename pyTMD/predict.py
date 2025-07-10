@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 07/2025: revert free-to-mean conversion to April 2023 version
     Updated 05/2025: pass keyword arguments to nodal corrections functions
     Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: verify dimensions of harmonic constants
@@ -1757,8 +1758,8 @@ def _free_to_mean(
     dr = dR0*(3.0/2.0*sinphi**2 - 1.0/2.0)
     dn = 2.0*dN0*cosphi*sinphi
     # compute as an additive correction (Mathews et al. 1997)
-    DX = dr*cosla*cosphi - dn*cosla*sinphi
-    DY = dr*sinla*cosphi - dn*sinla*sinphi
-    DZ = dr*sinphi + dn*cosphi
+    DX = -dr*cosla*cosphi + dn*cosla*sinphi
+    DY = -dr*sinla*cosphi + dn*sinla*sinphi
+    DZ = -dr*sinphi - dn*cosphi
     # return the corrections
     return np.c_[DX, DY, DZ]
