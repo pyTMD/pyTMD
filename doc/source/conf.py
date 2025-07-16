@@ -15,6 +15,7 @@
 import datetime
 # sys.path.insert(0, os.path.abspath('.'))
 import importlib.metadata
+import importlib.util
 
 
 # -- Project information -----------------------------------------------------
@@ -31,6 +32,12 @@ author = 'Tyler C. Sutterley'
 version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
+
+# create tables
+for module_name in ['model_table', 'constituent_table']:
+    spec = importlib.util.spec_from_file_location(module_name, f'{module_name}.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
 # -- General configuration ---------------------------------------------------
 
