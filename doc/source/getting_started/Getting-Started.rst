@@ -38,66 +38,9 @@ Directories
 This structure was chosen based on the different formats of each tide model.
 Presently, the following models and their directories are parameterized within ``pyTMD``.
 
-- Circum-Antarctic Tidal Simulations :cite:p:`Padman:2008ec`
-
-    * CATS0201: ``<path_to_tide_models>/cats0201_tmd/``
-    * `CATS2008 <https://doi.org/10.15784/601235>`_: ``<path_to_tide_models>/CATS2008/``
-    * CATS2008_load: ``<path_to_tide_models>/CATS2008a_SPOTL_Load/``
-    * `CATS2008-v2023 <https://doi.org/10.15784/601772>`_: ``<path_to_tide_models>/CATS2008_v2023/``
-
-- Arctic Ocean and Greenland Coast Tidal Simulations :cite:p:`Padman:2004hv`
-
-    * `AODTM-5 <https://arcticdata.io/catalog/view/doi:10.18739/A2901ZG3N>`_: ``<path_to_tide_models>/aodtm5_tmd/``
-    * `AOTIM-5 <https://arcticdata.io/catalog/view/doi:10.18739/A2S17SS80>`_: ``<path_to_tide_models>/aotim5_tmd/``
-    * `AOTIM-5-2018 <https://arcticdata.io/catalog/view/doi:10.18739/A21R6N14K>`_: ``<path_to_tide_models>/Arc5km2018/``
-    * `Arc2kmTM <https://arcticdata.io/catalog/view/doi:10.18739/A2D21RK6K>`_: ``<path_to_tide_models>/Arc2kmTM/``
-    * Gr1km-v2: ``<path_to_tide_models>/greenlandTMD_v2/``
-
-- TOPEX/POSEIDON global tide models :cite:p:`Egbert:2002ge`
-
-    * TPXO7.2: ``<path_to_tide_models>/TPXO7.2_tmd/``
-    * TPXO7.2_load: ``<path_to_tide_models>/TPXO7.2_load/``
-    * `TPXO8-atlas <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/tpxo8_atlas/``
-    * `TPXO9.1 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9.1/DATA/``
-    * `TPXO9-atlas <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9_atlas/``
-    * `TPXO9-atlas-v2 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9_atlas_v2/``
-    * `TPXO9-atlas-v3 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9_atlas_v3/``
-    * `TPXO9-atlas-v4 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9_atlas_v4/``
-    * `TPXO9-atlas-v5 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO9_atlas_v5/``
-    * `TPXO10-atlas-v2 <https://www.tpxo.net/tpxo-products-and-registration>`_: ``<path_to_tide_models>/TPXO10_atlas_v2/``
-
-- Global Ocean Tide models :cite:p:`Ray:1999vm`
-
-    * GOT4.7: ``<path_to_tide_models>/GOT4.7/grids_oceantide/``
-    * GOT4.7_load: ``<path_to_tide_models>/GOT4.7/grids_loadtide/``
-    * `GOT4.8 <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/got4.8.tar.gz>`_: ``<path_to_tide_models>/got4.8/grids_oceantide/``
-    * `GOT4.8_load <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/got4.8.tar.gz>`_: ``<path_to_tide_models>/got4.8/grids_loadtide/``
-    * `GOT4.10 <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/got4.10c.tar.gz>`_: ``<path_to_tide_models>/GOT4.10c/grids_oceantide/``
-    * `GOT4.10_load <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/got4.10c.tar.gz>`_: ``<path_to_tide_models>/GOT4.10c/grids_loadtide/``
-    * `GOT5.5 <https://earth.gsfc.nasa.gov/sites/default/files/2024-07/GOT5.5.tar%201.gz>`_: ``<path_to_tide_models>/GOT5.5/ocean_tides/``
-    * `GOT5.5_load <https://earth.gsfc.nasa.gov/sites/default/files/2024-07/GOT5.5.tar%201.gz>`_: ``<path_to_tide_models>/GOT5.5/load_tides/``
-    * `GOT5.6 <https://earth.gsfc.nasa.gov/sites/default/files/2024-07/GOT5.6.tar%201.gz>`_: ``<path_to_tide_models>/GOT5.6/ocean_tides/``
-    * `RE14 <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/re14_longperiodtides_rel.tar>`_: ``<path_to_tide_models>/RE14_LongPeriodTides_rel/oceantides/``
-
-- Finite Element Solution tide models :cite:p:`Lyard:2021fk`
-
-    * `FES2014 <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes/description-fes2014.html>`_: ``<path_to_tide_models>/fes2014/ocean_tide/``
-    * `FES2014_load <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes/description-fes2014.html>`_: ``<path_to_tide_models>/fes2014/load_tide/``
-    * `FES2022 <https://doi.org/10.24400/527896/A01-2024.004>`_: ``<path_to_tide_models>/fes2022b/ocean_tide_20241025/``
-    * `FES2022_load <https://doi.org/10.24400/527896/A01-2024.004>`_: ``<path_to_tide_models>/fes2022b/load_tide/``
-
-- Empirical Ocean Tide models :cite:p:`HartDavis:2021dx`
-
-    * `EOT20 <https://doi.org/10.17882/79489>`_: ``<path_to_tide_models>/EOT20/ocean_tides/``
-    * `EOT20_load <https://doi.org/10.17882/79489>`_: ``<path_to_tide_models>/EOT20/load_tides/``
-
-- Technical University of Denmark tide models :cite:p:`Andersen:2023ei`
-
-    * `DTU23 <https://doi.org/10.11583/DTU.23828874>`_: ``<path_to_tide_models>/DTU23_OceanTide/DTU23/``
-
-- Hamburg direct data Assimilation Methods for Tides models :cite:p:`Taguchi:2014ht`
-
-    * `HAMTIDE11 <https://www.cen.uni-hamburg.de/en/icdc/data/ocean/hamtide.html>`_: ``<path_to_tide_models>/hamtide/``
+.. csv-table::
+   :file: ../_assets/models.csv
+   :header-rows: 1
 
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
 Note that any alternatively defined model will have to fit the file standard of a currently supported model.
