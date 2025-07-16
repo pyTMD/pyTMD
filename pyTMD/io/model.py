@@ -54,7 +54,7 @@ UPDATE HISTORY:
     Updated 12/2022: moved to io and added deprecation warning to old
     Updated 11/2022: use f-strings for formatting verbose or ascii output
     Updated 06/2022: added Greenland 1km model (Gr1kmTM) to list of models
-        updated citation url for Global Ocean Tide (GOT) models
+        updated citation url for Goddard Ocean Tide (GOT) models
     Updated 05/2022: added ESR CATS2022 to list of models
         added attribute for flexure fields being available for model
     Updated 04/2022: updated docstrings to numpy documentation format

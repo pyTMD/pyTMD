@@ -3,10 +3,10 @@ u"""
 GOT.py
 Written by Tyler Sutterley (11/2024)
 
-Reads files for Richard Ray's Global Ocean Tide (GOT) models and makes initial
-    calculations to run the tide program
-Includes functions to extract tidal harmonic constants out of a tidal model for
-    given locations
+Reads files for Richard Ray's Goddard Ocean Tide (GOT) models and makes
+    initial calculations to run the tide program
+Includes functions to extract tidal harmonic constants out of a tidal
+    model for given locations
 
 INPUTS:
     ilon: longitude to interpolate
@@ -123,7 +123,7 @@ def extract_constants(
         **kwargs
     ):
     """
-    Reads files for Richard Ray's Global Ocean Tide (GOT) models
+    Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
 
     Makes initial calculations to run the tide program
 
@@ -315,7 +315,7 @@ def read_constants(
         **kwargs
     ):
     """
-    Reads files for Richard Ray's Global Ocean Tide (GOT) models
+    Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
 
     Parameters
     ----------
@@ -540,7 +540,7 @@ def read_ascii_file(
         **kwargs
     ):
     """
-    Read Richard Ray's Global Ocean Tide (GOT) model file
+    Read Richard Ray's Goddard Ocean Tide (GOT) model file
 
     Parameters
     ----------
@@ -625,7 +625,7 @@ def read_netcdf_file(
         **kwargs
     ):
     """
-    Read Richard Ray's Global Ocean Tide (GOT) netCDF4 model file
+    Read Richard Ray's Goddard Ocean Tide (GOT) netCDF4 model file
 
     Parameters
     ----------

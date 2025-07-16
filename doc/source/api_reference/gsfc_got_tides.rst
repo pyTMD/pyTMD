@@ -2,7 +2,7 @@
 gsfc_got_tides.py
 =================
 
-- Download `GSFC Global Ocean Tide (GOT) models <https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models>`_
+- Download `Goddard Ocean Tide (GOT) models <https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models>`_
 
    * `GOT4.8 <https://earth.gsfc.nasa.gov/sites/default/files/2022-07/got4.8.tar.gz>`_
    * `GOT4.10 <https://earth.gsfc.nasa.gov/sites/default/files/2023-12/got4.10c.tar.gz>`_
