@@ -31,6 +31,18 @@ All presently available models are stored within a `JSON database <https://githu
    >>> pyTMD.models.elevation.get('CATS2008')
    {'format': 'OTIS', 'grid_file': 'CATS2008/grid_CATS2008','model_file': 'CATS2008/hf.CATS2008.out', 'name': 'CATS2008','projection': 'CATS2008', 'reference': 'https://doi.org/10.15784/601235','type': 'z', 'variable': 'tide_ocean'}
 
+
+``pyTMD`` currently supports several solutions from the following tide models:
+
+- Arctic Ocean (AO) and Greenland coast (Gr) tidal simulations :cite:p:`Padman:2004hv`
+- Circum-Antarctic Tidal Simulations (CATS) :cite:p:`Padman:2008ec`
+- Empirical Ocean Tide (EOT) models :cite:p:`HartDavis:2021dx`
+- Finite Element Solution (FES) tide models :cite:p:`Lyard:2021fk`
+- Goddard Ocean Tide (GOT) models :cite:p:`Ray:1999vm`
+- Hamburg direct data Assimilation Methods for Tides (HAMTIDE) models :cite:p:`Taguchi:2014ht`
+- Technical University of Denmark (DTU) tide models :cite:p:`Andersen:2023ei`
+- TOPEX/POSEIDON (TPXO) global tide models :cite:p:`Egbert:2002ge`
+
 Directories
 ###########
 

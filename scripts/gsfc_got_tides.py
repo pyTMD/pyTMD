@@ -2,7 +2,7 @@
 u"""
 gsfc_got_tides.py
 Written by Tyler Sutterley (01/2025)
-Download GSFC Global Ocean Tide (GOT) models
+Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
     python gsfc_got_tides.py --tide=GOT5.6
@@ -132,7 +132,7 @@ def newer(t1: int, t2: int) -> bool:
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Download Global Ocean Tide models from NASA
+        description="""Download Goddard Tide models from NASA
             Goddard Space Flight Center (GSFC)
             """,
         fromfile_prefix_chars="@"
@@ -143,16 +143,16 @@ def arguments():
     parser.add_argument('--directory','-D',
         type=pathlib.Path, default=pathlib.Path.cwd(),
         help='Working data directory')
-    # Global Ocean Tide model to download
+    # Goddard Ocean Tide model to download
     parser.add_argument('--tide','-T',
         metavar='TIDE', type=str, nargs='+', default=['GOT5.5'],
         choices=('GOT4.8','GOT4.10','GOT5.5','GOT5.5D','GOT5.6','RE14'),
-        help='Global Ocean Tide model to download')
-    # Global Ocean Tide model format to download
+        help='Goddard Ocean Tide model to download')
+    # Goddard Ocean Tide model format to download
     parser.add_argument('--format',
         type=str, default='netcdf',
         choices=('ascii','netcdf'),
-        help='Global Ocean Tide model format to download')
+        help='Goddard Ocean Tide model format to download')
     # compress output ascii and netCDF4 tide files with gzip
     parser.add_argument('--gzip','-G',
         default=False, action='store_true',

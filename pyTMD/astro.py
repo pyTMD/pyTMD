@@ -49,7 +49,7 @@ UPDATE HISTORY:
     Updated 08/2020: change time variable names to not overwrite functions
     Updated 07/2020: added function docstrings
     Updated 07/2018: added option ASTRO5 to use coefficients from Richard Ray
-        for use with the GSFC Global Ocean Tides (GOT) model
+        for use with the Goddard Ocean Tides (GOT) model
         added longitude of solar perigee (Ps) as an additional output
     Updated 09/2017: added option MEEUS to use additional coefficients
         from Meeus Astronomical Algorithms to calculate mean longitudes
