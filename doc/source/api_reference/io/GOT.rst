@@ -2,7 +2,7 @@
 GOT
 ===
 
-- Reads files for Richard Ray's Global Ocean Tide (GOT) models
+- Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
 
   * ascii format
   * netcdf format

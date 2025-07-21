@@ -10,7 +10,7 @@ For each of these measurements, it is important to note the `vertical datum of t
 Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
 A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
 Tidal oscillations for both ocean and load tides can be decomposed into a series of tidal constituents (or partial tides) of particular frequencies that are associated with the relative positions of the sun, moon and Earth.
-These tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-1`].
+These tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents`].
 
 .. plot:: ./background/spectra.py
     :show-source-link: False

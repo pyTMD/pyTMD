@@ -6,7 +6,6 @@ Download and management utilities for syncing time and auxiliary files
 
  - Can list a directory on a ftp host
  - Can download a file from a ftp or http host
- - Can download a file from CDDIS via https when NASA Earthdata credentials are supplied
 
 `Source code`__
 
@@ -33,15 +32,9 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.url_split
 
-.. autofunction:: pyTMD.utilities.roman_to_int
-
 .. autofunction:: pyTMD.utilities.get_unix_time
 
-.. autofunction:: pyTMD.utilities.isoformat
-
 .. autofunction:: pyTMD.utilities.even
-
-.. autofunction:: pyTMD.utilities.ceil
 
 .. autofunction:: pyTMD.utilities.copy
 
@@ -64,22 +57,6 @@ General Methods
 .. autofunction:: pyTMD.utilities.from_http
 
 .. autofunction:: pyTMD.utilities.from_json
-
-.. autofunction:: pyTMD.utilities.attempt_login
-
-.. autofunction:: pyTMD.utilities.build_opener
-
-.. autofunction:: pyTMD.utilities.get_token
-
-.. autofunction:: pyTMD.utilities.list_tokens
-
-.. autofunction:: pyTMD.utilities.revoke_token
-
-.. autofunction:: pyTMD.utilities.check_credentials
-
-.. autofunction:: pyTMD.utilities.cddis_list
-
-.. autofunction:: pyTMD.utilities.from_cddis
 
 .. autofunction:: pyTMD.utilities.iers_list
 
