@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 utilities.py
-Written by Tyler Sutterley (01/2025)
+Written by Tyler Sutterley (07/2025)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,7 @@ PYTHON DEPENDENCIES:
         https://pypi.python.org/pypi/lxml
 
 UPDATE HISTORY:
+    Updated 07/2025: removed (now) unused functions that were moved to timescale
     Updated 01/2025: added function to list a directory from the UHSLC
     Updated 08/2024: generalize hash function to use any available algorithm
     Updated 07/2024: added function to parse JSON responses from https
@@ -51,17 +52,13 @@ import re
 import io
 import ssl
 import json
-import netrc
 import ftplib
 import shutil
-import base64
 import socket
-import getpass
 import inspect
 import hashlib
 import logging
 import pathlib
-import builtins
 import warnings
 import importlib
 import posixpath
@@ -88,11 +85,8 @@ __all__ = [
     "url_split",
     "convert_arg_line_to_args",
     "build_logger",
-    "roman_to_int",
     "get_unix_time",
-    "isoformat",
     "even",
-    "ceil",
     "copy",
     "check_ftp_connection",
     "ftp_list",
@@ -104,14 +98,6 @@ __all__ = [
     "http_list",
     "from_http",
     "from_json",
-    "attempt_login",
-    "build_opener",
-    "get_token",
-    "list_tokens",
-    "revoke_token",
-    "check_credentials",
-    "cddis_list",
-    "from_cddis",
     "iers_list",
     "from_jpl_ssd",
     "uhslc_list"
@@ -358,30 +344,6 @@ def build_logger(name: str, **kwargs):
         logger.addHandler(handler)
     return logger
 
-# PURPOSE: convert Roman numerals to (Arabic) integers
-def roman_to_int(roman: str):
-    """
-    Converts a string from Roman numerals into an integer (Arabic)
-
-    Parameters
-    ----------
-    roman: str
-        Roman numeral string
-    """
-    # mapping between Roman and Arabic numerals
-    roman_map = {'i':1, 'v':5, 'x':10, 'l':50, 'c':100, 'd':500, 'm':1000}
-    # verify case
-    roman = roman.lower()
-    output = 0
-    # iterate through roman numerals in string and calculate total
-    for i,s in enumerate(roman):
-        if (i > 0) and (roman_map[s] > roman_map[roman[i-1]]):
-            output += roman_map[s] - 2*roman_map[roman[i-1]]
-        else:
-            output += roman_map[s]
-    # return the integer value
-    return output
-
 # PURPOSE: returns the Unix timestamp value for a formatted date string
 def get_unix_time(
         time_string: str,
@@ -411,24 +373,6 @@ def get_unix_time(
     else:
         return parsed_time.timestamp()
 
-# PURPOSE: output a time string in isoformat
-def isoformat(time_string: str):
-    """
-    Reformat a date string to ISO formatting
-
-    Parameters
-    ----------
-    time_string: str
-        formatted time string to parse
-    """
-    # try parsing with dateutil
-    try:
-        parsed_time = dateutil.parser.parse(time_string.rstrip())
-    except (TypeError, ValueError):
-        return None
-    else:
-        return parsed_time.isoformat()
-
 # PURPOSE: rounds a number to an even number less than or equal to original
 def even(value: float):
     """
@@ -440,18 +384,6 @@ def even(value: float):
         number to be rounded
     """
     return 2*int(value//2)
-
-# PURPOSE: rounds a number upward to its nearest integer
-def ceil(value: float):
-    """
-    Rounds a number upward to its nearest integer
-
-    Parameters
-    ----------
-    value: float
-        number to be rounded upward
-    """
-    return -int(-value//1)
 
 # PURPOSE: make a copy of a file with all system information
 def copy(
@@ -939,534 +871,6 @@ def from_json(
     else:
         # load JSON response
         return json.loads(response.read())
-
-# PURPOSE: attempt to build an opener with netrc
-def attempt_login(
-        urs: str,
-        context=_default_ssl_context,
-        password_manager: bool = True,
-        get_ca_certs: bool = True,
-        redirect: bool = True,
-        authorization_header: bool = False,
-        **kwargs
-    ):
-    """
-    attempt to build a urllib opener for NASA Earthdata
-
-    Parameters
-    ----------
-    urs: str
-        Earthdata login URS 3 host
-    context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
-    password_manager: bool, default True
-        Create password manager context using default realm
-    get_ca_certs: bool, default True
-        Get list of loaded “certification authority” certificates
-    redirect: bool, default True
-        Create redirect handler object
-    authorization_header: bool, default False
-        Add base64 encoded authorization header to opener
-    username: str, default from environmental variable
-        NASA Earthdata username
-    password: str, default from environmental variable
-        NASA Earthdata password
-    retries: int, default 5
-        number of retry attempts
-    netrc: str, default ~/.netrc
-        path to .netrc file for authentication
-
-    Returns
-    -------
-    opener: obj
-        OpenerDirector instance
-    """
-    # set default keyword arguments
-    kwargs.setdefault('username', os.environ.get('EARTHDATA_USERNAME'))
-    kwargs.setdefault('password', os.environ.get('EARTHDATA_PASSWORD'))
-    kwargs.setdefault('retries', 5)
-    kwargs.setdefault('netrc', os.path.expanduser('~/.netrc'))
-    try:
-        # only necessary on jupyterhub
-        os.chmod(kwargs['netrc'], 0o600)
-        # try retrieving credentials from netrc
-        username, _, password = netrc.netrc(kwargs['netrc']).authenticators(urs)
-    except Exception as exc:
-        # try retrieving credentials from environmental variables
-        username, password = (kwargs['username'], kwargs['password'])
-        pass
-    # if username or password are not available
-    if not username:
-        username = builtins.input(f'Username for {urs}: ')
-    if not password:
-        prompt = f'Password for {username}@{urs}: '
-        password = getpass.getpass(prompt=prompt)
-    # for each retry
-    for retry in range(kwargs['retries']):
-        # build an opener for urs with credentials
-        opener = build_opener(username, password,
-            context=context,
-            password_manager=password_manager,
-            get_ca_certs=get_ca_certs,
-            redirect=redirect,
-            authorization_header=authorization_header,
-            urs=urs)
-        # try logging in by check credentials
-        try:
-            check_credentials()
-        except Exception as exc:
-            pass
-        else:
-            return opener
-        # reattempt login
-        username = builtins.input(f'Username for {urs}: ')
-        password = getpass.getpass(prompt=prompt)
-    # reached end of available retries
-    raise RuntimeError('End of Retries: Check NASA Earthdata credentials')
-
-# PURPOSE: "login" to NASA Earthdata with supplied credentials
-def build_opener(
-        username: str,
-        password: str,
-        context=_default_ssl_context,
-        password_manager: bool = True,
-        get_ca_certs: bool = True,
-        redirect: bool = True,
-        authorization_header: bool = False,
-        urs: str = 'https://urs.earthdata.nasa.gov'
-    ):
-    """
-    Build ``urllib`` opener for NASA Earthdata with supplied credentials
-
-    Parameters
-    ----------
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
-    password_manager: bool, default True
-        Create password manager context using default realm
-    get_ca_certs: bool, default True
-        Get list of loaded “certification authority” certificates
-    redirect: bool, default True
-        Create redirect handler object
-    authorization_header: bool, default False
-        Add base64 encoded authorization header to opener
-    urs: str, default 'https://urs.earthdata.nasa.gov'
-        Earthdata login URS 3 host
-
-    Returns
-    -------
-    opener: obj
-        ``OpenerDirector`` instance
-    """
-    # https://docs.python.org/3/howto/urllib2.html#id5
-    handler = []
-    # create a password manager
-    if password_manager:
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        # Add the username and password for NASA Earthdata Login system
-        password_mgr.add_password(None, urs, username, password)
-        handler.append(urllib2.HTTPBasicAuthHandler(password_mgr))
-    # Create cookie jar for storing cookies. This is used to store and return
-    # the session cookie given to use by the data server (otherwise will just
-    # keep sending us back to Earthdata Login to authenticate).
-    cookie_jar = CookieJar()
-    handler.append(urllib2.HTTPCookieProcessor(cookie_jar))
-    # SSL context handler
-    if get_ca_certs:
-        context.get_ca_certs()
-    handler.append(urllib2.HTTPSHandler(context=context))
-    # redirect handler
-    if redirect:
-        handler.append(urllib2.HTTPRedirectHandler())
-    # create "opener" (OpenerDirector instance)
-    opener = urllib2.build_opener(*handler)
-    # Encode username/password for request authorization headers
-    # add Authorization header to opener
-    if authorization_header:
-        b64 = base64.b64encode(f'{username}:{password}'.encode())
-        opener.addheaders = [("Authorization", f"Basic {b64.decode()}")]
-    # Now all calls to urllib2.urlopen use our opener.
-    urllib2.install_opener(opener)
-    # All calls to urllib2.urlopen will now use handler
-    # Make sure not to include the protocol in with the URL, or
-    # HTTPPasswordMgrWithDefaultRealm will be confused.
-    return opener
-
-# PURPOSE: generate a NASA Earthdata user token
-def get_token(
-        HOST: str = 'https://urs.earthdata.nasa.gov/api/users/token',
-        username: str | None = None,
-        password: str | None = None,
-        build: bool = True,
-        urs: str = 'urs.earthdata.nasa.gov',
-    ):
-    """
-    Generate a NASA Earthdata User Token
-
-    Parameters
-    ----------
-    HOST: str or list
-        NASA Earthdata token API host
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    build: bool, default True
-        Build opener and check WebDAV credentials
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        NASA Earthdata URS 3 host
-
-    Returns
-    -------
-    token: dict
-        JSON response with NASA Earthdata User Token
-    """
-    # attempt to build urllib2 opener and check credentials
-    if build:
-        attempt_login(urs,
-            username=username,
-            password=password,
-            password_manager=False,
-            get_ca_certs=False,
-            redirect=False,
-            authorization_header=True)
-    # create post response with Earthdata token API
-    try:
-        request = urllib2.Request(HOST, method='POST')
-        response = urllib2.urlopen(request)
-    except urllib2.HTTPError as exc:
-        logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
-    except urllib2.URLError as exc:
-        logging.debug(exc.reason)
-        raise RuntimeError('Check internet connection') from exc
-    # read and return JSON response
-    return json.loads(response.read())
-
-# PURPOSE: generate a NASA Earthdata user token
-def list_tokens(
-        HOST: str = 'https://urs.earthdata.nasa.gov/api/users/tokens',
-        username: str | None = None,
-        password: str | None = None,
-        build: bool = True,
-        urs: str = 'urs.earthdata.nasa.gov',
-    ):
-    """
-    List the current associated NASA Earthdata User Tokens
-
-    Parameters
-    ----------
-    HOST: str
-        NASA Earthdata list token API host
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    build: bool, default True
-        Build opener and check WebDAV credentials
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        NASA Earthdata URS 3 host
-
-    Returns
-    -------
-    tokens: list
-        JSON response with NASA Earthdata User Tokens
-    """
-    # attempt to build urllib2 opener and check credentials
-    if build:
-        attempt_login(urs,
-            username=username,
-            password=password,
-            password_manager=False,
-            get_ca_certs=False,
-            redirect=False,
-            authorization_header=True)
-    # create get response with Earthdata list tokens API
-    try:
-        request = urllib2.Request(HOST)
-        response = urllib2.urlopen(request)
-    except urllib2.HTTPError as exc:
-        logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
-    except urllib2.URLError as exc:
-        logging.debug(exc.reason)
-        raise RuntimeError('Check internet connection') from exc
-    # read and return JSON response
-    return json.loads(response.read())
-
-# PURPOSE: revoke a NASA Earthdata user token
-def revoke_token(
-        token: str,
-        HOST: str = f'https://urs.earthdata.nasa.gov/api/users/revoke_token',
-        username: str | None = None,
-        password: str | None = None,
-        build: bool = True,
-        urs: str = 'urs.earthdata.nasa.gov',
-    ):
-    """
-    Generate a NASA Earthdata User Token
-
-    Parameters
-    ----------
-    token: str
-        NASA Earthdata token to be revoked
-    HOST: str
-        NASA Earthdata revoke token API host
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    build: bool, default True
-        Build opener and check WebDAV credentials
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        NASA Earthdata URS 3 host
-    """
-    # attempt to build urllib2 opener and check credentials
-    if build:
-        attempt_login(urs,
-            username=username,
-            password=password,
-            password_manager=False,
-            get_ca_certs=False,
-            redirect=False,
-            authorization_header=True)
-    # full path for NASA Earthdata revoke token API
-    url = f'{HOST}?token={token}'
-    # create post response with Earthdata revoke tokens API
-    try:
-        request = urllib2.Request(url, method='POST')
-        response = urllib2.urlopen(request)
-    except urllib2.HTTPError as exc:
-        logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
-    except urllib2.URLError as exc:
-        logging.debug(exc.reason)
-        raise RuntimeError('Check internet connection') from exc
-    # verbose response
-    logging.debug(f'Token Revoked: {token}')
-
-# PURPOSE: check that entered NASA Earthdata credentials are valid
-def check_credentials():
-    """
-    Check that entered NASA Earthdata credentials are valid
-    """
-    try:
-        remote_path = posixpath.join('https://cddis.nasa.gov','archive')
-        request = urllib2.Request(url=remote_path)
-        response = urllib2.urlopen(request, timeout=20)
-    except urllib2.HTTPError as exc:
-        logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
-    except urllib2.URLError as exc:
-        logging.debug(exc.reason)
-        raise RuntimeError('Check internet connection') from exc
-    else:
-        return True
-
-# PURPOSE: list a directory on GSFC CDDIS https server
-def cddis_list(
-        HOST: str | list,
-        username: str | None = None,
-        password: str | None = None,
-        build: bool = True,
-        timeout: int | None = None,
-        urs: str = 'urs.earthdata.nasa.gov',
-        parser=lxml.etree.HTMLParser(),
-        pattern: str = '',
-        sort: bool = False
-    ):
-    """
-    List a directory on GSFC CDDIS archive server
-
-    Parameters
-    ----------
-    HOST: str or list
-        remote https host
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    build: bool, default True
-        Build opener and check Earthdata credentials
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        NASA Earthdata URS 3 host
-    parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
-    pattern: str, default ''
-        regular expression pattern for reducing list
-    sort: bool, default False
-        sort output list
-
-    Returns
-    -------
-    colnames: list
-        column names in a directory
-    collastmod: list
-        last modification times for items in the directory
-    """
-    # use netrc credentials
-    if build and not (username or password):
-        username,_,password = netrc.netrc().authenticators(urs)
-    # build urllib2 opener and check credentials
-    if build:
-        # build urllib2 opener with credentials
-        build_opener(username, password)
-        # check credentials
-        check_credentials()
-    # verify inputs for remote https host
-    if isinstance(HOST, str):
-        HOST = url_split(HOST)
-    # Encode username/password for request authorization headers
-    b64 = base64.b64encode(f'{username}:{password}'.encode())
-    authorization_header = f"Basic {b64.decode()}"
-    # try listing from https
-    try:
-        # Create and submit request.
-        request = urllib2.Request(posixpath.join(*HOST))
-        request.add_header("Authorization", authorization_header)
-        tree = lxml.etree.parse(urllib2.urlopen(request, timeout=timeout), parser)
-    except:
-        raise Exception('List error from {0}'.format(posixpath.join(*HOST)))
-    else:
-        # read and parse request for files (column names and modified times)
-        # find directories
-        colnames = tree.xpath('//div[@class="archiveDir"]/div/a/text()')
-        collastmod = [None]*(len(colnames))
-        # find files
-        colnames.extend(tree.xpath('//div[@class="archiveItem"]/div/a/text()'))
-        # get the Unix timestamp value for a modification time
-        collastmod.extend([get_unix_time(i[:19], format='%Y:%m:%d %H:%M:%S')
-            for i in tree.xpath('//div[@class="archiveItem"]/div/span/text()')])
-        # reduce using regular expression pattern
-        if pattern:
-            i = [i for i,f in enumerate(colnames) if re.search(pattern, f)]
-            # reduce list of column names and last modified times
-            colnames = [colnames[indice] for indice in i]
-            collastmod = [collastmod[indice] for indice in i]
-        # sort the list
-        if sort:
-            i = [i for i,j in sorted(enumerate(colnames), key=lambda i: i[1])]
-            # sort list of column names and last modified times
-            colnames = [colnames[indice] for indice in i]
-            collastmod = [collastmod[indice] for indice in i]
-        # return the list of column names and last modified times
-        return (colnames, collastmod)
-
-# PURPOSE: download a file from a GSFC CDDIS https server
-def from_cddis(
-        HOST: str | list,
-        username: str | None = None,
-        password: str | None = None,
-        build: bool = True,
-        timeout: int | None = None,
-        urs: str = 'urs.earthdata.nasa.gov',
-        local: str | pathlib.Path | None = None,
-        hash: str = '',
-        chunk: int = 16384,
-        verbose: bool = False,
-        fid=sys.stdout,
-        mode: oct = 0o775
-    ):
-    """
-    Download a file from GSFC CDDIS archive server
-
-    Parameters
-    ----------
-    HOST: str or list
-        remote https host
-    username: str or NoneType, default None
-        NASA Earthdata username
-    password: str or NoneType, default None
-        NASA Earthdata password
-    build: bool, default True
-        Build opener and check Earthdata credentials
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        NASA Earthdata URS 3 host
-    local: str, pathlib.Path or NoneType, default None
-        path to local file
-    hash: str, default ''
-        MD5 hash of local file
-    chunk: int, default 16384
-        chunk size for transfer encoding
-    verbose: bool, default False
-        print file transfer information
-    fid: obj, default sys.stdout
-        open file object to print if verbose
-    mode: oct, default 0o775
-        permissions mode of output local file
-
-    Returns
-    -------
-    remote_buffer: obj
-        BytesIO representation of file
-    """
-    # create logger
-    loglevel = logging.INFO if verbose else logging.CRITICAL
-    logging.basicConfig(stream=fid, level=loglevel)
-    # use netrc credentials
-    if build and not (username or password):
-        username,_,password = netrc.netrc().authenticators(urs)
-    # build urllib2 opener and check credentials
-    if build:
-        # build urllib2 opener with credentials
-        build_opener(username, password)
-        # check credentials
-        check_credentials()
-    # verify inputs for remote https host
-    if isinstance(HOST, str):
-        HOST = url_split(HOST)
-    # Encode username/password for request authorization headers
-    b64 = base64.b64encode(f'{username}:{password}'.encode())
-    authorization_header = f"Basic {b64.decode()}"
-    # try downloading from https
-    try:
-        # Create and submit request.
-        request = urllib2.Request(posixpath.join(*HOST))
-        request.add_header("Authorization", authorization_header)
-        response = urllib2.urlopen(request, timeout=timeout)
-    except:
-        raise Exception('Download error from {0}'.format(posixpath.join(*HOST)))
-    else:
-        # copy remote file contents to bytesIO object
-        remote_buffer = io.BytesIO()
-        shutil.copyfileobj(response, remote_buffer, chunk)
-        remote_buffer.seek(0)
-        # save file basename with bytesIO object
-        remote_buffer.filename = HOST[-1]
-        # generate checksum hash for remote file
-        remote_hash = hashlib.md5(remote_buffer.getvalue()).hexdigest()
-        # compare checksums
-        if local and (hash != remote_hash):
-            # convert to absolute path
-            local = pathlib.Path(local).expanduser().absolute()
-            # create directory if non-existent
-            local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
-            # print file information
-            args = (posixpath.join(*HOST), str(local))
-            logging.info('{0} -->\n\t{1}'.format(*args))
-            # store bytes to file using chunked transfer encoding
-            remote_buffer.seek(0)
-            with local.open(mode='wb') as f:
-                shutil.copyfileobj(remote_buffer, f, chunk)
-            # change the permissions mode
-            local.chmod(mode)
-        # return the bytesIO object
-        remote_buffer.seek(0)
-        return remote_buffer
 
 # PURPOSE: list a directory on IERS https Server
 def iers_list(

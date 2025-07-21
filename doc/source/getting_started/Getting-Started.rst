@@ -51,9 +51,10 @@ This structure was chosen based on the different formats of each tide model.
 Presently, the following models and their directories are parameterized within ``pyTMD``.
 
 .. csv-table::
-   :file: ../_assets/models.csv
+   :file: ../_assets/elevation-models.csv
    :header-rows: 1
 
+See :ref:`tab-currents` for the table of directories for models with tidal currents. 
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
 Note that any alternatively defined model will have to fit the file standard of a currently supported model.
 
