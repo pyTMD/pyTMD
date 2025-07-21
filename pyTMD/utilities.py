@@ -67,8 +67,12 @@ import lxml.etree
 import calendar, time
 import dateutil.parser
 if sys.version_info[0] == 2:
+    from urllib import quote_plus
+    from cookielib import CookieJar
     import urllib2
 else:
+    from urllib.parse import quote_plus
+    from http.cookiejar import CookieJar
     import urllib.request as urllib2
 
 __all__ = [
