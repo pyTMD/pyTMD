@@ -24,6 +24,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
+        mask mean pole values prior to valid epoch of convention
     Updated 05/2025: pass keyword arguments to nodal corrections functions
     Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: verify dimensions of harmonic constants
@@ -1173,7 +1174,10 @@ def load_pole_tide(
     R[2,0,:] = -np.sin(theta)
     R[2,2,:] = np.cos(theta)
     # rotate displacements to ECEF coordinates
-    dxt = np.einsum('ti...,jit...->tj...', S, R)
+    dxt = np.ma.zeros((n, 3))
+    dxt[:,:] = np.einsum('ti...,jit...->tj...', S, R)
+    # use mask from mean pole estimates
+    dxt.mask = np.broadcast_to(np.logical_not(fl[:,None]), (n,3))
 
     # return the pole tide displacements
     # in Cartesian coordinates
@@ -1273,7 +1277,9 @@ def ocean_pole_tide(
     # number of points
     n = np.maximum(len(time_decimal), len(theta))
     # calculate ocean pole tide displacements (meters)
-    dxt = np.zeros((n, 3))
+    dxt = np.ma.zeros((n, 3))
+    # use mask from mean pole estimates
+    dxt.mask = np.broadcast_to(np.logical_not(fl[:,None]), (n,3))
     for i in range(3):
         dxt[:,i] = K*atr*np.real(
             (mx*g2.real + my*g2.imag)*UXYZ.real[:,i] +
