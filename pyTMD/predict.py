@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 predict.py
-Written by Tyler Sutterley (05/2025)
+Written by Tyler Sutterley (07/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -23,6 +23,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
+        revert load pole tide to IERS 1996 convention definitions
     Updated 05/2025: pass keyword arguments to nodal corrections functions
     Updated 03/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: verify dimensions of harmonic constants
@@ -1157,9 +1158,9 @@ def load_pole_tide(
     # calculate pole tide displacements (meters)
     S = np.zeros((n, 3))
     # pole tide displacements in latitude, longitude, and radial directions
-    S[:,0] = dfactor[:,0]*np.cos(2.0*theta)*(mx*np.cos(phi) + my*np.sin(phi))
-    S[:,1] = dfactor[:,1]*np.cos(theta)*(mx*np.sin(phi) - my*np.cos(phi))
-    S[:,2] = dfactor[:,2]*np.sin(2.0*theta)*(mx*np.cos(phi) + my*np.sin(phi))
+    S[:,0] = dfactor[:,0]*np.cos(2.0*theta)*(mx*np.cos(phi) - my*np.sin(phi))
+    S[:,1] = dfactor[:,1]*np.cos(theta)*(mx*np.sin(phi) + my*np.cos(phi))
+    S[:,2] = dfactor[:,2]*np.sin(2.0*theta)*(mx*np.cos(phi) - my*np.sin(phi))
 
     # rotation matrix
     R = np.zeros((3, 3, n))

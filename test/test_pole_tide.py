@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 u"""
 test_pole_tide.py
-Written by Tyler Sutterley (08/2024)
+Written by Tyler Sutterley (07/2025)
 
 UPDATE HISTORY:
+    Updated 07/2025: revert load pole tide to IERS 1996 conventions
     Updated 08/2024: add tests for new cartesian pole tides
     Updated 06/2024: use np.clongdouble instead of np.longcomplex
     Updated 02/2024: changed class name for ellipsoid parameters to datum
@@ -152,22 +153,22 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((ny,nx,nt))
         for i in range(nt):
             SRAD = dfactor*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi)+my[i]*np.sin(phi))
+                (mx[i]*np.cos(phi) - my[i]*np.sin(phi))
             # reform grid
             Srad.data[:,:,i] = np.reshape(SRAD, (ny, nx))
             Srad.mask[:,:,i] = np.isnan(Srad.data[:,:,i])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi) + my[i]*np.sin(phi))
+                (mx[i]*np.cos(phi) - my[i]*np.sin(phi))
             approx[:,:,i] = np.reshape(S, (ny, nx))/1e3
     elif (TYPE == 'drift'):
         Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
         Srad.data[:] = dfactor*np.sin(2.0*theta) * \
-            (mx*np.cos(phi)+my*np.sin(phi))
+            (mx*np.cos(phi) - my*np.sin(phi))
         Srad.mask = np.isnan(Srad.data)
         # approximate values from IERS (2010) conventions
         S = -33.0*np.sin(2.0*theta) * \
-            (mx*np.cos(phi) + my*np.sin(phi))
+            (mx*np.cos(phi) - my*np.sin(phi))
         approx = S/1e3
     elif (TYPE == 'time series'):
         nstation = len(x)
@@ -176,12 +177,12 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((nstation,nt))
         for s in range(nstation):
             SRAD = dfactor[s]*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s])+my*np.sin(phi[s]))
+                (mx*np.cos(phi[s]) - my*np.sin(phi[s]))
             Srad.data[s,:] = np.copy(SRAD)
             Srad.mask[s,:] = np.isnan(Srad.data[s,:])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s]) + my*np.sin(phi[s]))
+                (mx*np.cos(phi[s]) - my*np.sin(phi[s]))
             approx[s,:] = np.copy(S)/1e3
     # replace invalid data with fill values
     Srad.data[Srad.mask] = Srad.fill_value
