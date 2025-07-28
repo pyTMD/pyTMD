@@ -2,20 +2,26 @@ name: pytmd-docs
 channels:
   - conda-forge
 dependencies:
+  - cartopy
   - docutils
   - fontconfig
   - freetype
   - graphviz
+  - ipyleaflet
+  - ipywidgets
+  - jplephem
   - lxml
   - matplotlib
   - myst-nb
   - netCDF4
+  - notebook
   - numpy
   - numpydoc
+  - pandas
   - pip
   - python>=3.6
   - python-dateutil
-  - scipy
+  - scipy>=1.10.1
   - setuptools_scm
   - sphinx
   - sphinx-argparse>=0.4
@@ -24,4 +30,4 @@ dependencies:
   - sphinx_rtd_theme
   - timescale>=0.0.8
   - pip:
-    - ..[all]
+    - ..
