@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 tools.py
-Written by Tyler Sutterley (09/2024)
+Written by Tyler Sutterley (07/2025)
 Jupyter notebook, user interface and plotting tools
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://github.com/matplotlib/matplotlib
 
 UPDATE HISTORY:
+    Updated 07/2025: add a default directory for tide models
     Updated 09/2024: removed widget for ATLAS following database update
         added widget for setting constituent to plot in a cotidal chart
     Updated 07/2024: renamed format for netcdf to ATLAS-netcdf
@@ -33,6 +34,7 @@ UPDATE HISTORY:
     Updated 02/2022: add leaflet map projections
     Written 09/2021
 """
+import os
 import io
 import copy
 import base64
@@ -40,17 +42,17 @@ import logging
 import datetime
 import numpy as np
 import pyTMD.io.model
-from pyTMD.utilities import import_dependency
+import pyTMD.utilities
 
 # attempt imports
-IPython = import_dependency('IPython')
-ipyleaflet = import_dependency('ipyleaflet')
-ipywidgets = import_dependency('ipywidgets')
-pyproj = import_dependency('pyproj')
-matplotlib = import_dependency('matplotlib')
-plt = import_dependency('matplotlib.pyplot')
-cm = import_dependency('matplotlib.cm')
-colors = import_dependency('matplotlib.colors')
+IPython = pyTMD.utilities.import_dependency('IPython')
+ipyleaflet = pyTMD.utilities.import_dependency('ipyleaflet')
+ipywidgets = pyTMD.utilities.import_dependency('ipywidgets')
+pyproj = pyTMD.utilities.import_dependency('pyproj')
+matplotlib = pyTMD.utilities.import_dependency('matplotlib')
+plt = pyTMD.utilities.import_dependency('matplotlib.pyplot')
+cm = pyTMD.utilities.import_dependency('matplotlib.cm')
+colors = pyTMD.utilities.import_dependency('matplotlib.colors')
 
 try:
     matplotlib.rcParams['axes.linewidth'] = 2.0
@@ -67,9 +69,11 @@ class widgets:
         self.HBox = ipywidgets.HBox
         self.VBox = ipywidgets.VBox
 
+        # default working data directory for tide models
+        d = pyTMD.utilities.compressuser(pyTMD.utilities.get_data_path('data'))
         # set the directory with tide models
         self.directory = ipywidgets.Text(
-            value='',
+            value=str(d),
             description='Directory:',
             disabled=False
         )
@@ -86,7 +90,7 @@ class widgets:
         )
 
         # dropdown menu for setting model constituents
-        constituents_list = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
+        constituents_list = ['q1','o1','p1','k1','n2','m2','s2','k2','s1','m4']
         self.constituents = ipywidgets.Dropdown(
             options=constituents_list,
             value='m2',

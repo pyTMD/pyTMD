@@ -10,9 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 import datetime
+import subprocess
 # sys.path.insert(0, os.path.abspath('.'))
 import importlib.metadata
 import importlib.util
@@ -39,6 +40,11 @@ for module_name in ['model_table', 'constituent_table']:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
+# download a tide model for rendering documentation
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    subprocess.run(['gsfc_got_tides.py','--tide','GOT4.10'])
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -61,7 +67,11 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".ipynb": "myst-nb",
 }
-nb_execution_mode = "off"
+nb_execution_mode = "auto"
+nb_execution_excludepatterns = [
+    "Plot-Antarctic-Tidal-Currents.ipynb",
+    "Plot-ATLAS-Compact.ipynb"
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
