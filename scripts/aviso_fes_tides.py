@@ -44,6 +44,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 07/2025: added extrapolation option for FES2014 tide model
+        add a default directory for tide models
     Updated 01/2025: new ocean tide directory for latest FES2022 version
         scrubbed use of pathlib.os to just use os directly
     Updated 07/2024: added list and download for FES2022 tide model
@@ -420,8 +421,9 @@ def arguments():
         type=pathlib.Path, default=pathlib.Path().home().joinpath('.netrc'),
         help='Path to .netrc file for authentication')
     # working data directory
+    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=pathlib.Path.cwd(),
+        type=pathlib.Path, default=default_path,
         help='Working data directory')
     # FES tide models
     choices = ['FES1999','FES2004','FES2012','FES2014','FES2022']

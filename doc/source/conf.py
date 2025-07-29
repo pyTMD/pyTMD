@@ -10,15 +10,18 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 import datetime
+import warnings
+import subprocess
 # sys.path.insert(0, os.path.abspath('.'))
 import importlib.metadata
 import importlib.util
 
 
 # -- Project information -----------------------------------------------------
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 # package metadata
 metadata = importlib.metadata.metadata("pyTMD")
@@ -33,11 +36,19 @@ version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
 
+# suppress warnings in examples and documentation
+if on_rtd:
+    warnings.filterwarnings("ignore")
+
 # create tables
 for module_name in ['model_table', 'constituent_table']:
     spec = importlib.util.spec_from_file_location(module_name, f'{module_name}.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+
+# download a tide model for rendering documentation
+if on_rtd:
+    subprocess.run(['gsfc_got_tides.py','--tide','GOT4.10'])
 
 # -- General configuration ---------------------------------------------------
 
@@ -61,7 +72,11 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".ipynb": "myst-nb",
 }
-nb_execution_mode = "off"
+nb_execution_mode = "auto"
+nb_execution_excludepatterns = [
+    "Plot-Antarctic-Tidal-Currents.ipynb",
+    "Plot-ATLAS-Compact.ipynb"
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

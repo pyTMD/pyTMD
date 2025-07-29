@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 gsfc_got_tides.py
-Written by Tyler Sutterley (01/2025)
+Written by Tyler Sutterley (0/2025)
 Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
@@ -32,6 +32,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 07/2025: add a default directory for tide models
     Updated 01/2025: scrubbed use of pathlib.os to just use os directly
     Updated 09/2024: added Ray and Erofeeva (2014) long-period tide model
     Updated 08/2024: keep prime nomenclature for 3rd degree tides
@@ -140,8 +141,9 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory for location of tide models
+    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=pathlib.Path.cwd(),
+        type=pathlib.Path, default=default_path,
         help='Working data directory')
     # Goddard Ocean Tide model to download
     parser.add_argument('--tide','-T',

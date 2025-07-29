@@ -1,8 +1,9 @@
 """
-test_model.py (06/2025)
+test_model.py (07/2025)
 Tests the reading of model definition files
 
 UPDATE HISTORY:
+    Updated 07/2025: added GOT4.10_SAL subset of constituents
     Updated 06/2025: added function to check extra databases
     Updated 02/2025: added function to try to parse bathymetry files
     Updated 09/2024: drop support for the ascii definition file format
@@ -732,6 +733,8 @@ def test_parse_GOT_elevation(MODEL):
     # constituents for long-period and short-period tides
     if MODEL in ('RE14',):
         constituents = ['mf','mm','mt','node','sa','ssa']
+    elif MODEL in ('GOT4.10_SAL'):
+        constituents = ['o1','p1','k1','q1','n2','m2','s2','k2']
     else:
         constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1','m4']
     # extend list with third degree constituents

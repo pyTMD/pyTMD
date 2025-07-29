@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 verify_box_tpxo.py
-Written by Tyler Sutterley (01/2025)
+Written by Tyler Sutterley (07/2025)
 Verifies downloaded TPXO9-atlas global tide models from the box file
     sharing service
 
@@ -26,6 +26,7 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 07/2025: add a default directory for tide models
     Updated 01/2025: scrubbed use of pathlib.os to just use os directly
     Updated 09/2024: use model class to define output directory
     Updated 04/2023: using pathlib to define and expand paths
@@ -149,8 +150,9 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory
+    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=pathlib.Path.cwd(),
+        type=pathlib.Path, default=default_path,
         help='Working data directory')
     # box user access token
     parser.add_argument('--token','-t',

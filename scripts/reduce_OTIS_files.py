@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 reduce_OTIS_files.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (07/2025)
 Read OTIS-format tidal files and reduce to a regional subset
 
 COMMAND LINE OPTIONS:
@@ -30,6 +30,7 @@ PROGRAM DEPENDENCIES:
     crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
+    Updated 07/2025: add a default directory for tide models
     Updated 11/2024: use "stem" instead of "basename"
     Updated 07/2024: renamed format for ATLAS to ATLAS-compact
     Updated 04/2024: add debug mode printing input arguments
@@ -238,8 +239,9 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line options
     # set data directory containing the tidal data
+    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=pathlib.Path.cwd(),
+        type=pathlib.Path, default=default_path,
         help='Working data directory')
     # tide model to use
     model_choices = ('CATS0201','CATS2008','CATS2008_load','TPXO9-atlas',

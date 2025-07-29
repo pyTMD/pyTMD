@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 07/2025: removed (now) unused functions that were moved to timescale
+        add tilde compression for file paths (squash home directory)
     Updated 01/2025: added function to list a directory from the UHSLC
     Updated 08/2024: generalize hash function to use any available algorithm
     Updated 07/2024: added function to parse JSON responses from https
@@ -79,6 +80,7 @@ __all__ = [
     "get_data_path",
     "import_dependency",
     "file_opener",
+    "compressuser",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -195,6 +197,24 @@ def file_opener(filename: str | pathlib.Path):
         subprocess.call(["open", filename])
     else:
         subprocess.call(["xdg-open", filename])
+
+def compressuser(filename: str | pathlib.Path):
+    """
+    Tilde-compresses a file to be relative to the home directory
+
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        input filename to compress
+    """
+    filename = pathlib.Path(filename).expanduser().absolute()
+    # attempt to compress filename relative to home directory
+    try:
+        relative_to = filename.relative_to(pathlib.Path().home())
+    except (ValueError, AttributeError) as exc:
+        return filename
+    else:
+        return pathlib.Path('~').joinpath(relative_to)
 
 # PURPOSE: get the hash value of a file
 def get_hash(

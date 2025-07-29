@@ -42,6 +42,46 @@
             "variable": "tide_load",
             "version": "4.10"
         },
+        "GOT4.10_nc": {
+            "format": "GOT-netcdf",
+            "model_file": [
+                "GOT4.10c/grids_oceantide_netcdf/q1.nc",
+                "GOT4.10c/grids_oceantide_netcdf/o1.nc",
+                "GOT4.10c/grids_oceantide_netcdf/p1.nc",
+                "GOT4.10c/grids_oceantide_netcdf/k1.nc",
+                "GOT4.10c/grids_oceantide_netcdf/n2.nc",
+                "GOT4.10c/grids_oceantide_netcdf/m2.nc",
+                "GOT4.10c/grids_oceantide_netcdf/s2.nc",
+                "GOT4.10c/grids_oceantide_netcdf/k2.nc",
+                "GOT4.10c/grids_oceantide_netcdf/s1.nc",
+                "GOT4.10c/grids_oceantide_netcdf/m4.nc"
+            ],
+            "name": "GOT4.10",
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "scale": 0.01,
+            "type": "z",
+            "variable": "tide_ocean",
+            "version": "4.10"
+        },
+        "GOT4.10_SAL": {
+            "format": "GOT-netcdf",
+            "model_file": [
+                "GOT4.10c/grids_SAL/p1sal.nc",
+                "GOT4.10c/grids_SAL/n2sal.nc",
+                "GOT4.10c/grids_SAL/k2sal.nc",
+                "GOT4.10c/grids_SAL/s2sal.nc",
+                "GOT4.10c/grids_SAL/o1sal.nc",
+                "GOT4.10c/grids_SAL/k1sal.nc",
+                "GOT4.10c/grids_SAL/m2sal.nc",
+                "GOT4.10c/grids_SAL/q1sal.nc"
+            ],
+            "name": "GOT4.10",
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "scale": 0.01,
+            "type": "z",
+            "variable": "tide_ocean",
+            "version": "4.10"
+        },
         "GOT4.7": {
             "format": "GOT-ascii",
             "model_file": [
@@ -124,6 +164,27 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_load",
+            "version": "4.8"
+        },
+        "GOT4.8_nc": {
+            "format": "GOT-netcdf",
+            "model_file": [
+                "GOT4.8/grids_oceantide_netcdf/q1.nc",
+                "GOT4.8/grids_oceantide_netcdf/o1.nc",
+                "GOT4.8/grids_oceantide_netcdf/p1.nc",
+                "GOT4.8/grids_oceantide_netcdf/k1.nc",
+                "GOT4.8/grids_oceantide_netcdf/n2.nc",
+                "GOT4.8/grids_oceantide_netcdf/m2.nc",
+                "GOT4.8/grids_oceantide_netcdf/s2.nc",
+                "GOT4.8/grids_oceantide_netcdf/k2.nc",
+                "GOT4.8/grids_oceantide_netcdf/s1.nc",
+                "GOT4.8/grids_oceantide_netcdf/m4.nc"
+            ],
+            "name": "GOT4.8",
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "scale": 0.01,
+            "type": "z",
+            "variable": "tide_ocean",
             "version": "4.8"
         },
         "GOT5.5": {

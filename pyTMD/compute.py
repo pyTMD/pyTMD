@@ -63,6 +63,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 07/2025: mask mean pole values prior to valid epoch of convention
+        add a default directory for tide models
     Updated 05/2025: added option to select constituents to read from model
     Updated 12/2024: moved check points function as compute.tide_masks
     Updated 11/2024: expose buffer distance for cropping tide model data
@@ -167,6 +168,9 @@ __all__ = [
 # number of days between the Julian day epoch and MJD
 _jd_mjd = 2400000.5
 
+# default working data directory for tide models
+_default_directory = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: wrapper function for computing values
 def corrections(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
@@ -217,7 +221,7 @@ def corrections(
 # PURPOSE: compute tides at points and times using tide model algorithms
 def tide_elevations(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = None,
+        DIRECTORY: str | pathlib.Path | None = _default_directory,
         MODEL: str | None = None,
         GZIP: bool = False,
         DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
@@ -449,7 +453,7 @@ def tide_elevations(
 # PURPOSE: compute tides at points and times using tide model algorithms
 def tide_currents(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = None,
+        DIRECTORY: str | pathlib.Path | None = _default_directory,
         MODEL: str | None = None,
         GZIP: bool = False,
         DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
@@ -680,10 +684,10 @@ def tide_currents(
 
 # PURPOSE: check if points are within a tide model domain
 def tide_masks(x: np.ndarray, y: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = None,
+        DIRECTORY: str | pathlib.Path | None = _default_directory,
         MODEL: str | None = None,
         GZIP: bool = False,
-        DEFINITION_FILE: str | pathlib.Path | None = None,
+        DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
         EPSG: str | int = 4326,
         METHOD: str = 'spline'
     ):
