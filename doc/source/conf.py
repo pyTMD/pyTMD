@@ -13,6 +13,7 @@
 import os
 # import sys
 import datetime
+import warnings
 import subprocess
 # sys.path.insert(0, os.path.abspath('.'))
 import importlib.metadata
@@ -33,6 +34,9 @@ author = 'Tyler C. Sutterley'
 version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
+
+# suppress warnings in examples
+warnings.filterwarnings("ignore")
 
 # create tables
 for module_name in ['model_table', 'constituent_table']:

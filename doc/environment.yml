@@ -8,6 +8,7 @@ dependencies:
   - freetype
   - graphviz
   - ipyleaflet
+  - ipympl
   - ipywidgets
   - jplephem
   - lxml
