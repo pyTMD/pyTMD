@@ -9,7 +9,7 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
-    Written 07/2025: extracted from NOAA jupyter notebook
+    Written 07/2025: extracted from Compare NOAA Tides notebook
 """
 from __future__ import annotations
 
