@@ -21,6 +21,7 @@ import importlib.util
 
 
 # -- Project information -----------------------------------------------------
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 # package metadata
 metadata = importlib.metadata.metadata("pyTMD")
@@ -35,8 +36,9 @@ version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
 
-# suppress warnings in examples
-warnings.filterwarnings("ignore")
+# suppress warnings in examples and documentation
+if on_rtd:
+    warnings.filterwarnings("ignore")
 
 # create tables
 for module_name in ['model_table', 'constituent_table']:
@@ -45,7 +47,6 @@ for module_name in ['model_table', 'constituent_table']:
     spec.loader.exec_module(module)
 
 # download a tide model for rendering documentation
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     subprocess.run(['gsfc_got_tides.py','--tide','GOT4.10'])
 
