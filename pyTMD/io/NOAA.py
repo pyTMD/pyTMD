@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import logging
 import traceback
-import pyTMD.utilities
+from pyTMD.utilities import import_dependency
+
 # attempt imports
-pd = pyTMD.utilities.import_dependency('pandas')
+pd = import_dependency('pandas')
 
 __all__ = [
     "build_query",
@@ -28,14 +29,24 @@ _apis = [
     'currentpredictionstations',
     'tidepredictionstations',
     'harmonicconstituents',
-    'waterlevelrawsixmin'
+    'waterlevelrawonemin',
+    'waterlevelrawsixmin',
+    'waterlevelverifiedsixmin',
+    'waterlevelverifiedhourly',
+    'waterlevelverifieddaily',
+    'waterlevelverifiedmonthly',
 ]
 
 _xpaths = {
     'currentpredictionstations': '//wsdl:station',
     'tidepredictionstations': '//wsdl:station',
     'harmonicconstituents': '//wsdl:item',
-    'waterlevelrawsixmin': '//wsdl:item'
+    'waterlevelrawonemin': '//wsdl:item',
+    'waterlevelrawsixmin': '//wsdl:item',
+    'waterlevelverifiedsixmin': '//wsdl:item',
+    'waterlevelverifiedhourly': '//wsdl:item',
+    'waterlevelverifieddaily': '//wsdl:item',
+    'waterlevelverifiedmonthly': '//wsdl:item'
 }
 
 def build_query(api, **kwargs):
