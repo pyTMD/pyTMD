@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import traceback
+import pyTMD.io.constituents
 from pyTMD.utilities import import_dependency
 
 # attempt imports
@@ -22,7 +23,10 @@ pd = import_dependency('pandas')
 
 __all__ = [
     "build_query",
-    "from_xml"
+    "from_xml",
+    "prediction_stations",
+    "harmonic_constituents",
+    "water_level"
 ]
 
 _apis = [
@@ -56,7 +60,7 @@ def build_query(api, **kwargs):
     Parameters
     ----------
     api: str
-        The API endpoint to query
+        NOAA webservices API endpoint to query
     **kwargs: dict
         Additional query parameters to include in the request
     
@@ -107,3 +111,98 @@ def from_xml(url, **kwargs):
     # return the dataframe
     else:
         return df
+
+def prediction_stations(
+        api: str = 'tidepredictionstations',
+        **kwargs
+    ):
+    """
+    Retrieve a list of tide prediction stations
+    
+    Parameters
+    ----------
+    api: str
+        NOAA webservices API endpoint to query
+    **kwargs: dict
+        Additional query parameters to include in the request
+
+    Returns
+    -------
+    df: pandas.DataFrame
+        A ``DataFrame`` containing the station information
+    """
+    # get list of tide prediction stations
+    xpath = _xpaths[api]
+    url, namespaces = build_query(api, **kwargs)
+    df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    # set the index to the station name
+    df = df.set_index('name')
+    # sort the index and drop metadata column
+    df = df.sort_index().drop(columns=['metadata'])
+    # return the dataframe
+    return df
+
+def harmonic_constituents(
+        api: str = 'harmonicconstituents',
+        **kwargs
+    ):
+    """
+    Retrieve a list of harmonic constituents for a specified station
+
+    Parameters
+    ----------
+    api: str
+        NOAA webservices API endpoint to query
+    **kwargs: dict
+        Additional query parameters to include in the request
+
+    Returns
+    -------
+    df: pandas.DataFrame
+        ``DataFrame`` containing the harmonic constituent information
+    """
+    # set default query parameters
+    kwargs.setdefault('unit', 0)
+    kwargs.setdefault('timeZone', 0)
+    # get list of harmonic constituents
+    xpath = _xpaths[api]
+    url, namespaces = build_query(api, **kwargs)
+    df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    # set the index to the constituent number
+    df = df.set_index('constNum')
+    # parse harmonic constituents
+    c = [pyTMD.io.constituents.parse(row['name']) for i, row in df.iterrows()]
+    df['constituent'] = c
+    # return the dataframe
+    return df
+
+def water_level(
+        api: str = 'waterlevelrawsixmin',
+        **kwargs
+    ):
+    """
+    Retrieve water level data for a specified station and date range
+
+    Parameters
+    ----------
+    api: str
+        NOAA webservices API endpoint to query
+    **kwargs: dict
+        Additional query parameters to include in the request
+
+    Returns
+    -------
+    df: pandas.DataFrame
+        ``DataFrame`` containing the water level data
+    """
+    # set default query parameters
+    kwargs.setdefault('unit', 0)
+    kwargs.setdefault('timeZone', 0)
+    kwargs.setdefault('datum', 'MSL')
+    # get water levels for station and date range
+    xpath = _xpaths[api]
+    url, namespaces = build_query(api, **kwargs)
+    df = from_xml(url, xpath=xpath, namespaces=namespaces,
+        parse_dates=['timeStamp'])
+    # return the dataframe
+    return df

@@ -44,6 +44,15 @@ def test_noaa_harmonic_constituents():
     expected_columns = ['name', 'amplitude', 'phase', 'speed']
     assert hcons.columns.tolist() == expected_columns
     assert 'M2' in hcons['name'].values
+    # get dataframe using wrapper function
+    df = pyTMD.io.NOAA.harmonic_constituents(stationId=station_id)
+    # check if the values match expected
+    assert 'm2' in df['constituent'].values
+    # check if the values match between queries
+    for i, row in df.iterrows():
+        assert row['amplitude'] == hcons.loc[i, 'amplitude']
+        assert row['phase'] == hcons.loc[i, 'phase']
+        assert row['speed'] == hcons.loc[i, 'speed']
 
 def test_noaa_water_level():
     """Test NOAA water level data retrieval
@@ -72,3 +81,17 @@ def test_noaa_water_level():
     assert wlevel.columns.tolist() == expected_columns
     assert wlevel['timeStamp'][0] == np.datetime64('2020-01-01')
     assert np.allclose(wlevel['WL'].values, expected_WL)
+    # get dataframe using wrapper function
+    df = pyTMD.io.NOAA.water_level(api, stationId=station_id,
+        beginDate=startdate, endDate=enddate)
+    # check if the values match expected
+    assert df.columns.tolist() == expected_columns
+    assert df['timeStamp'][0] == np.datetime64('2020-01-01')
+    assert np.allclose(df['WL'].values, expected_WL)
+    # check if the values match between queries
+    for i, row in df.iterrows():
+        assert row['timeStamp'] == wlevel.loc[i, 'timeStamp']
+        assert row['WL'] == wlevel.loc[i, 'WL']
+        assert row['sigma'] == wlevel.loc[i, 'sigma']
+        assert row['I'] == wlevel.loc[i, 'I']
+        assert row['L'] == wlevel.loc[i, 'L']

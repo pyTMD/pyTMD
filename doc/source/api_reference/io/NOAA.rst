@@ -10,10 +10,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    api = 'tidepredictionstations'
-    xpath = pyTMD.io.NOAA._xpaths[api]
-    url, namespaces = pyTMD.io.NOAA.build_query(api)
-    stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath, namespaces=namespaces)
+    stations = pyTMD.io.NOAA.prediction_stations()
 
 `Source code`__
 
@@ -22,3 +19,9 @@ Calling Sequence
 .. autofunction:: pyTMD.io.NOAA.build_query
 
 .. autofunction:: pyTMD.io.NOAA.from_xml
+
+.. autofunction:: pyTMD.io.NOAA.prediction_stations
+
+.. autofunction:: pyTMD.io.NOAA.harmonic_constituents
+
+.. autofunction:: pyTMD.io.NOAA.water_level
