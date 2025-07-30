@@ -12,12 +12,10 @@ PYTHON DEPENDENCIES:
         https://ipywidgets.readthedocs.io/en/latest/
     ipyleaflet: Jupyter / Leaflet bridge enabling interactive maps
         https://github.com/jupyter-widgets/ipyleaflet
-    matplotlib: Python 2D plotting library
-        http://matplotlib.org/
-        https://github.com/matplotlib/matplotlib
 
 UPDATE HISTORY:
     Updated 07/2025: add a default directory for tide models
+        add full screen control to ipyleaflet maps
     Updated 09/2024: removed widget for ATLAS following database update
         added widget for setting constituent to plot in a cotidal chart
     Updated 07/2024: renamed format for netcdf to ATLAS-netcdf
@@ -34,11 +32,7 @@ UPDATE HISTORY:
     Updated 02/2022: add leaflet map projections
     Written 09/2021
 """
-import os
-import io
 import copy
-import base64
-import logging
 import datetime
 import numpy as np
 import pyTMD.io.model
@@ -49,15 +43,6 @@ IPython = pyTMD.utilities.import_dependency('IPython')
 ipyleaflet = pyTMD.utilities.import_dependency('ipyleaflet')
 ipywidgets = pyTMD.utilities.import_dependency('ipywidgets')
 pyproj = pyTMD.utilities.import_dependency('pyproj')
-matplotlib = pyTMD.utilities.import_dependency('matplotlib')
-plt = pyTMD.utilities.import_dependency('matplotlib.pyplot')
-cm = pyTMD.utilities.import_dependency('matplotlib.cm')
-colors = pyTMD.utilities.import_dependency('matplotlib.colors')
-
-try:
-    matplotlib.rcParams['axes.linewidth'] = 2.0
-except (AttributeError, ImportError, ModuleNotFoundError) as exc:
-    logging.debug("matplotlib not available")
 
 class widgets:
     def __init__(self, **kwargs):
@@ -70,10 +55,12 @@ class widgets:
         self.VBox = ipywidgets.VBox
 
         # default working data directory for tide models
-        d = pyTMD.utilities.compressuser(pyTMD.utilities.get_data_path('data'))
+        default_directory = pyTMD.utilities.compressuser(
+            pyTMD.utilities.get_data_path('data')
+        )
         # set the directory with tide models
         self.directory = ipywidgets.Text(
-            value=str(d),
+            value=str(default_directory),
             description='Directory:',
             disabled=False
         )
@@ -90,7 +77,9 @@ class widgets:
         )
 
         # dropdown menu for setting model constituents
-        constituents_list = ['q1','o1','p1','k1','n2','m2','s2','k2','s1','m4']
+        constituents_list = [
+            'q1','o1','p1','k1','n2','m2','s2','k2','s1','m4'
+        ]
         self.constituents = ipywidgets.Dropdown(
             options=constituents_list,
             value='m2',
@@ -115,81 +104,13 @@ class widgets:
             style=self.style,
         )
 
-# define projections for ipyleaflet tiles
-projections = dict(
-    # Alaska Polar Stereographic (WGS84)
-    EPSG5936 = dict(
-        Basemap = dict(
-            name='EPSG:5936',
-            custom=True,
-            proj4def="""+proj=stere +lat_0=90 +lat_ts=90 +lon_0=-150 +k=0.994
-                +x_0=2000000 +y_0=2000000 +datum=WGS84 +units=m +no_defs""",
-            origin=[-2.8567784109255e+07, 3.2567784109255e+07],
-            resolutions=[
-                238810.813354,
-                119405.406677,
-                59702.7033384999,
-                29851.3516692501,
-                14925.675834625,
-                7462.83791731252,
-                3731.41895865639,
-                1865.70947932806,
-                932.854739664032,
-                466.427369832148,
-                233.213684916074,
-                116.60684245803701,
-                58.30342122888621,
-                29.151710614575396,
-                14.5758553072877,
-                7.28792765351156,
-                3.64396382688807,
-                1.82198191331174,
-                0.910990956788164,
-                0.45549547826179,
-                0.227747739130895,
-                0.113873869697739,
-                0.05693693484887,
-                0.028468467424435
-            ],
-            bounds=[
-                [-2623285.8808999992907047,-2623285.8808999992907047],
-                [6623285.8803000003099442,6623285.8803000003099442]
-            ]
-        )
-    ),
-    # Polar Stereographic South (WGS84)
-    EPSG3031 = dict(
-        Basemap = dict(
-            name='EPSG:3031',
-            custom=True,
-            proj4def="""+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1
-                +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs""",
-            origin=[-3.06361E7, 3.0636099999999993E7],
-            resolutions=[
-                67733.46880027094,
-                33866.73440013547,
-                16933.367200067736,
-                8466.683600033868,
-                4233.341800016934,
-                2116.670900008467,
-                1058.3354500042335,
-                529.1677250021168,
-                264.5838625010584,
-            ],
-            bounds=[
-                [-4524583.19363305,-4524449.487765655],
-                [4524449.4877656475,4524583.193633042]
-            ]
-        )
-    )
-)
-
 # draw ipyleaflet map
 class leaflet:
     def __init__(self, projection='Global', **kwargs):
         # set default keyword arguments
         kwargs.setdefault('map',None)
         kwargs.setdefault('attribution',True)
+        kwargs.setdefault('full_screen_control', False)
         kwargs.setdefault('zoom',1)
         kwargs.setdefault('zoom_control',False)
         kwargs.setdefault('scale_control',False)
@@ -208,24 +129,28 @@ class leaflet:
                 zoom=kwargs['zoom'], max_zoom=24,
                 attribution_control=kwargs['attribution'],
                 basemap=ipyleaflet.basemaps.Esri.ArcticOceanBase,
-                crs=projections['EPSG5936']['Basemap'])
-            self.map.add_layer(ipyleaflet.basemaps.Esri.ArcticOceanReference)
+                crs=ipyleaflet.projections.EPSG5936.ESRIBasemap)
+            self.map.add(ipyleaflet.basemaps.Esri.ArcticOceanReference)
             self.crs = 'EPSG:5936'
         elif (projection == 'South'):
             self.map = ipyleaflet.Map(center=kwargs['center'],
                 zoom=kwargs['zoom'], max_zoom=9,
                 attribution_control=kwargs['attribution'],
                 basemap=ipyleaflet.basemaps.Esri.AntarcticBasemap,
-                crs=projections['EPSG3031']['Basemap'])
+                crs=ipyleaflet.projections.EPSG3031.ESRIBasemap)
             self.crs = 'EPSG:3031'
         else:
             # use a predefined ipyleaflet map
             self.map = kwargs['map']
             self.crs = self.map.crs['name']
+        # add control for full screen
+        if kwargs['full_screen_control']:
+            self.full_screen_control = ipyleaflet.FullScreenControl()
+            self.map.add(self.full_screen_control)
         # add control for layers
         if kwargs['layer_control']:
             self.layer_control = ipyleaflet.LayersControl(position='topleft')
-            self.map.add_control(self.layer_control)
+            self.map.add(self.layer_control)
             self.layers = self.map.layers
         # add control for zoom
         if kwargs['zoom_control']:
@@ -234,17 +159,17 @@ class leaflet:
             ipywidgets.jslink((zoom_slider, 'value'), (self.map, 'zoom'))
             zoom_control = ipyleaflet.WidgetControl(widget=zoom_slider,
                 position='topright')
-            self.map.add_control(zoom_control)
+            self.map.add(zoom_control)
         # add control for spatial scale bar
         if kwargs['scale_control']:
             scale_control = ipyleaflet.ScaleControl(position='topright')
-            self.map.add_control(scale_control)
+            self.map.add(scale_control)
         # add control for cursor position
         if kwargs['cursor_control']:
             self.cursor = ipywidgets.Label()
             cursor_control = ipyleaflet.WidgetControl(widget=self.cursor,
                 position='bottomleft')
-            self.map.add_control(cursor_control)
+            self.map.add(cursor_control)
             # keep track of cursor position
             self.map.on_interaction(self.handle_interaction)
         # add control for marker
@@ -252,7 +177,7 @@ class leaflet:
             # add marker with default location
             self.marker = ipyleaflet.Marker(location=kwargs['center'],
                 draggable=True)
-            self.map.add_layer(self.marker)
+            self.map.add(self.marker)
             # add text with marker location
             self.marker_text = ipywidgets.Text(
                 value='{0:0.8f},{1:0.8f}'.format(*kwargs['center']),
@@ -265,7 +190,7 @@ class leaflet:
             # add control for marker location
             marker_control = ipyleaflet.WidgetControl(
                 widget=self.marker_text, position='bottomright')
-            self.map.add_control(marker_control)
+            self.map.add(marker_control)
 
     # convert points to EPSG:4326
     def transform(self, x, y, proj4def):
