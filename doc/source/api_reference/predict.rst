@@ -59,3 +59,5 @@ Calling Sequence
 .. autofunction:: pyTMD.predict._frequency_dependence_long_period
 
 .. autofunction:: pyTMD.predict._free_to_mean
+
+.. autofunction:: pyTMD.predict.body_tide

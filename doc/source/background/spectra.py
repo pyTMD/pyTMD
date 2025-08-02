@@ -1,35 +1,7 @@
 import numpy as np
-import pyTMD.astro
 import pyTMD.arguments
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-
-def frequency(arguments):
-    """
-    Calculates the angular frequencies of constituents
-    """
-    # Modified Julian Dates at J2000
-    MJD = np.array([51544.5, 51544.55])
-    # time interval in seconds
-    deltat = 86400.0*(MJD[1] - MJD[0])
-    # calculate the mean longitudes of the sun and moon
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
-    # initial time conversions
-    hour = 24.0*np.mod(MJD, 1)
-    # convert from hours solar time into mean lunar time in degrees
-    tau = 15.0*hour - s + h
-    # determine equilibrium arguments
-    fargs = np.c_[tau, s, h, p, n, pp]
-    rates = (fargs[1,:] - fargs[0,:])/deltat
-    fd = np.dot(rates, arguments)
-    # convert to radians per second
-    omega = 2.0*np.pi*fd/360.0
-    return omega
-
-# Cartwright and Edden (1973) table with updated values
-table = pyTMD.arguments._ce1973_table_1
-# read the table
-CTE = pyTMD.arguments._parse_tide_potential_table(table)
 
 # create figure and subplots
 fig = plt.figure(num=1, figsize=(13,5))
@@ -52,12 +24,32 @@ frange = []
 frange.append([0, 0.5])
 frange.append([0.80, 1.15])
 frange.append([1.75, 2.10])
+
+# run for degree-2 constituents
+l = 2
+# parse the Cartwright and Edden (1973) table for degree-2 constituents
+CTE = pyTMD.arguments._parse_tide_potential_table(
+    pyTMD.arguments._ce1973_table_1,
+    format='Cartwright')
 # for each spectral line
 for i, line in enumerate(CTE):
+    # spherical harmonic dependence (order)
+    TAU = line['tau']
+    # Doodson coefficients for constituent
+    S = line['s']
+    H = line['h']
+    P = line['p']
+    # convert N for ascending lunar node
+    N = -1.0*line['n']
+    PP = line['pp']
+    # use cosines for (m + n) even
+    # and sines for (m + n) odd
+    K = -1.0*np.mod(l + TAU, 2)
+    # determine constituent phase using equilibrium arguments
+    arguments = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
     # calculate the angular frequency
-    arguments = np.array([line[c] for c in ['tau','s','h','p','n','pp']])
-    omega = frequency(arguments)
-    # skip z0
+    omega = pyTMD.arguments._frequency(arguments, method='ASTRO5')
+    # skip z0 (permanent tide)
     if (omega == 0.0):
         continue
     # convert to frequency (solar days per cycle)
@@ -77,6 +69,40 @@ for i, line in enumerate(CTE):
         elif (f >= fr[0]) and (f <= fr[1]):
             ax2[j].semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
             break
+
+# run for degree-3 constituents
+l = 3
+# parse the Cartwright and Tayler (1971) table for degree-3 constituents
+CTE = pyTMD.arguments._parse_tide_potential_table(
+    pyTMD.arguments._ct1971_table_5,
+    format='Cartwright')
+# for each line in the table
+for i, line in enumerate(CTE):
+    # spherical harmonic dependence (order)
+    TAU = line['tau']
+    # Doodson coefficients for constituent
+    S = line['s']
+    H = line['h']
+    P = line['p']
+    # convert N for ascending lunar node
+    N = -1.0*line['n']
+    PP = line['pp']
+    # use cosines for (l + tau) even
+    # and sines for (l + tau) odd
+    K = -1.0*np.mod(l + TAU, 2)
+    # determine constituent phase using equilibrium arguments
+    arguments = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
+    # calculate the angular frequency
+    omega = pyTMD.arguments._frequency(arguments, method='ASTRO5')
+    # convert to frequency (solar days per cycle)
+    f = np.abs(omega*86400.0)/(2.0*np.pi)
+    # amplitude in cm
+    amp = 100.0*np.abs(line['Hs3'])
+    # plot amplitudes
+    ax1.semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
+    for j, fr in enumerate(frange):
+        if (f >= fr[0]) and (f <= fr[1]):
+            ax2[j].semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
 
 # create inset axes and set ticks
 plot_colors = ['k', 'k', 'k']

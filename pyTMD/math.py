@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 math.py
-Written by Tyler Sutterley (04/2025)
+Written by Tyler Sutterley (07/2025)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 07/2025: add deriv and phase arguments to sph_harm function
+        add Legendre polynomial derivatives with respect to theta
     Updated 04/2025: use numpy power function over using pow for consistency
     Updated 01/2025: added function for fully-normalized Legendre polynomials
     Updated 12/2024: added function to calculate an aliasing frequency
@@ -135,11 +137,13 @@ def aliasing(
 def legendre(
         l: int,
         x: np.ndarray,
-        m: int = 0
+        m: int = 0,
+        deriv: bool = False
     ):
     """
-    Computes associated Legendre functions for a particular degree
-    and order :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
+    Computes associated Legendre functions and their first-derivatives
+    for a particular degree and order 
+    :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
     Parameters
     ----------
@@ -151,6 +155,8 @@ def legendre(
         Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
     m: int, default 0
         order of the Legendre polynomials (0 to ``l``)
+    deriv: bool, default False
+        return the first derivative of the Legendre polynomials
 
     Returns
     -------
@@ -175,16 +181,29 @@ def legendre(
     Plm = np.zeros((4, 4, nx), dtype=np.float64)
     # since tides only use low-degree harmonics:
     # functions are hard coded rather than using a recursion relation
-    Plm[0, 0, :] = 1.0
-    Plm[1, 0, :] = x
-    Plm[1, 1, :] = u
-    Plm[2, 0, :] = 0.5*(3.0*x**2 - 1.0)
-    Plm[2, 1, :] = 3.0*x*u
-    Plm[2, 2, :] = 3.0*u**2
-    Plm[3, 0, :] = 0.5*(5.0*x**3 - 3.0*x)
-    Plm[3, 1, :] = 1.5*(5.0*x**2 - 1.0)*u
-    Plm[3, 2, :] = 15.0*x*u**2
-    Plm[3, 3, :] = 15.0*u**3
+    if deriv:
+        # calculate first derivatives
+        Plm[1, 0, :] = -u
+        Plm[1, 1, :] = x
+        Plm[2, 0, :]= -3.0*u*x
+        Plm[2, 1, :] = 3.0*(1.0 - 2.0*u**2)
+        Plm[2, 2, :] = 6.0*u*x
+        Plm[3, 0, :] = u*(1.5 - 7.5*x**2)
+        Plm[3, 1, :] = -1.5*x*(10.0*u**2 - 5.0*x**2 + 1.0)
+        Plm[3, 2, :] = 15.0*u*(3.0*x**2 - 1.0)
+        Plm[3, 3, :] = 45.0*x*u**2   
+    else:
+        # calculate Legendre polynomials
+        Plm[0, 0, :] = 1.0
+        Plm[1, 0, :] = x
+        Plm[1, 1, :] = u
+        Plm[2, 0, :] = 0.5*(3.0*x**2 - 1.0)
+        Plm[2, 1, :] = 3.0*x*u
+        Plm[2, 2, :] = 3.0*u**2
+        Plm[3, 0, :] = 0.5*(5.0*x**3 - 3.0*x)
+        Plm[3, 1, :] = 1.5*(5.0*x**2 - 1.0)*u
+        Plm[3, 2, :] = 15.0*x*u**2
+        Plm[3, 3, :] = 15.0*u**3
     # return values
     if singular_values:
         return np.power(-1.0, m)*Plm[l, m, 0]
@@ -247,7 +266,9 @@ def sph_harm(
         l: int,
         theta: np.ndarray,
         phi: np.ndarray,
-        m: int = 0
+        m: int = 0,
+        phase: float = 0.0,
+        deriv: bool = False
     ):
     """
     Computes the spherical harmonics for a particular degree
@@ -263,6 +284,10 @@ def sph_harm(
         longitude in radians
     m: int, default 0
         order of the spherical harmonics (0 to ``l``)
+    phase: float, default 0.0
+        phase shift in radians
+    deriv: bool, default False
+        return the first derivative of the spherical harmonics
 
     Returns
     -------
@@ -270,18 +295,21 @@ def sph_harm(
         complex spherical harmonics of degree ``l`` and order ``m``
     """
     # verify dimensions
-    singular_values = (np.ndim(theta) == 0)
+    singular_values = (np.ndim(theta) == 0) and (np.ndim(phase) == 0)
     theta = np.atleast_1d(theta).flatten()
     phi = np.atleast_1d(phi).flatten()
     # assert dimensions
     assert len(theta) == len(phi), 'coordinates must have the same dimensions'
+    # flatten phase if it is an array
+    if (np.ndim(phase) != 0):
+        phase = np.atleast_1d(phase).flatten()
     # normalize associated Legendre functions
-    # following Munk and Cartwright (1966)
+    # following Munk and Cartwright (1966) equation A5
     norm = np.sqrt(factorial(l - m)/factorial(l + m))
-    Plm = norm*legendre(l, np.cos(theta), m=m)
+    Plm = norm*legendre(l, np.cos(theta), m=m, deriv=deriv)
     # spherical harmonics of degree l and order m
     dfactor = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
-    Ylm = dfactor*Plm*np.sin(theta)*np.exp(1j*m*phi)
+    Ylm = dfactor*Plm*np.exp(1j*m*phi + 1j*phase)
     # return values
     if singular_values:
         return Ylm[0]
