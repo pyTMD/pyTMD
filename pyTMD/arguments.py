@@ -1869,20 +1869,34 @@ _d1921_table = get_data_path(['data','d1921_tab.txt'])
 _ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 # Cartwright and Edden (1973) table with updated values
 _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
+# Woodworth (1990) tables with updated and 3rd-degree values
+_w1990_table_1 = get_data_path(['data','w1990_tab1.txt'])
+_w1990_table_2 = get_data_path(['data','w1990_tab2.txt'])
 
-def _parse_tide_potential_table(table: str | pathlib.Path):
+def _parse_tide_potential_table(
+        table: str | pathlib.Path,
+        format: str = 'Cartwright',
+    ):
     """Parse tables of tide-generating potential
 
     Parameters
     ----------
     table: str or pathlib.Path
         table of tide-generating potentials
+    format: str, default 'Cartwright'
+        format for tide-generating potential table
+            - 'Cartwright' (default)
+            - 'Doodson' (1921)
+            - 'Woodworth' (1990)
 
     Returns
     -------
     CTE: float
         Cartwright-Tayler-Edden table values
     """
+    # set default keyword arguments
+    if format not in ('Cartwright', 'Doodson', 'Woodworth'):
+        raise ValueError(f'Unknown format: {format}')
     # verify table path
     table = pathlib.Path(table).expanduser().absolute()
     with table.open(mode='r', encoding='utf8') as f:
@@ -1895,18 +1909,36 @@ def _parse_tide_potential_table(table: str | pathlib.Path):
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
-    # Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
-    # Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
-    # Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
-    # DO: Doodson number for coefficient
-    # Hs0: Doodson scaled amplitude for 1900
-    names = ('tau','s','h','p','n','pp','Hs1','Hs2','Hs3','DO','Hs0')
-    formats = ('i','i','i','i','i','i','f','f','f','U7','f')
+    if (format == 'Cartwright'):
+        # Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
+        # Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
+        # Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
+        # DO: Doodson number for coefficient
+        # Hs0: Doodson scaled amplitude for 1900
+        names = ('tau','s','h','p','n','pp','Hs1','Hs2','Hs3','DO','Hs0')
+        formats = ('i','i','i','i','i','i','f','f','f','U7','f')
+    elif (format == 'Doodson'):
+        # Hs1: amplitude for epoch span 1 (1900 epoch)
+        # DO: Doodson number for coefficient
+        # Hs0: Doodson scaled amplitude for 1900
+        names = ('tau','s','h','p','n','pp','Hs1','DO','Hs0')
+        formats = ('i','i','i','i','i','i','f','U7','f')
+    elif (format == 'Woodworth'):
+        # Hs1: amplitude for epoch span 1 (1990 epoch)
+        # DO: Doodson number for coefficient
+        names = ('tau','s','h','p','n','pp','Hs1','DO')
+        formats = ('i','i','i','i','i','i','f','U7')
+    # create a structured numpy dtype for the table
+    # names: names of the columns in the table
+    # formats: data types for each column in the table
     dtype = np.dtype({'names':names, 'formats':formats})
     CTE = np.zeros((file_lines), dtype=dtype)
+    # number of output columns
+    columns = len(names)
+    # iterate over each line in the file
     for i,line in enumerate(file_contents):
         # drop last column with values from Doodson (1921)
-        CTE[i] = np.array(tuple(line.split()[:11]), dtype=dtype)
+        CTE[i] = np.array(tuple(line.split()[:columns]), dtype=dtype)
     # return the table values
     return CTE
 
