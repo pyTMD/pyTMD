@@ -1066,7 +1066,8 @@ def equilibrium_tide(
     P20 = 0.5*(3.0*np.sin(lat*np.pi/180.0)**2 - 1.0)
     # calculate long-period equilibrium tide and convert to meters
     # Multiply by gamma_2 * normalization * P20(lat)
-    norm = np.sqrt((4.0 + 1.0)/(4.0*np.pi))
+    l = 2
+    norm = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
     if (nlat != nt):
         lpet = gamma_2*norm*np.outer(P20,Z/100.0)
     else:

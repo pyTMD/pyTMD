@@ -185,13 +185,13 @@ def legendre(
         # calculate first derivatives
         Plm[1, 0, :] = -u
         Plm[1, 1, :] = x
-        Plm[2, 0, :]= -3.0*u*x
+        Plm[2, 0, :] = -3.0*u*x
         Plm[2, 1, :] = 3.0*(1.0 - 2.0*u**2)
         Plm[2, 2, :] = 6.0*u*x
         Plm[3, 0, :] = u*(1.5 - 7.5*x**2)
         Plm[3, 1, :] = -1.5*x*(10.0*u**2 - 5.0*x**2 + 1.0)
         Plm[3, 2, :] = 15.0*u*(3.0*x**2 - 1.0)
-        Plm[3, 3, :] = 45.0*x*u**2   
+        Plm[3, 3, :] = 45.0*x*u**2
     else:
         # calculate Legendre polynomials
         Plm[0, 0, :] = 1.0
