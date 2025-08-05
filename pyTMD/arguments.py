@@ -39,8 +39,9 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
-    Updated 08/2025: make frequency function a wrapper around a function
-        to calculate using Doodson coefficients (Cartwright numbers)
+    Updated 08/2025: add Cartwright and Tayler table with radiational tides
+        make frequency function a wrapper around one that calculates using
+            Doodson coefficients (Cartwright numbers)
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -1909,6 +1910,9 @@ _d1921_table = get_data_path(['data','d1921_tab.txt'])
 _ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 # Cartwright and Edden (1973) table with updated values
 _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
+# Cartwright and Tayler (1971) table with radiational tides
+# Hs1: amplitude for epoch span 1 (1900 epoch)
+_ct1971_table_6 = get_data_path(['data','ct1971_tab6.txt'])
 
 def _parse_tide_potential_table(
         table: str | pathlib.Path,
