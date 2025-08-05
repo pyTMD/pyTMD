@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 arguments.py
-Written by Tyler Sutterley (04/2025)
+Written by Tyler Sutterley (08/2025)
 Calculates the nodal corrections for tidal constituents
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -39,6 +39,8 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 08/2025: make frequency function a wrapper around a function
+        to calculate using Doodson coefficients (Cartwright numbers)
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -113,6 +115,7 @@ __all__ = [
     "_arguments_table",
     "_minor_table",
     "_constituent_parameters",
+    "_frequency",
     "_love_numbers",
     "_parse_tide_potential_table",
     "_to_constituent_id",
@@ -1521,8 +1524,8 @@ def frequency(
         **kwargs
     ):
     """
-    Calculates the angular frequency for tidal constituents
-    :cite:p:`Ray:1999vm`
+    Wrapper function for calculating the angular frequency
+    for tidal constituents :cite:p:`Ray:1999vm`
 
     Parameters
     ----------
@@ -1552,28 +1555,9 @@ def frequency(
         method = 'Cartwright'
     else:
         method = 'ASTRO5'
-    # Modified Julian Dates at J2000
-    MJD = np.array([51544.5, 51544.55])
-    # time interval in seconds
-    deltat = 86400.0*(MJD[1] - MJD[0])
-    # calculate the mean longitudes of the sun and moon
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method=method)
-
-    # number of temporal values
-    nt = len(np.atleast_1d(MJD))
-    # initial time conversions
-    hour = 24.0*np.mod(MJD, 1)
-    # convert from hours solar time into mean lunar time in degrees
-    tau = 15.0*hour - s + h
-    # variable for multiples of 90 degrees (Ray technical note 2017)
-    k = 90.0 + np.zeros((nt))
-
-    # determine equilibrium arguments
-    fargs = np.c_[tau, s, h, p, n, pp, k]
-    rates = (fargs[1,:] - fargs[0,:])/deltat
-    fd = np.dot(rates, coefficients_table(constituents, **kwargs))
-    # convert to radians per second
-    omega = 2.0*np.pi*fd/360.0
+    # get Doodson coefficients
+    coef = coefficients_table(constituents, **kwargs)
+    omega = _frequency(coef, method=method)
     return omega
 
 def aliasing_period(
@@ -1769,6 +1753,58 @@ def _constituent_parameters(c: str, **kwargs):
     # return the values for the constituent
     return (amplitude, phase, omega, alpha, species)
 
+def _frequency(
+        coef: np.ndarray,
+        **kwargs
+    ):
+    """
+    Calculates the angular frequency for Doodson coefficients
+    (Cartwright numbers) :cite:p:`Ray:1999vm`
+
+    Parameters
+    ----------
+    coef: list or np.ndarray
+        Doodson coefficients (Cartwright numbers) for constituents
+    method: str, default 'Cartwright'
+        Method for computing the mean longitudes
+
+            - ``'Cartwright'``
+            - ``'Meeus'``
+            - ``'ASTRO5'`` 
+            - ``'IERS'``
+
+    Returns
+    -------
+    omega: np.ndarray
+        angular frequency in radians per second
+    """
+    # set default keyword arguments
+    kwargs.setdefault('method', 'Cartwright')
+    # Modified Julian Dates at J2000
+    MJD = np.array([51544.5, 51544.55])
+    # time interval in seconds
+    deltat = 86400.0*(MJD[1] - MJD[0])
+    # calculate the mean longitudes of the sun and moon
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD,
+        method=kwargs['method'])
+
+    # number of temporal values
+    nt = len(np.atleast_1d(MJD))
+    # initial time conversions
+    hour = 24.0*np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0*hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    k = 90.0 + np.zeros((nt))
+
+    # determine equilibrium arguments
+    fargs = np.c_[tau, s, h, p, n, pp, k]
+    rates = (fargs[1,:] - fargs[0,:])/deltat
+    fd = np.dot(rates, coef)
+    # convert to radians per second
+    omega = 2.0*np.pi*fd/360.0
+    return omega
+
 def _love_numbers(
         omega: np.ndarray,
         model: str = 'PREM'
@@ -1864,19 +1900,28 @@ def _love_numbers(
     return (h2, k2, l2)
 
 # Doodson (1921) table with values missing from Cartwright tables
+# Hs1: amplitude for epoch span 1 (1900 epoch)
 _d1921_table = get_data_path(['data','d1921_tab.txt'])
 # Cartwright and Tayler (1971) table with 3rd-degree values
+# Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
+# Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
+# Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
 _ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 # Cartwright and Edden (1973) table with updated values
 _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
 
-def _parse_tide_potential_table(table: str | pathlib.Path):
+def _parse_tide_potential_table(
+        table: str | pathlib.Path,
+        columns: int = 3,
+    ):
     """Parse tables of tide-generating potential
 
     Parameters
     ----------
     table: str or pathlib.Path
         table of tide-generating potentials
+    columns: int, default 3
+        number of amplitude columns in the table
 
     Returns
     -------
@@ -1895,18 +1940,26 @@ def _parse_tide_potential_table(table: str | pathlib.Path):
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
-    # Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
-    # Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
-    # Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
-    # DO: Doodson number for coefficient
-    # Hs0: Doodson scaled amplitude for 1900
-    names = ('tau','s','h','p','n','pp','Hs1','Hs2','Hs3','DO','Hs0')
-    formats = ('i','i','i','i','i','i','f','f','f','U7','f')
+    names = ['tau','s','h','p','n','pp']
+    formats = ['i','i','i','i','i','i']
+    for c in range(columns):
+        # add amplitude columns to names and formats
+        names.append(f'Hs{c+1}')
+        formats.append('f8')
+    # add Doodson number
+    names.append('DO')
+    formats.append('U7')
+    # create a structured numpy dtype for the table
+    # names: names of the columns in the table
+    # formats: data types for each column in the table
     dtype = np.dtype({'names':names, 'formats':formats})
     CTE = np.zeros((file_lines), dtype=dtype)
+    # number of output columns
+    columns = len(names)
+    # iterate over each line in the file
     for i,line in enumerate(file_contents):
         # drop last column with values from Doodson (1921)
-        CTE[i] = np.array(tuple(line.split()[:11]), dtype=dtype)
+        CTE[i] = np.array(tuple(line.split()[:columns]), dtype=dtype)
     # return the table values
     return CTE
 

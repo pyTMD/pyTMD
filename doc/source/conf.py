@@ -72,11 +72,15 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".ipynb": "myst-nb",
 }
-nb_execution_mode = "auto"
-nb_execution_excludepatterns = [
-    "Plot-Antarctic-Tidal-Currents.ipynb",
-    "Plot-ATLAS-Compact.ipynb"
-]
+# execute notebooks on build
+if on_rtd:
+    nb_execution_mode = "auto"
+    nb_execution_excludepatterns = [
+        "Plot-Antarctic-Tidal-Currents.ipynb",
+        "Plot-ATLAS-Compact.ipynb"
+    ]
+else:
+    nb_execution_mode = "off"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

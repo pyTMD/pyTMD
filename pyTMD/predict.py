@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 predict.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (08/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: add simplified solid earth tide prediction function
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -1065,10 +1066,12 @@ def equilibrium_tide(
     P20 = 0.5*(3.0*np.sin(lat*np.pi/180.0)**2 - 1.0)
     # calculate long-period equilibrium tide and convert to meters
     # Multiply by gamma_2 * normalization * P20(lat)
+    l = 2
+    norm = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
     if (nlat != nt):
-        lpet = gamma_2*np.sqrt((4.0+1.0)/(4.0*np.pi))*np.outer(P20,Z/100.0)
+        lpet = gamma_2*norm*np.outer(P20,Z/100.0)
     else:
-        lpet = gamma_2*np.sqrt((4.0+1.0)/(4.0*np.pi))*P20*(Z/100.0)
+        lpet = gamma_2*norm*P20*(Z/100.0)
     # return the long-period equilibrium tides
     return lpet
 
@@ -1324,6 +1327,18 @@ def solid_earth_tide(
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    h2: float, default 0.6078
+        Degree-2 Love number of vertical displacement
+    l2: float, default 0.0847
+        Degree-2 Love (Shida) number of horizontal displacement
+    h3: float, default 0.292
+        Degree-3 Love number of vertical displacement
+    l3: float, default 0.015
+        Degree-3 Love (Shida) number of horizontal displacement
+    mass_ratio_solar: float, default 332946.0482
+        Mass ratio between the Earth and the Sun
+    mass_ratio_lunar: float, default 0.0123000371
+        Mass ratio between the Earth and the Moon
 
     Returns
     -------
@@ -1770,3 +1785,159 @@ def _free_to_mean(
     DZ = -dr*sinphi - dn*cosphi
     # return the corrections
     return np.c_[DX, DY, DZ]
+
+def body_tide(
+        t: np.ndarray,
+        lon: np.ndarray,
+        lat: np.ndarray,
+        deltat: float | np.ndarray = 0.0,
+        method: str = 'ASTRO5',
+        tide_system: str = 'tide_free',
+        **kwargs
+    ):
+    """
+    Compute the solid Earth tides due to the gravitational
+    attraction of the moon and sun using the approach of
+    :cite:t:`Cartwright:1971iz` adjusting the degree-2 Love numbers
+    for frequency dependence :cite:p:`Mathews:1995go`
+    
+    Parameters
+    ----------
+    t: np.ndarray
+        Time (days relative to January 1, 1992)
+    lon: np.ndarray
+        longitude (degrees east)
+    lat: np.ndarray
+        latitude (degrees north)
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
+    method: str, default 'ASTRO5'
+        Method for computing the mean longitudes
+
+            - ``'Cartwright'``
+            - ``'Meeus'``
+            - ``'ASTRO5'`` 
+            - ``'IERS'``
+    tide_system: str, default 'tide_free'
+        Permanent tide system for the output solid Earth tide
+
+            - ``'tide_free'``: no permanent direct and indirect tidal potentials
+            - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    h3: float, default 0.291
+        Degree-3 Love number of vertical displacement
+    l3: float, default 0.015
+        Degree-3 Love (Shida) number of horizontal displacement
+
+    Returns
+    -------
+    zeta: np.ndarray
+        Solid Earth tide in meters
+    """
+    # set default keyword arguments
+    # nominal Love and Shida numbers for degree-3
+    kwargs.setdefault('h3', 0.291)
+    kwargs.setdefault('l3', 0.015)
+    # validate output tide system
+    assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
+    assert tide_system.lower() in ('tide_free', 'mean_tide')
+
+    # convert dates to Modified Julian Days
+    MJD = t + _mjd_tide
+    # number of temporal values
+    nt = len(np.atleast_1d(MJD))
+
+    # compute principal mean longitudes
+    # convert dates into Ephemeris Time
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + deltat,
+        method=method)
+    # initial time conversions
+    hour = 24.0*np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0*hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    # full expansion of Equilibrium Tide includes some negative cosine
+    # terms and some sine terms (Pugh and Woodworth, 2014)
+    k = 90.0 + np.zeros((nt))
+    # astronomical mean longitudes
+    fargs = np.c_[tau, s, h, p, n, pp, k]
+
+    # longitudes and colatitudes in radians
+    phi = np.radians(lon)
+    th = np.radians(90.0 - lat)
+
+    # initialize body tide estimates degree-2 and degree-3 constituents
+    # latitudinal, longitudinal and radial components
+    zeta = np.zeros((nt, 3))
+
+    # run for degree-2 constituents
+    l = 2
+    # parse the Cartwright and Edden (1973) table for degree-2 constituents
+    CTE = pyTMD.arguments._parse_tide_potential_table(
+        pyTMD.arguments._ce1973_table_1)
+    # for each line in the table
+    for i, line in enumerate(CTE):
+        # skip the permanent tide if using a mean-tide system
+        if (i == 0) and (tide_system == 'mean_tide'):
+            continue
+        # spherical harmonic dependence (order)
+        TAU = line['tau']
+        # Doodson coefficients for constituent
+        S = line['s']
+        H = line['h']
+        P = line['p']
+        # convert N for ascending lunar node
+        N = -1.0*line['n']
+        PP = line['pp']
+        # use cosines for (l + tau) even
+        # and sines for (l + tau) odd
+        K = -1.0*np.mod(l + TAU, 2)
+        # determine constituent phase using equilibrium arguments
+        coef = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
+        G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
+        # convert phase angles to radians
+        phase = np.radians(G)
+        # calculate angular frequency and determine love numbers
+        omega = pyTMD.arguments._frequency(coef, method=method)
+        h2, k2, l2 = pyTMD.arguments._love_numbers(omega)
+        # calculate spherical harmonics (and derivatives)
+        S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
+        dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
+        # calculate potentials for constituent and add to the total
+        zeta[:,0] += l2*line['Hs3']*dS.real
+        zeta[:,1] -= l2*TAU*line['Hs3']*S.imag
+        zeta[:,2] += h2*line['Hs3']*S.real
+
+    # run for degree-3 constituents
+    l = 3
+    # parse the Cartwright and Tayler (1971) table for degree-3 constituents
+    CTE = pyTMD.arguments._parse_tide_potential_table(
+        pyTMD.arguments._ct1971_table_5)
+    # for each line in the table
+    for i, line in enumerate(CTE):
+        # spherical harmonic dependence (order)
+        TAU = line['tau']
+        # Doodson coefficients for constituent
+        S = line['s']
+        H = line['h']
+        P = line['p']
+        # convert N for ascending lunar node
+        N = -1.0*line['n']
+        PP = line['pp']
+        # use cosines for (l + tau) even
+        # and sines for (l + tau) odd
+        K = -1.0*np.mod(l + TAU, 2)
+        # determine constituent phase using equilibrium arguments
+        coef = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
+        G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
+        # convert phase angles to radians
+        phase = np.radians(G)
+        # calculate spherical harmonics (and derivatives)
+        S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
+        dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
+        # calculate potentials for constituent and add to the total
+        zeta[:,0] += kwargs['l3']*line['Hs3']*dS.real
+        zeta[:,1] -= kwargs['l3']*TAU*line['Hs3']*S.imag
+        zeta[:,2] += kwargs['h3']*line['Hs3']*S.real
+
+    # return the body tides
+    return zeta
