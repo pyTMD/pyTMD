@@ -33,6 +33,7 @@ from __future__ import annotations
 import numpy as np
 import pyTMD.arguments
 import pyTMD.solve.grid as fdgrid
+import pyTMD.math
 
 class model:
     """
@@ -60,8 +61,6 @@ class model:
     dt: float, default 30.0
         time step in seconds
     """
-    # degrees to radians
-    deg2rad = np.pi/180.0
 
     def __init__(self, grid: fdgrid, constituents: list = [], **kwargs):
         # set initial attributes
@@ -134,23 +133,24 @@ class model:
         lon_u, lat_u = self.grid.get_latlon(self.grid.x_u, self.grid.y_u)
         lon_v, lat_v = self.grid.get_latlon(self.grid.x_v, self.grid.y_v)
         # longitudes and colatitudes for u transports in radians
-        phi_u = self.deg2rad*lon_u
-        th_u = self.deg2rad*(90.0 - lat_u)
+        phi_u = np.deg2rad(lon_u)
+        th_u = np.deg2rad(90.0 - lat_u)
         # longitudes and colatitudes for v transports in radians
-        phi_v = self.deg2rad*lon_v
-        th_v = self.deg2rad*(90.0 - lat_v)
+        phi_v = np.deg2rad(lon_v)
+        th_v = np.deg2rad(90.0 - lat_v)
         # gravitational acceleration at each colatitude [m/s^2]
         gamma_u = self.grid.gamma_0(th_u)
         gamma_v = self.grid.gamma_0(th_v)
 
         # load parameters for each constituent
         amp, ph, omega, alpha, species = self.constituent_parameters(c)
-        # uniform zonal dependence of astronomical forcing
+        # no time dependence of astronomical forcing
         ph = 0.0
 
         # calculate forcing for constituent
         Fu = alpha*amp*gamma_u*np.exp(1j*phi_u*species + 1j*ph)/self.grid.rad_e
         Fv = alpha*amp*gamma_v*np.exp(1j*phi_v*species + 1j*ph)/self.grid.rad_e
+        
         # calculate latitudinal dependence of forcing
         # for a given spherical harmonic dependence
         if (species == 1):
@@ -165,6 +165,7 @@ class model:
             # long-period species
             Fu *= 0.0 + 0j
             Fv *= -3.0*(np.sin(th_v)*np.cos(th_v))
+
         # return the generating forces
         return (Fu, Fv)
 
@@ -183,12 +184,12 @@ class model:
         # longitudes and latitudes for zeta nodes
         lon_z, lat_z = self.grid.get_latlon(self.grid.x_z, self.grid.y_z)
         # longitudes and colatitudes for zeta nodes in radians
-        phi_z = self.deg2rad*lon_z
-        th_z = self.deg2rad*(90.0 - lat_z)
+        phi_z = np.deg2rad(lon_z)
+        th_z = np.deg2rad(90.0 - lat_z)
 
         # load parameters for each constituent
         amp, ph, omega, alpha, species = self.constituent_parameters(c)
-        # uniform zonal dependence of astronomical potential
+        # no time dependence of astronomical forcing
         ph = 0.0
 
         # calculate potential for constituent
@@ -205,6 +206,7 @@ class model:
         else:
             # long-period species
             zeta *= -1.0*(3.0/2.0*np.cos(th_z)**2 - 1.0/2.0)
+
         # return the generating potential and the angular frequency
         return (zeta, omega)
 
