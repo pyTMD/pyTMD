@@ -5,6 +5,7 @@ Verify arguments table matches prior arguments array
 Verify nodal corrections match prior estimates
 
 UPDATE HISTORY:
+    Updated 08/2025: add Cartwright and Tayler table with radiational tides
     Updated 04/2025: changed argument for method calculating mean longitudes
     Updated 02/2025: add Doodson (1921) table with missing coefficients
         add check for converting from coefficients to constituent ID
@@ -910,7 +911,9 @@ tables = []
 tables.append([pyTMD.arguments._d1921_table, 1])
 tables.append([pyTMD.arguments._ct1971_table_5, 3])
 tables.append([pyTMD.arguments._ce1973_table_1, 3])
-ids = ['Doodson-1921', 'Cartwright-1971', 'Cartwright-1973']
+tables.append([pyTMD.arguments._ct1971_table_6, 1])
+ids = ['Doodson-1921', 'Cartwright-1971', 'Cartwright-1973',
+    'Cartwright-1971-6']
 @pytest.mark.parametrize("table, columns", tables, ids=ids)
 def test_parse_tables(table, columns):
     """
