@@ -16,6 +16,6 @@ dependencies:
   - pyproj
   - python>=3.6
   - python-dateutil
-  - scipy>=1.10.1
+  - scipy>=1.16.0
   - setuptools_scm
   - timescale>=0.0.8
