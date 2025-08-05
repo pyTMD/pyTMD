@@ -1798,8 +1798,8 @@ def body_tide(
     """
     Compute the solid Earth tides due to the gravitational
     attraction of the moon and sun using the approach of
-    :cite:t:`Cartwright:1971iz,Cartwright:1973em` adjusting the
-    degree-2 Love numbers for frequency dependence :cite:p:`Mathews:1995go`
+    :cite:t:`Cartwright:1971iz` adjusting the degree-2 Love numbers
+    for frequency dependence :cite:p:`Mathews:1995go`
     
     Parameters
     ----------
