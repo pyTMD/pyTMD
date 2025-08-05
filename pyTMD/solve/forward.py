@@ -73,8 +73,6 @@ class forward(model):
     # ts = 86164.0
     # 360 degrees
     turndeg = 360.0
-    # degrees to radians
-    deg2rad = np.pi/180.0
 
     # inherit model class
     def __init__(self, grid: fdgrid, **kwargs):
@@ -220,9 +218,9 @@ class forward(model):
         _, lat_u = self.grid.get_latlon(self.grid.x_u, self.grid.y_u)
         _, lat_v = self.grid.get_latlon(self.grid.x_v, self.grid.y_v)
         # colatitudes for nodes in radians
-        th_z = self.deg2rad*(90.0 - lat_z)
-        th_u = self.deg2rad*(90.0 - lat_u)
-        th_v = self.deg2rad*(90.0 - lat_v)
+        th_z = np.deg2rad(90.0 - lat_z)
+        th_u = np.deg2rad(90.0 - lat_u)
+        th_v = np.deg2rad(90.0 - lat_v)
 
         # Coriolis parameters at each node
         f_z = self.grid.f(th_z)
