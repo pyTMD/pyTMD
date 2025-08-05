@@ -65,8 +65,6 @@ class grid:
     """
     # 360 degrees
     turndeg = 360.0
-    # degrees to radians
-    deg2rad = np.pi/180.0
 
     def __init__(self, **kwargs):
         # set initial attributes
@@ -150,10 +148,10 @@ class grid:
         longitude, latitude = self.get_latlon(x, y)
         if self.is_geographic:
             # calculate the step sizes in radians
-            dphi = self.deg2rad*np.abs(x[1] - x[0])
-            dth = self.deg2rad*np.abs(y[1] - y[0])
+            dphi = np.deg2rad(np.abs(x[1] - x[0]))
+            dth = np.deg2rad(np.abs(y[1] - y[0]))
             # convert the step sizes to meters
-            dx = self.rad_e*dphi*np.cos(self.deg2rad*latitude)
+            dx = self.rad_e*dphi*np.cos(np.deg2rad(latitude))
             dy = self.rad_e*dth*np.ones_like(latitude)
             # assume a spherical Earth
         elif self.is_stereographic:
