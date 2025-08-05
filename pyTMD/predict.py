@@ -99,7 +99,8 @@ __all__ = [
     "_latitude_dependence",
     "_frequency_dependence_diurnal",
     "_frequency_dependence_long_period",
-    "_free_to_mean"
+    "_free_to_mean",
+    "body_tide"
 ]
 
 # number of days between the Julian day epoch and MJD
@@ -1786,6 +1787,8 @@ def _free_to_mean(
     # return the corrections
     return np.c_[DX, DY, DZ]
 
+# PURPOSE: estimate solid Earth tides due to gravitational attraction
+# using a simplified approach based on Cartwright and Tayler (1971)
 def body_tide(
         t: np.ndarray,
         lon: np.ndarray,
@@ -1799,7 +1802,7 @@ def body_tide(
     Compute the solid Earth tides due to the gravitational
     attraction of the moon and sun using the approach of
     :cite:t:`Cartwright:1971iz` adjusting the degree-2 Love numbers
-    for frequency dependence :cite:p:`Mathews:1995go`
+    for a near-diurnal frequency dependence :cite:p:`Mathews:1995go`
     
     Parameters
     ----------
@@ -1865,11 +1868,11 @@ def body_tide(
     phi = np.radians(lon)
     th = np.radians(90.0 - lat)
 
-    # initialize body tide estimates degree-2 and degree-3 constituents
+    # allocate for output body tide estimates (meters)
     # latitudinal, longitudinal and radial components
     zeta = np.zeros((nt, 3))
 
-    # run for degree-2 constituents
+    # calculate the summation over all degree-2 constituents
     l = 2
     # parse the Cartwright and Edden (1973) table for degree-2 constituents
     CTE = pyTMD.arguments._parse_tide_potential_table(
@@ -1885,7 +1888,7 @@ def body_tide(
         S = line['s']
         H = line['h']
         P = line['p']
-        # convert N for ascending lunar node
+        # convert N for ascending lunar node (from N')
         N = -1.0*line['n']
         PP = line['pp']
         # use cosines for (l + tau) even
@@ -1897,17 +1900,19 @@ def body_tide(
         # convert phase angles to radians
         phase = np.radians(G)
         # calculate angular frequency and determine love numbers
+        # use resonance formula for tides in the diurnal band
         omega = pyTMD.arguments._frequency(coef, method=method)
         h2, k2, l2 = pyTMD.arguments._love_numbers(omega)
         # calculate spherical harmonics (and derivatives)
         S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
-        # calculate potentials for constituent and add to the total
+        # convert potentials for constituent and add to the total
+        # (latitudinal, longitudinal and radial components)
         zeta[:,0] += l2*line['Hs3']*dS.real
         zeta[:,1] -= l2*TAU*line['Hs3']*S.imag
         zeta[:,2] += h2*line['Hs3']*S.real
 
-    # run for degree-3 constituents
+    # calculate the summation over all degree-3 constituents
     l = 3
     # parse the Cartwright and Tayler (1971) table for degree-3 constituents
     CTE = pyTMD.arguments._parse_tide_potential_table(
@@ -1920,7 +1925,7 @@ def body_tide(
         S = line['s']
         H = line['h']
         P = line['p']
-        # convert N for ascending lunar node
+        # convert N for ascending lunar node (from N')
         N = -1.0*line['n']
         PP = line['pp']
         # use cosines for (l + tau) even
@@ -1934,7 +1939,8 @@ def body_tide(
         # calculate spherical harmonics (and derivatives)
         S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
-        # calculate potentials for constituent and add to the total
+        # convert potentials for constituent and add to the total
+        # (latitudinal, longitudinal and radial components)
         zeta[:,0] += kwargs['l3']*line['Hs3']*dS.real
         zeta[:,1] -= kwargs['l3']*TAU*line['Hs3']*S.imag
         zeta[:,2] += kwargs['h3']*line['Hs3']*S.real

@@ -156,7 +156,7 @@ def legendre(
     m: int, default 0
         order of the Legendre polynomials (0 to ``l``)
     deriv: bool, default False
-        return the first derivative of the Legendre polynomials
+        return the first derivative with respect to ``theta``
 
     Returns
     -------
@@ -182,7 +182,7 @@ def legendre(
     # since tides only use low-degree harmonics:
     # functions are hard coded rather than using a recursion relation
     if deriv:
-        # calculate first derivatives
+        # calculate first derivatives with respect to theta
         Plm[1, 0, :] = -u
         Plm[1, 1, :] = x
         Plm[2, 0, :] = -3.0*u*x
@@ -287,7 +287,7 @@ def sph_harm(
     phase: float, default 0.0
         phase shift in radians
     deriv: bool, default False
-        return the first derivative of the spherical harmonics
+        return the first derivative with respect to ``theta``
 
     Returns
     -------

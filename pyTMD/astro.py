@@ -212,7 +212,7 @@ def mean_longitudes(
         l, lp, F, D, omega = delaunay_arguments(MJD)
         # degrees to radians
         dtr = np.pi/180.0
-        # convert to Doodson arguments
+        # convert to Doodson arguments in degrees
         # mean longitude of moon
         S = (F + omega)/dtr
         # mean longitude of sun
