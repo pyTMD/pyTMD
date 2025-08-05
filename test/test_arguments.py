@@ -906,23 +906,18 @@ def test_constituent_id():
 # Doodson (1921) table with values missing from Cartwright tables
 # Cartwright and Tayler (1971) table with 3rd-degree values
 # Cartwright and Edden (1973) table with updated values
-# Woodworth (1990) table with updated values
-# Woodworth (1990) table with 3rd-degree values
 tables = []
-tables.append([pyTMD.arguments._d1921_table, 'Doodson'])
-tables.append([pyTMD.arguments._ct1971_table_5, 'Cartwright'])
-tables.append([pyTMD.arguments._ce1973_table_1, 'Cartwright'])
-tables.append([pyTMD.arguments._w1990_table_1, 'Woodworth'])
-tables.append([pyTMD.arguments._w1990_table_2, 'Woodworth'])
-ids = ['Doodson-1921', 'Cartwright-1971', 'Cartwright-1973',
-    'Woodworth-1990-1', 'Woodworth-1990-2']
-@pytest.mark.parametrize("table, format", tables, ids=ids)
-def test_parse_tables(table, format):
+tables.append([pyTMD.arguments._d1921_table, 1])
+tables.append([pyTMD.arguments._ct1971_table_5, 3])
+tables.append([pyTMD.arguments._ce1973_table_1, 3])
+ids = ['Doodson-1921', 'Cartwright-1971', 'Cartwright-1973']
+@pytest.mark.parametrize("table, columns", tables, ids=ids)
+def test_parse_tables(table, columns):
     """
     Tests the parsing of tables for tide potential coefficients
     """
     # parse table
-    CTE = pyTMD.arguments._parse_tide_potential_table(table, format=format)
+    CTE = pyTMD.arguments._parse_tide_potential_table(table, columns=columns)
     for i, line in enumerate(CTE):
         # convert Doodson number to Cartwright numbers
         t, s, h, p, n, pp = pyTMD.arguments._from_doodson_number(line['DO'])

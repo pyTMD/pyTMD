@@ -1813,6 +1813,11 @@ def body_tide(
         time correction for converting to Ephemeris Time (days)
     method: str, default 'ASTRO5'
         Method for computing the mean longitudes
+
+            - ``'Cartwright'``
+            - ``'Meeus'``
+            - ``'ASTRO5'`` 
+            - ``'IERS'``
     tide_system: str, default 'tide_free'
         Permanent tide system for the output solid Earth tide
 
@@ -1868,8 +1873,7 @@ def body_tide(
     l = 2
     # parse the Cartwright and Edden (1973) table for degree-2 constituents
     CTE = pyTMD.arguments._parse_tide_potential_table(
-        pyTMD.arguments._ce1973_table_1,
-        format='Cartwright')
+        pyTMD.arguments._ce1973_table_1)
     # for each line in the table
     for i, line in enumerate(CTE):
         # skip the permanent tide if using a mean-tide system
@@ -1907,8 +1911,7 @@ def body_tide(
     l = 3
     # parse the Cartwright and Tayler (1971) table for degree-3 constituents
     CTE = pyTMD.arguments._parse_tide_potential_table(
-        pyTMD.arguments._ct1971_table_5,
-        format='Cartwright')
+        pyTMD.arguments._ct1971_table_5)
     # for each line in the table
     for i, line in enumerate(CTE):
         # spherical harmonic dependence (order)
