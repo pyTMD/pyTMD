@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 NOAA.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (08/2025)
 Query and parsing functions for NOAA webservices API
 
 PYTHON DEPENDENCIES:
@@ -9,12 +9,15 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 08/2025: replace invalid water level values with NaN
+        convert all station names to title case (some are upper)
     Written 07/2025: extracted from Compare NOAA Tides notebook
 """
 from __future__ import annotations
 
 import logging
 import traceback
+import numpy as np
 import pyTMD.io.constituents
 from pyTMD.utilities import import_dependency
 
@@ -135,6 +138,8 @@ def prediction_stations(
     xpath = _xpaths[api]
     url, namespaces = build_query(api, **kwargs)
     df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    # convert station names to title case
+    df['name'] = df['name'].str.title()
     # set the index to the station name
     df = df.set_index('name')
     # sort the index and drop metadata column
@@ -204,5 +209,7 @@ def water_level(
     url, namespaces = build_query(api, **kwargs)
     df = from_xml(url, xpath=xpath, namespaces=namespaces,
         parse_dates=['timeStamp'])
+    # replace invalid water level values with NaN
+    df = df.replace(to_replace=[-999], value=np.nan)
     # return the dataframe
     return df
