@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 arguments.py
-Written by Tyler Sutterley (04/2025)
+Written by Tyler Sutterley (08/2025)
 Calculates the nodal corrections for tidal constituents
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -39,6 +39,10 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 08/2025: add Cartwright and Tayler table with radiational tides
+        make frequency function a wrapper around one that calculates using
+            Doodson coefficients (Cartwright numbers)
+        add complex love numbers function for correcting out-of-phase effects
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -113,7 +117,9 @@ __all__ = [
     "_arguments_table",
     "_minor_table",
     "_constituent_parameters",
+    "_frequency",
     "_love_numbers",
+    "_complex_love_numbers",
     "_parse_tide_potential_table",
     "_to_constituent_id",
     "_to_doodson_number",
@@ -1521,8 +1527,8 @@ def frequency(
         **kwargs
     ):
     """
-    Calculates the angular frequency for tidal constituents
-    :cite:p:`Ray:1999vm`
+    Wrapper function for calculating the angular frequency
+    for tidal constituents :cite:p:`Ray:1999vm`
 
     Parameters
     ----------
@@ -1549,31 +1555,13 @@ def frequency(
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
-        method = 'Cartwright'
+        kwargs.setdefault('method', 'Cartwright')
     else:
-        method = 'ASTRO5'
-    # Modified Julian Dates at J2000
-    MJD = np.array([51544.5, 51544.55])
-    # time interval in seconds
-    deltat = 86400.0*(MJD[1] - MJD[0])
-    # calculate the mean longitudes of the sun and moon
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method=method)
-
-    # number of temporal values
-    nt = len(np.atleast_1d(MJD))
-    # initial time conversions
-    hour = 24.0*np.mod(MJD, 1)
-    # convert from hours solar time into mean lunar time in degrees
-    tau = 15.0*hour - s + h
-    # variable for multiples of 90 degrees (Ray technical note 2017)
-    k = 90.0 + np.zeros((nt))
-
-    # determine equilibrium arguments
-    fargs = np.c_[tau, s, h, p, n, pp, k]
-    rates = (fargs[1,:] - fargs[0,:])/deltat
-    fd = np.dot(rates, coefficients_table(constituents, **kwargs))
-    # convert to radians per second
-    omega = 2.0*np.pi*fd/360.0
+        kwargs.setdefault('method', 'ASTRO5')
+    # get Doodson coefficients
+    coef = coefficients_table(constituents, **kwargs)
+    # calculate the angular frequency
+    omega = _frequency(coef, **kwargs)
     return omega
 
 def aliasing_period(
@@ -1769,9 +1757,62 @@ def _constituent_parameters(c: str, **kwargs):
     # return the values for the constituent
     return (amplitude, phase, omega, alpha, species)
 
+def _frequency(
+        coef: np.ndarray,
+        **kwargs
+    ):
+    """
+    Calculates the angular frequency for Doodson coefficients
+    (Cartwright numbers) :cite:p:`Ray:1999vm`
+
+    Parameters
+    ----------
+    coef: list or np.ndarray
+        Doodson coefficients (Cartwright numbers) for constituents
+    method: str, default 'Cartwright'
+        Method for computing the mean longitudes
+
+            - ``'Cartwright'``
+            - ``'Meeus'``
+            - ``'ASTRO5'`` 
+            - ``'IERS'``
+
+    Returns
+    -------
+    omega: np.ndarray
+        angular frequency in radians per second
+    """
+    # set default keyword arguments
+    kwargs.setdefault('method', 'Cartwright')
+    # Modified Julian Dates at J2000
+    MJD = np.array([51544.5, 51544.55])
+    # time interval in seconds
+    deltat = 86400.0*(MJD[1] - MJD[0])
+    # calculate the mean longitudes of the sun and moon
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD,
+        method=kwargs['method'])
+
+    # number of temporal values
+    nt = len(np.atleast_1d(MJD))
+    # initial time conversions
+    hour = 24.0*np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0*hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    k = 90.0 + np.zeros((nt))
+
+    # determine equilibrium arguments
+    fargs = np.c_[tau, s, h, p, n, pp, k]
+    rates = (fargs[1,:] - fargs[0,:])/deltat
+    fd = np.dot(rates, coef)
+    # convert to radians per second
+    omega = 2.0*np.pi*fd/360.0
+    return omega
+
 def _love_numbers(
         omega: np.ndarray,
-        model: str = 'PREM'
+        model: str = 'PREM',
+        **kwargs
     ):
     """
     Compute the body tide Love/Shida numbers for a given frequency
@@ -1790,6 +1831,8 @@ def _love_numbers(
             - 'PEM-C'
             - 'C2'
             - 'PREM'
+    astype: np.dtype, default np.float64
+        data type for the output Love numbers
 
     Returns
     -------
@@ -1800,6 +1843,8 @@ def _love_numbers(
     l2: float
         Degree-2 Love (Shida) number of horizontal displacement
     """
+    # set default keyword arguments
+    kwargs.setdefault('astype', np.float64)
     # free core nutation frequencies (cycles per sidereal day) and
     # Love number parameters from Wahr (1981) table 6
     # and Mathews et al. (1995) table 3
@@ -1850,7 +1895,7 @@ def _love_numbers(
         # calculate love numbers following J. Wahr (1979)
         # use resonance formula for tides in the diurnal band
         # frequency of the o1 tides (radians/second)
-        omega_o1, = frequency('o1')
+        omega_o1, = frequency('o1', **kwargs)
         # convert frequency from cycles per sidereal day
         # frequency of free core nutation (radians/second)
         omega_fcn = lambda_fcn*7292115e-11
@@ -1861,22 +1906,103 @@ def _love_numbers(
         k2 = k0 + k1*ratio
         l2 = l0 + l1*ratio
     # return the Love numbers for frequency
-    return (h2, k2, l2)
+    return np.array([h2, k2, l2], dtype=kwargs['astype'])
+
+def _complex_love_numbers(
+        omega: np.ndarray,
+        **kwargs
+    ):
+    """
+    Compute the complex body tide Love/Shida numbers with in-phase
+    and out-of-phase components for a given frequency
+    :cite:p:`Mathews:1997js,Petit:2010tp`
+
+    Parameters
+    ----------
+    omega: np.ndarray
+        angular frequency (radians per second)
+    kwargs: dict
+        additional keyword arguments for love number calculation
+
+    Returns
+    -------
+    h2: complex
+        Degree-2 Love number of vertical displacement
+    k2: complex
+        Degree-2 Love number of gravitational potential
+    l2: complex
+        Degree-2 Love (Shida) number of horizontal displacement
+    """
+    # Doodson cefficients from table 7.3b of the 2010 IERS conventions
+    coefficients = np.array([
+        [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
+        [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0],
+        [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 2.0, 0.0, 0.0, -1.0, 0.0, 0.0]
+    ])
+    # calculate angular frequencies for coefficients from IERS table
+    anelastic_omegas = [_frequency(c, **kwargs) for c in coefficients]
+    # love numbers with adjustments for the frequency dependence
+    # induced by mantle anelasticity at long-periods
+    anelastic_love_numbers = np.array([
+        [0.6344 + 0.0093j, 0.31537 - 0.00541j, 0.0936 + 0.0028j],
+        [0.6182 + 0.0054j, 0.30593 - 0.00315j, 0.0886 + 0.0016j],
+        [0.6126 + 0.0041j, 0.30270 - 0.00237j, 0.0870 + 0.0012j],
+        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
+        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
+    ])
+    # calculate the Love numbers for the frequency
+    h2, k2, l2 = _love_numbers(omega, **kwargs)
+    # Love numbers for different frequency bands
+    if (omega > 1e-4):
+        # add out-of-phase components for the semi-diurnal band
+        h2 += 0.0022j
+        k2 += 0.0013j
+        l2 += 0.0007j
+    elif (omega < 2e-5):
+        # compute in-phase and out-of-phase components for the long period band
+        # interpolate the anelastic Love numbers to the frequency
+        h2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 0],
+            left=np.complex128(h2), right=np.complex128(h2))
+        k2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 1],
+            left=np.complex128(k2), right=np.complex128(k2))
+        l2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 2],
+            left=np.complex128(l2), right=np.complex128(l2))
+    else:
+        # add out-of-phase components for the diurnal band
+        h2 += 0.0025j
+        k2 += 0.00144j
+        l2 += 0.0007j
+    # return the Love numbers as a complex number
+    return np.array([h2, k2, l2], dtype=np.complex128)
 
 # Doodson (1921) table with values missing from Cartwright tables
+# Hs1: amplitude for epoch span 1 (1900 epoch)
 _d1921_table = get_data_path(['data','d1921_tab.txt'])
 # Cartwright and Tayler (1971) table with 3rd-degree values
+# Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
+# Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
+# Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
 _ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 # Cartwright and Edden (1973) table with updated values
 _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
+# Cartwright and Tayler (1971) table with radiational tides
+# Hs1: amplitude for epoch span 1 (1900 epoch)
+_ct1971_table_6 = get_data_path(['data','ct1971_tab6.txt'])
 
-def _parse_tide_potential_table(table: str | pathlib.Path):
+def _parse_tide_potential_table(
+        table: str | pathlib.Path,
+        columns: int = 3,
+    ):
     """Parse tables of tide-generating potential
 
     Parameters
     ----------
     table: str or pathlib.Path
         table of tide-generating potentials
+    columns: int, default 3
+        number of amplitude columns in the table
 
     Returns
     -------
@@ -1895,18 +2021,26 @@ def _parse_tide_potential_table(table: str | pathlib.Path):
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
-    # Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
-    # Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
-    # Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
-    # DO: Doodson number for coefficient
-    # Hs0: Doodson scaled amplitude for 1900
-    names = ('tau','s','h','p','n','pp','Hs1','Hs2','Hs3','DO','Hs0')
-    formats = ('i','i','i','i','i','i','f','f','f','U7','f')
+    names = ['tau','s','h','p','n','pp']
+    formats = ['i','i','i','i','i','i']
+    for c in range(columns):
+        # add amplitude columns to names and formats
+        names.append(f'Hs{c+1}')
+        formats.append('f8')
+    # add Doodson number
+    names.append('DO')
+    formats.append('U7')
+    # create a structured numpy dtype for the table
+    # names: names of the columns in the table
+    # formats: data types for each column in the table
     dtype = np.dtype({'names':names, 'formats':formats})
     CTE = np.zeros((file_lines), dtype=dtype)
+    # number of output columns
+    columns = len(names)
+    # iterate over each line in the file
     for i,line in enumerate(file_contents):
         # drop last column with values from Doodson (1921)
-        CTE[i] = np.array(tuple(line.split()[:11]), dtype=dtype)
+        CTE[i] = np.array(tuple(line.split()[:columns]), dtype=dtype)
     # return the table values
     return CTE
 

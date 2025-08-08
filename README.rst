@@ -115,7 +115,7 @@ Contributing
 ############
 
 This project contains work and contributions from the `scientific community <./CONTRIBUTORS.rst>`_.
-If you would like to contribute to the project, please have a look at the `open issues <https://github.com/pyTMD/pyTMD/issues>`_ and `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_.
+If you would like to contribute to the project, please have a look at the `contribution guidelines <./doc/source/getting_started/Contributing.rst>`_, `open issues <https://github.com/pyTMD/pyTMD/issues>`_ and `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_.
 
 Credits
 #######
