@@ -60,7 +60,7 @@ Repository = "https://github.com/pyTMD/pyTMD"
 Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
-doc = ["docutils", "fontconfig", "freetype", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
+doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "oct2py", "boto3"]
 
@@ -101,6 +101,8 @@ precision = 2
 line-length = 80
 
 [tool.pixi.workspace]
+name = "pytmd"
+authors = ["pyTMD contributors"]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64", "win-64"]
 
@@ -114,39 +116,40 @@ dev = { features = ["all", "dev", "doc"], solve-group = "default" }
 doc = { features = ["doc"], solve-group = "default" }
 
 [tool.pixi.tasks]
+start = { cmd = "jupyter lab", cwd = "doc/source/notebooks", description = "Start JupyterLab in the notebooks directory" }
 
 [tool.pixi.dependencies]
-numpy = ">=2.3.2,<3"
-netcdf4 = ">=1.7.2,<2"
-lxml = ">=6.0.0,<7"
-pyproj = ">=3.7.1,<4"
-python-dateutil = ">=2.9.0.post0,<3"
-scipy = ">=1.16.0,<2"
-timescale = ">=0.0.9,<0.0.10"
+numpy = "*"
+netcdf4 = "*"
+lxml = "*"
+pyproj = "*"
+python-dateutil = "*"
+scipy = ">=1.16.0"
+timescale = ">=0.0.8"
 
 [tool.pixi.feature.all.dependencies]
-cartopy = ">=0.25.0,<0.26"
-matplotlib = ">=3.10.5,<4"
-ipyleaflet = ">=0.20.0,<0.21"
-ipywidgets = ">=8.1.7,<9"
-jplephem = ">=2.23,<3"
-pandas = ">=2.3.1,<3"
-notebook = ">=7.4.4,<8"
+cartopy = "*"
+matplotlib = "*"
+ipyleaflet = "*"
+ipywidgets = "*"
+jplephem = "*"
+pandas = "*"
+notebook = "*"
 
 [tool.pixi.feature.dev.dependencies]
-flake8 = ">=7.3.0,<8"
-pytest = ">=8.4.1,<9"
-pytest-cov = ">=6.2.1,<7"
-boto3 = ">=1.40.1,<2"
-oct2py = ">=5.8.0,<6"
+flake8 = "*"
+pytest = "*"
+pytest-cov = "*"
+boto3 = "*"
+oct2py = "*"
 
 [tool.pixi.feature.doc.dependencies]
-docutils = ">=0.21.2,<0.22"
-graphviz = ">=13.1.1,<14"
-myst-nb = ">=1.3.0,<2"
-numpydoc = ">=1.9.0,<2"
-sphinx = ">=8.2.3,<9"
-sphinx-argparse = ">=0.5.2,<0.6"
-sphinxcontrib-bibtex = ">=2.6.5,<3"
-sphinx-design = ">=0.6.1,<0.7"
-sphinx_rtd_theme = ">=3.0.1,<4"
+docutils = "*"
+graphviz = "*"
+myst-nb = "*"
+numpydoc = "*"
+sphinx = "*"
+sphinx-argparse = "*"
+sphinxcontrib-bibtex = "*"
+sphinx-design = "*"
+sphinx_rtd_theme = "*"

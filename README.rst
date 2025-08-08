@@ -46,7 +46,7 @@ To include all optional dependencies:
 
    python3 -m pip install pyTMD[all]
 
-Using `conda` or `mamba` from conda-forge:
+Using ``conda`` or ``mamba`` from conda-forge:
 
 .. code-block:: bash
 
@@ -61,6 +61,33 @@ Development version from GitHub:
 .. code-block:: bash
 
    python3 -m pip install git+https://github.com/pyTMD/pyTMD.git
+
+Running with Pixi
+#################
+
+Alternatively, you can use `Pixi <https://pixi.sh/>`_ for a streamlined workspace environment:
+
+1. Install Pixi following the `installation instructions <https://pixi.sh/latest/#installation>`_
+
+2. Clone the project repository:
+
+.. code-block:: bash
+
+   git clone https://github.com/pyTMD/pyTMD.git
+
+3. Move into the ``pyTMD`` directory
+
+.. code-block:: bash
+
+   cd pyTMD
+
+4. Install dependencies and start JupyterLab:
+
+.. code-block:: bash
+
+   pixi run start
+
+This will automatically create the environment, install all dependencies, and launch JupyterLab in the `notebooks <./doc/source/notebooks/>`_ directory.
 
 Dependencies
 ############

@@ -46,6 +46,11 @@ To use the development repository, please fork ``pyTMD`` into your own account a
 
     python3 -m pip install --user .
 
+or alternatively ``pixi``:
+
+.. code-block:: bash
+
+    pixi install
 
 To include all optional dependencies:
 
