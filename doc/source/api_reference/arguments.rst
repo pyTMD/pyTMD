@@ -42,6 +42,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.arguments._love_numbers
 
+.. autofunction:: pyTMD.arguments._complex_love_numbers
+
 .. autofunction:: pyTMD.arguments._parse_tide_potential_table
 
 .. autofunction:: pyTMD.arguments._to_constituent_id
