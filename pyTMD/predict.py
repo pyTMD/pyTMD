@@ -1841,7 +1841,7 @@ def body_tide(
     # nominal Love and Shida numbers for degree-3
     kwargs.setdefault('h3', 0.291)
     kwargs.setdefault('l3', 0.015)
-    # validate output tide system
+    # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
 
@@ -1881,7 +1881,7 @@ def body_tide(
     # for each line in the table
     for i, line in enumerate(CTE):
         # skip the permanent tide if using a mean-tide system
-        if (i == 0) and (tide_system == 'mean_tide'):
+        if (i == 0) and (tide_system.lower() == 'mean_tide'):
             continue
         # spherical harmonic dependence (order)
         TAU = line['tau']
