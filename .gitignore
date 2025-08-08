@@ -94,3 +94,6 @@ None*.png
 #######################
 .ipynb_checkpoints
 Untitled.ipynb
+# pixi environments
+.pixi/*
+!.pixi/config.toml
