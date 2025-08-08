@@ -42,6 +42,7 @@ UPDATE HISTORY:
     Updated 08/2025: add Cartwright and Tayler table with radiational tides
         make frequency function a wrapper around one that calculates using
             Doodson coefficients (Cartwright numbers)
+        add complex love numbers function for correcting out-of-phase effects
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -118,6 +119,7 @@ __all__ = [
     "_constituent_parameters",
     "_frequency",
     "_love_numbers",
+    "_complex_love_numbers",
     "_parse_tide_potential_table",
     "_to_constituent_id",
     "_to_doodson_number",
@@ -1553,12 +1555,13 @@ def frequency(
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
-        method = 'Cartwright'
+        kwargs.setdefault('method', 'Cartwright')
     else:
-        method = 'ASTRO5'
+        kwargs.setdefault('method', 'ASTRO5')
     # get Doodson coefficients
     coef = coefficients_table(constituents, **kwargs)
-    omega = _frequency(coef, method=method)
+    # calculate the angular frequency
+    omega = _frequency(coef, **kwargs)
     return omega
 
 def aliasing_period(
@@ -1808,7 +1811,8 @@ def _frequency(
 
 def _love_numbers(
         omega: np.ndarray,
-        model: str = 'PREM'
+        model: str = 'PREM',
+        **kwargs
     ):
     """
     Compute the body tide Love/Shida numbers for a given frequency
@@ -1827,6 +1831,8 @@ def _love_numbers(
             - 'PEM-C'
             - 'C2'
             - 'PREM'
+    astype: np.dtype, default np.float64
+        data type for the output Love numbers
 
     Returns
     -------
@@ -1837,6 +1843,8 @@ def _love_numbers(
     l2: float
         Degree-2 Love (Shida) number of horizontal displacement
     """
+    # set default keyword arguments
+    kwargs.setdefault('astype', np.float64)
     # free core nutation frequencies (cycles per sidereal day) and
     # Love number parameters from Wahr (1981) table 6
     # and Mathews et al. (1995) table 3
@@ -1887,7 +1895,7 @@ def _love_numbers(
         # calculate love numbers following J. Wahr (1979)
         # use resonance formula for tides in the diurnal band
         # frequency of the o1 tides (radians/second)
-        omega_o1, = frequency('o1')
+        omega_o1, = frequency('o1', **kwargs)
         # convert frequency from cycles per sidereal day
         # frequency of free core nutation (radians/second)
         omega_fcn = lambda_fcn*7292115e-11
@@ -1898,7 +1906,76 @@ def _love_numbers(
         k2 = k0 + k1*ratio
         l2 = l0 + l1*ratio
     # return the Love numbers for frequency
-    return (h2, k2, l2)
+    return np.array([h2, k2, l2], dtype=kwargs['astype'])
+
+def _complex_love_numbers(
+        omega: np.ndarray,
+        **kwargs
+    ):
+    """
+    Compute the complex body tide Love/Shida numbers with in-phase
+    and out-of-phase components for a given frequency
+    :cite:p:`Mathews:1997js,Petit:2010tp`
+
+    Parameters
+    ----------
+    omega: np.ndarray
+        angular frequency (radians per second)
+    kwargs: dict
+        additional keyword arguments for love number calculation
+
+    Returns
+    -------
+    h2: complex
+        Degree-2 Love number of vertical displacement
+    k2: complex
+        Degree-2 Love number of gravitational potential
+    l2: complex
+        Degree-2 Love (Shida) number of horizontal displacement
+    """
+    # Doodson cefficients from table 7.3b of the 2010 IERS conventions
+    coefficients = np.array([
+        [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
+        [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0],
+        [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 2.0, 0.0, 0.0, -1.0, 0.0, 0.0]
+    ])
+    # calculate angular frequencies for coefficients from IERS table
+    anelastic_omegas = [_frequency(c, **kwargs) for c in coefficients]
+    # love numbers with adjustments for the frequency dependence
+    # induced by mantle anelasticity at long-periods
+    anelastic_love_numbers = np.array([
+        [0.6344 + 0.0093j, 0.31537 - 1j*0.00541, 0.0936 + 0.0028j],
+        [0.6182 + 0.0054j, 0.30593 - 1j*0.00315, 0.0886 + 0.0016j],
+        [0.6126 + 0.0041j, 0.30270 - 1j*0.00237, 0.0870 + 0.0012j],
+        [0.6109 + 0.0037j, 0.30171 - 1j*0.00213, 0.0864 + 0.0011j],
+        [0.6109 + 0.0037j, 0.30171 - 1j*0.00213, 0.0864 + 0.0011j],
+    ])
+    # calculate the Love numbers for the frequency
+    h2, k2, l2 = _love_numbers(omega, **kwargs)
+    # Love numbers for different frequency bands
+    if (omega > 1e-4):
+        # add out-of-phase components for the semi-diurnal band
+        h2 += 0.0022j
+        k2 += 0.0013j
+        l2 += 0.0007j
+    elif (omega < 2e-5):
+        # compute in-phase and out-of-phase components for the long period band
+        # interpolate the anelastic Love numbers to the frequency
+        h2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 0],
+            left=np.complex128(h2), right=np.complex128(h2))
+        k2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 1],
+            left=np.complex128(k2), right=np.complex128(k2))
+        l2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 2],
+            left=np.complex128(l2), right=np.complex128(l2))
+    else:
+        # add out-of-phase components for the diurnal band
+        h2 += 0.0025j
+        k2 += 0.00144j
+        l2 += 0.0007j
+    # return the Love numbers as a complex number
+    return np.array([h2, k2, l2], dtype=np.complex128)
 
 # Doodson (1921) table with values missing from Cartwright tables
 # Hs1: amplitude for epoch span 1 (1900 epoch)

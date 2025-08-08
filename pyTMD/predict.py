@@ -23,6 +23,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: add simplified solid earth tide prediction function
+        add correction of anelastic effects for long-period body tides
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -1422,7 +1423,7 @@ def _out_of_phase_diurnal(
     ):
     """
     Computes the out-of-phase corrections induced by mantle
-    anelasticity in the diurnal band
+    anelasticity in the diurnal band :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1483,7 +1484,7 @@ def _out_of_phase_semidiurnal(
     ):
     """
     Computes the out-of-phase corrections induced by mantle
-    anelasticity in the semi-diurnal band
+    anelasticity in the semi-diurnal band :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1551,7 +1552,7 @@ def _latitude_dependence(
     ):
     r"""
     Computes the corrections induced by the latitude of the
-    dependence given by L\ :sup:`1`
+    dependence given by L\ :sup:`1` :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1618,7 +1619,7 @@ def _frequency_dependence_diurnal(
     ):
     """
     Computes the in-phase and out-of-phase corrections induced by mantle
-    anelasticity in the diurnal band
+    anelasticity in the diurnal band :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1700,7 +1701,7 @@ def _frequency_dependence_long_period(
     ):
     """
     Computes the in-phase and out-of-phase corrections induced by mantle
-    anelasticity in the long-period band
+    anelasticity in the long-period band :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1899,18 +1900,30 @@ def body_tide(
         G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
         # convert phase angles to radians
         phase = np.radians(G)
-        # calculate angular frequency and determine love numbers
-        # use resonance formula for tides in the diurnal band
+        # calculate angular frequency of constituent
         omega = pyTMD.arguments._frequency(coef, method=method)
-        h2, k2, l2 = pyTMD.arguments._love_numbers(omega)
+        # determine love numbers for constituent
+        if (method == 'IERS'):
+            # IERS: including both in-phase and out-of-phase components
+            # 1) using resonance formula for tides in the diurnal band
+            # 2) adjusting some long-period tides for anelastic effects
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega,
+                method=method)
+            # 3) including latitudinal dependence
+            h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
+            l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
+        else:
+            # use resonance formula for tides in the diurnal band
+            h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
+                method=method, astype=np.complex128)
         # calculate spherical harmonics (and derivatives)
         S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
         # convert potentials for constituent and add to the total
         # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += l2*line['Hs3']*dS.real
-        zeta[:,1] -= l2*TAU*line['Hs3']*S.imag
-        zeta[:,2] += h2*line['Hs3']*S.real
+        zeta[:,0] += line['Hs3']*(l2.real*dS.real + l2.imag*dS.imag)
+        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag + l2.imag*S.real)
+        zeta[:,2] += line['Hs3']*(h2.real*S.real + h2.imag*S.imag)
 
     # calculate the summation over all degree-3 constituents
     l = 3
@@ -1941,9 +1954,9 @@ def body_tide(
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
         # convert potentials for constituent and add to the total
         # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += kwargs['l3']*line['Hs3']*dS.real
-        zeta[:,1] -= kwargs['l3']*TAU*line['Hs3']*S.imag
-        zeta[:,2] += kwargs['h3']*line['Hs3']*S.real
+        zeta[:,0] += line['Hs3']*kwargs['l3']*dS.real
+        zeta[:,1] -= line['Hs3']*TAU*kwargs['l3']*S.imag
+        zeta[:,2] += line['Hs3']*kwargs['h3']*S.real
 
     # return the body tides
     return zeta
