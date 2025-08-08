@@ -1,4 +1,4 @@
-name: pyTMD
+name: pytmd
 channels:
   - conda-forge
 dependencies:
