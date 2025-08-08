@@ -36,7 +36,7 @@ from pyTMD.compute_tide_corrections import (
     compute_SET_corrections,
 )
 
-# get semantic version from setuptools-scm
+# get version information
 __version__ = pyTMD.version.version
 # read model database
 models = io.load_database()

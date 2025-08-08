@@ -23,7 +23,6 @@ dependencies:
   - python>=3.6
   - python-dateutil
   - scipy>=1.16.0
-  - setuptools_scm
   - sphinx
   - sphinx-argparse>=0.4
   - sphinxcontrib-bibtex

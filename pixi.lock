@@ -9199,8 +9199,8 @@ packages:
   timestamp: 1752805902938
 - pypi: ./
   name: pytmd
-  version: 2.2.7.dev9+gaf0d83d.d20250808
-  sha256: 872af7c246c7bfd545ba215132ce45f8e4866b00725fcf49a07095212312607f
+  version: 2.2.6
+  sha256: f8bf8e10c1c172a7c6fa4bdab332969876e4178939668c1902fd4b3d31d95b33
   requires_dist:
   - lxml
   - netcdf4
@@ -9208,7 +9208,6 @@ packages:
   - pyproj
   - python-dateutil
   - scipy>=1.10.1
-  - setuptools-scm
   - timescale>=0.0.8
   - docutils ; extra == 'doc'
   - graphviz ; extra == 'doc'
