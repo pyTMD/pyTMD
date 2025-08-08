@@ -1946,11 +1946,11 @@ def _complex_love_numbers(
     # love numbers with adjustments for the frequency dependence
     # induced by mantle anelasticity at long-periods
     anelastic_love_numbers = np.array([
-        [0.6344 + 0.0093j, 0.31537 - 1j*0.00541, 0.0936 + 0.0028j],
-        [0.6182 + 0.0054j, 0.30593 - 1j*0.00315, 0.0886 + 0.0016j],
-        [0.6126 + 0.0041j, 0.30270 - 1j*0.00237, 0.0870 + 0.0012j],
-        [0.6109 + 0.0037j, 0.30171 - 1j*0.00213, 0.0864 + 0.0011j],
-        [0.6109 + 0.0037j, 0.30171 - 1j*0.00213, 0.0864 + 0.0011j],
+        [0.6344 + 0.0093j, 0.31537 - 0.00541j, 0.0936 + 0.0028j],
+        [0.6182 + 0.0054j, 0.30593 - 0.00315j, 0.0886 + 0.0016j],
+        [0.6126 + 0.0041j, 0.30270 - 0.00237j, 0.0870 + 0.0012j],
+        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
+        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
     ])
     # calculate the Love numbers for the frequency
     h2, k2, l2 = _love_numbers(omega, **kwargs)

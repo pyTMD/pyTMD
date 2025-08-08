@@ -54,6 +54,37 @@ def test_love_numbers():
         assert np.isclose(k2, v[1], atol=15e-4)
         assert np.isclose(l2, v[2], atol=15e-4)
 
+def test_complex_love_numbers():
+    """
+    Tests the calculation of complex body tide Love numbers
+    for long-period constituents compared with the values from
+    Mathews et al. (1997)
+    """
+    # Doodson coefficients
+    coefficients = {}
+    coefficients['055.565'] = [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0]
+    coefficients['ssa'] = [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0]
+    coefficients['mm'] = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0]
+    coefficients['mf'] = [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    coefficients['075.565'] = [0.0, 2.0, 0.0, 0.0, -1.0, 0.0, 0.0]
+    # expected values
+    exp = {}
+    # long-period species
+    exp['055.565'] = (0.6344 + 0.0093j, 0.31537 - 0.00541j, 0.0936 + 0.0028j)
+    exp['ssa'] = (0.6182 + 0.0054j, 0.30593 - 0.00315j, 0.0886 + 0.0016j)
+    exp['mm'] = (0.6126 + 0.0041j, 0.30270 - 0.00237j, 0.0870 + 0.0012j)
+    exp['mf'] = (0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j)
+    exp['075.565'] = (0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j)
+    # for each tidal constituent
+    for c, v in exp.items():
+        # calculate Love numbers
+        omega = pyTMD.arguments._frequency(coefficients[c])
+        h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega)
+        # check Love numbers
+        assert np.isclose(h2, v[0], atol=15e-4)
+        assert np.isclose(k2, v[1], atol=15e-4)
+        assert np.isclose(l2, v[2], atol=15e-4)
+
 @pytest.mark.parametrize("model", ['1066A-N', 'PEM-C', 'C2'])
 def test_love_number_ratios(model):
     """
@@ -86,7 +117,7 @@ def test_love_number_ratios(model):
     # frequency of the o1 tidal constituent
     omega = pyTMD.arguments.frequency('o1')
     # calculate Love numbers for o1
-    ho1, ko1, lo1=pyTMD.arguments._love_numbers(omega, model=model)
+    ho1, ko1, lo1 = pyTMD.arguments._love_numbers(omega, model=model)
     # for each tidal constituent
     for c, v in exp[model].items():
         # calculate Love numbers
