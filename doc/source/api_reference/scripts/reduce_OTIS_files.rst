@@ -12,7 +12,7 @@ Calling Sequence
 ################
 
 .. argparse::
-    :filename: reduce_OTIS_files.py
+    :module: pyTMD.scripts.reduce_OTIS_files
     :func: arguments
     :prog: reduce_OTIS_files.py
     :nodescription:

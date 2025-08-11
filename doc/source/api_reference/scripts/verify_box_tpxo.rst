@@ -13,7 +13,7 @@ Calling Sequence
 ################
 
 .. argparse::
-    :filename: verify_box_tpxo.py
+    :module: pyTMD.scripts.verify_box_tpxo
     :func: arguments
     :prog: verify_box_tpxo.py
     :nodescription:

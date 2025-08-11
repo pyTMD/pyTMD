@@ -18,7 +18,7 @@ Calling Sequence
 ################
 
 .. argparse::
-    :filename: arcticdata_tides.py
+    :module: pyTMD.scripts.arcticdata_tides
     :func: arguments
     :prog: arcticdata_tides.py
     :nodescription:

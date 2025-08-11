@@ -19,7 +19,7 @@ Calling Sequence
 ################
 
 .. argparse::
-    :filename: gsfc_got_tides.py
+    :module: pyTMD.scripts.gsfc_got_tides
     :func: arguments
     :prog: gsfc_got_tides.py
     :nodescription:

@@ -15,7 +15,7 @@ Calling Sequence
 ################
 
 .. argparse::
-    :filename: aviso_fes_tides.py
+    :module: pyTMD.scripts.aviso_fes_tides
     :func: arguments
     :prog: aviso_fes_tides.py
     :nodescription:
