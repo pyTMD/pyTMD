@@ -1941,7 +1941,10 @@ def _complex_love_numbers(
     # frequency in cycles per sidereal day
     f = omega*sidereal_day/(2.0*np.pi)
     # Love numbers for different frequency bands
-    if (omega > 1e-4):
+    if (omega == 0.0):
+        # use real-valued body tide love numbers for permanent tide
+        h2, k2, l2 = _love_numbers(omega, **kwargs)
+    elif (omega > 1e-4):
         # in-phase and out-of-phase components for the semi-diurnal band
         h2 = 0.6078 - 0.0022j
         k2 = 0.30102 - 0.0013j
