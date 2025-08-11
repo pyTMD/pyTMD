@@ -1,9 +1,10 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyTMD"
+version = "2.2.6"
 description = "Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides"
 keywords = [
     "Ocean Tides",
@@ -30,11 +31,8 @@ dependencies = [
     "pyproj",
     "python-dateutil",
     "scipy>=1.10.1",
-    "setuptools_scm",
     "timescale>=0.0.8",
 ]
-
-dynamic = ["version"]
 
 classifiers=[
     "Development Status :: 3 - Alpha",
@@ -64,6 +62,13 @@ doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "oct2py", "boto3"]
 
+[project.scripts]
+"arcticdata_tides.py" = "pyTMD.scripts.arcticdata_tides:main" 
+"aviso_fes_tides.py" = "pyTMD.scripts.aviso_fes_tides:main" 
+"gsfc_got_tides.py" = "pyTMD.scripts.gsfc_got_tides:main" 
+"reduce_OTIS_files.py" = "pyTMD.scripts.reduce_OTIS_files:main" 
+"verify_box_tpxo.py" = "pyTMD.scripts.verify_box_tpxo:main" 
+
 [tool.setuptools.packages.find]
 exclude = ["providers*", "run*", "test*"]
 
@@ -86,7 +91,7 @@ source = [
 omit = [
     "setup.py",
     "conf.py",
-    "scripts/*",
+    "pyTMD/scripts/*",
     "pyTMD/compute_tide_corrections.py",
     "test/_coefficients_to_json.py",
     "test/_def_to_json.py",

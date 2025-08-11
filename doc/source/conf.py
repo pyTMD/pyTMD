@@ -30,8 +30,7 @@ year = datetime.date.today().year
 copyright = f"2017\u2013{year}, Tyler C. Sutterley"
 author = 'Tyler C. Sutterley'
 
-# The full version, including alpha/beta/rc tags
-# get semantic version from setuptools-scm
+# software version
 version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
