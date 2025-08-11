@@ -63,7 +63,7 @@ Development version from GitHub:
    python3 -m pip install git+https://github.com/pyTMD/pyTMD.git
 
 Running with Pixi
-#################
+-----------------
 
 Alternatively, you can use `Pixi <https://pixi.sh/>`_ for a streamlined workspace environment:
 
