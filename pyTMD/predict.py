@@ -24,6 +24,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: add simplified solid earth tide prediction function
         add correction of anelastic effects for long-period body tides
+        use sign convention from IERS for complex body tide Love numbers
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -1921,9 +1922,9 @@ def body_tide(
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
         # convert potentials for constituent and add to the total
         # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += line['Hs3']*(l2.real*dS.real + l2.imag*dS.imag)
-        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag + l2.imag*S.real)
-        zeta[:,2] += line['Hs3']*(h2.real*S.real + h2.imag*S.imag)
+        zeta[:,0] += line['Hs3']*(l2.real*dS.real - l2.imag*dS.imag)
+        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag - l2.imag*S.real)
+        zeta[:,2] += line['Hs3']*(h2.real*S.real - h2.imag*S.imag)
 
     # calculate the summation over all degree-3 constituents
     l = 3
