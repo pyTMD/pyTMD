@@ -7,13 +7,13 @@ verify_box_tpxo.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/verify_box_tpxo.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/verify_box_tpxo.py
 
 Calling Sequence
 ################
 
 .. argparse::
-    :filename: verify_box_tpxo.py
+    :module: pyTMD.scripts.verify_box_tpxo
     :func: arguments
     :prog: verify_box_tpxo.py
     :nodescription:

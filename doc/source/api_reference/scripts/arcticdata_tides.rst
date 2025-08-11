@@ -12,13 +12,13 @@ arcticdata_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/arcticdata_tides.py
 
 Calling Sequence
 ################
 
 .. argparse::
-    :filename: arcticdata_tides.py
+    :module: pyTMD.scripts.arcticdata_tides
     :func: arguments
     :prog: arcticdata_tides.py
     :nodescription:

@@ -6,13 +6,13 @@ reduce_OTIS_files.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/reduce_OTIS_files.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/reduce_OTIS_files.py
 
 Calling Sequence
 ################
 
 .. argparse::
-    :filename: reduce_OTIS_files.py
+    :module: pyTMD.scripts.reduce_OTIS_files
     :func: arguments
     :prog: reduce_OTIS_files.py
     :nodescription:

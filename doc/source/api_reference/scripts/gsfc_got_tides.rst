@@ -13,13 +13,13 @@ gsfc_got_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/gsfc_got_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/gsfc_got_tides.py
 
 Calling Sequence
 ################
 
 .. argparse::
-    :filename: gsfc_got_tides.py
+    :module: pyTMD.scripts.gsfc_got_tides
     :func: arguments
     :prog: gsfc_got_tides.py
     :nodescription:

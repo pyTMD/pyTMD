@@ -9,13 +9,13 @@ aviso_fes_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/scripts/aviso_fes_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/aviso_fes_tides.py
 
 Calling Sequence
 ################
 
 .. argparse::
-    :filename: aviso_fes_tides.py
+    :module: pyTMD.scripts.aviso_fes_tides
     :func: arguments
     :prog: aviso_fes_tides.py
     :nodescription:
