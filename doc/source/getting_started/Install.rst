@@ -46,7 +46,7 @@ To use the development repository, please fork ``pyTMD`` into your own account a
 
     python3 -m pip install --user .
 
-or alternatively ``pixi``:
+or alternatively ``pixi`` for a `streamlined environment <https://pixi.sh/>`_:
 
 .. code-block:: bash
 
