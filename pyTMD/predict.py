@@ -841,6 +841,8 @@ def _infer_long_period(
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
         tidal constituent IDs of minor constituents for inference
+    include_anelasticity: bool, default False
+        compute Love numbers taking into account mantle anelasticity
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
@@ -852,6 +854,7 @@ def _infer_long_period(
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('include_anelasticity', False)
     kwargs.setdefault('raise_exception', False)
     # list of minor constituents
     kwargs.setdefault('minor', None)
@@ -880,8 +883,13 @@ def _infer_long_period(
         j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
         if j:
             j1, = j
-            # complex Love numbers of degree 2 for long-period constituent
-            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
+            # complex Love numbers of degree 2 for long-period band
+            if kwargs['include_anelasticity']:
+                # include variations largely due to mantle anelasticity
+                h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
+            else:
+                h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i],
+                    astype=np.complex128)
             # tilt factor: response with respect to the solid earth
             # use real components from Mathews et al. (2002)
             gamma_2 = (1.0 + k2.real - h2.real)
@@ -935,8 +943,13 @@ def _infer_long_period(
 
     # sum over the minor tidal constituents of interest
     for k in minor_indices:
-        # complex Love numbers of degree 2 for long-period constituent
-        h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega[k])
+        # complex Love numbers of degree 2 for long-period band
+        if kwargs['include_anelasticity']:
+            # include variations largely due to mantle anelasticity
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega[k])
+        else:
+            h2, k2, l2 = pyTMD.arguments._love_numbers(omega[k],
+                astype=np.complex128)
         # tilt factor: response with respect to the solid earth
         # use real components from Mathews et al. (2002)
         gamma_2 = (1.0 + k2.real - h2.real)
