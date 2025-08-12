@@ -44,6 +44,7 @@ UPDATE HISTORY:
             Doodson coefficients (Cartwright numbers)
         add complex love numbers function for correcting out-of-phase effects
         use Mathews et al. (2002) functions for diurnal complex love numbers
+        take the absolute value of the constituent angular frequencies
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -1808,7 +1809,7 @@ def _frequency(
     fd = np.dot(rates, coef)
     # convert to radians per second
     omega = 2.0*np.pi*fd/360.0
-    return omega
+    return np.abs(omega)
 
 def _love_numbers(
         omega: np.ndarray,

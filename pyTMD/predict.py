@@ -25,6 +25,7 @@ UPDATE HISTORY:
     Updated 08/2025: add simplified solid earth tide prediction function
         add correction of anelastic effects for long-period body tides
         use sign convention from IERS for complex body tide Love numbers
+        include mantle anelastic effects when inferring long-period tides
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -824,8 +825,9 @@ def _infer_long_period(
     ):
     """
     Infer the tidal values for long-period minor constituents
-    using their relation with major constituents
-    :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em`
+    using their relation with major constituents taking into
+    account variations due to mantle anelasticity
+    :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em,Mathews:2002cr`
 
     Parameters
     ----------
@@ -878,7 +880,13 @@ def _infer_long_period(
         j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
         if j:
             j1, = j
-            z[:,i] = zmajor[:,j1]/amajor[i]
+            # complex Love numbers of degree 2 for long-period constituent
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
+            # tilt factor: response with respect to the solid earth
+            # use real components from Mathews et al. (2002)
+            gamma_2 = (1.0 + k2.real - h2.real)
+            # "normalize" tide values
+            z[:,i] = zmajor[:,j1]/(amajor[i]*gamma_2)
             nz += 1
 
     # raise exception or log error
@@ -927,13 +935,18 @@ def _infer_long_period(
 
     # sum over the minor tidal constituents of interest
     for k in minor_indices:
+        # complex Love numbers of degree 2 for long-period constituent
+        h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega[k])
+        # tilt factor: response with respect to the solid earth
+        # use real components from Mathews et al. (2002)
+        gamma_2 = (1.0 + k2.real - h2.real)
         # linearly interpolate between major constituents
         if (omajor[0] < omajor[1]) and (omega[k] < omajor[1]):
             slope = (z[:,1] - z[:,0])/(omajor[1] - omajor[0])
-            zmin = amin[k]*(z[:,0] + slope*(omega[k] - omajor[0]))
+            zmin = amin[k]*gamma_2*(z[:,0] + slope*(omega[k] - omajor[0]))
         else:
             slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
-            zmin = amin[k]*(z[:,1] + slope*(omega[k] - omajor[1]))
+            zmin = amin[k]*gamma_2*(z[:,1] + slope*(omega[k] - omajor[1]))
         # sum over all tides
         th = G[:,k]*np.pi/180.0 + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
