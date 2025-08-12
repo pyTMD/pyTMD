@@ -67,9 +67,6 @@ def test_complex_love_numbers():
     coefficients['o1'] = [1.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
     coefficients['pi1'] = [1.0, 1.0, -3.0, 0.0, 0.0, 1.0, -1.0]
     coefficients['p1'] = [1.0, 1.0, -2.0, 0.0, 0.0, 0.0, -1.0]
-    coefficients['k1'] = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-    coefficients['psi1'] = [1.0, 1.0, 1.0, 0.0, 0.0, -1.0, 1.0]
-    coefficients['phi1'] = [1.0, 1.0, 2.0, 0.0, 0.0, 0.0, 1.0]
     # semi-diurnal species
     coefficients['m2'] = [2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     # long-period species

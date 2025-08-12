@@ -825,8 +825,8 @@ def _infer_long_period(
     ):
     """
     Infer the tidal values for long-period minor constituents
-    using their relation with major constituents taking into
-    account variations due to mantle anelasticity
+    using their relation with major constituents with option to
+    take into account variations due to mantle anelasticity
     :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em,Mathews:2002cr`
 
     Parameters
