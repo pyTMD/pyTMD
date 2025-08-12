@@ -43,6 +43,8 @@ UPDATE HISTORY:
         make frequency function a wrapper around one that calculates using
             Doodson coefficients (Cartwright numbers)
         add complex love numbers function for correcting out-of-phase effects
+        use Mathews et al. (2002) functions for diurnal complex love numbers
+        take the absolute value of the constituent angular frequencies
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -1807,7 +1809,7 @@ def _frequency(
     fd = np.dot(rates, coef)
     # convert to radians per second
     omega = 2.0*np.pi*fd/360.0
-    return omega
+    return np.abs(omega)
 
 def _love_numbers(
         omega: np.ndarray,
@@ -1915,7 +1917,7 @@ def _complex_love_numbers(
     """
     Compute the complex body tide Love/Shida numbers with in-phase
     and out-of-phase components for a given frequency
-    :cite:p:`Mathews:1997js,Petit:2010tp`
+    :cite:p:`Mathews:1997js,Mathews:2002cr,Petit:2010tp`
 
     Parameters
     ----------
@@ -1933,47 +1935,71 @@ def _complex_love_numbers(
     l2: complex
         Degree-2 Love (Shida) number of horizontal displacement
     """
-    # Doodson cefficients from table 7.3b of the 2010 IERS conventions
-    coefficients = np.array([
-        [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
-        [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0],
-        [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [0.0, 2.0, 0.0, 0.0, -1.0, 0.0, 0.0]
-    ])
-    # calculate angular frequencies for coefficients from IERS table
-    anelastic_omegas = [_frequency(c, **kwargs) for c in coefficients]
-    # love numbers with adjustments for the frequency dependence
-    # induced by mantle anelasticity at long-periods
-    anelastic_love_numbers = np.array([
-        [0.6344 + 0.0093j, 0.31537 - 0.00541j, 0.0936 + 0.0028j],
-        [0.6182 + 0.0054j, 0.30593 - 0.00315j, 0.0886 + 0.0016j],
-        [0.6126 + 0.0041j, 0.30270 - 0.00237j, 0.0870 + 0.0012j],
-        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
-        [0.6109 + 0.0037j, 0.30171 - 0.00213j, 0.0864 + 0.0011j],
-    ])
-    # calculate the Love numbers for the frequency
-    h2, k2, l2 = _love_numbers(omega, **kwargs)
+    # (number of sidereal days per solar day)
+    sidereal_ratio = 1.002737909
+    # number of seconds in a sidereal day (approx 86164.1)
+    sidereal_day = 86400.0/sidereal_ratio
+    # frequency in cycles per sidereal day
+    f = omega*sidereal_day/(2.0*np.pi)
     # Love numbers for different frequency bands
-    if (omega > 1e-4):
-        # add out-of-phase components for the semi-diurnal band
-        h2 += 0.0022j
-        k2 += 0.0013j
-        l2 += 0.0007j
+    if (omega == 0.0):
+        # use real-valued body tide love numbers for permanent tide
+        h2, k2, l2 = _love_numbers(omega, **kwargs)
+    elif (omega > 1e-4):
+        # in-phase and out-of-phase components for the semi-diurnal band
+        h2 = 0.6078 - 0.0022j
+        k2 = 0.30102 - 0.0013j
+        l2 = 0.0847 - 0.0007j
     elif (omega < 2e-5):
         # compute in-phase and out-of-phase components for the long period band
-        # interpolate the anelastic Love numbers to the frequency
-        h2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 0],
-            left=np.complex128(h2), right=np.complex128(h2))
-        k2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 1],
-            left=np.complex128(k2), right=np.complex128(k2))
-        l2 = np.interp(omega, anelastic_omegas, anelastic_love_numbers[:, 2],
-            left=np.complex128(l2), right=np.complex128(l2))
+        # variation largely due to mantle anelasticity
+        alpha = 0.15
+        # frequency equivalent to 200s
+        fm = sidereal_day/200.0
+        factor = np.tan(alpha*np.pi/2.0)**(-1)
+        anelasticity_model = factor*(1.0 - (fm/f)**alpha) + 1j*(fm/f)**alpha
+        # model for the variation of love numbers across the zonal tide band
+        h2 = 0.5998 - 9.96e-4*anelasticity_model
+        k2 = 0.29525 - 5.796e-4*anelasticity_model
+        l2 = 0.0831 - 3.01e-4*anelasticity_model
     else:
-        # add out-of-phase components for the diurnal band
-        h2 += 0.0025j
-        k2 += 0.00144j
-        l2 += 0.0007j
+        # in-phase and out-of-phase components for the diurnal band
+        # following IERS conventions and Mathews et al. (2002)
+        # values from equation 6.10 of IERS conventions 2010
+        # and from Mathews et al. (2002)
+        sigma = np.zeros((4), dtype=np.complex128)
+        # factor for calculating L0
+        sigma[0] = f - 1.0
+        # Chandler wobble
+        sigma[1] = -0.0026010 - 0.0001361j
+        # retrograde free core nutation
+        sigma[2] = 1.0023181 + 0.000025j
+        # prograde free core nutation
+        sigma[3] = 0.999026 + 0.000780j
+        # frequency dependence of Love number h2
+        H2 = np.zeros((4), dtype=np.complex128)
+        H2[0] = 0.60671 - 0.242e-2j
+        H2[1] = -0.15777e-2 - 0.7630e-4j
+        H2[2] = 0.18053e-3 - 0.6292e-5j
+        H2[3] = -0.18616e-5 + 0.1379e-6j
+        # frequency dependence of Love number k2
+        K2 = np.zeros((4), dtype=np.complex128)
+        K2[0] = 0.29954 - 0.1412e-2j
+        K2[1] = -0.77896e-3 - 0.3711e-4j
+        K2[2] = 0.90963e-4 - 0.2963e-5j
+        K2[3] = -0.11416e-5 + 0.5325e-7j
+        # frequency dependence of Love number l2
+        L2 = np.zeros((4), dtype=np.complex128)
+        L2[0] = 0.84963e-1 - 0.7395e-3j
+        L2[1] = -0.22107e-3 - 0.9446e-5j
+        L2[2] = 0.54710e-5 - 0.2990e-6j
+        L2[3] = -0.29904e-7 - 0.7717e-8j
+        # estimate the complex Love number fors diurnal tides
+        # equation 6.9 of IERS conventions 2010
+        h2 = np.sum(H2/(f - sigma))
+        k2 = np.sum(K2/(f - sigma))
+        l2 = np.sum(L2/(f - sigma))
+
     # return the Love numbers as a complex number
     return np.array([h2, k2, l2], dtype=np.complex128)
 

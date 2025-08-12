@@ -1,5 +1,5 @@
 """
-test_equilibrium_tide.py (11/2024)
+test_equilibrium_tide.py (08/2025)
 Tests the calculation of long-period equilibrium tides with respect
 to the LPEQMT subroutine
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 08/2025: added option to include mantle anelasticity
     Updated 11/2024: moved normalize_angle to math.py
     Written 10/2024
 """
@@ -22,7 +23,8 @@ import timescale.time
 
 # PURPOSE: test the estimation of long-period equilibrium tides
 @pytest.mark.parametrize("TYPE", ['grid','drift'])
-def test_equilibrium_tide(TYPE):
+@pytest.mark.parametrize("include_anelasticity", [False, True])
+def test_equilibrium_tide(TYPE, include_anelasticity):
     """
     Test the computation of the long-period equilibrium tides
     from the summation of fifteen tidal spectral lines from
@@ -44,7 +46,8 @@ def test_equilibrium_tide(TYPE):
     EPOCH = (2018, 1, 1, 0, 0, 0)
     t = timescale.from_deltatime(delta_time, epoch=EPOCH, standard='GPS')
     # calculate long-period equilibrium tides
-    lpet = pyTMD.predict.equilibrium_tide(t.tide, lat)
+    lpet = pyTMD.predict.equilibrium_tide(t.tide, lat,
+        include_anelasticity=include_anelasticity)
 
     # longitude of moon
     # longitude of sun

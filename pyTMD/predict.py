@@ -24,6 +24,9 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: add simplified solid earth tide prediction function
         add correction of anelastic effects for long-period body tides
+        use sign convention from IERS for complex body tide Love numbers
+        include mantle anelastic effects when inferring long-period tides
+        added option to include mantle anelastic effects for LPET predict
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -823,8 +826,9 @@ def _infer_long_period(
     ):
     """
     Infer the tidal values for long-period minor constituents
-    using their relation with major constituents
-    :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em`
+    using their relation with major constituents with option to
+    take into account variations due to mantle anelasticity
+    :cite:p:`Ray:1999vm,Ray:2014fu,Cartwright:1973em,Mathews:2002cr`
 
     Parameters
     ----------
@@ -838,6 +842,8 @@ def _infer_long_period(
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
         tidal constituent IDs of minor constituents for inference
+    include_anelasticity: bool, default False
+        compute Love numbers taking into account mantle anelasticity
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
@@ -849,6 +855,7 @@ def _infer_long_period(
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('include_anelasticity', False)
     kwargs.setdefault('raise_exception', False)
     # list of minor constituents
     kwargs.setdefault('minor', None)
@@ -877,7 +884,19 @@ def _infer_long_period(
         j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
         if j:
             j1, = j
-            z[:,i] = zmajor[:,j1]/amajor[i]
+            # complex Love numbers of degree 2 for long-period band
+            if kwargs['include_anelasticity']:
+                # include variations largely due to mantle anelasticity
+                h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
+            else:
+                # Love numbers for long-period tides (Wahr, 1981)
+                h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i],
+                    astype=np.complex128)
+            # tilt factor: response with respect to the solid earth
+            # use real components from Mathews et al. (2002)
+            gamma_2 = (1.0 + k2.real - h2.real)
+            # "normalize" tide values
+            z[:,i] = zmajor[:,j1]/(amajor[i]*gamma_2)
             nz += 1
 
     # raise exception or log error
@@ -926,13 +945,24 @@ def _infer_long_period(
 
     # sum over the minor tidal constituents of interest
     for k in minor_indices:
+        # complex Love numbers of degree 2 for long-period band
+        if kwargs['include_anelasticity']:
+            # include variations largely due to mantle anelasticity
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega[k])
+        else:
+            # Love numbers for long-period tides (Wahr, 1981)
+            h2, k2, l2 = pyTMD.arguments._love_numbers(omega[k],
+                astype=np.complex128)
+        # tilt factor: response with respect to the solid earth
+        # use real components from Mathews et al. (2002)
+        gamma_2 = (1.0 + k2.real - h2.real)
         # linearly interpolate between major constituents
         if (omajor[0] < omajor[1]) and (omega[k] < omajor[1]):
             slope = (z[:,1] - z[:,0])/(omajor[1] - omajor[0])
-            zmin = amin[k]*(z[:,0] + slope*(omega[k] - omajor[0]))
+            zmin = amin[k]*gamma_2*(z[:,0] + slope*(omega[k] - omajor[0]))
         else:
             slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
-            zmin = amin[k]*(z[:,1] + slope*(omega[k] - omajor[1]))
+            zmin = amin[k]*gamma_2*(z[:,1] + slope*(omega[k] - omajor[1]))
         # sum over all tides
         th = G[:,k]*np.pi/180.0 + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
@@ -961,6 +991,8 @@ def equilibrium_tide(
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
         use nodal corrections from OTIS/ATLAS or GOT/FES models
+    include_anelasticity: bool, default False
+        compute Love numbers taking into account mantle anelasticity
     constituents: list
         long-period tidal constituent IDs
 
@@ -975,11 +1007,14 @@ def equilibrium_tide(
         'mst', 'mt', '085.465']
     kwargs.setdefault('constituents', cindex)
     kwargs.setdefault('deltat', 0.0)
+    kwargs.setdefault('include_anelasticity', False)
     kwargs.setdefault('corrections', 'OTIS')
 
     # number of input points
     nt = len(np.atleast_1d(t))
     nlat = len(np.atleast_1d(lat))
+    # number of constituents
+    nc = 15
 
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
@@ -990,16 +1025,24 @@ def equilibrium_tide(
     # convert from Modified Julian Dates into Ephemeris Time
     MJD = t + _mjd_tide
     # compute principal mean longitudes
-    s, h, p, N, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
         method=method)
+    # initial time conversions
+    hour = 24.0*np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0*hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    # full expansion of Equilibrium Tide includes some negative cosine
+    # terms and some sine terms (Pugh and Woodworth, 2014)
+    k = 90.0 + np.zeros((nt))
     # convert to negative mean longitude of the ascending node (N')
-    n = pyTMD.math.normalize_angle(360.0 - N)
+    Np = pyTMD.math.normalize_angle(360.0 - n)
     # determine equilibrium arguments
-    fargs = np.c_[s, h, p, n, pp]
+    fargs = np.c_[tau, s, h, p, Np, pp, k]
 
     # Cartwright and Edden potential amplitudes (centimeters)
     # assemble long-period tide potential from 15 CTE terms greater than 1 mm
-    amajor = np.zeros((15))
+    amajor = np.zeros((nc))
     # group 0,0
     # nodal term is included but not the constant term.
     amajor[0] = 2.7929# node
@@ -1028,52 +1071,73 @@ def equilibrium_tide(
         constituents = [c.lower() for c in kwargs['constituents']]
 
     # reduce potential amplitudes to constituents
-    CTE = np.zeros((15))
+    CTE = np.zeros((nc))
     for i,c in enumerate(cindex):
         if c in constituents:
             CTE[i] = amajor[i]
 
     # Doodson coefficients for 15 long-period terms
-    coef = np.zeros((5, 15))
+    coef = np.zeros((7, nc))
     # group 0,0
-    coef[:,0] = [0.0, 0.0, 0.0, 1.0, 0.0]# node
-    coef[:,1] = [0.0, 1.0, 0.0, 0.0, -1.0]# sa
-    coef[:,2] = [0.0, 2.0, 0.0, 0.0, 0.0]# ssa
+    coef[:,0] = [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]# node
+    coef[:,1] = [0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0]# sa
+    coef[:,2] = [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0]# ssa
     # group 0,1
-    coef[:,3] = [1.0, -2.0, 1.0, 0.0, 0.0]# msm
-    coef[:,4] = [1.0, 0.0, -1.0, -1.0, 0.0]
-    coef[:,5] = [1.0, 0.0, -1.0, 0.0, 0.0]# mm
-    coef[:,6] = [1.0, 0.0, -1.0, 1.0, 0.0]
+    coef[:,3] = [0.0, 1.0, -2.0, 1.0, 0.0, 0.0, 0.0]# msm
+    coef[:,4] = [0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 0.0]
+    coef[:,5] = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0]# mm
+    coef[:,6] = [0.0, 1.0, 0.0, -1.0, 1.0, 0.0, 0.0]
     # group 0,2
-    coef[:,7] = [2.0, -2.0, 0.0, 0.0, 0.0]# msf
-    coef[:,8] = [2.0, 0.0, -2.0, 0.0, 0.0]
-    coef[:,9] = [2.0, 0.0, 0.0, 0.0, 0.0]# mf
-    coef[:,10] = [2.0, 0.0, 0.0, 1.0, 0.0]# mf+
-    coef[:,11] = [2.0, 0.0, 0.0, 2.0, 0.0]
+    coef[:,7] = [0.0, 2.0, -2.0, 0.0, 0.0, 0.0, 0.0]# msf
+    coef[:,8] = [0.0, 2.0, 0.0, -2.0, 0.0, 0.0, 0.0]
+    coef[:,9] = [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0]# mf
+    coef[:,10] = [0.0, 2.0, 0.0, 0.0, 1.0, 0.0, 0.0]# mf+
+    coef[:,11] = [0.0, 2.0, 0.0, 0.0, 2.0, 0.0, 0.0]
     # group 0,3
-    coef[:,12] = [3.0, -2.0, 1.0, 0.0, 0.0]# mst
-    coef[:,13] = [3.0, 0.0, -1.0, 0.0, 0.0]# mt
-    coef[:,14] = [3.0, 0.0, -1.0, 1.0, 0.0]
+    coef[:,12] = [0.0, 3.0, -2.0, 1.0, 0.0, 0.0, 0.0]# mst
+    coef[:,13] = [0.0, 3.0, 0.0, -1.0, 0.0, 0.0, 0.0]# mt
+    coef[:,14] = [0.0, 3.0, 0.0, -1.0, 1.0, 0.0, 0.0]
+
+    # spherical harmonic degree and order
+    l = 2
+    m = 0
+    # colatitude in radians
+    theta = np.radians(90.0 - lat)
+    # degree dependent normalization (4-pi)
+    dfactor = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
+    # 2nd degree Legendre polynomials (normalized)
+    P20 = dfactor*pyTMD.math.legendre(l, np.cos(theta), m=m)
 
     # determine equilibrium arguments
     G = np.dot(fargs, coef)
-    Z = np.inner(np.cos(G*np.pi/180.0), CTE)
 
-    # Love numbers for long-period tides (Wahr, 1981)
-    k2 = 0.299
-    h2 = 0.606
-    # tilt factor: response with respect to the solid earth
-    gamma_2 = (1.0 + k2 - h2)
-    # 2nd degree Legendre polynomials
-    P20 = 0.5*(3.0*np.sin(lat*np.pi/180.0)**2 - 1.0)
-    # calculate long-period equilibrium tide and convert to meters
-    # Multiply by gamma_2 * normalization * P20(lat)
-    l = 2
-    norm = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
+    # temporal component of long-period equilibrium tides (meters)
+    Z = np.zeros((nt))
+    # for each constituent
+    for i in range(nc):
+        # calculate angular frequencies of constituents
+        omega = pyTMD.arguments._frequency(coef[:, i])
+        # complex Love numbers of degree 2 for long-period band
+        if kwargs['include_anelasticity']:
+            # include variations largely due to mantle anelasticity
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega)
+        else:
+            # Love numbers for long-period tides (Wahr, 1981)
+            h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
+                astype=np.complex128)
+        # tilt factor: response with respect to the solid earth
+        # use real components from Mathews et al. (2002)
+        gamma_2 = (1.0 + k2.real - h2.real)
+        # phase of the equilibrium argument (radians)
+        phase = np.radians(G[:, i])
+        # add constituent to temporal component and convert to meters
+        Z += gamma_2*np.cos(phase)*(CTE[i]/100.0)
+
+    # calculate long-period equilibrium tide
     if (nlat != nt):
-        lpet = gamma_2*norm*np.outer(P20,Z/100.0)
+        lpet = np.outer(P20, Z)
     else:
-        lpet = gamma_2*norm*P20*(Z/100.0)
+        lpet = P20*Z
     # return the long-period equilibrium tides
     return lpet
 
@@ -1921,9 +1985,9 @@ def body_tide(
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
         # convert potentials for constituent and add to the total
         # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += line['Hs3']*(l2.real*dS.real + l2.imag*dS.imag)
-        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag + l2.imag*S.real)
-        zeta[:,2] += line['Hs3']*(h2.real*S.real + h2.imag*S.imag)
+        zeta[:,0] += line['Hs3']*(l2.real*dS.real - l2.imag*dS.imag)
+        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag - l2.imag*S.real)
+        zeta[:,2] += line['Hs3']*(h2.real*S.real - h2.imag*S.imag)
 
     # calculate the summation over all degree-3 constituents
     l = 3
