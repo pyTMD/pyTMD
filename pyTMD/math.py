@@ -297,9 +297,12 @@ def sph_harm(
     # verify dimensions
     singular_values = (np.ndim(theta) == 0) and (np.ndim(phase) == 0)
     theta = np.atleast_1d(theta).flatten()
-    phi = np.atleast_1d(phi).flatten()
-    # assert dimensions
-    assert len(theta) == len(phi), 'coordinates must have the same dimensions'
+    # flatten longitude if it is an array
+    if (np.ndim(phi) != 0):
+        phi = np.atleast_1d(phi).flatten()
+        # assert dimensions
+        assert len(theta) == len(phi), \
+            'coordinates must have the same dimensions'
     # flatten phase if it is an array
     if (np.ndim(phase) != 0):
         phase = np.atleast_1d(phase).flatten()
