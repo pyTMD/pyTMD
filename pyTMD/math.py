@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 math.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (08/2025)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 08/2025: add arcs2rad and rad2arcs functions
     Updated 07/2025: add deriv and phase arguments to sph_harm function
         add Legendre polynomial derivatives with respect to theta
     Updated 04/2025: use numpy power function over using pow for consistency
@@ -25,6 +26,8 @@ import numpy as np
 from scipy.special import factorial
 
 __all__ = [
+    "arcs2rad",
+    "rad2arcs",
     "polynomial_sum",
     "normalize_angle",
     "rotate",
@@ -33,6 +36,32 @@ __all__ = [
     "assoc_legendre",
     "sph_harm"
 ]
+
+def arcs2rad(
+        x: float | np.ndarray,
+    ):
+    """
+    Convert angles from arcseconds to radians
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        Input angle in arcseconds
+    """
+    return np.radians(x / 3600.0)
+
+def rad2arcs(
+        x: float | np.ndarray,
+    ):
+    """
+    Convert angles from radians to arcseconds
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        Input angle in radians
+    """
+    return np.degrees(x) * 3600.0
 
 # PURPOSE: calculate the sum of a polynomial function of time
 def polynomial_sum(

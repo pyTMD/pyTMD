@@ -27,6 +27,9 @@ UPDATE HISTORY:
         use sign convention from IERS for complex body tide Love numbers
         include mantle anelastic effects when inferring long-period tides
         added option to include mantle anelastic effects for LPET predict
+        switch time decimal in pole tides to nominal years of 365.25 days
+        convert angles with numpy radians and degrees functions
+        convert arcseconds to radians with arcs2rad function in math.py
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -83,7 +86,7 @@ import pyTMD.arguments
 import pyTMD.astro
 import pyTMD.math
 import pyTMD.spatial
-import timescale.time
+import timescale.eop
 
 __all__ = [
     "map",
@@ -1185,18 +1188,10 @@ def load_pole_tide(
     dxt: np.ndarray
         Load pole tide displacements in meters in Cartesian coordinates
     """
-    # degrees and arcseconds to radians
-    dtr = np.pi/180.0
-    atr = np.pi/648000.0
-    # convert time to Terrestrial Time (TT)
-    tt = t + _jd_tide + deltat
+    # convert time to nominal years (Terrestrial Time)
+    time_decimal = 1992.0 + np.atleast_1d(t + deltat)/365.25
     # convert time to Modified Julian Days (MJD)
-    MJD = tt - _jd_mjd
-    # convert Julian days to calendar dates
-    Y,M,D,h,m,s = timescale.time.convert_julian(tt, format='tuple')
-    # calculate time in year-decimal format
-    time_decimal = timescale.time.convert_calendar_decimal(Y, M, day=D,
-        hour=h, minute=m, second=s)
+    MJD = t + deltat + _mjd_tide
 
     # radius of the Earth
     radius = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2 + XYZ[:,2]**2)
@@ -1214,16 +1209,17 @@ def load_pole_tide(
     px, py = timescale.eop.iers_polar_motion(MJD, k=3, s=0)
     # calculate differentials from mean/secular pole positions
     # using the latest definition from IERS Conventions (2010)
-    mx = px - mpx
-    my = -(py - mpy)
+    # convert angles from arcseconds to radians
+    mx = pyTMD.math.arcs2rad(px - mpx)
+    my = -pyTMD.math.arcs2rad(py - mpy)
 
     # number of points
     n = np.maximum(len(time_decimal), len(theta))
     # conversion factors in latitude, longitude, and radial directions
     dfactor = np.zeros((n, 3))
-    dfactor[:,0] = -l2*atr*(omega**2 * radius**2)/(gamma_0)
-    dfactor[:,1] = l2*atr*(omega**2 * radius**2)/(gamma_0)
-    dfactor[:,2] = -h2*atr*(omega**2 * radius**2)/(2.0*gamma_0)
+    dfactor[:,0] = -l2*(omega**2 * radius**2)/(gamma_0)
+    dfactor[:,1] = l2*(omega**2 * radius**2)/(gamma_0)
+    dfactor[:,2] = -h2*(omega**2 * radius**2)/(2.0*gamma_0)
 
     # calculate pole tide displacements (meters)
     S = np.zeros((n, 3))
@@ -1305,27 +1301,15 @@ def ocean_pole_tide(
     dxt: np.ndarray
         Load pole tide displacements in meters in Cartesian coordinates
     """
-    # degrees and arcseconds to radians
-    dtr = np.pi/180.0
-    atr = np.pi/648000.0
-    # convert time to Terrestrial Time (TT)
-    tt = t + _jd_tide + deltat
+    # convert time to nominal years (Terrestrial Time)
+    time_decimal = 1992.0 + np.atleast_1d(t + deltat)/365.25
     # convert time to Modified Julian Days (MJD)
-    MJD = tt - _jd_mjd
-    # convert Julian days to calendar dates
-    Y,M,D,h,m,s = timescale.time.convert_julian(tt, format='tuple')
-    # calculate time in year-decimal format
-    time_decimal = timescale.time.convert_calendar_decimal(Y, M, day=D,
-        hour=h, minute=m, second=s)
+    MJD = t + deltat + _mjd_tide
 
-    # radius of the Earth
-    radius = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2 + XYZ[:,2]**2)
     # geocentric latitude (radians)
     latitude = np.arctan(XYZ[:,2] / np.sqrt(XYZ[:,0]**2.0 + XYZ[:,1]**2.0))
     # geocentric colatitude (radians)
     theta = (np.pi/2.0 - latitude)
-    # calculate longitude (radians)
-    phi = np.arctan2(XYZ[:,1], XYZ[:,0])
     # universal gravitational constant [N*m^2/kg^2]
     G = 6.67430e-11
 
@@ -1336,8 +1320,9 @@ def ocean_pole_tide(
     px, py = timescale.eop.iers_polar_motion(MJD, k=3, s=0)
     # calculate differentials from mean/secular pole positions
     # using the latest definition from IERS Conventions (2010)
-    mx = px - mpx
-    my = -(py - mpy)
+    # convert angles from arcseconds to radians
+    mx = pyTMD.math.arcs2rad(px - mpx)
+    my = -pyTMD.math.arcs2rad(py - mpy)
 
     # pole tide displacement factors
     Hp = np.sqrt(8.0*np.pi/15.0)*(omega**2 * a_axis**4)/GM
@@ -1350,7 +1335,7 @@ def ocean_pole_tide(
     # use mask from mean pole estimates
     dxt.mask = np.broadcast_to(np.logical_not(fl[:,None]), (n,3))
     for i in range(3):
-        dxt[:,i] = K*atr*np.real(
+        dxt[:,i] = K*np.real(
             (mx*g2.real + my*g2.imag)*UXYZ.real[:,i] +
             (my*g2.real - mx*g2.imag)*UXYZ.imag[:,i])
 

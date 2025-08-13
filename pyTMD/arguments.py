@@ -45,6 +45,7 @@ UPDATE HISTORY:
         add complex love numbers function for correcting out-of-phase effects
         use Mathews et al. (2002) functions for diurnal complex love numbers
         take the absolute value of the constituent angular frequencies
+        convert angles with numpy radians and degrees functions
     Updated 04/2025: convert longitudes p and n to radians within nodal function
         use schureman_arguments function to get nodal variables for FES models
         added Schureman to list of M1 options in nodal arguments
@@ -241,8 +242,6 @@ def minor_arguments(
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
 
-    # degrees to radians
-    dtr = np.pi/180.0
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
@@ -267,8 +266,8 @@ def minor_arguments(
     arg = np.dot(fargs, _minor_table())
 
     # convert mean longitudes to radians
-    P = p*dtr
-    N = n*dtr
+    P = np.radians(p)
+    N = np.radians(n)
     # determine nodal corrections f and u
     sinn = np.sin(N)
     cosn = np.cos(N)
@@ -562,11 +561,9 @@ def nodal_modulation(
     FES_TYPE = kwargs['corrections'] in ('FES',)
     PERTH3_TYPE = kwargs['corrections'] in ('perth3',)
 
-    # degrees to radians
-    dtr = np.pi/180.0
     # convert longitudes to radians
-    N = dtr*n
-    P = dtr*p
+    N = np.radians(n)
+    P = np.radians(p)
     # trigonometric factors for nodal corrections
     sinn = np.sin(N)
     cosn = np.cos(N)
@@ -623,7 +620,7 @@ def nodal_modulation(
             term2 = 1.0 - 0.1308*cosn - 0.0534*cos2p - 0.0219*np.cos(2.0*P - N)
         elif c in ('mf','msqm','msp','mq','mtm') and OTIS_TYPE:
             f[:,i] = 1.043 + 0.414*cosn
-            u[:,i] = dtr*(-23.7*sinn + 2.7*sin2n - 0.4*sin3n)
+            u[:,i] = np.radians(-23.7*sinn + 2.7*sin2n - 0.4*sin3n)
             continue
         elif c in ('mf','msqm','msp','mq','mt','mtm') and FES_TYPE:
             # Schureman: Table 2, Page 164
@@ -659,7 +656,7 @@ def nodal_modulation(
             term1 = 0.189*sinn - 0.0058*sin2n
             term2 = 1.0 + 0.189*cosn - 0.0058*cos2n
             f[:,i] = np.sqrt(term1**2 + term2**2) # O1
-            u[:,i] = dtr*(10.8*sinn - 1.3*sin2n + 0.2*sin3n)
+            u[:,i] = np.radians(10.8*sinn - 1.3*sin2n + 0.2*sin3n)
             continue
         elif c in ('o1','so3','op2','2q1','q1','rho1','sigma1') and FES_TYPE:
             # Schureman: Table 2, Page 164
@@ -669,7 +666,7 @@ def nodal_modulation(
             continue
         elif c in ('q1','o1') and PERTH3_TYPE:
             f[:,i] = 1.009 + 0.187*cosn - 0.015*cos2n
-            u[:,i] = dtr*(10.8*sinn - 1.3*sin2n)
+            u[:,i] = np.radians(10.8*sinn - 1.3*sin2n)
             continue
         elif c in ('o1','so3','op2'):
             term1 = 0.1886*sinn - 0.0058*sin2n - 0.0065*sin2p
@@ -733,7 +730,7 @@ def nodal_modulation(
             continue
         elif c in ('k1',) and PERTH3_TYPE:
             f[:,i] = 1.006 + 0.115*cosn - 0.009*cos2n
-            u[:,i] = dtr*(-8.9*sinn + 0.7*sin2n)
+            u[:,i] = np.radians(-8.9*sinn + 0.7*sin2n)
             continue
         elif c in ('k1','sk3','2sk5'):
             term1 = -0.1554*sinn + 0.0031*sin2n
@@ -762,7 +759,7 @@ def nodal_modulation(
             continue
         elif c in ('m2','n2') and PERTH3_TYPE:
             f[:,i] = 1.000 - 0.037*cosn
-            u[:,i] = dtr*(-2.1*sinn)
+            u[:,i] = np.radians(-2.1*sinn)
             continue
         elif c in ('m2','2n2','mu2','n2','nu2','lambda2','ms4','eps2','2sm6',
                 '2sn6','mp1','mp3','sn4'):
@@ -797,7 +794,7 @@ def nodal_modulation(
             continue
         elif c in ('k2',) and PERTH3_TYPE:
             f[:,i] = 1.024 + 0.286*cosn + 0.008*cos2n
-            u[:,i] = dtr*(-17.7*sinn + 0.7*sin2n)
+            u[:,i] = np.radians(-17.7*sinn + 0.7*sin2n)
             continue
         elif c in ('k2','sk4','2sk6','kp1'):
             term1 = -0.3108*sinn - 0.0324*sin2n
@@ -863,7 +860,7 @@ def nodal_modulation(
         elif c in ('mfdw',):
             # special test of Doodson-Warburg formula
             f[:,i] = 1.043 + 0.414*cosn
-            u[:,i] = dtr*(-23.7*sinn + 2.7*sin2n - 0.4*sin3n)
+            u[:,i] = np.radians(-23.7*sinn + 2.7*sin2n - 0.4*sin3n)
             continue
         elif c in ('so1','2so3','2po1'):
             # compound tides calculated using recursion
@@ -1275,13 +1272,11 @@ def group_modulation(
         angle correction (radians)
     """
 
-    # degrees to radians
-    dtr = np.pi/180.0
     # convert longitudes to radians
-    H = dtr*h
-    Np = -dtr*n
-    P = dtr*p
-    Ps = dtr*ps
+    H = np.radians(h)
+    Np = -np.radians(n)
+    P = np.radians(p)
+    Ps = np.radians(ps)
     # mean anomaly of the sun
     lp = H - Ps
 

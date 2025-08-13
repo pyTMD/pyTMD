@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (05/2025)
+Written by Tyler Sutterley (08/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,8 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 08/2025: convert angles with numpy radians and degrees functions
+        convert arcseconds to radians with arcs2rad function in math.py
     Updated 05/2025: use Barycentric Dynamical Time (TDB) for JPL ephemerides
     Updated 04/2025: added schureman arguments function for FES models
         more outputs from schureman arguments function for M1 constituent
@@ -68,6 +70,7 @@ import timescale.time
 from pyTMD.math import (
     polynomial_sum,
     normalize_angle,
+    arcs2rad,
     rotate
 )
 from pyTMD.utilities import (
@@ -210,19 +213,17 @@ def mean_longitudes(
     elif (kwargs['method'].upper() == 'IERS'):
         # compute the Delaunay arguments (IERS conventions)
         l, lp, F, D, omega = delaunay_arguments(MJD)
-        # degrees to radians
-        dtr = np.pi/180.0
         # convert to Doodson arguments in degrees
         # mean longitude of moon
-        S = (F + omega)/dtr
+        S = np.degrees(F + omega)
         # mean longitude of sun
-        H = (F + omega - D)/dtr
+        H = np.degrees(F + omega - D)
         # longitude of lunar perigee
-        P = (F + omega - l)/dtr
+        P = np.degrees(F + omega - l)
         # longitude of ascending lunar node
-        N = omega/dtr
+        N = np.degrees(omega)
         # longitude of solar perigee
-        Ps = (-lp + F - D + omega)/dtr
+        Ps = np.degrees(-lp + F - D + omega)
     else:
         # Formulae for the period 1990--2010 derived by David Cartwright
         # convert from MJD to days relative to 2000-01-01T12:00:00
@@ -295,8 +296,6 @@ def doodson_arguments(
     Ps: np.ndarray
         mean longitude of solar perigee (radians)
     """
-    # degrees to radians
-    dtr = np.pi/180.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # hour of the day
@@ -335,12 +334,12 @@ def doodson_arguments(
     Ps = polynomial_sum(np.array([282.93734098, 1.71945766667,
         4.5688889e-4, -1.778e-8, -3.34e-9]), T)
     # take the modulus of each and convert to radians
-    S = dtr*normalize_angle(S)
-    H = dtr*normalize_angle(H)
-    P = dtr*normalize_angle(P)
-    TAU = dtr*normalize_angle(TAU)
-    Np = dtr*normalize_angle(Np)
-    Ps = dtr*normalize_angle(Ps)
+    S = np.radians(normalize_angle(S))
+    H = np.radians(normalize_angle(H))
+    P = np.radians(normalize_angle(P))
+    TAU = np.radians(normalize_angle(TAU))
+    Np = np.radians(normalize_angle(Np))
+    Ps = np.radians(normalize_angle(Ps))
     # return as tuple
     return (TAU, S, H, P, Np, Ps)
 
@@ -369,8 +368,6 @@ def delaunay_arguments(MJD: np.ndarray):
     N: np.ndarray
         mean longitude of ascending lunar node (radians)
     """
-    # arcseconds to radians
-    atr = np.pi/648000.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # 360 degrees
@@ -392,11 +389,11 @@ def delaunay_arguments(MJD: np.ndarray):
     N = polynomial_sum(np.array([450160.398036, -6962890.5431,
         7.4722, 7.702e-3, -5.939e-05]), T)
     # take the modulus of each and convert to radians
-    l = atr*normalize_angle(l, circle=circle)
-    lp = atr*normalize_angle(lp, circle=circle)
-    F = atr*normalize_angle(F, circle=circle)
-    D = atr*normalize_angle(D, circle=circle)
-    N = atr*normalize_angle(N, circle=circle)
+    l = arcs2rad(normalize_angle(l, circle=circle))
+    lp = arcs2rad(normalize_angle(lp, circle=circle))
+    F = arcs2rad(normalize_angle(F, circle=circle))
+    D = arcs2rad(normalize_angle(D, circle=circle))
+    N = arcs2rad(normalize_angle(N, circle=circle))
     # return as tuple
     return (l, lp, F, D, N)
 
@@ -493,14 +490,12 @@ def mean_obliquity(MJD: np.ndarray):
     epsilon: np.ndarray
         mean obliquity of the ecliptic (radians)
     """
-    # arcseconds to radians
-    atr = np.pi/648000.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # mean obliquity of the ecliptic (arcseconds)
     epsilon0 = np.array([84381.406, -46.836769, -1.831e-4,
         2.00340e-4, -5.76e-07, -4.34e-08])
-    return atr*polynomial_sum(epsilon0, T)
+    return arcs2rad(polynomial_sum(epsilon0, T))
 
 def equation_of_time(MJD: np.ndarray):
     """Approximate calculation of the difference between apparent and
@@ -516,8 +511,6 @@ def equation_of_time(MJD: np.ndarray):
     E: np.ndarray
         equation of time (radians)
     """
-    # degrees to radians
-    dtr = np.pi/180.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000)/_century
     # mean longitude of sun (degrees)
@@ -528,17 +521,19 @@ def equation_of_time(MJD: np.ndarray):
     mean_anomaly = np.array([357.5291092, 35999.0502909,
         -0.0001536, 1.0/24490000.0])
     lp = polynomial_sum(mean_anomaly, T)
-    # take the modulus of each and convert to radians
-    H = dtr*normalize_angle(H)
-    lp = dtr*normalize_angle(lp)
-    # ecliptic longitude of the sun (radians)
-    lambda_sun = H + 1.915*dtr*np.sin(lp) + 0.020*dtr*np.sin(2.0*lp)
+    # take the modulus of each
+    H = normalize_angle(H)
+    lp = normalize_angle(lp)
+    # ecliptic longitude of the sun (degrees)
+    lambda_sun = H + 1.915*np.sin(np.radians(lp)) + \
+        0.020*np.sin(2.0*np.radians(lp))
     # calculate the equation of time (degrees)
-    E = -1.915*np.sin(lp) - 0.020*np.sin(2.0*lp) + \
-        2.466*np.sin(2.0*lambda_sun) - \
-        0.053*np.sin(4.0*lambda_sun)
+    E = -1.915*np.sin(np.radians(lp)) - \
+        0.020*np.sin(2.0*np.radians(lp)) + \
+        2.466*np.sin(2.0*np.radians(lambda_sun)) - \
+        0.053*np.sin(4.0*np.radians(lambda_sun))
     # convert to radians
-    return dtr*E
+    return np.radians(E)
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
 def solar_ecef(MJD: np.ndarray, **kwargs):
@@ -1020,13 +1015,11 @@ def _frame_bias_matrix():
     reference system to the International Celestial Reference
     System (ICRS) :cite:p:`Petit:2010tp,Urban:2013vl`
     """
-    # arcseconds to radians
-    atr = np.pi/648000.0
     # frame bias rotation matrix
     B = np.zeros((3,3))
-    xi0  = -0.0166170*atr
-    eta0 = -0.0068192*atr
-    da0  = -0.01460*atr
+    xi0  = arcs2rad(-0.0166170)
+    eta0 = arcs2rad(-0.0068192)
+    da0  = arcs2rad(-0.01460)
     # off-diagonal elements of the frame bias matrix
     B[0,1] = da0
     B[0,2] = -xi0
@@ -1136,8 +1129,6 @@ def _polar_motion_matrix(T: float | np.ndarray):
     T: np.ndarray
         Centuries since 2000-01-01T12:00:00
     """
-    # arcseconds to radians
-    atr = np.pi/648000.0
     # convert to MJD from centuries relative to 2000-01-01T12:00:00
     MJD = T*_century + _mjd_j2000
     # correct longitude origin for Terrestrial Intermediate Origin (TIO)
@@ -1146,9 +1137,9 @@ def _polar_motion_matrix(T: float | np.ndarray):
     # calculate the polar motion for the given dates
     px, py = timescale.eop.iers_polar_motion(MJD)
     # calculate the rotation matrices
-    M1 = rotate(py*atr,'x')
-    M2 = rotate(px*atr,'y')
-    M3 = rotate(-sprime*atr,'z')
+    M1 = rotate(arcs2rad(py),'x')
+    M2 = rotate(arcs2rad(px),'y')
+    M3 = rotate(-arcs2rad(sprime),'z')
     # calculate the combined rotation matrix
     return np.einsum('ij...,jk...,kl...->il...', M1, M2, M3)
 
@@ -1162,25 +1153,23 @@ def _precession_matrix(T: float | np.ndarray):
     T: np.ndarray
         Centuries since 2000-01-01T12:00:00
     """
-    # arcseconds to radians
-    atr = np.pi/648000.0
     # equatorial precession angles Lieske et al. (1977)
     # Capitaine et al. (2003), eqs. (4), (37), & (39).
     # obliquity of the ecliptic
     epsilon0 = 84381.406
-    EPS = epsilon0 * atr
+    EPS = arcs2rad(epsilon0)
     # lunisolar precession
     phi0 = np.array([0.0, 5038.481507, -1.0790069,
         -1.14045e-3, 1.32851e-4, -9.51e-8])
-    psi = atr*polynomial_sum(phi0, T)
+    psi = arcs2rad(polynomial_sum(phi0, T))
     # inclination of moving equator on fixed ecliptic
     omega0 = np.array([epsilon0, -2.5754e-2, 5.12623e-2,
         -7.72503e-3, -4.67e-7, 3.337e-7])
-    omega = atr*polynomial_sum(omega0, T)
+    omega = arcs2rad(polynomial_sum(omega0, T))
     # planetary precession
     chi0 = np.array([0.0, 10.556403, -2.3814292,
         -1.21197e-3, 1.70663e-4, -5.60e-8])
-    chi = atr*polynomial_sum(chi0, T)
+    chi = arcs2rad(polynomial_sum(chi0, T))
     # compute elements of precession rotation matrix
     P = np.zeros((3,3,len(np.atleast_1d(T))))
     P[0,0,:] = np.cos(chi)*np.cos(-psi) - \
