@@ -16,7 +16,7 @@ def test_arcs2rad():
     # expected values in radians
     exp = np.array([-np.pi, -np.pi/2, 0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi])
     # test conversion to radians
-    test = pyTMD.math.arcs2rad(angles)
+    test = pyTMD.math.asec2rad(angles)
     assert np.allclose(exp, test)
     # arcseconds to radians
     atr = np.pi/648000.0
@@ -33,7 +33,7 @@ def test_rad2arcs():
     # expected values in arcseconds
     exp = np.array([-180, -90, 0, 90, 180, 270, 360])*3600.0
     # test conversion to arcseconds
-    test = pyTMD.math.rad2arcs(angles)
+    test = pyTMD.math.rad2asec(angles)
     assert np.allclose(exp, test)
     # arcseconds to radians
     atr = np.pi/648000.0

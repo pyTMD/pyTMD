@@ -16,9 +16,9 @@ Calling Sequence
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
 
-.. autofunction:: pyTMD.math.arcs2rad
+.. autofunction:: pyTMD.math.asec2rad
 
-.. autofunction:: pyTMD.math.rad2arcs
+.. autofunction:: pyTMD.math.rad2asec
 
 .. autofunction:: pyTMD.math.polynomial_sum
 

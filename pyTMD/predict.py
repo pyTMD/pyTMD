@@ -29,7 +29,7 @@ UPDATE HISTORY:
         added option to include mantle anelastic effects for LPET predict
         switch time decimal in pole tides to nominal years of 365.25 days
         convert angles with numpy radians and degrees functions
-        convert arcseconds to radians with arcs2rad function in math.py
+        convert arcseconds to radians with asec2rad function in math.py
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -1210,8 +1210,8 @@ def load_pole_tide(
     # calculate differentials from mean/secular pole positions
     # using the latest definition from IERS Conventions (2010)
     # convert angles from arcseconds to radians
-    mx = pyTMD.math.arcs2rad(px - mpx)
-    my = -pyTMD.math.arcs2rad(py - mpy)
+    mx = pyTMD.math.asec2rad(px - mpx)
+    my = -pyTMD.math.asec2rad(py - mpy)
 
     # number of points
     n = np.maximum(len(time_decimal), len(theta))
@@ -1321,8 +1321,8 @@ def ocean_pole_tide(
     # calculate differentials from mean/secular pole positions
     # using the latest definition from IERS Conventions (2010)
     # convert angles from arcseconds to radians
-    mx = pyTMD.math.arcs2rad(px - mpx)
-    my = -pyTMD.math.arcs2rad(py - mpy)
+    mx = pyTMD.math.asec2rad(px - mpx)
+    my = -pyTMD.math.asec2rad(py - mpy)
 
     # pole tide displacement factors
     Hp = np.sqrt(8.0*np.pi/15.0)*(omega**2 * a_axis**4)/GM
