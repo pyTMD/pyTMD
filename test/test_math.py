@@ -7,6 +7,40 @@ import numpy as np
 import pyTMD.ellipse
 import pyTMD.math
 
+def test_arcs2rad():
+    """
+    Tests the conversion of arcseconds to radians
+    """
+    # test angles in arcseconds
+    angles = np.array([-180, -90, 0, 90, 180, 270, 360])*3600.0
+    # expected values in radians
+    exp = np.array([-np.pi, -np.pi/2, 0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi])
+    # test conversion to radians
+    test = pyTMD.math.arcs2rad(angles)
+    assert np.allclose(exp, test)
+    # arcseconds to radians
+    atr = np.pi/648000.0
+    # test conversion to radians
+    test = angles * atr
+    assert np.allclose(exp, test)
+
+def test_rad2arcs():
+    """
+    Tests the conversion of radians to arcseconds
+    """
+    # test angles in radians
+    angles = np.array([-np.pi, -np.pi/2, 0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi])
+    # expected values in arcseconds
+    exp = np.array([-180, -90, 0, 90, 180, 270, 360])*3600.0
+    # test conversion to arcseconds
+    test = pyTMD.math.rad2arcs(angles)
+    assert np.allclose(exp, test)
+    # arcseconds to radians
+    atr = np.pi/648000.0
+    # test conversion from radians
+    test = angles / atr
+    assert np.allclose(exp, test)
+
 def test_normalize_angle():
     """
     Tests the normalization of angles to between 0 and 360 degrees

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 spatial.py
-Written by Tyler Sutterley (03/2025)
+Written by Tyler Sutterley (08/2025)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 08/2025: convert angles with numpy radians and degrees functions
     Updated 03/2025: add more ellipsoidal parameters to datum class
     Updated 02/2025: major refactor to move io routines out of this module
     Updated 12/2024: add latitude and longitude as potential dimension names
@@ -881,14 +882,13 @@ def to_cartesian(
     lin_ecc = np.sqrt((2.0*flat - flat**2)*a_axis**2)
     ecc1 = lin_ecc/a_axis
     # convert from geodetic latitude to geocentric latitude
-    dtr = np.pi/180.0
     # geodetic latitude in radians
-    latitude_geodetic_rad = lat*dtr
+    latitude_geodetic_rad = np.radians(lat)
     # prime vertical radius of curvature
     N = a_axis/np.sqrt(1.0 - ecc1**2.0*np.sin(latitude_geodetic_rad)**2.0)
     # calculate X, Y and Z from geodetic latitude and longitude
-    X = (N + h) * np.cos(latitude_geodetic_rad) * np.cos(lon*dtr)
-    Y = (N + h) * np.cos(latitude_geodetic_rad) * np.sin(lon*dtr)
+    X = (N + h) * np.cos(latitude_geodetic_rad) * np.cos(np.radians(lon))
+    Y = (N + h) * np.cos(latitude_geodetic_rad) * np.sin(np.radians(lon))
     Z = (N * (1.0 - ecc1**2.0) + h) * np.sin(latitude_geodetic_rad)
     # return the cartesian coordinates
     # flattened to singular values if necessary
@@ -1038,10 +1038,8 @@ def _moritz_iterative(
     # Linear eccentricity and first numerical eccentricity
     lin_ecc = np.sqrt((2.0*flat - flat**2)*a_axis**2)
     ecc1 = lin_ecc/a_axis
-    # degrees to radians
-    dtr = np.pi/180.0
     # calculate longitude
-    lon = np.arctan2(y, x)/dtr
+    lon = np.degrees(np.arctan2(y, x))
     # set initial estimate of height to 0
     h = np.zeros_like(lon)
     h0 = np.inf*np.ones_like(lon)
@@ -1062,8 +1060,10 @@ def _moritz_iterative(
         phi = np.arctan(z/(p*(1.0 - ecc1**2*N/(N + h))))
         # add to iterator
         i += 1
+    # convert latitudes and fix values
+    lat = np.clip(np.degrees(phi), -90.0, 90.0)
     # return longitude, latitude and height
-    return (lon, phi/dtr, h)
+    return (lon, lat, h)
 
 def _bowring_iterative(
         x: np.ndarray,
@@ -1102,10 +1102,8 @@ def _bowring_iterative(
     # square of first and second numerical eccentricity
     e12 = lin_ecc**2/a_axis**2
     e22 = lin_ecc**2/b_axis**2
-    # degrees to radians
-    dtr = np.pi/180.0
     # calculate longitude
-    lon = np.arctan2(y, x)/dtr
+    lon = np.degrees(np.arctan2(y, x))
     # calculate radius of parallel
     p = np.sqrt(x**2 + y**2)
     # initial estimated value for reduced parametric latitude
@@ -1130,8 +1128,10 @@ def _bowring_iterative(
     N = a_axis/np.sqrt(1.0 - e12 * np.sin(phi)**2)
     # estimate final height (Bowring, 1985)
     h = p*np.cos(phi) + z*np.sin(phi) - a_axis**2/N
+    # convert latitudes and fix values
+    lat = np.clip(np.degrees(phi), -90.0, 90.0)
     # return longitude, latitude and height
-    return (lon, phi/dtr, h)
+    return (lon, lat, h)
 
 def _zhu_closed_form(
         x: np.ndarray,
@@ -1163,10 +1163,8 @@ def _zhu_closed_form(
     lin_ecc = np.sqrt((2.0*flat - flat**2)*a_axis**2)
     # square of first numerical eccentricity
     e12 = lin_ecc**2/a_axis**2
-    # degrees to radians
-    dtr = np.pi/180.0
     # calculate longitude
-    lon = np.arctan2(y, x)/dtr
+    lon = np.degrees(np.arctan2(y, x))
     # calculate radius of parallel
     w = np.sqrt(x**2 + y**2)
     # allocate for output latitude and height
@@ -1193,7 +1191,7 @@ def _zhu_closed_form(
         wi = w/(t + l)
         zi = (1.0 - e12)*z[ind]/(t - l)
         # calculate latitude and height
-        lat[ind] = np.arctan2(zi, ((1.0 - e12)*wi))/dtr
+        lat[ind] = np.degrees(np.arctan2(zi, ((1.0 - e12)*wi)))
         h[ind] = np.sign(t-1.0+l)*np.sqrt((w-wi)**2.0 + (z[ind]-zi)**2.0)
     # return longitude, latitude and height
     return (lon, lat, h)
@@ -1240,8 +1238,6 @@ def to_ENU(
     U: np.ndarray
         up coordinates
     """
-    # degrees to radians
-    dtr = np.pi/180.0
     # verify axes and copy to not modify inputs
     singular_values = (np.ndim(x) == 0)
     x = np.atleast_1d(np.copy(x)).astype(np.float64)
@@ -1249,17 +1245,20 @@ def to_ENU(
     z = np.atleast_1d(np.copy(z)).astype(np.float64)
     # convert latitude and longitude to ECEF
     X0, Y0, Z0 = to_cartesian(lon0, lat0, h=h0, a_axis=a_axis, flat=flat)
+    # latitude and longitude in radians
+    theta0 = np.radians(lat0)
+    lambda0 = np.radians(lon0)
     # calculate the rotation matrix
     R = np.zeros((3, 3))
-    R[0,0] = -np.sin(dtr*lon0)
-    R[0,1] = np.cos(dtr*lon0)
+    R[0,0] = -np.sin(lambda0)
+    R[0,1] = np.cos(lambda0)
     R[0,2] = 0.0
-    R[1,0] = -np.sin(dtr*lat0)*np.cos(dtr*lon0)
-    R[1,1] = -np.sin(dtr*lat0)*np.sin(dtr*lon0)
-    R[1,2] = np.cos(dtr*lat0)
-    R[2,0] = np.cos(dtr*lat0)*np.cos(dtr*lon0)
-    R[2,1] = np.cos(dtr*lat0)*np.sin(dtr*lon0)
-    R[2,2] = np.sin(dtr*lat0)
+    R[1,0] = -np.sin(theta0)*np.cos(lambda0)
+    R[1,1] = -np.sin(theta0)*np.sin(lambda0)
+    R[1,2] = np.cos(theta0)
+    R[2,0] = np.cos(theta0)*np.cos(lambda0)
+    R[2,1] = np.cos(theta0)*np.sin(lambda0)
+    R[2,2] = np.sin(theta0)
     # calculate the ENU coordinates
     E, N, U = np.dot(R, np.vstack((x - X0, y - Y0, z - Z0)))
     # return the ENU coordinates
@@ -1311,8 +1310,6 @@ def from_ENU(
     z, float
         cartesian z-coordinates
     """
-    # degrees to radians
-    dtr = np.pi/180.0
     # verify axes and copy to not modify inputs
     singular_values = (np.ndim(E) == 0)
     E = np.atleast_1d(np.copy(E)).astype(np.float64)
@@ -1320,17 +1317,20 @@ def from_ENU(
     U = np.atleast_1d(np.copy(U)).astype(np.float64)
     # convert latitude and longitude to ECEF
     X0, Y0, Z0 = to_cartesian(lon0, lat0, h=h0, a_axis=a_axis, flat=flat)
+    # latitude and longitude in radians
+    theta0 = np.radians(lat0)
+    lambda0 = np.radians(lon0)
     # calculate the rotation matrix
     R = np.zeros((3, 3))
-    R[0,0] = -np.sin(dtr*lon0)
-    R[1,0] = np.cos(dtr*lon0)
+    R[0,0] = -np.sin(lambda0)
+    R[1,0] = np.cos(lambda0)
     R[2,0] = 0.0
-    R[0,1] = -np.sin(dtr*lat0)*np.cos(dtr*lon0)
-    R[1,1] = -np.sin(dtr*lat0)*np.sin(dtr*lon0)
-    R[2,1] = np.cos(dtr*lat0)
-    R[0,2] = np.cos(dtr*lat0)*np.cos(dtr*lon0)
-    R[1,2] = np.cos(dtr*lat0)*np.sin(dtr*lon0)
-    R[2,2] = np.sin(dtr*lat0)
+    R[0,1] = -np.sin(theta0)*np.cos(lambda0)
+    R[1,1] = -np.sin(theta0)*np.sin(lambda0)
+    R[2,1] = np.cos(theta0)
+    R[0,2] = np.cos(theta0)*np.cos(lambda0)
+    R[1,2] = np.cos(theta0)*np.sin(lambda0)
+    R[2,2] = np.sin(theta0)
     # calculate the ECEF coordinates
     x, y, z = np.dot(R, np.vstack((E, N, U)))
     # add reference coordinates

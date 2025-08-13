@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (08/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -62,6 +62,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: convert angles with numpy radians and degrees functions
     Updated 07/2025: mask mean pole values prior to valid epoch of convention
         add a default directory for tide models
     Updated 05/2025: added option to select constituents to read from model
@@ -1017,8 +1018,6 @@ def LPT_displacements(
     # number of time points
     nt = len(ts)
 
-    # degrees to radians
-    dtr = np.pi/180.0
     # earth and physical parameters for ellipsoid
     units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # tidal love/shida numbers appropriate for the load tide
@@ -1030,11 +1029,11 @@ def LPT_displacements(
     X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
         a_axis=units.a_axis, flat=units.flat)
     # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
+    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
     npts = len(latitude_geocentric)
     # geocentric colatitude and longitude in radians
-    theta = dtr*(90.0 - latitude_geocentric)
-    phi = dtr*lon.flatten()
+    theta = np.radians(90.0 - latitude_geocentric)
+    phi = np.radians(lon.flatten())
 
     # compute normal gravity at spatial location
     # p. 80, Eqn.(2-199)
@@ -1235,8 +1234,6 @@ def OPT_displacements(
     # number of time points
     nt = len(time_decimal)
 
-    # degrees to radians
-    dtr = np.pi/180.0
     # earth and physical parameters for ellipsoid
     units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
     # mean equatorial gravitational acceleration [m/s^2]
@@ -1251,11 +1248,11 @@ def OPT_displacements(
     X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
         a_axis=units.a_axis, flat=units.flat)
     # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
+    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
     npts = len(latitude_geocentric)
     # geocentric colatitude and longitude in radians
-    theta = dtr*(90.0 - latitude_geocentric)
-    phi = dtr*lon.flatten()
+    theta = np.radians(90.0 - latitude_geocentric)
+    phi = np.radians(lon.flatten())
 
     # read and interpolate ocean pole tide map from Desai (2002)
     ur, un, ue = pyTMD.io.IERS.extract_coefficients(lon.flatten(),

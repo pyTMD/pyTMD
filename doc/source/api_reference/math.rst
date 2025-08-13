@@ -16,6 +16,10 @@ Calling Sequence
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
 
+.. autofunction:: pyTMD.math.arcs2rad
+
+.. autofunction:: pyTMD.math.rad2arcs
+
 .. autofunction:: pyTMD.math.polynomial_sum
 
 .. autofunction:: pyTMD.math.normalize_angle
