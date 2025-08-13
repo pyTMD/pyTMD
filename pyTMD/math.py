@@ -12,7 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
-    Updated 08/2025: add arcs2rad and rad2arcs functions
+    Updated 08/2025: add asec2rad and rad2asec functions
     Updated 07/2025: add deriv and phase arguments to sph_harm function
         add Legendre polynomial derivatives with respect to theta
     Updated 04/2025: use numpy power function over using pow for consistency
@@ -26,8 +26,8 @@ import numpy as np
 from scipy.special import factorial
 
 __all__ = [
-    "arcs2rad",
-    "rad2arcs",
+    "asec2rad",
+    "rad2asec",
     "polynomial_sum",
     "normalize_angle",
     "rotate",
@@ -37,7 +37,7 @@ __all__ = [
     "sph_harm"
 ]
 
-def arcs2rad(
+def asec2rad(
         x: float | np.ndarray,
     ):
     """
@@ -50,7 +50,7 @@ def arcs2rad(
     """
     return np.radians(x / 3600.0)
 
-def rad2arcs(
+def rad2asec(
         x: float | np.ndarray,
     ):
     """

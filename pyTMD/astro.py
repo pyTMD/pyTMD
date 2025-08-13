@@ -19,7 +19,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 08/2025: convert angles with numpy radians and degrees functions
-        convert arcseconds to radians with arcs2rad function in math.py
+        convert arcseconds to radians with asec2rad function in math.py
     Updated 05/2025: use Barycentric Dynamical Time (TDB) for JPL ephemerides
     Updated 04/2025: added schureman arguments function for FES models
         more outputs from schureman arguments function for M1 constituent
@@ -70,7 +70,7 @@ import timescale.time
 from pyTMD.math import (
     polynomial_sum,
     normalize_angle,
-    arcs2rad,
+    asec2rad,
     rotate
 )
 from pyTMD.utilities import (
@@ -389,11 +389,11 @@ def delaunay_arguments(MJD: np.ndarray):
     N = polynomial_sum(np.array([450160.398036, -6962890.5431,
         7.4722, 7.702e-3, -5.939e-05]), T)
     # take the modulus of each and convert to radians
-    l = arcs2rad(normalize_angle(l, circle=circle))
-    lp = arcs2rad(normalize_angle(lp, circle=circle))
-    F = arcs2rad(normalize_angle(F, circle=circle))
-    D = arcs2rad(normalize_angle(D, circle=circle))
-    N = arcs2rad(normalize_angle(N, circle=circle))
+    l = asec2rad(normalize_angle(l, circle=circle))
+    lp = asec2rad(normalize_angle(lp, circle=circle))
+    F = asec2rad(normalize_angle(F, circle=circle))
+    D = asec2rad(normalize_angle(D, circle=circle))
+    N = asec2rad(normalize_angle(N, circle=circle))
     # return as tuple
     return (l, lp, F, D, N)
 
@@ -495,7 +495,7 @@ def mean_obliquity(MJD: np.ndarray):
     # mean obliquity of the ecliptic (arcseconds)
     epsilon0 = np.array([84381.406, -46.836769, -1.831e-4,
         2.00340e-4, -5.76e-07, -4.34e-08])
-    return arcs2rad(polynomial_sum(epsilon0, T))
+    return asec2rad(polynomial_sum(epsilon0, T))
 
 def equation_of_time(MJD: np.ndarray):
     """Approximate calculation of the difference between apparent and
@@ -1017,9 +1017,9 @@ def _frame_bias_matrix():
     """
     # frame bias rotation matrix
     B = np.zeros((3,3))
-    xi0  = arcs2rad(-0.0166170)
-    eta0 = arcs2rad(-0.0068192)
-    da0  = arcs2rad(-0.01460)
+    xi0  = asec2rad(-0.0166170)
+    eta0 = asec2rad(-0.0068192)
+    da0  = asec2rad(-0.01460)
     # off-diagonal elements of the frame bias matrix
     B[0,1] = da0
     B[0,2] = -xi0
@@ -1137,9 +1137,9 @@ def _polar_motion_matrix(T: float | np.ndarray):
     # calculate the polar motion for the given dates
     px, py = timescale.eop.iers_polar_motion(MJD)
     # calculate the rotation matrices
-    M1 = rotate(arcs2rad(py),'x')
-    M2 = rotate(arcs2rad(px),'y')
-    M3 = rotate(-arcs2rad(sprime),'z')
+    M1 = rotate(asec2rad(py),'x')
+    M2 = rotate(asec2rad(px),'y')
+    M3 = rotate(-asec2rad(sprime),'z')
     # calculate the combined rotation matrix
     return np.einsum('ij...,jk...,kl...->il...', M1, M2, M3)
 
@@ -1157,19 +1157,19 @@ def _precession_matrix(T: float | np.ndarray):
     # Capitaine et al. (2003), eqs. (4), (37), & (39).
     # obliquity of the ecliptic
     epsilon0 = 84381.406
-    EPS = arcs2rad(epsilon0)
+    EPS = asec2rad(epsilon0)
     # lunisolar precession
     phi0 = np.array([0.0, 5038.481507, -1.0790069,
         -1.14045e-3, 1.32851e-4, -9.51e-8])
-    psi = arcs2rad(polynomial_sum(phi0, T))
+    psi = asec2rad(polynomial_sum(phi0, T))
     # inclination of moving equator on fixed ecliptic
     omega0 = np.array([epsilon0, -2.5754e-2, 5.12623e-2,
         -7.72503e-3, -4.67e-7, 3.337e-7])
-    omega = arcs2rad(polynomial_sum(omega0, T))
+    omega = asec2rad(polynomial_sum(omega0, T))
     # planetary precession
     chi0 = np.array([0.0, 10.556403, -2.3814292,
         -1.21197e-3, 1.70663e-4, -5.60e-8])
-    chi = arcs2rad(polynomial_sum(chi0, T))
+    chi = asec2rad(polynomial_sum(chi0, T))
     # compute elements of precession rotation matrix
     P = np.zeros((3,3,len(np.atleast_1d(T))))
     P[0,0,:] = np.cos(chi)*np.cos(-psi) - \
