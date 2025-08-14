@@ -12,7 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
-    Updated 08/2025: add asec2rad and rad2asec functions
+    Updated 08/2025: add asec2rad and masec2rad functions for arcseconds
     Updated 07/2025: add deriv and phase arguments to sph_harm function
         add Legendre polynomial derivatives with respect to theta
     Updated 04/2025: use numpy power function over using pow for consistency
@@ -27,7 +27,7 @@ from scipy.special import factorial
 
 __all__ = [
     "asec2rad",
-    "rad2asec",
+    "masec2rad",
     "polynomial_sum",
     "normalize_angle",
     "rotate",
@@ -50,18 +50,18 @@ def asec2rad(
     """
     return np.radians(x / 3600.0)
 
-def rad2asec(
+def masec2rad(
         x: float | np.ndarray,
     ):
     """
-    Convert angles from radians to arcseconds
+    Convert angles from microarcseconds to radians
 
     Parameters
     ----------
     x: float or np.ndarray
-        Input angle in radians
+        Input angle in microarcseconds
     """
-    return np.degrees(x) * 3600.0
+    return np.radians(x / 3.6e9)
 
 # PURPOSE: calculate the sum of a polynomial function of time
 def polynomial_sum(

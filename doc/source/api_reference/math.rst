@@ -18,7 +18,7 @@ Calling Sequence
 
 .. autofunction:: pyTMD.math.asec2rad
 
-.. autofunction:: pyTMD.math.rad2asec
+.. autofunction:: pyTMD.math.masec2rad
 
 .. autofunction:: pyTMD.math.polynomial_sum
 
