@@ -63,6 +63,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: convert angles with numpy radians and degrees functions
+        pass kwargs to computation of long-period equilibrium tides
     Updated 07/2025: mask mean pole values prior to valid epoch of convention
         add a default directory for tide models
     Updated 05/2025: added option to select constituents to read from model
@@ -904,16 +905,18 @@ def LPET_elevations(
         ny,nx = np.shape(x)
         tide_lpe = np.zeros((ny,nx,nt))
         for i in range(nt):
-            lpet = pyTMD.predict.equilibrium_tide(tide_time[i], lat)
-            tide_lpe[:,:,i] = np.reshape(lpet,(ny,nx))
+            lpet = pyTMD.predict.equilibrium_tide(
+                tide_time[i], lat, **kwargs)
+            tide_lpe[:,:,i] = np.reshape(lpet, (ny,nx))
     elif (TYPE == 'drift'):
-        tide_lpe = pyTMD.predict.equilibrium_tide(tide_time, lat)
+        tide_lpe = pyTMD.predict.equilibrium_tide(
+            tide_time, lat, **kwargs)
     elif (TYPE == 'time series'):
         nstation = len(x)
         tide_lpe = np.zeros((nstation,nt))
         for s in range(nstation):
-            lpet = pyTMD.predict.equilibrium_tide(tide_time, lat[s])
-            tide_lpe[s,:] = np.copy(lpet)
+            tide_lpe[s,:] = pyTMD.predict.equilibrium_tide(
+                tide_time, lat[s], **kwargs)
 
     # return the long-period equilibrium tide elevations
     return tide_lpe
