@@ -30,6 +30,7 @@ UPDATE HISTORY:
         switch time decimal in pole tides to nominal years of 365.25 days
         convert angles with numpy radians and degrees functions
         convert arcseconds to radians with asec2rad function in math.py
+        return numpy arrays if cannot infer minor constituents
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -333,10 +334,10 @@ def infer_minor(
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
         use nodal corrections from OTIS/ATLAS or GOT/FES models
-    raise_exception: bool, default False
-        Raise a ``ValueError`` if major constituents are not found
     minor: list or None, default None
         tidal constituent IDs of minor constituents for inference
+    infer_long_period, bool, default True
+        try to infer long period tides from constituents
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
@@ -348,6 +349,7 @@ def infer_minor(
     # set default keyword arguments
     kwargs.setdefault('deltat', 0.0)
     kwargs.setdefault('corrections', 'OTIS')
+    kwargs.setdefault('infer_long_period', True)
     kwargs.setdefault('raise_exception', False)
     # list of minor constituents
     kwargs.setdefault('minor', None)
@@ -360,7 +362,8 @@ def infer_minor(
     else:
         dh += _infer_short_period(t, zmajor, constituents, **kwargs)
     # infer long-period tides for minor constituents
-    dh += _infer_long_period(t, zmajor, constituents, **kwargs)
+    if kwargs['infer_long_period']:
+        dh += _infer_long_period(t, zmajor, constituents, **kwargs)
     # return the inferred values
     return dh
 
@@ -425,12 +428,12 @@ def _infer_short_period(
             nz += 1
 
     # raise exception or log error
-    msg = 'Not enough constituents for inference of short-period tides'
+    msg = 'Not enough constituents to infer short-period tides'
     if (nz < 6) and kwargs['raise_exception']:
         raise Exception(msg)
     elif (nz < 6):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # complete list of minor constituents
     minor_constituents = ['2q1', 'sigma1', 'rho1', 'm1b', 'm1',
@@ -445,7 +448,7 @@ def _infer_short_period(
     msg = 'No short-period tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # relationship between major and minor constituent amplitude and phase
     zmin = np.zeros((n, 20), dtype=np.complex64)
@@ -573,12 +576,12 @@ def _infer_semi_diurnal(
             nz += 1
 
     # raise exception or log error
-    msg = 'Not enough constituents for inference of semi-diurnal tides'
+    msg = 'Not enough constituents to infer semi-diurnal tides'
     if (nz < 3) and kwargs['raise_exception']:
         raise Exception(msg)
     elif (nz < 3):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # complete list of minor constituents
     minor_constituents = ['eps2', '2n2', 'mu2', 'nu2', 'gamma2',
@@ -593,7 +596,7 @@ def _infer_semi_diurnal(
     msg = 'No semi-diurnal tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
@@ -733,12 +736,12 @@ def _infer_diurnal(
             nz += 1
 
     # raise exception or log error
-    msg = 'Not enough constituents for inference of diurnal tides'
+    msg = 'Not enough constituents to infer diurnal tides'
     if (nz < 3) and kwargs['raise_exception']:
         raise Exception(msg)
     elif (nz < 3):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # complete list of minor constituents
     minor_constituents = ['2q1', 'sigma1', 'rho1', 'tau1', 'beta1',
@@ -753,7 +756,7 @@ def _infer_diurnal(
     msg = 'No diurnal tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
@@ -903,12 +906,12 @@ def _infer_long_period(
             nz += 1
 
     # raise exception or log error
-    msg = 'Not enough constituents for inference of long-period tides'
+    msg = 'Not enough constituents to infer long-period tides'
     if (nz < 3) and kwargs['raise_exception']:
         raise Exception(msg)
     elif (nz < 3):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # complete list of minor constituents
     minor_constituents = ['sa', 'ssa', 'sta', 'msm', 'msf',
@@ -922,7 +925,7 @@ def _infer_long_period(
     msg = 'No long-period tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return 0.0
+        return dh
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
