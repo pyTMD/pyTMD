@@ -659,7 +659,7 @@ def convert_ellipsoid(
         # handle case if latitude is within 45 degrees of equator
         elif (np.abs(lat1[N]) <= 45):
             # convert lat1 to radians
-            lat1r = lat1[N] * np.pi/180.0
+            lat1r = np.radians(lat1[N])
             sinlat1 = np.sin(lat1r)
             coslat1 = np.cos(lat1r)
             # prevent division by very small numbers
@@ -690,15 +690,13 @@ def convert_ellipsoid(
                         break
             # convert latitude to degrees and verify values between +/- 90
             lat2r = np.arctan(a2 / b2 * np.tan(u2))
-            lat2[N] = lat2r*180.0/np.pi
-            if (np.abs(lat2[N]) > 90.0):
-                lat2[N] = np.sign(lat2[N])*90.0
+            lat2[N] = np.clip(np.degrees(lat2r), -90.0, 90.0)
             # calculate height
             h2[N] = (hpr1cos - a2 * np.cos(u2)) / np.cos(lat2r)
         # handle final case where latitudes are between 45 degrees and pole
         else:
             # convert lat1 to radians
-            lat1r = lat1[N] * np.pi/180.0
+            lat1r = np.radians(lat1[N])
             sinlat1 = np.sin(lat1r)
             coslat1 = np.cos(lat1r)
             # prevent division by very small numbers
@@ -729,9 +727,7 @@ def convert_ellipsoid(
                         break
             # convert latitude to degrees and verify values between +/- 90
             lat2r = np.arctan(a2 / b2 * np.tan(u2))
-            lat2[N] = lat2r*180.0/np.pi
-            if (np.abs(lat2[N]) > 90.0):
-                lat2[N] = np.sign(lat2[N])*90.0
+            lat2[N] = np.clip(np.degrees(lat2r), -90.0, 90.0)
             # calculate height
             h2[N] = (hpr1sin - b2 * np.sin(u2)) / np.sin(lat2r)
 
@@ -768,7 +764,7 @@ def compute_delta_h(
         difference in elevation for two ellipsoids
     """
     # force latitudes to be within -90 to 90 and convert to radians
-    phi = np.clip(lat, -90.0, 90.0)*np.pi/180.0
+    phi = np.radians(np.clip(lat, -90.0, 90.0))
     # semi-minor axis of input and output ellipsoid
     b1 = (1.0 - f1)*a1
     b2 = (1.0 - f2)*a2
@@ -789,9 +785,9 @@ def wrap_longitudes(lon: float | np.ndarray):
     lon: float or np.ndarray
         longitude (degrees east)
     """
-    phi = np.arctan2(np.sin(lon*np.pi/180.0), np.cos(lon*np.pi/180.0))
+    phi = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
     # convert phi from radians to degrees
-    return phi*180.0/np.pi
+    return np.degrees(phi)
 
 def to_dms(d: np.ndarray):
     """
@@ -923,12 +919,12 @@ def to_sphere(x: np.ndarray, y: np.ndarray, z: np.ndarray):
     # th: polar angle
     th = np.arccos(z/rad)
     # convert to degrees and fix to 0:360
-    lon = 180.0*phi/np.pi
+    lon = np.degrees(phi)
     if np.any(lon < 0):
         lt0 = np.nonzero(lon < 0)
         lon[lt0] += 360.0
     # convert to degrees and fix to -90:90
-    lat = 90.0 - (180.0*th/np.pi)
+    lat = 90.0 - np.degrees(th)
     np.clip(lat, -90, 90, out=lat)
     # return longitude, latitude and radius
     # flattened to singular values if necessary
@@ -1375,9 +1371,9 @@ def to_horizontal(
     # convert coordinates to unit vectors
     D = np.sqrt(E**2 + N**2 + U**2)
     # altitude (elevation) angle in degrees
-    alpha = np.arcsin(U/D)*180.0/np.pi
+    alpha = np.degrees(np.arcsin(U/D))
     # azimuth angle in degrees (fixed to 0 to 360)
-    phi = np.mod(np.arctan2(E/D, N/D)*180.0/np.pi, 360.0)
+    phi = np.mod(np.degrees(np.arctan2(E/D, N/D)), 360.0)
     return (alpha, phi, D)
 
 def to_zenith(
@@ -1465,9 +1461,9 @@ def scale_factors(
     """
     assert metric.lower() in ['distance', 'area'], 'Unknown metric'
     # convert latitude from degrees to positive radians
-    theta = np.abs(lat)*np.pi/180.0
+    theta = np.radians(np.abs(lat))
     # convert reference latitude from degrees to positive radians
-    theta_ref = np.abs(reference_latitude)*np.pi/180.0
+    theta_ref = np.radians(np.abs(reference_latitude))
     # square of the eccentricity of the ellipsoid
     # ecc2 = (1-b**2/a**2) = 2.0*flat - flat^2
     ecc2 = 2.0*flat - flat**2

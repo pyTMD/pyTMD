@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 ellipse.py
-Written by Tyler Sutterley (05/2025)
+Written by Tyler Sutterley (08/2025)
 Expresses the amplitudes and phases for the u and v components in terms of
     four ellipse parameters using Foreman's formula
 
@@ -25,6 +25,7 @@ REFERENCE:
         https://doi.org/10.1016/0309-1708(89)90017-1
 
 UPDATE HISTORY:
+    Updated 08/2025: use divmod to adjust orientation of ellipse
     Updated 06/2025: added function to calculate x and y coordinates of ellipse
     Updated 01/2024: added inverse function to get currents from parameters
         use complex algebra to calculate tidal ellipse parameters
@@ -86,10 +87,8 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     incl = (em + ep)/2.0
     phase = (em - ep)/2.0
     # adjust orientation of ellipse
-    k = (incl//180.0)
-    incl -= 180.0*k
-    phase += 180.0*k
-    phase = np.mod(phase, 360.0)
+    k, incl = np.divmod(incl, 180.0)
+    phase = np.mod(phase + 180.0*k, 360.0)
     # return values
     return (major, minor, incl, phase)
 
@@ -125,8 +124,8 @@ def inverse(
     major = np.atleast_1d(major)
     minor = np.atleast_1d(minor)
     # convert inclination and phase to radians
-    incl = np.atleast_1d(incl)*np.pi/180.0
-    phase = np.atleast_1d(phase)*np.pi/180.0
+    incl = np.radians(np.atleast_1d(incl))
+    phase = np.radians(np.atleast_1d(phase))
     # ep, em: phases of positively and negatively rotating vectors
     ep = (incl - phase)
     em = (incl + phase)
@@ -178,11 +177,11 @@ def _xy(
     kwargs.setdefault('xy', (0.0, 0.0))
     kwargs.setdefault('N', 1000)
     # validate inputs
-    phi = incl*np.pi/180.0
+    phi = np.radians(np.atleast_1d(incl))
     # calculate the angle of the ellipse
     if kwargs['phase'] is not None:
         # use the phase lag and inclination
-        th  = (kwargs['phase'] + incl)*np.pi/180.0 
+        th = np.radians(kwargs['phase'] + incl)
     else:
         # use a full rotation
         th = np.linspace(0, 2*np.pi, kwargs['N'])

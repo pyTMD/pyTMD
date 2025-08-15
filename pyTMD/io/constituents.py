@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constituents.py
-Written by Tyler Sutterley (02/2025)
+Written by Tyler Sutterley (08/2025)
 Basic tide model constituent class
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 02/2025: add RHO to rho1 to known mappable constituents
         add more known constituents to string parser function
     Updated 11/2024: added property for Extended Doodson numbers
@@ -160,7 +161,7 @@ class constituents:
         """
         constituent = getattr(self, field)
         # calculate constituent phase and convert to degrees
-        ph = 180.0*np.arctan2(-constituent.imag, constituent.real)/np.pi
+        ph = np.degrees(np.arctan2(-constituent.imag, constituent.real))
         ph.data[ph.data < 0] += 360.0
         # update mask and fill values
         ph.mask = np.copy(constituent.mask)

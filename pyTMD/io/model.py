@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 model.py
-Written by Tyler Sutterley (06/2025)
+Written by Tyler Sutterley (08/2025)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -11,6 +11,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
+        update node equilibrium tide estimation
     Updated 06/2025: add function for reducing list of model files
         fix extra_databases to not overwrite the default database
         add capability to use a dictionary to expand the model database
@@ -1271,11 +1273,15 @@ class model:
         h2 = 0.606
         # tilt factor: response with respect to the solid earth
         gamma_2 = (1.0 + k2 - h2)
+        # colatitude in radians
+        th = np.radians(90.0 - lat)
         # 2nd degree Legendre polynomials
-        P20 = 0.5*(3.0*np.sin(lat*np.pi/180.0)**2 - 1.0)
+        P20 = 0.5*(3.0*np.cos(th)**2 - 1.0)
+        # normalization for spherical harmonics
+        dfactor = np.sqrt((4.0 + 1.0)/(4.0*np.pi))
         # calculate equilibrium node constants
         amp = np.ma.zeros_like(lat, dtype=np.float64)
-        amp.data[:] = amajor*gamma_2*P20*np.sqrt((4.0 + 1.0)/(4.0*np.pi))
+        amp.data[:] = dfactor*P20*gamma_2*amajor
         amp.mask = np.zeros_like(lat, dtype=bool)
         phase = np.ma.zeros_like(amp)
         phase.data[:] = 180.0

@@ -281,7 +281,7 @@ def main():
     loglevels = [logging.CRITICAL, logging.INFO, logging.DEBUG]
     logging.basicConfig(level=loglevels[args.verbose])
 
-    # try to run reginal program
+    # try to run regional program
     try:
         info(args)
         make_regional_OTIS_files(args.directory, args.tide,
