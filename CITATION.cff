@@ -36,8 +36,8 @@ url: 'https://pytmd.readthedocs.io'
 repository: 'https://pypi.org/project/pyTMD'
 repository-artifact: 'https://anaconda.org/conda-forge/pytmd'
 doi: "10.5281/zenodo.5555395"
-version: "2.2.6"
-date-released: "2025-07-24"
+version: "2.2.7"
+date-released: "2025-08-15"
 keywords:
   - Ocean Tides
   - Load Tides
