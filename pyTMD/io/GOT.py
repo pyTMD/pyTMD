@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 GOT.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (08/2025)
 
 Reads files for Richard Ray's Goddard Ocean Tide (GOT) models and makes
     initial calculations to run the tide program
@@ -42,6 +42,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added crop and bounds keywords for trimming model data
@@ -301,7 +302,7 @@ def extract_constants(
         ph.mask[:,i] = np.copy(hci.mask)
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value
@@ -526,7 +527,7 @@ def interpolate_constants(
         ph.mask[:,i] = np.copy(hci.mask)
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value

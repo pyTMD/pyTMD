@@ -174,7 +174,7 @@ def map(t: float | np.ndarray,
             # add component for constituent to output tidal elevation
             th = omega*t*86400.0 + ph + pu[0,k]
         else:
-            th = G[0,k]*np.pi/180.0 + pu[0,k]
+            th = np.radians(G[0,k]) + pu[0,k]
         # sum over all tides
         ht.data[:] += pf[0,k]*hc.real[:,k]*np.cos(th) - \
             pf[0,k]*hc.imag[:,k]*np.sin(th)
@@ -238,7 +238,7 @@ def drift(t: float | np.ndarray,
             # add component for constituent to output tidal elevation
             th = omega*t*86400.0 + ph + pu[:,k]
         else:
-            th = G[:,k]*np.pi/180.0 + pu[:,k]
+            th = np.radians(G[:,k]) + pu[:,k]
         # sum over all tides
         ht.data[:] += pf[:,k]*hc.real[:,k]*np.cos(th) - \
             pf[:,k]*hc.imag[:,k]*np.sin(th)
@@ -302,7 +302,7 @@ def time_series(t: float | np.ndarray,
             # add component for constituent to output tidal time series
             th = omega*t*86400.0 + ph + pu[:,k]
         else:
-            th = G[:,k]*np.pi/180.0 + pu[:,k]
+            th = np.radians(G[:,k]) + pu[:,k]
         # sum over all tides at location
         ht.data[:] += pf[:,k]*hc.real[0,k]*np.cos(th) - \
             pf[:,k]*hc.imag[0,k]*np.sin(th)
@@ -495,7 +495,7 @@ def _infer_short_period(
 
     # sum over the minor tidal constituents of interest
     for k in minor_indices:
-        th = G[:,k]*np.pi/180.0 + pu[:,k]
+        th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real[:,k]*pf[:,k]*np.cos(th) - \
             zmin.imag[:,k]*pf[:,k]*np.sin(th)
     # return the inferred values
@@ -650,7 +650,7 @@ def _infer_semi_diurnal(
             # rescale tide values
             zmin = amin[k]*interp
         # sum over all tides
-        th = G[:,k]*np.pi/180.0 + pu[:,k]
+        th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
             zmin.imag*pf[:,k]*np.sin(th)
     # return the inferred values
@@ -817,7 +817,7 @@ def _infer_diurnal(
             # rescale tide values
             zmin = amin[k]*gamma_2*interp
         # sum over all tides
-        th = G[:,k]*np.pi/180.0 + pu[:,k]
+        th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
             zmin.imag*pf[:,k]*np.sin(th)
     # return the inferred values
@@ -970,7 +970,7 @@ def _infer_long_period(
             slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
             zmin = amin[k]*gamma_2*(z[:,1] + slope*(omega[k] - omajor[1]))
         # sum over all tides
-        th = G[:,k]*np.pi/180.0 + pu[:,k]
+        th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
             zmin.imag*pf[:,k]*np.sin(th)
     # return the inferred values

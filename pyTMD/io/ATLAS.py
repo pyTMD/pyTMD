@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 ATLAS.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (08/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from OTIS tide models for
@@ -55,6 +55,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added crop and bounds keywords for trimming model data
@@ -384,7 +385,7 @@ def extract_constants(
     # convert amplitude from input units to meters
     amplitude = ampl*kwargs['scale']
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase[phase < 0] += 360.0
     # return the interpolated values
     return (amplitude, phase, D, constituents)
@@ -680,7 +681,7 @@ def interpolate_constants(
     # convert amplitude from input units to meters
     amplitude = ampl*kwargs['scale']
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase[phase < 0] += 360.0
     # return the interpolated values
     return (amplitude, phase, D)

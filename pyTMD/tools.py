@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 tools.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (08/2025)
 Jupyter notebook, user interface and plotting tools
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://github.com/jupyter-widgets/ipyleaflet
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 07/2025: add a default directory for tide models
         add full screen control to ipyleaflet maps
     Updated 09/2024: removed widget for ATLAS following database update
@@ -202,9 +203,9 @@ class leaflet:
 
     # fix longitudes to be -180:180
     def wrap_longitudes(self, lon):
-        phi = np.arctan2(np.sin(lon*np.pi/180.0),np.cos(lon*np.pi/180.0))
+        phi = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
         # convert phi from radians to degrees
-        return phi*180.0/np.pi
+        return np.degrees(phi)
 
     # add function for setting marker text if location changed
     def set_marker_text(self, sender):

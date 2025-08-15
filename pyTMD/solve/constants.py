@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constants.py
-Written by Tyler Sutterley (06/2025)
+Written by Tyler Sutterley (08/2025)
 Routines for estimating the harmonic constants for ocean tides
 
 REFERENCES:
@@ -25,6 +25,7 @@ PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 06/2025: verify that height values are all finite
     Updated 05/2025: added option to include higher order polynomials
     Updated 09/2024: added bounded options for least squares solvers
@@ -133,7 +134,7 @@ def constants(t: float | np.ndarray,
                 pyTMD.arguments._constituent_parameters(c)
             th = omega*t*86400.0 + ph + pu[:,k]
         else:
-            th = G[:,k]*np.pi/180.0 + pu[:,k]
+            th = np.radians(G[:,k]) + pu[:,k]
         # add constituent to design matrix
         M.append(pf[:,k]*np.cos(th))
         M.append(-pf[:,k]*np.sin(th))
@@ -165,7 +166,7 @@ def constants(t: float | np.ndarray,
         amp[k] = np.abs(1j*p[isin] + p[icos])
         ph[k] = np.arctan2(-p[isin], p[icos])
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase[phase < 0] += 360.0
 
     # return the amplitude and phase

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 FES.py
-Written by Tyler Sutterley (11/2024)
+Written by Tyler Sutterley (08/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from the
@@ -57,6 +57,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added new FES2022 to available known model versions
@@ -336,7 +337,7 @@ def extract_constants(
         ph.mask[:,i] |= invalid
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value
@@ -583,7 +584,7 @@ def interpolate_constants(
         ph.mask[:,i] |= invalid
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value
@@ -801,7 +802,7 @@ def output_netcdf_file(
     fileID.createDimension('nct', 4)
     # calculate amplitude and phase
     amp = np.abs(hc)
-    ph = 180.0*np.arctan2(-np.imag(hc), np.real(hc))/np.pi
+    ph = np.degrees(np.arctan2(-np.imag(hc), np.real(hc)))
     # update masks and fill values
     amp.mask = np.copy(hc.mask)
     amp.data[amp.mask] = amp.fill_value

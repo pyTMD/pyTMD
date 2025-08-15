@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 OTIS.py
-Written by Tyler Sutterley (05/2025)
+Written by Tyler Sutterley (08/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from OTIS tide models for
@@ -60,6 +60,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 08/2025: use numpy degree to radian conversions
     Updated 05/2025: added option to select constituents to read from model
     Updated 12/2024: released version of TMD3 has different variable names
     Updated 11/2024: expose buffer distance for cropping tide model data
@@ -536,7 +537,7 @@ def extract_constants(
         constituents.append(c)
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value
@@ -945,7 +946,7 @@ def interpolate_constants(
         amplitude.mask[:,i] |= invalid
 
     # convert phase to degrees
-    phase = ph*180.0/np.pi
+    phase = np.degrees(ph)
     phase.data[phase.data < 0] += 360.0
     # replace data for invalid mask values
     amplitude.data[amplitude.mask] = amplitude.fill_value
