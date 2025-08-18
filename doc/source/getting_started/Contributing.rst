@@ -73,9 +73,9 @@ The main database can then be updated by running the `merge providers <https://g
 
 Continuous Integration
 ^^^^^^^^^^^^^^^^^^^^^^
-We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (Ubuntu) and Mac Operating Systems.
+We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (``ubuntu-latest``), Mac (``macos-latest``) and Windows (``windows-latest``) Operating Systems.
 The configuration files for this service are in the `GitHub workflows <https://github.com/pyTMD/pyTMD/tree/main/.github/workflows>`_ directory.
-The workflows rely on the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ and `requirements-dev.txt <https://github.com/pyTMD/pyTMD/blob/main/requirements-dev.txt>`_ files to install the required dependencies.
+The workflows use ``mamba`` and the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ file to install the required dependencies and build the environment.
 
 The GitHub Actions jobs include:
 
