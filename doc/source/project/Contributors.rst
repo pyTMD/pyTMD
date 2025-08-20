@@ -2,4 +2,5 @@
 Contributors
 ============
 
-.. include:: ../../../CONTRIBUTORS.rst
+.. include:: ../../../CONTRIBUTORS.md
+    :parser: commonmark

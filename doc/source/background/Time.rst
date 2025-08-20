@@ -1,8 +1,7 @@
 Time
 ####
 
-Time can be measured using a variety of different scales and standards.
-``pyTMD`` uses the ``timescale`` library to manage the conversions between some of the more common time scales.
+``pyTMD`` uses the ``timescale`` library to manage conversions between time scales.
 A uniform time scale expresses dates as the count of time elapsed since a reference epoch.
 The Julian Day (JD) is one such scale, and is the continuous count of days from noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
 The JD time system simplifies the calculation of the number of days between two epochs, and thus is convenient for astronomical purposes.

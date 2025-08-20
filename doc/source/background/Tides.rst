@@ -22,7 +22,10 @@ Ocean tide models are typically one of following categories:
 1) empirically adjusted models,
 2) barotropic hydrodynamic models constrained by data assimilation, and
 3) unconstrained hydrodynamic models :cite:p:`Stammer:2014ci`.
-``pyTMD`` is not an ocean or load tide model, but rather a tool for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
+
+.. note::
+
+    ``pyTMD`` is not an ocean or load tide model, but rather a tool for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
 
 Under the equilibrium theory of tides, the Earth is a spherical body with a uniform distribution of water over its surface :cite:p:`Doodson:1921kt`.
 In this model, the oceanic surface instantaneously responds to the tide-producing forces of the moon and sun, and is not influenced by inertia, currents or the irregular distribution of land :cite:p:`Schureman:1958ty`.
@@ -46,8 +49,11 @@ Each constituent has a particular "Doodson number" describing the polynomial coe
 
     \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
-``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
-Together these coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal amplitudes :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
+.. hint::
+
+    ``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
+
+Together the Doodson coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used by ``pyTMD`` to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal values :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
 After the determination of the major constituents, ``pyTMD`` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 
 
@@ -63,7 +69,7 @@ Analytical approximate positions for the sun and moon can be calculated within `
 Within ``pyTMD``, the tidal deformation of the Earth is modeled using the :term:`Love and Shida Numbers` formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:p:`Wahr:1981ea,Mathews:1997js`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1979vx,Wahr:1981ea`.
-However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances in the diurnal and semi-diurnal bands :cite:p:`Wahr:1979vx,Wahr:1981ea`.
+However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea`.
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js`.
 
 .. plot:: ./background/love-numbers.py
@@ -74,7 +80,7 @@ However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are depen
 In addition to the ups and downs of tides, there is a considerable portion of tidal potential and displacement that does not vary in time, a *permanent tide* that is due to the Earth being in the presence of the Sun and Moon (and other planetary bodies).
 The `Earth is lower in polar areas and higher in equatorial areas <https://www.ngs.noaa.gov/PUBS_LIB/EGM96_GEOID_PAPER/egm96_geoid_paper.html>`_ than it would without those gravitational effects.
 The `IERS formalism <https://iers-conventions.obspm.fr/>`_ for determining station locations is to remove all cyclical and permanent components of the tides, which is known as a "tide-free" system.
-This is the default tide-system within ``pyTMD``.
+This is the default "tide-system" within ``pyTMD``.
 Alternatively, the permanent tide components can be added back in order to calculate the station locations in a "mean-tide" state.
 The radial difference in terms of latitude between the mean-tide and tide-free systems is:
 

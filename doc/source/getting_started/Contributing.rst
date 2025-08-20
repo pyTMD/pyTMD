@@ -8,8 +8,10 @@ Anyone at any career stage and with any level of coding experience can contribut
 Please read our `code of conduct <./Code-of-Conduct.html>`_ before contributing to ``pyTMD`` development.
 You will be recognized for your work by being listed as one of the `project contributors <../project/Contributors.html>`_.
 
-If you have found a problem in ``pyTMD``, or you would like to suggest an improvement or modification,
-please submit a `GitHub issue <https://github.com/pyTMD/pyTMD/issues>`_ and we will get back to you.
+.. note::
+
+    If you have found a problem in ``pyTMD``, or you would like to suggest an improvement or modification,
+    please submit a `GitHub issue <https://github.com/pyTMD/pyTMD/issues>`_ and we will get back to you.
 
 Ways to Contribute
 ------------------

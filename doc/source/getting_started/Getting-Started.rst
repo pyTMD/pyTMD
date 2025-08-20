@@ -2,18 +2,20 @@
 Getting Started
 ===============
 
-See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
+.. hint::
+
+    See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
 Tide Model Formats
 ##################
 
 Ocean and load tide constituent files are available from different modeling groups in different formats.
 ``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
-OTIS and ATLAS formatted data use  binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
+OTIS and ATLAS formatted data use binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
 They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
 Arctic Ocean models can be downloaded from the NSF ArcticData server using the `arcticdata_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py>`_ program.
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
-GOT formatted data use ascii files for each height constituent (``z``).
+GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
 The FES models can be downloaded using the `aviso_fes_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/aviso_fes_tides.py>`_ program for users registered with AVISO.
 
@@ -56,7 +58,9 @@ Presently, the following models and their directories are parameterized within `
 
 See :ref:`tab-currents` for the table of directories for models with tidal currents. 
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
-Note that any alternatively defined model will have to fit the file standard of a currently supported model.
+
+.. note::
+    Any alternative model parameterized with a definition file will have to fit a presently supported file standard.
 
 Definition Files
 ################
