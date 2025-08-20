@@ -8,8 +8,10 @@ Anyone at any career stage and with any level of coding experience can contribut
 Please read our `code of conduct <./Code-of-Conduct.html>`_ before contributing to ``pyTMD`` development.
 You will be recognized for your work by being listed as one of the `project contributors <../project/Contributors.html>`_.
 
-If you have found a problem in ``pyTMD``, or you would like to suggest an improvement or modification,
-please submit a `GitHub issue <https://github.com/pyTMD/pyTMD/issues>`_ and we will get back to you.
+.. note::
+
+    If you have found a problem in ``pyTMD``, or you would like to suggest an improvement or modification,
+    please submit a `GitHub issue <https://github.com/pyTMD/pyTMD/issues>`_ and we will get back to you.
 
 Ways to Contribute
 ------------------
@@ -73,9 +75,9 @@ The main database can then be updated by running the `merge providers <https://g
 
 Continuous Integration
 ^^^^^^^^^^^^^^^^^^^^^^
-We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (Ubuntu) and Mac Operating Systems.
+We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (``ubuntu-latest``), Mac (``macos-latest``) and Windows (``windows-latest``) Operating Systems.
 The configuration files for this service are in the `GitHub workflows <https://github.com/pyTMD/pyTMD/tree/main/.github/workflows>`_ directory.
-The workflows rely on the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ and `requirements-dev.txt <https://github.com/pyTMD/pyTMD/blob/main/requirements-dev.txt>`_ files to install the required dependencies.
+The workflows use ``mamba`` and the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ file to install the required dependencies and build the environment.
 
 The GitHub Actions jobs include:
 
