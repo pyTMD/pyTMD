@@ -4,7 +4,7 @@ Contribution Guidelines
 
 ``pyTMD`` is an open source project.
 We welcome any help in maintaining and developing the software and documentation.
-Anyone at any career stage and with any level of coding experience can contribute towards the development of ``pyTMD``.
+Anyone at *any career stage and with any level of coding experience* can contribute towards the development of ``pyTMD``.
 Please read our `code of conduct <./Code-of-Conduct.html>`_ before contributing to ``pyTMD`` development.
 You will be recognized for your work by being listed as one of the `project contributors <../project/Contributors.html>`_.
 
@@ -37,8 +37,8 @@ If not, *please* submit a new issue so that we are made aware of the problem.
 Please provide as much detail as possible when writing the description of your bug report.
 Providing information and examples will help us resolve issues faster.
 
-Contributing Code or Examples
------------------------------
+Contributing Code
+-----------------
 We follow a standard Forking Workflow for code changes and additions.
 Submitted code goes through the pull request process for `continuous integration (CI) testing <./Contributing.html#continuous-integration>`_ and comments.
 
@@ -67,6 +67,7 @@ Adding Examples
 ^^^^^^^^^^^^^^^
 Examples may be in the form of executable scripts or interactive `Jupyter Notebooks <../user_guide/Examples.html>`_.
 Fully working (but unrendered) examples should be submitted with the same steps as above.
+Many examples can be rendered when the project documentation is built on `Read the Docs <https://about.readthedocs.com/>`_.
 
 Adding Model Providers
 ^^^^^^^^^^^^^^^^^^^^^^

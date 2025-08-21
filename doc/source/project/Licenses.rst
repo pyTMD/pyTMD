@@ -2,8 +2,8 @@
 Licenses
 ========
 
-License
-=======
+MIT License
+===========
 
 The source code of ``pyTMD`` is licensed under a MIT license:
 

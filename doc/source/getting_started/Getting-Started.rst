@@ -2,7 +2,7 @@
 Getting Started
 ===============
 
-.. hint::
+.. tip::
 
     See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
@@ -56,7 +56,9 @@ Presently, the following models and their directories are parameterized within `
    :file: ../_assets/elevation-models.csv
    :header-rows: 1
 
-See :ref:`tab-currents` for the table of directories for models with tidal currents. 
+.. tip::
+    See :ref:`tab-currents` for the table of directories for models with tidal currents. 
+
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
 
 .. note::
@@ -158,4 +160,6 @@ For coastal or near-grounded points, the model can be extrapolated using a
 `nearest-neighbor <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
-The extrapolation cutoff can be set to any distance in kilometers, but should be used with caution in cases such as narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
+
+.. warning::
+    The extrapolation cutoff can be set to any distance in kilometers, but should be used with caution in cases such as narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.

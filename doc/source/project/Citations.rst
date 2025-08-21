@@ -10,7 +10,7 @@ Program (NPP) at NASA Goddard Space Flight Center (GSFC), administered by
 Universities Space Research Association (USRA) under contract with NASA.
 It is currently supported under the NASA Cryospheric Sciences Program (Grant Number 80NSSC22K0379).
 
-If you have used ``pyTMD`` in your work, please consider citing our library:
+.. admonition:: Please consider citing our library
 
     T. C. Sutterley, K. Alley, K. Brunt, S. Howard, L. Padman, and M. Siegfried,
     "pyTMD: Python-based tidal prediction software", (2017).
@@ -78,8 +78,10 @@ Disclaimer
 This package includes software developed at NASA Goddard Space Flight Center (GSFC) and the University
 of Washington Applied Physics Laboratory (UW-APL).
 It is not sponsored or maintained by the Universities Space Research Association (USRA), AVISO or NASA.
-Outputs from this software should be used for scientific or technical purposes only.
-This software should not be used for coastal navigation or any application that may risk life or property.
+
+.. warning::
+    Outputs from this software should be used for scientific or technical purposes only.
+    This software should not be used for coastal navigation or *any application that may risk life or property*.
 
 .. |auml|    unicode:: U+00E4 .. LATIN SMALL LETTER A WITH DIAERESIS
 .. |uuml|    unicode:: U+00FC .. LATIN SMALL LETTER U WITH DIAERESIS
