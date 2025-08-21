@@ -81,7 +81,7 @@ It is not sponsored or maintained by the Universities Space Research Association
 
 .. warning::
     Outputs from this software should be used for scientific or technical purposes only.
-    This software should not be used for coastal navigation or any application that may risk life or property.
+    This software should not be used for coastal navigation or *any application that may risk life or property*.
 
 .. |auml|    unicode:: U+00E4 .. LATIN SMALL LETTER A WITH DIAERESIS
 .. |uuml|    unicode:: U+00FC .. LATIN SMALL LETTER U WITH DIAERESIS
