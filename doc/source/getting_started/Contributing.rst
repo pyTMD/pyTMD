@@ -4,7 +4,7 @@ Contribution Guidelines
 
 ``pyTMD`` is an open source project.
 We welcome any help in maintaining and developing the software and documentation.
-Anyone at any career stage and with any level of coding experience can contribute towards the development of ``pyTMD``.
+Anyone at *any career stage and with any level of coding experience* can contribute towards the development of ``pyTMD``.
 Please read our `code of conduct <./Code-of-Conduct.html>`_ before contributing to ``pyTMD`` development.
 You will be recognized for your work by being listed as one of the `project contributors <../project/Contributors.html>`_.
 
@@ -67,7 +67,7 @@ Adding Examples
 ^^^^^^^^^^^^^^^
 Examples may be in the form of executable scripts or interactive `Jupyter Notebooks <../user_guide/Examples.html>`_.
 Fully working (but unrendered) examples should be submitted with the same steps as above.
-Many examples can be rendered during the documentation build for the project.
+Many examples can be rendered when the project documentation is built on `Read the Docs <https://about.readthedocs.com/>`_.
 
 Adding Model Providers
 ^^^^^^^^^^^^^^^^^^^^^^
