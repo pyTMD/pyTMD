@@ -10,7 +10,7 @@ Program (NPP) at NASA Goddard Space Flight Center (GSFC), administered by
 Universities Space Research Association (USRA) under contract with NASA.
 It is currently supported under the NASA Cryospheric Sciences Program (Grant Number 80NSSC22K0379).
 
-If you have used ``pyTMD`` in your work, please consider citing our library:
+.. admonition:: Please consider citing our library
 
     T. C. Sutterley, K. Alley, K. Brunt, S. Howard, L. Padman, and M. Siegfried,
     "pyTMD: Python-based tidal prediction software", (2017).

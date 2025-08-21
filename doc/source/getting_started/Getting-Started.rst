@@ -2,7 +2,7 @@
 Getting Started
 ===============
 
-.. hint::
+.. tip::
 
     See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
