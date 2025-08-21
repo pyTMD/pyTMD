@@ -5,7 +5,10 @@ Examples
 ========
 
 Examples of using the ``pyTMD`` package are provided in the form of Jupyter Notebooks.
-Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include all of the optional dependencies.
+
+.. note::
+  Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include all of the optional dependencies.
+
 The available examples include:
 
 .. toctree::

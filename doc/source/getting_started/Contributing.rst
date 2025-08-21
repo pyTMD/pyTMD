@@ -37,8 +37,8 @@ If not, *please* submit a new issue so that we are made aware of the problem.
 Please provide as much detail as possible when writing the description of your bug report.
 Providing information and examples will help us resolve issues faster.
 
-Contributing Code or Examples
------------------------------
+Contributing Code
+-----------------
 We follow a standard Forking Workflow for code changes and additions.
 Submitted code goes through the pull request process for `continuous integration (CI) testing <./Contributing.html#continuous-integration>`_ and comments.
 
@@ -67,6 +67,7 @@ Adding Examples
 ^^^^^^^^^^^^^^^
 Examples may be in the form of executable scripts or interactive `Jupyter Notebooks <../user_guide/Examples.html>`_.
 Fully working (but unrendered) examples should be submitted with the same steps as above.
+Many examples can be rendered during the documentation build for the project.
 
 Adding Model Providers
 ^^^^^^^^^^^^^^^^^^^^^^

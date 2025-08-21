@@ -4,9 +4,6 @@ utilities
 
 Download and management utilities for syncing time and auxiliary files
 
- - Can list a directory on a ftp host
- - Can download a file from a ftp or http host
-
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/utilities.py
