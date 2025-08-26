@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
         update node equilibrium tide estimation
+        add functions for converting a model to an xarray DataTree object
     Updated 06/2025: add function for reducing list of model files
         fix extra_databases to not overwrite the default database
         add capability to use a dictionary to expand the model database
@@ -76,9 +77,12 @@ import copy
 import json
 import pathlib
 import numpy as np
-from pyTMD.utilities import get_data_path
+from pyTMD.utilities import import_dependency, get_data_path
 from collections.abc import Iterable
 from dataclasses import dataclass
+
+# attempt imports
+xr = import_dependency('xarray')
 
 __all__ = [
     'DataBase',
@@ -869,6 +873,38 @@ class model:
                 self.format = m[1]
         # assert that tide model is a known format
         assert self.format in self.formats()
+
+    def to_datatree(self, m, **kwargs):
+        """
+        Create an xarray DataTree from a model object
+
+        Parameters
+        ----------
+        m: str
+            model name
+        """
+        ds = {}
+        # try to read model elevations for constituents
+        try:
+            model = self.elevation(m)
+        except (ValueError, KeyError):
+            pass
+        else:
+            model.read_constants(**kwargs)
+            ds[model.type] = model._constituents.to_xarray()
+        # try to read model currents for constituents
+        try:
+            model = self.current(m)
+        except (ValueError, KeyError):
+            pass
+        else:
+            for TYPE in model.type:
+                model.read_constants(type=TYPE, **kwargs)
+                ds[TYPE] = model._constituents.to_xarray()
+        # create xarray DataTree from dictionary
+        dtree = xr.DataTree.from_dict(ds)
+        # return the model xarray DataTree
+        return dtree
 
     def from_dict(self, d: dict):
         """
