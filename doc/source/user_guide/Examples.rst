@@ -4,12 +4,8 @@
 Examples
 ========
 
-Examples of using the ``pyTMD`` package are provided in the form of Jupyter Notebooks.
-
 .. note::
   Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include all of the optional dependencies.
-
-The available examples include:
 
 .. toctree::
    :maxdepth: 1
@@ -136,3 +132,6 @@ The available examples include:
       :link: ../notebooks/Solve-Synthetic-Tides.html
       :link-alt: Solves for the amplitude and phase of harmonic constituents at a given location
 
+
+.. tip::
+  More examples can be found on the `Recipes <./Recipes.html>`_ page!

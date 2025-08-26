@@ -60,6 +60,7 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 [project.optional-dependencies]
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
+aws = ["xarray", "dask", "zarr>=3", "h5netcdf", "geopandas", "pyarrow", "obstore", "s3fs"]
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "oct2py", "boto3"]
 
 [project.scripts]
@@ -117,11 +118,13 @@ pyTMD = { path = ".", editable = true }
 [tool.pixi.environments]
 default = { solve-group = "default" }
 all = { features = ["all"], solve-group = "default" }
+aws = { features = ["all", "aws"], solve-group = "default" }
 dev = { features = ["all", "dev", "doc"], solve-group = "default" }
 doc = { features = ["doc"], solve-group = "default" }
 
 [tool.pixi.tasks]
 start = { cmd = "jupyter lab", cwd = "doc/source/notebooks", description = "Start JupyterLab in the notebooks directory" }
+docs = { cmd = "make html", cwd = "doc", description = "Create HTML documentation with sphinx" }
 
 [tool.pixi.dependencies]
 numpy = "*"
@@ -140,6 +143,16 @@ ipywidgets = "*"
 jplephem = "*"
 pandas = "*"
 notebook = "*"
+
+[tool.pixi.feature.aws.dependencies]
+xarray = "*"
+dask = "*"
+zarr = ">=3"
+h5netcdf = "*"
+geopandas = "*"
+pyarrow = "*"
+obstore = "*"
+s3fs = "*"
 
 [tool.pixi.feature.dev.dependencies]
 flake8 = "*"

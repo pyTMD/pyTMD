@@ -883,24 +883,33 @@ class model:
         m: str
             model name
         """
+        # output dictionary of xarray Datasets
         ds = {}
-        # try to read model elevations for constituents
+        # try to read model elevations
         try:
             model = self.elevation(m)
         except (ValueError, KeyError):
             pass
         else:
+            # read model constituents
             model.read_constants(**kwargs)
-            ds[model.type] = model._constituents.to_xarray()
-        # try to read model currents for constituents
+            # scale factor to convert to output units
+            scale = model.scale or 1.0
+            # convert to xarray Dataset and scale
+            ds[model.type] = scale*model._constituents.to_dataset()
+        # try to read model currents
         try:
             model = self.current(m)
         except (ValueError, KeyError):
             pass
         else:
             for TYPE in model.type:
+                # read model constituents
                 model.read_constants(type=TYPE, **kwargs)
-                ds[TYPE] = model._constituents.to_xarray()
+                # scale factor to convert to output units
+                scale = model.scale or 1.0
+                # convert to xarray Dataset and scale
+                ds[TYPE] = scale*model._constituents.to_dataset()
         # create xarray DataTree from dictionary
         dtree = xr.DataTree.from_dict(ds)
         # return the model xarray DataTree

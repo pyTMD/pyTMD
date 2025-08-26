@@ -195,16 +195,19 @@ class constituents:
         """
         # create a dictionary of constituent data
         data = {}
+        # data coordinates (standardize to x and y)
         data["coords"] = {}
         data["coords"]["x"] = dict(dims="x", data=self.coords.x)
         data["coords"]["y"] = dict(dims="y", data=self.coords.y)
+        # data dimensions
         data["dims"] = ("y", "x")
+        # data variables
         data["data_vars"] = {}
         for field in self.fields:
             data["data_vars"][field] = {}
             data["data_vars"][field]["dims"] = ("y", "x")
             data["data_vars"][field]["data"] = getattr(self, field)
-        # create an xarray Dataset from the data dictionary
+        # convert to xarray Dataset from the data dictionary
         ds = xr.Dataset.from_dict(data)
         return ds
 
