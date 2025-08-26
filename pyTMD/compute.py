@@ -64,6 +64,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: convert angles with numpy radians and degrees functions
         pass kwargs to computation of long-period equilibrium tides
+        use timescale shortcut wrapper functions to create Timescale objects
     Updated 07/2025: mask mean pole values prior to valid epoch of convention
         add a default directory for tide models
     Updated 05/2025: added option to select constituents to read from model
@@ -368,10 +369,9 @@ def tide_elevations(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
     # number of time points
     nt = len(ts)
@@ -597,10 +597,9 @@ def tide_currents(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
     # number of time points
     nt = len(ts)
@@ -890,10 +889,9 @@ def LPET_elevations(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
     # number of time points
     nt = len(ts)
@@ -1012,10 +1010,9 @@ def LPT_displacements(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
 
     # number of time points
@@ -1221,21 +1218,12 @@ def OPT_displacements(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
-
-    # convert dynamic time to Modified Julian Days (MJD)
-    MJD = ts.tt - _jd_mjd
-    # convert Julian days to calendar dates
-    Y,M,D,h,m,s = timescale.time.convert_julian(ts.tt, format='tuple')
-    # calculate time in year-decimal format
-    time_decimal = timescale.time.convert_calendar_decimal(Y, M, day=D,
-        hour=h, minute=m, second=s)
     # number of time points
-    nt = len(time_decimal)
+    nt = len(ts)
 
     # earth and physical parameters for ellipsoid
     units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
@@ -1443,10 +1431,9 @@ def SET_displacements(
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.time.Timescale().from_datetime(
-            delta_time.flatten())
+        ts = timescale.from_datetime(delta_time.flatten())
     else:
-        ts = timescale.time.Timescale().from_deltatime(delta_time,
+        ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
     # convert tide times to dynamical time
     tide_time = ts.tide + ts.tt_ut1
