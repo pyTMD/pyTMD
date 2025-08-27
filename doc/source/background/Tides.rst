@@ -8,7 +8,7 @@ The rise and fall of the oceanic tides are a major source of the vertical variab
 Ocean tides are typically observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
 .. note::
-    It is important to note the `vertical datum of different measurement techniques <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_.
+    The different measurement techniques can have different `vertical datums! <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_
 
 Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
 A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
@@ -52,7 +52,7 @@ Each constituent has a particular "Doodson number" describing the polynomial coe
 
     \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
-.. hint::
+.. tip::
 
     ``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
 

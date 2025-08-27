@@ -4,23 +4,18 @@
 Recipes
 =======
 
-Save model as a ``zarr`` store using ``xarray``
-###############################################
+.. grid:: 2 2 4 4
+    :padding: 0
 
-.. include:: ./zarr-to-s3-obstore.py
-   :literal:
+    .. grid-item-card::  xarray Integration
+      :text-align: center
+      :link: ./xarray.html
 
-Use ``xarray`` to predict tides from a ``zarr`` store
-#####################################################
+      :material-outlined:`insert_chart;5em`
 
-.. include:: ./xarray-predict.py
-   :literal:
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+    :caption: Recipes
 
-Use ``s3fs`` to setup a ``zarr`` store 
-######################################
-
-The above examples use ``obstore`` to access a ``zarr`` store on S3.
-The ``s3fs`` package is an alternative method that uses a ``fsspec`` based store.
-
-.. include:: ./setup-s3fs.py
-   :literal:
+    ./xarray.rst
