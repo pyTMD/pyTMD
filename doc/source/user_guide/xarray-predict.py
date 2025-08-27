@@ -12,7 +12,7 @@ tide_model = 'FES2022'
 m = pyTMD.io.model(verify=False).elevation(tide_model)
 
 # setup s3 store
-presigned_s3_url = f's3://{s3_bucket}/{tide_model}.zarr'
+presigned_s3_url = f's3://{s3_bucket}/{m.name}.zarr'
 s3_store = obstore.store.S3Store.from_url(presigned_s3_url,
     region="us-west-2", skip_signature=True)
 # use read_only store for accessing data
@@ -27,7 +27,7 @@ constituents = list(ds.data_vars.keys())
 df = gpd.pd.read_parquet('pytmd-test.parquet')
 ts = timescale.from_deltatime(df.time, epoch=(2018,1,1), standard='GPS')
 # convert points to EPSG of model (default is 4326)
-crs = m['projection'] or 4326
+crs = m.projection or 4326
 geometry = gpd.points_from_xy(df.x, df.y, crs=3031).to_crs(crs)
 
 # create xarray DataArrays for coordinates

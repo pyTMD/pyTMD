@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 interpolate.py
-Written by Tyler Sutterley (09/2024)
+Written by Tyler Sutterley (08/2025)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 08/2025: added vectorized 1D linear interpolation function
+        improve performance of bilinear interpolation and allow extrapolation
     Updated 09/2024: deprecation fix case where an array is output to scalars
     Updated 07/2024: changed projection flag in extrapolation to is_geographic
     Written 12/2022
@@ -24,12 +26,56 @@ import scipy.interpolate
 import pyTMD.spatial
 
 __all__ = [
+    "interp1d",
     "bilinear",
     "spline",
     "regulargrid",
     "extrapolate",
     "_distance"
 ]
+
+# PURPOSE: 1-dimensional linear interpolation on arrays
+def interp1d(
+        x: float,
+        xp: np.ndarray,
+        fp: np.ndarray,
+        extrapolate: str = 'linear'
+    ):
+    """
+    Vectorized one-dimensional linear interpolation
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates of the interpolated values
+    xp: np.ndarray
+        x-coordinates of the data points
+    fp: np.ndarray
+        y-coordinates of the data points
+    extrapolate: str, default = 'linear'
+        Method of extrapolation
+
+            - ``'linear'``
+            - ``'nearest'``    
+
+    Returns
+    -------
+    f: np.ndarray
+        Interpolated values at x
+    """
+    # clip coordinates to handle nearest-neighbor extrapolation
+    if (extrapolate == 'nearest'):
+        x = np.clip(x, a_min=xp.min(), a_max=xp.max())
+    # find indice where x could be inserted into xp
+    j = np.searchsorted(xp, x) - 1
+    # clip indices to handle linear extrapolation
+    if (extrapolate == 'linear'):
+        j = np.clip(j, a_min=0, a_max=len(xp) - 2)
+    # fractional distance between points
+    d = np.divide(x - xp[j], xp[j+1] - xp[j])
+    # calculate interpolated values
+    f = (1.0 - d)*fp[:,j] + d*fp[:,j+1]
+    return f
 
 # PURPOSE: bilinear interpolation of input data to output data
 def bilinear(
@@ -39,6 +85,7 @@ def bilinear(
         lon: np.ndarray,
         lat: np.ndarray,
         fill_value: float = np.nan,
+        extrapolate: bool = False,
         dtype: str | np.dtype = np.float64
     ):
     """
@@ -58,6 +105,8 @@ def bilinear(
         output longitude
     fill_value: float, default np.nan
         invalid value
+    extrapolate: bool, default False
+        allow linear extrapolation of points
     dtype: np.dtype, default np.float64
         output data type
 
@@ -70,9 +119,6 @@ def bilinear(
     if not isinstance(idata, np.ma.MaskedArray):
         idata = np.ma.array(idata)
         idata.mask = np.zeros_like(idata, dtype=bool)
-    # find valid points (within bounds)
-    valid, = np.nonzero((lon >= ilon.min()) & (lon <= ilon.max()) &
-        (lat > ilat.min()) & (lat < ilat.max()))
     # interpolate gridded data values to data
     npts = len(lon)
     # allocate to output interpolated data array
@@ -80,11 +126,18 @@ def bilinear(
     data.mask = np.ones((npts), dtype=bool)
     # initially set all data to fill value
     data.data[:] = data.fill_value
-    # for each valid point
-    for i in valid:
+    # for each point
+    for i in range(npts):
         # calculating the indices for the original grid
-        ix, = np.nonzero((ilon[0:-1] <= lon[i]) & (ilon[1:] > lon[i]))
-        iy, = np.nonzero((ilat[0:-1] <= lat[i]) & (ilat[1:] > lat[i]))
+        ix = np.searchsorted(ilon, lon[i]) - 1
+        iy = np.searchsorted(ilat, lat[i]) - 1
+        # check that all points are within valid bounds
+        bounds = (ix >= 0) & (iy >= 0) & (ix < len(ilon)) & (iy < len(ilat))
+        if not (extrapolate or bounds):
+            continue
+        # clip to handle extrapolation
+        ix = np.clip(ix, a_min=0, a_max=len(ilon) - 2)
+        iy = np.clip(iy, a_min=0, a_max=len(ilat) - 2)
         # corner data values for adjacent grid cells
         IM = np.ma.zeros((4), fill_value=fill_value, dtype=dtype)
         IM.mask = np.ones((4), dtype=bool)
@@ -92,22 +145,22 @@ def bilinear(
         WM = np.zeros((4))
         # build data and weight arrays
         for j,XI,YI in zip([0,1,2,3],[ix,ix+1,ix,ix+1],[iy,iy,iy+1,iy+1]):
-            IM.data[j], = idata.data[YI,XI].astype(dtype)
-            IM.mask[j], = idata.mask[YI,XI]
-            WM[3-j], = np.abs(lon[i]-ilon[XI])*np.abs(lat[i]-ilat[YI])
+            IM.data[j] = idata.data[YI,XI].astype(dtype)
+            IM.mask[j] = idata.mask[YI,XI]
+            WM[3-j] = np.abs(lon[i]-ilon[XI])*np.abs(lat[i]-ilat[YI])
         # if on corner value: use exact
         if (np.isclose(lat[i],ilat[iy]) & np.isclose(lon[i],ilon[ix])):
-            data.data[i] = np.squeeze(idata.data[iy,ix]).astype(dtype)
-            data.mask[i] = np.squeeze(idata.mask[iy,ix])
+            data.data[i] = idata.data[iy,ix].astype(dtype)
+            data.mask[i] = idata.mask[iy,ix]
         elif (np.isclose(lat[i],ilat[iy+1]) & np.isclose(lon[i],ilon[ix])):
-            data.data[i] = np.squeeze(idata.data[iy+1,ix]).astype(dtype)
-            data.mask[i] = np.squeeze(idata.mask[iy+1,ix])
+            data.data[i] = idata.data[iy+1,ix].astype(dtype)
+            data.mask[i] = idata.mask[iy+1,ix]
         elif (np.isclose(lat[i],ilat[iy]) & np.isclose(lon[i],ilon[ix+1])):
-            data.data[i] = np.squeeze(idata.data[iy,ix+1]).astype(dtype)
-            data.mask[i] = np.squeeze(idata.mask[iy,ix+1])
+            data.data[i] = idata.data[iy,ix+1].astype(dtype)
+            data.mask[i] = idata.mask[iy,ix+1]
         elif (np.isclose(lat[i],ilat[iy+1]) & np.isclose(lon[i],ilon[ix+1])):
-            data.data[i] = np.squeeze(idata.data[iy+1,ix+1]).astype(dtype)
-            data.mask[i] = np.squeeze(idata.mask[iy+1,ix+1])
+            data.data[i] = idata.data[iy+1,ix+1].astype(dtype)
+            data.mask[i] = idata.mask[iy+1,ix+1]
         elif np.any(np.isfinite(IM) & (~IM.mask)):
             # find valid indices for data summation and weight matrix
             ii, = np.nonzero(np.isfinite(IM) & (~IM.mask))

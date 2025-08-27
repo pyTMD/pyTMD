@@ -31,6 +31,7 @@ UPDATE HISTORY:
         convert angles with numpy radians and degrees functions
         convert arcseconds to radians with asec2rad function in math.py
         return numpy arrays if cannot infer minor constituents
+        use a vectorized linear interpolator for inferring from major tides
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
         revert load pole tide to IERS 1996 convention definitions
         mask mean pole values prior to valid epoch of convention
@@ -86,6 +87,7 @@ import numpy as np
 import pyTMD.arguments
 import pyTMD.astro
 import pyTMD.math
+import pyTMD.interpolate
 import pyTMD.spatial
 import timescale.eop
 
@@ -598,6 +600,13 @@ def _infer_semi_diurnal(
         logging.debug(msg)
         return dh
 
+    # coefficients for Munk-Cartwright admittance interpolation
+    if (kwargs['method'].lower() == 'admittance'):
+        Ainv = np.array([[3.3133, -4.2538, 1.9405],
+            [-3.3133, 4.2538, -0.9405],
+            [1.5018, -3.2579, 1.7561]])
+        coef = np.dot(Ainv, z.T)
+
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
     # Cartwright and Edden potential amplitudes for inferred constituents
@@ -630,25 +639,16 @@ def _infer_semi_diurnal(
         # interpolate from major constituents
         if (kwargs['method'].lower() == 'linear'):
             # linearly interpolate between major constituents
-            if (omajor[0] < omajor[1]) and (omega[k] < omajor[1]):
-                slope = (z[:,1] - z[:,0])/(omajor[1] - omajor[0])
-                zmin = amin[k]*(z[:,0] + slope*(omega[k] - omajor[0]))
-            else:
-                slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
-                zmin = amin[k]*(z[:,1] + slope*(omega[k] - omajor[1]))
+            interp = pyTMD.interpolate.interp1d(omega[k], omajor, z)
         elif (kwargs['method'].lower() == 'admittance'):
             # admittance interpolation using Munk-Cartwright approach
-            Ainv = np.array([[3.3133, -4.2538, 1.9405],
-                [-3.3133, 4.2538, -0.9405],
-                [1.5018, -3.2579, 1.7561]])
-            coef = np.dot(Ainv, z.T)
             # convert frequency to radians per 48 hours
             # following Munk and Cartwright (1966)
             f = 2.0*omega[k]*86400.0
             # calculate interpolated values for constituent
             interp = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
-            # rescale tide values
-            zmin = amin[k]*interp
+        # rescale tide values
+        zmin = amin[k]*interp
         # sum over all tides
         th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
@@ -758,6 +758,13 @@ def _infer_diurnal(
         logging.debug(msg)
         return dh
 
+    # coefficients for Munk-Cartwright admittance interpolation
+    if (kwargs['method'].lower() == 'admittance'):
+        Ainv = np.array([[3.1214, -3.8494, 1.728],
+            [-3.1727, 3.9559, -0.7832],
+            [1.438, -3.0297, 1.5917]])
+        coef = np.dot(Ainv, z.T)
+
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
     # Cartwright and Edden potential amplitudes for inferred constituents
@@ -797,25 +804,15 @@ def _infer_diurnal(
         # interpolate from major constituents
         if (kwargs['method'].lower() == 'linear'):
             # linearly interpolate between major constituents
-            if (omajor[0] < omajor[1]) and (omega[k] < omajor[1]):
-                slope = (z[:,1] - z[:,0])/(omajor[1] - omajor[0])
-                zmin = amin[k]*gamma_2*(z[:,0] + slope*(omega[k] - omajor[0]))
-            else:
-                slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
-                zmin = amin[k]*gamma_2*(z[:,1] + slope*(omega[k] - omajor[1]))
+            interp = pyTMD.interpolate.interp1d(omega[k], omajor, z)
         elif (kwargs['method'].lower() == 'admittance'):
-            # admittance interpolation using Munk-Cartwright approach
-            Ainv = np.array([[3.1214, -3.8494, 1.728],
-                [-3.1727, 3.9559, -0.7832],
-                [1.438, -3.0297, 1.5917]])
-            coef = np.dot(Ainv, z.T)
             # convert frequency to radians per 48 hours
             # following Munk and Cartwright (1966)
             f = 2.0*omega[k]*86400.0
             # calculate interpolated values for constituent
             interp = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
-            # rescale tide values
-            zmin = amin[k]*gamma_2*interp
+        # rescale tide values
+        zmin = amin[k]*gamma_2*interp
         # sum over all tides
         th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
@@ -963,12 +960,9 @@ def _infer_long_period(
         # use real components from Mathews et al. (2002)
         gamma_2 = (1.0 + k2.real - h2.real)
         # linearly interpolate between major constituents
-        if (omajor[0] < omajor[1]) and (omega[k] < omajor[1]):
-            slope = (z[:,1] - z[:,0])/(omajor[1] - omajor[0])
-            zmin = amin[k]*gamma_2*(z[:,0] + slope*(omega[k] - omajor[0]))
-        else:
-            slope = (z[:,2] - z[:,1])/(omajor[2] - omajor[1])
-            zmin = amin[k]*gamma_2*(z[:,1] + slope*(omega[k] - omajor[1]))
+        interp = pyTMD.interpolate.interp1d(omega[k], omajor, z)
+        # rescale tide values
+        zmin = amin[k]*gamma_2*interp
         # sum over all tides
         th = np.radians(G[:,k]) + pu[:,k]
         dh += zmin.real*pf[:,k]*np.cos(th) - \
