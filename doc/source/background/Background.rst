@@ -2,7 +2,7 @@
 Background
 ==========
 
-This section provides background information on the theoretical concepts used in ``pyTMD``.
+Background information on the theoretical concepts used in ``pyTMD``
 
 .. grid:: 2 2 4 4
     :padding: 0

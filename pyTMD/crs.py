@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 crs.py
-Written by Tyler Sutterley (09/2024)
+Written by Tyler Sutterley (08/2025)
 Coordinates Reference System (CRS) class
 
 CALLING SEQUENCE:
@@ -30,6 +30,7 @@ PYTHON DEPENDENCIES:
         https://pyproj4.github.io/pyproj/
 
 UPDATE HISTORY:
+    Updated 08/2025: add function to output to a python dictionary
     Updated 09/2024: added function for idealized Arctic Azimuthal projection
         complete refactor to use JSON dictionary format for model projections
     Updated 07/2024: added function to get the CRS transform
@@ -212,6 +213,12 @@ class crs:
             return CRS
         # no projection can be made
         raise pyproj.exceptions.CRSError
+    
+    def to_dict(self):
+        """
+        Convert the CRS to a dictionary
+        """
+        return self.crs.to_dict()
 
     @property
     def direction(self):

@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
+        add functions for converting constituents to an xarray Dataset
     Updated 02/2025: add RHO to rho1 to known mappable constituents
         add more known constituents to string parser function
     Updated 11/2024: added property for Extended Doodson numbers
@@ -31,10 +32,25 @@ import re
 import copy
 import numpy as np
 import pyTMD.arguments
+from pyTMD.utilities import import_dependency
+from dataclasses import dataclass
 
+# attempt imports
+xr = import_dependency('xarray')
+    
 __all__ = [
+    "coords",
     "constituents"
 ]
+
+@dataclass
+class coords(dict):
+    """Class for pyTMD constituent coordinates"""
+    x: np.ndarray
+    y: np.ndarray
+    def __init__(self, *args, **kwargs):
+        super(coords, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
 class constituents:
     """
@@ -167,6 +183,72 @@ class constituents:
         ph.mask = np.copy(constituent.mask)
         ph.data[ph.mask] = ph.fill_value
         return ph
+
+    def to_dataset(self):
+        """
+        Convert constituents to an xarray Dataset
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            Dataset of tide model constituents
+        """
+        # create a dictionary of constituent data
+        data = {}
+        # data coordinates (standardize to x and y)
+        data["coords"] = {}
+        data["coords"]["x"] = dict(dims="x", data=self.coords.x)
+        data["coords"]["y"] = dict(dims="y", data=self.coords.y)
+        # data dimensions
+        data["dims"] = ("y", "x")
+        # data variables
+        data["data_vars"] = {}
+        for field in self.fields:
+            data["data_vars"][field] = {}
+            data["data_vars"][field]["dims"] = ("y", "x")
+            data["data_vars"][field]["data"] = getattr(self, field)
+        # append auxiliary variables if present
+        for var in ("bathymetry", "mask"):
+            if hasattr(self, var):
+                data["data_vars"][var] = {}
+                data["data_vars"][var]["dims"] = ("y", "x")
+                data["data_vars"][var]["data"] = getattr(self, var)
+        # data attributes
+        data["attrs"] = {}
+        # include coordinate reference system if present
+        if hasattr(self, "crs"):
+            data["attrs"]["crs"] = self.crs.to_dict()
+        # convert to xarray Dataset from the data dictionary
+        ds = xr.Dataset.from_dict(data)
+        return ds
+
+    @property
+    def coords(self):
+        """Coordinates of constituent fields
+        """
+        return coords(x=self._x, y=self._y)
+
+    @property
+    def _x(self):
+        """x-dimension coordinates
+        """
+        if hasattr(self, "x"):
+            return self.x
+        elif hasattr(self, "longitude"):
+            return self.longitude
+        else:
+            return None
+
+    @property
+    def _y(self):
+        """y-dimension coordinates
+        """
+        if hasattr(self, "y"):
+            return self.y
+        elif hasattr(self, "latitude"):
+            return self.latitude
+        else:
+            return None
 
     @property
     def doodson_number(self):

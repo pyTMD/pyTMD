@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 u"""
-test_interpolate.py (04/2023)
+test_interpolate.py (08/2025)
 Test the interpolation and extrapolation routines
 
 UPDATE HISTORY:
+    Updated 08/2025: added 1d interpolation routine test
     Updated 04/2023: test geodetic conversion additionally as arrays
         using pathlib to define and expand paths
     Updated 12/2022: refactored interpolation routines into new module
@@ -45,6 +46,24 @@ def franke_3d(x,y,z):
     F4 = 0.2*np.exp(-((9.*x-4.)**2 + (9.*y-7.)**2 + (9.*z-5.)**2))
     F = F1 + F2 + F3 - F4
     return F
+
+# parameterize extrapolation method
+@pytest.mark.parametrize("extrapolate", ['linear','nearest'])
+# PURPOSE: test 1d vectorized interpolation routine
+def test_interp1d(extrapolate):
+    x = np.array([-1, 3, 0.5, 1.5])
+    xp = np.array([0, 1, 2])
+    fp = np.array([[1.0, 2.0, 3.0]])
+    # expected outputs for extrapolation method
+    if (extrapolate == 'linear'):
+        exp = np.array([0.0, 4.0, 1.5, 2.5])
+    elif (extrapolate == 'nearest'):
+        exp = np.array([1.0, 3.0, 1.5, 2.5])
+    # run interpolation over each output point
+    for i, xi in enumerate(x):
+        val = pyTMD.interpolate.interp1d(xi, xp, fp,
+            extrapolate=extrapolate)
+        assert np.isclose(exp[i],val).all()
 
 # use max determinant nodes from spherepts
 def test_cartesian(N=324):

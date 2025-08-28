@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
         update node equilibrium tide estimation
+        add functions for converting a model to an xarray DataTree object
     Updated 06/2025: add function for reducing list of model files
         fix extra_databases to not overwrite the default database
         add capability to use a dictionary to expand the model database
@@ -76,9 +77,12 @@ import copy
 import json
 import pathlib
 import numpy as np
-from pyTMD.utilities import get_data_path
+from pyTMD.utilities import import_dependency, get_data_path
 from collections.abc import Iterable
 from dataclasses import dataclass
+
+# attempt imports
+xr = import_dependency('xarray')
 
 __all__ = [
     'DataBase',
@@ -870,6 +874,47 @@ class model:
         # assert that tide model is a known format
         assert self.format in self.formats()
 
+    def to_datatree(self, m, **kwargs):
+        """
+        Create an xarray DataTree from a model object
+
+        Parameters
+        ----------
+        m: str
+            model name
+        """
+        # output dictionary of xarray Datasets
+        ds = {}
+        # try to read model elevations
+        try:
+            model = self.elevation(m)
+        except (ValueError, KeyError):
+            pass
+        else:
+            # read model constituents
+            model.read_constants(**kwargs)
+            # scale factor to convert to output units
+            scale = model.scale or 1.0
+            # convert to xarray Dataset and scale
+            ds[model.type] = scale*model._constituents.to_dataset()
+        # try to read model currents
+        try:
+            model = self.current(m)
+        except (ValueError, KeyError):
+            pass
+        else:
+            for TYPE in model.type:
+                # read model constituents
+                model.read_constants(type=TYPE, **kwargs)
+                # scale factor to convert to output units
+                scale = model.scale or 1.0
+                # convert to xarray Dataset and scale
+                ds[TYPE] = scale*model._constituents.to_dataset()
+        # create xarray DataTree from dictionary
+        dtree = xr.DataTree.from_dict(ds)
+        # return the model xarray DataTree
+        return dtree
+
     def from_dict(self, d: dict):
         """
         Create a model object from a python dictionary
@@ -1144,6 +1189,9 @@ class model:
         # set default keyword arguments
         kwargs.setdefault('type', self.type)
         kwargs.setdefault('append_node', False)
+        kwargs.setdefault('constituents', None)
+        # reduce constituents if specified
+        self.reduce_constituents(kwargs['constituents'])
         # read tidal constants
         if self.format in ('OTIS','ATLAS-compact','TMD3'):
             # extract model file in case of currents

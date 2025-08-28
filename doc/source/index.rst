@@ -114,6 +114,7 @@ Project Details
     :caption: User Guide
 
     user_guide/Examples.rst
+    user_guide/Recipes.rst
 
 .. toctree::
     :maxdepth: 1
