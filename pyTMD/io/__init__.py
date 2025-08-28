@@ -15,3 +15,4 @@ from .model import (
     read_constants,
     interpolate_constants
 )
+from .dataset import dataset
