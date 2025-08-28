@@ -905,21 +905,20 @@ class Test_CATS2008:
             # model parameters for CATS2008
             if (TYPE == 'z'):
                 model = m.elevation('CATS2008')
-                model_files = model.model_file
             else:
                 model = m.current('CATS2008')
-                model_files = model.model_file['u']
 
             # extract amplitude and phase from tide model
-            amp1, ph1, D, c = pyTMD.io.OTIS.extract_constants(
+            amp1, ph1, c = model.extract_constants(
                 station_lon[valid_stations], station_lat[valid_stations],
-                model.grid_file, model_files, model.projection,
-                grid=model.file_format, type=TYPE, method='linear') 
+                type=TYPE, method='linear') 
             # calculate complex form of constituent oscillation
             hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)          
 
             # get dataset for variable
             ds = dtree[TYPE].to_dataset()
+            assert(ds.tmd.crs.is_exact_same(m.projection))
+            assert(set(c) == set(ds.tmd.constituents))
             # interpolate constituents to points
             hc2 = ds.interp(x=x, y=y, method='linear', kwargs={"fill_value": None})
             # convert data from transports (m^2/s) to velocities (cm/s)

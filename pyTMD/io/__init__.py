@@ -15,4 +15,9 @@ from .model import (
     read_constants,
     interpolate_constants
 )
-from .dataset import dataset
+
+# Attempt to import the dataset module for xarray support
+try:
+    from .dataset import dataset
+except (ImportError, AttributeError):
+    dataset = None

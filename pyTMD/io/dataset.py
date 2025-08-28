@@ -57,6 +57,8 @@ class dataset:
     def crs(self):
         """Coordinate reference system of the ``Dataset``
         """
+        from pyTMD.crs import from_input
         # return the CRS of the dataset
         # default is EPSG:4326 (WGS84)
-        return self._ds.attrs.get('crs', 4326)
+        CRS = self._ds.attrs.get('crs', 4326)
+        return from_input(CRS)
