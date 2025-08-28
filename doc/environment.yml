@@ -29,5 +29,6 @@ dependencies:
   - sphinx-design
   - sphinx_rtd_theme
   - timescale>=0.0.8
+  - xarray
   - pip:
     - ..

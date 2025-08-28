@@ -184,7 +184,7 @@ class constituents:
         ph.data[ph.mask] = ph.fill_value
         return ph
 
-    def to_dataset(self):
+    def to_dataset(self, **kwargs):
         """
         Convert constituents to an xarray Dataset
 
@@ -193,6 +193,8 @@ class constituents:
         ds: xarray.Dataset
             Dataset of tide model constituents
         """
+        kwargs.setdefault('attrs', {})
+        kwargs.setdefault('auxiliary', ["bathymetry"])
         # create a dictionary of constituent data
         data = {}
         # data coordinates (standardize to x and y)
@@ -208,13 +210,13 @@ class constituents:
             data["data_vars"][field]["dims"] = ("y", "x")
             data["data_vars"][field]["data"] = getattr(self, field)
         # append auxiliary variables if present
-        for var in ("bathymetry", "mask"):
+        for var in kwargs['auxiliary']:
             if hasattr(self, var):
                 data["data_vars"][var] = {}
                 data["data_vars"][var]["dims"] = ("y", "x")
                 data["data_vars"][var]["data"] = getattr(self, var)
         # data attributes
-        data["attrs"] = {}
+        data["attrs"] = kwargs.get("attrs", {})
         # include coordinate reference system if present
         if hasattr(self, "crs"):
             data["attrs"]["crs"] = self.crs.to_dict()

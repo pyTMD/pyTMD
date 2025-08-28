@@ -31,6 +31,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: add function to output to a python dictionary
+        move from_input function to outside class and then call
     Updated 09/2024: added function for idealized Arctic Azimuthal projection
         complete refactor to use JSON dictionary format for model projections
     Updated 07/2024: added function to get the CRS transform
@@ -191,28 +192,7 @@ class crs:
             Coordinate Reference System
         """
         # coordinate reference system dictionary
-        try:
-            CRS = pyproj.CRS.from_user_input(PROJECTION)
-        except (ValueError, pyproj.exceptions.CRSError):
-            pass
-        else:
-            return CRS
-        # EPSG projection code
-        try:
-            CRS = pyproj.CRS.from_epsg(int(PROJECTION))
-        except (ValueError, pyproj.exceptions.CRSError):
-            pass
-        else:
-            return CRS
-        # coordinate reference system string
-        try:
-            CRS = pyproj.CRS.from_string(PROJECTION)
-        except (ValueError, pyproj.exceptions.CRSError):
-            pass
-        else:
-            return CRS
-        # no projection can be made
-        raise pyproj.exceptions.CRSError
+        return from_input(PROJECTION)
     
     def to_dict(self):
         """
@@ -252,3 +232,41 @@ class crs:
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+# PURPOSE: attempts to retrieve the Coordinate Reference System
+def from_input(PROJECTION, raise_exception: bool = True):
+    """
+    Attempt to retrieve the Coordinate Reference System
+
+    Parameters
+    ----------
+    PROJECTION: int, str or dict
+        Coordinate Reference System
+    raise_exception: bool, default True
+        Whether to raise an exception if the CRS cannot be determined
+    """
+    # coordinate reference system dictionary
+    try:
+        CRS = pyproj.CRS.from_user_input(PROJECTION)
+    except (ValueError, pyproj.exceptions.CRSError):
+        pass
+    else:
+        return CRS
+    # EPSG projection code
+    try:
+        CRS = pyproj.CRS.from_epsg(int(PROJECTION))
+    except (ValueError, pyproj.exceptions.CRSError):
+        pass
+    else:
+        return CRS
+    # coordinate reference system string
+    try:
+        CRS = pyproj.CRS.from_string(PROJECTION)
+    except (ValueError, pyproj.exceptions.CRSError):
+        pass
+    else:
+        return CRS
+    # no projection can be made
+    if raise_exception:
+        raise pyproj.exceptions.CRSError
+    return None

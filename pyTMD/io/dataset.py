@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+u"""
+dataset.py
+Written by Tyler Sutterley (08/2025)
+An xarray.Dataset extension for tidal model data
+
+PYTHON DEPENDENCIES:
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
+
+UPDATE HISTORY:
+    Written 08/2025
+"""
+from pyTMD.utilities import import_dependency
+# attempt imports
+xr = import_dependency('xarray')
+
+__all__ = [
+    'dataset',
+]
+
+@xr.register_dataset_accessor('tmd')
+class dataset:
+    """Accessor for extending an ``xarray.Dataset`` for tidal model data
+    """
+    def __init__(self, ds):
+        # initialize dataset
+        self._ds = ds
+
+    def to_dataarray(self):
+        """
+        Converts ``Dataset`` to a ``DataArray`` with constituents as a dimension
+        """
+        # reduce dataset to constituents and convert to dataarray
+        da = self._ds[self.constituents].to_dataarray().assign_coords(
+            variable=self.constituents).T
+        return da
+
+    @property
+    def constituents(self):
+        """List of tidal constituent names in the ``Dataset``
+        """
+        # import constituents class
+        from pyTMD.io import constituents
+        # output list of tidal constituents
+        cons = []
+        # parse list of model constituents
+        for i,c in enumerate(self._ds.data_vars.keys()):
+            try:
+                cons.append(constituents.parse(c))
+            except ValueError:
+                pass
+        # return list of constituents
+        return cons
+
+    @property
+    def crs(self):
+        """Coordinate reference system of the ``Dataset``
+        """
+        from pyTMD.crs import from_input
+        # return the CRS of the dataset
+        # default is EPSG:4326 (WGS84)
+        CRS = self._ds.attrs.get('crs', 4326)
+        return from_input(CRS)

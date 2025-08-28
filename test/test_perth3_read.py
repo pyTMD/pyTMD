@@ -263,6 +263,8 @@ def test_GOT47_xarray():
     eps = np.finfo(np.float32).eps
     # calculate differences between methods
     for i, cons in enumerate(constituents):
+        # verify constituents
+        assert (cons in ds.tmd.constituents)
         # calculate difference in amplitude and phase
         difference = hc1[:,i] - hc2[cons].values
         assert np.all(np.abs(difference) <= eps)

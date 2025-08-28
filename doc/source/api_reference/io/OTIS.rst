@@ -7,7 +7,7 @@ OTIS
   * multi-constituent binary
   * ATLAS-compact binary
   * single-constituent binary
-  * TMD3 netCDF4
+  * TMD3 consolidated netCDF4
 - Spatially interpolates tidal constituents to input coordinates
 - Writes OTIS-format tide files
 

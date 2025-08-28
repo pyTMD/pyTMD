@@ -8,7 +8,7 @@ The rise and fall of the oceanic tides are a major source of the vertical variab
 Ocean tides are typically observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
 .. note::
-    The different measurement techniques can have different `vertical datums! <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_
+    Different measurement techniques can have different `vertical datums <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_!
 
 Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
 A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
@@ -72,7 +72,7 @@ Analytical approximate positions for the sun and moon can be calculated within `
 Within ``pyTMD``, the tidal deformation of the Earth is modeled using the :term:`Love and Shida Numbers` formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:p:`Wahr:1981ea,Mathews:1997js`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1979vx,Wahr:1981ea`.
-However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea`.
+However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Ray:2017jx`.
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js`.
 
 .. plot:: ./background/love-numbers.py

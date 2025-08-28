@@ -20,15 +20,13 @@ store = zarr.storage.ObjectStore(s3_store, read_only=True)
 
 # read zarr store for tide model
 ds = xr.open_zarr(store, group='z', zarr_format=3)
-# get list of model constituents
-constituents = list(ds.data_vars.keys())
+constituents = ds.tmd.constituents
 
 # read data from parquet
 df = gpd.pd.read_parquet('pytmd-test.parquet')
 ts = timescale.from_deltatime(df.time, epoch=(2018,1,1), standard='GPS')
 # convert points to EPSG of model (default is 4326)
-crs = m.projection or 4326
-geometry = gpd.points_from_xy(df.x, df.y, crs=3031).to_crs(crs)
+geometry = gpd.points_from_xy(df.x, df.y, crs=3031).to_crs(ds.tmd.crs)
 
 # create xarray DataArrays for coordinates
 x = xr.DataArray(geometry.x, dims='i')
@@ -49,7 +47,7 @@ if geometry.crs.is_geographic:
 
 # interpolate to points and convert to DataArray
 hc = ds.interp(x=x, y=y, method='linear', kwargs={"fill_value": None})
-hc = hc.to_dataarray().assign_coords(variable=constituents).T
+hc = hc.tmd.to_dataarray()
 
 # predict tides and infer minor constituents
 df[m.variable] = pyTMD.predict.drift(ts.tide, hc, constituents,
@@ -58,4 +56,4 @@ df[m.variable] += pyTMD.predict.infer_minor(ts.tide, hc, constituents,
     deltat=ts.tt_ut1, corrections=m.corrections)
 
 # save model outputs to parquet
-df.to_parquet(f'{tide_model}.parquet')
+df.to_parquet(f'{m.name}.parquet')
