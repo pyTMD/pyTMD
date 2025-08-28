@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_perth3_read.py (06/2025)
+test_perth3_read.py (08/2025)
 Tests that GOT4.7 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to NASA PERTH3 program
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
         use model class attributes for file format and corrections
@@ -46,6 +47,7 @@ import inspect
 import pathlib
 import posixpath
 import numpy as np
+import xarray as xr
 import pyTMD.io
 import pyTMD.io.model
 import pyTMD.utilities
@@ -218,6 +220,51 @@ def test_compare_GOT47(METHOD):
         hcomplex = amp*np.exp(-1j*phase*np.pi/180.0)
         # calculate difference in amplitude and phase
         difference = hc - hcomplex
+        assert np.all(np.abs(difference) <= eps)
+
+# PURPOSE: Tests that xarray-based results are comparable
+def test_GOT47_xarray():
+    # model parameters for GOT4.7
+    model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
+    # perth3 test program infers m4 tidal constituent
+    # constituent files included in test
+    constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
+    # keep units consistent with test outputs
+    model.scale = 1.0
+
+    # read validation dataset
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
+        file_contents = fid.read().decode('ISO-8859-1').splitlines()
+    # extract latitude, longitude, time (Modified Julian Days) and tide data
+    npts = len(file_contents) - 2
+    lat = np.zeros((npts))
+    lon = np.zeros((npts))
+    for i in range(npts):
+        line_contents = file_contents[i+2].split()
+        lat[i] = np.float64(line_contents[0])
+        lon[i] = np.float64(line_contents[1])
+    # convert latitude and longitude to xarray DataArrays
+    x = xr.DataArray(lon, dims="i")
+    y = xr.DataArray(lat, dims="i")
+
+    # read and interpolate constituents from tide model
+    model.read_constants(constituents=constituents)
+    assert (constituents == model._constituents.fields)
+    amp1, ph1 = model.interpolate_constants(lon, lat, method='linear')
+    # calculate complex form of constituent oscillation
+    hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)
+
+    # convert data to xarray Dataset and scale
+    ds = model.scale*model._constituents.to_dataset()
+    # interpolate constituents to points
+    hc2 = ds.interp(x=x, y=y, method='linear', kwargs={"fill_value": None})
+
+    # will verify differences between model outputs are within tolerance
+    eps = np.finfo(np.float32).eps
+    # calculate differences between methods
+    for i, cons in enumerate(constituents):
+        # calculate difference in amplitude and phase
+        difference = hc1[:,i] - hc2[cons].values
         assert np.all(np.abs(difference) <= eps)
 
 # PURPOSE: Tests check point program

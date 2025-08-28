@@ -207,6 +207,17 @@ class constituents:
             data["data_vars"][field] = {}
             data["data_vars"][field]["dims"] = ("y", "x")
             data["data_vars"][field]["data"] = getattr(self, field)
+        # append auxiliary variables if present
+        for var in ("bathymetry", "mask"):
+            if hasattr(self, var):
+                data["data_vars"][var] = {}
+                data["data_vars"][var]["dims"] = ("y", "x")
+                data["data_vars"][var]["data"] = getattr(self, var)
+        # data attributes
+        data["attrs"] = {}
+        # include coordinate reference system if present
+        if hasattr(self, "crs"):
+            data["attrs"]["crs"] = self.crs.to_dict()
         # convert to xarray Dataset from the data dictionary
         ds = xr.Dataset.from_dict(data)
         return ds

@@ -1189,6 +1189,9 @@ class model:
         # set default keyword arguments
         kwargs.setdefault('type', self.type)
         kwargs.setdefault('append_node', False)
+        kwargs.setdefault('constituents', None)
+        # reduce constituents if specified
+        self.reduce_constituents(kwargs['constituents'])
         # read tidal constants
         if self.format in ('OTIS','ATLAS-compact','TMD3'):
             # extract model file in case of currents

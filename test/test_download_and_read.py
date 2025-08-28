@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_download_and_read.py (06/2025)
+test_download_and_read.py (08/2025)
 Tests that CATS2008 data can be downloaded from the US Antarctic Program (USAP)
 Tests that AOTIM-5-2018 data can be downloaded from the NSF ArcticData server
 Tests the read program to verify that constituents are being extracted
@@ -21,6 +21,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
     Updated 12/2024: create test files from matlab program for comparison
     Updated 09/2024: drop support for the ascii definition file format
@@ -61,6 +62,7 @@ import pathlib
 import zipfile
 import posixpath
 import numpy as np
+import xarray as xr
 import pyTMD.io
 import pyTMD.io.model
 import pyTMD.compute
@@ -838,6 +840,100 @@ class Test_CATS2008:
         difference.data[difference.mask] = 0.0
         if not np.all(difference.mask):
             assert np.all(np.abs(difference) < eps)
+
+    # PURPOSE: Tests that interpolated results are comparable
+    def test_CATS2008_xarray(self):
+        # read data and convert to xarray datatree
+        m = pyTMD.io.model(filepath)
+        dtree = m.to_datatree('CATS2008')
+
+        # open Antarctic Tide Gauge (AntTG) database
+        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        with AntTG.open(mode='r', encoding='utf8') as f:
+            file_contents = f.read().splitlines()
+        # counts the number of lines in the header
+        count = 0
+        HEADER = True
+        # Reading over header text
+        while HEADER:
+            # check if file line at count starts with matlab comment string
+            HEADER = file_contents[count].startswith('%')
+            # add 1 to counter
+            count += 1
+        # rewind 1 line
+        count -= 1
+        # iterate over number of stations
+        antarctic_stations = (len(file_contents) - count)//10
+        stations = [None]*antarctic_stations
+        shortname = [None]*antarctic_stations
+        station_type = [None]*antarctic_stations
+        station_lon = np.zeros((antarctic_stations))
+        station_lat = np.zeros((antarctic_stations))
+        for s in range(antarctic_stations):
+            i = count + s*10
+            stations[s] = file_contents[i + 1].strip()
+            shortname[s] = file_contents[i + 3].strip()
+            lat,lon,_,_ = file_contents[i + 4].split()
+            station_type[s] = file_contents[i + 6].strip()
+            station_lon[s] = np.float64(lon)
+            station_lat[s] = np.float64(lat)
+
+        # compare outputs at each station point
+        invalid_list = ['Ablation Lake','Amery','Bahia Esperanza','Beaver Lake',
+            'Cape Roberts','Casey','Doake Ice Rumples','EE4A','EE4B',
+            'Eklund Islands','Gerlache C','Groussac','Gurrachaga',
+            'Half Moon Is.','Heard Island','Hobbs Pool','Mawson','McMurdo',
+            'Mikkelsen','Palmer','Primavera','Rutford GL','Rutford GPS',
+            'Rothera','Scott Base','Seymour Is','Terra Nova Bay']
+        # remove coastal stations from the list
+        valid_stations = [i for i,s in enumerate(shortname)
+            if s not in invalid_list]
+        ns = len(valid_stations)
+        # will verify differences between model outputs are within tolerance
+        eps = np.finfo(np.float16).eps
+
+        # convert input lat/lon in model projection
+        crs = pyTMD.crs().get(m.projection)
+        x, y = crs.transform(station_lon[valid_stations],
+            station_lat[valid_stations], direction='FORWARD')
+        # convert latitude and longitude to xarray DataArrays
+        x = xr.DataArray(x, dims="i")
+        y = xr.DataArray(y, dims="i")
+        
+        # iterate over variables
+        for TYPE in ('z','u','v'):
+            # model parameters for CATS2008
+            if (TYPE == 'z'):
+                model = m.elevation('CATS2008')
+                model_files = model.model_file
+            else:
+                model = m.current('CATS2008')
+                model_files = model.model_file['u']
+
+            # extract amplitude and phase from tide model
+            amp1, ph1, D, c = pyTMD.io.OTIS.extract_constants(
+                station_lon[valid_stations], station_lat[valid_stations],
+                model.grid_file, model_files, model.projection,
+                grid=model.file_format, type=TYPE, method='linear') 
+            # calculate complex form of constituent oscillation
+            hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)          
+
+            # get dataset for variable
+            ds = dtree[TYPE].to_dataset()
+            # interpolate constituents to points
+            hc2 = ds.interp(x=x, y=y, method='linear', kwargs={"fill_value": None})
+            # convert data from transports (m^2/s) to velocities (cm/s)
+            if TYPE in ('u','v'):
+                hc2 *= (100.0/hc2.bathymetry)
+
+            # calculate differences for each constituent
+            difference = np.ma.zeros((ns), dtype=np.complex128)
+            for i, cons in enumerate(c):
+                difference.data[:] = hc1.data[:,i] - hc2[cons].values
+                difference.mask = hc1.mask[:,i]
+                difference.data[difference.mask] = 0.0
+                if not np.all(difference.mask):
+                    assert np.all(np.abs(difference) < eps)
 
     # parameterize interpolation method
     # only use fast interpolation routines
