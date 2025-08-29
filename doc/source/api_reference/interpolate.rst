@@ -18,6 +18,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.interpolate.interp1d
 
+.. autofunction:: pyTMD.interpolate.inpaint
+
 .. autofunction:: pyTMD.interpolate.bilinear
 
 .. autofunction:: pyTMD.interpolate.spline

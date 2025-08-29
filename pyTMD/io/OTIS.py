@@ -61,6 +61,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
+        added option to gap fill when reading constituent grids
     Updated 05/2025: added option to select constituents to read from model
     Updated 12/2024: released version of TMD3 has different variable names
     Updated 11/2024: expose buffer distance for cropping tide model data
@@ -579,6 +580,8 @@ def read_constants(
             - ``'TMD3'``: combined global or local netCDF4 solution
     constituents: list or None, default None
         Specify constituents to read from model
+    gap_fill: bool, default False
+        Gap fill missing data in constituents
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list or NoneType, default None
@@ -597,6 +600,7 @@ def read_constants(
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('grid', 'OTIS')
     kwargs.setdefault('constituents', None)
+    kwargs.setdefault('gap_fill', False)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
     kwargs.setdefault('buffer', 0)
@@ -771,6 +775,9 @@ def read_constants(
             hc = _extend_matrix(hc)
         # copy mask to constituent
         hc.mask |= bathymetry.mask
+        # gap fill missing data in constituent
+        if kwargs['gap_fill']:
+            hc = pyTMD.interpolate.inpaint(xi, yi, hc, **kwargs)
         # append extended constituent
         constituents.append(c, hc)
 

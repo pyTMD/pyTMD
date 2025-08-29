@@ -8,7 +8,7 @@ tide_model = 'FES2022'
 # setup tide model
 m = pyTMD.io.model(compressed=False)
 # read tide model and convert to xarray DataTree
-dtree = m.to_datatree(tide_model)
+dtree = m.to_datatree(tide_model, gap_fill=True)
 
 # setup zarr store using obstore
 presigned_s3_url = f's3://{s3_bucket}/{m.name}.zarr'

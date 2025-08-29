@@ -30,7 +30,7 @@ OPTIONS:
         bilinear: quick bilinear interpolation
         spline: scipy bivariate spline interpolation
         linear, nearest: scipy regular grid interpolations
-    extrapoalte: extrapolate model using nearest-neighbors
+    extrapolate: extrapolate model using nearest-neighbors
     cutoff: extrapolation cutoff in kilometers
         set to np.inf to extrapolate for all points
     compressed: input netCDF4 files are gzip compressed
@@ -56,6 +56,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
+        added option to gap fill when reading constituent grids
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added crop and bounds keywords for trimming model data
@@ -415,6 +416,8 @@ def read_constants(
             - ``'V'``: vertical depth-averaged transport
     compressed: bool, default False
         Input files are gzip compressed
+    gap_fill: bool, default False
+        Gap fill missing data in constituents
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list or NoneType, default None
@@ -430,6 +433,7 @@ def read_constants(
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('compressed', True)
+    kwargs.setdefault('gap_fill', False)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
     kwargs.setdefault('buffer', 0)
@@ -491,6 +495,9 @@ def read_constants(
             hc = _extend_matrix(hc)
         # set constituent masks
         hc.mask[:] |= bathymetry.mask[:]
+        # gap fill missing data in constituent
+        if kwargs['gap_fill']:
+            hc = pyTMD.interpolate.inpaint(lon, lat, hc, **kwargs)
         # append extended constituent
         constituents.append(cons,  hc)
 
