@@ -58,6 +58,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
+        added option to gap fill when reading constituent grids
     Updated 11/2024: expose buffer distance for cropping tide model data
     Updated 10/2024: fix error when using default bounds in extract_constants
     Updated 07/2024: added new FES2022 to available known model versions
@@ -375,6 +376,8 @@ def read_constants(
             - ``'HAMTIDE11'``
     compressed: bool, default False
         Input files are gzip compressed
+    gap_fill: bool, default False
+        Gap fill missing data in constituents
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list or NoneType, default None
@@ -391,6 +394,7 @@ def read_constants(
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('version', None)
     kwargs.setdefault('compressed', False)
+    kwargs.setdefault('gap_fill', False)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
     kwargs.setdefault('buffer', 0)
@@ -432,6 +436,9 @@ def read_constants(
         if np.isclose(lon[-1] - lon[0], 360.0 - dlon):
             lon = _extend_array(lon, dlon)
             hc = _extend_matrix(hc)
+        # gap fill missing data in constituent
+        if kwargs['gap_fill']:
+            hc = pyTMD.interpolate.inpaint(lon, lat, hc, **kwargs)
         # append extended constituent
         constituents.append(cons, hc)
         # set model coordinates

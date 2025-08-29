@@ -14,6 +14,8 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
+        added a penalized least square inpainting function to gap fill data
+        standardized most variable names between interpolation functions
     Updated 09/2024: deprecation fix case where an array is output to scalars
     Updated 07/2024: changed projection flag in extrapolation to is_geographic
     Written 12/2022
@@ -21,12 +23,14 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import numpy as np
+import scipy.fftpack
 import scipy.spatial
 import scipy.interpolate
 import pyTMD.spatial
 
 __all__ = [
     "interp1d",
+    "inpaint",
     "bilinear",
     "spline",
     "regulargrid",
@@ -39,7 +43,8 @@ def interp1d(
         x: float,
         xp: np.ndarray,
         fp: np.ndarray,
-        extrapolate: str = 'linear'
+        extrapolate: str = 'linear',
+        **kwargs
     ):
     """
     Vectorized one-dimensional linear interpolation
@@ -77,32 +82,118 @@ def interp1d(
     f = (1.0 - d)*fp[:,j] + d*fp[:,j+1]
     return f
 
+def inpaint(
+        xs: np.ndarray,
+        ys: np.ndarray,
+        zs: np.ndarray,
+        N: int = 0,
+        s0: int = 3,
+        power: int = 2,
+        epsilon: float = 2.0,
+        **kwargs
+    ):
+    """
+    Inpaint over missing data in a two-dimensional array using a
+    penalized least square method based on discrete cosine transforms
+    :cite:p:`Garcia:2010hn,Wang:2012ei`
+
+    Parameters
+    ----------
+    xs: np.ndarray
+        input x-coordinates
+    ys: np.ndarray
+        input y-coordinates
+    zs: np.ndarray
+        input data
+    N: int, default 100
+        Number of iterations (0 for nearest neighbors)
+    s0: int, default 3
+        Smoothing
+    power: int, default 2
+        power for lambda function
+    epsilon: float, default 2.0
+        relaxation factor
+    """
+    # find masked values
+    if isinstance(zs, np.ma.MaskedArray):
+        W = np.logical_not(zs.mask)
+    else:
+        W = np.isfinite(zs)
+    # no valid values can be found
+    if not np.any(W):
+        raise ValueError('No valid values found')
+
+    # dimensions of input grid
+    ny, nx = np.shape(zs)
+    # calculate lambda function
+    L = np.zeros((ny, nx))
+    L += np.broadcast_to(np.cos(np.pi*np.arange(ny)/ny)[:, None], (ny, nx))
+    L += np.broadcast_to(np.cos(np.pi*np.arange(nx)/nx)[None, :], (ny, nx))
+    LAMBDA = np.power(2.0*(2.0 - L), power)
+
+    # calculate initial values using nearest neighbors
+    # computation of distance Matrix
+    # use scipy spatial KDTree routines
+    xgrid, ygrid = np.meshgrid(xs, ys)
+    tree = scipy.spatial.cKDTree(np.c_[xgrid[W], ygrid[W]])
+    # find nearest neighbors
+    masked = np.logical_not(W)
+    _, ii = tree.query(np.c_[xgrid[masked], ygrid[masked]], k=1)
+    # copy valid original values
+    z0 = np.zeros_like(zs)
+    z0[W] = np.copy(zs[W])
+    # copy nearest neighbors
+    z0[masked] = zs[W][ii]
+    # return nearest neighbors interpolation
+    if (N == 0):
+        return z0
+
+    # copy data to new array with 0 values for mask
+    ZI = np.zeros_like(zs)
+    ZI[W] = np.copy(z0[W])
+
+    # smoothness parameters
+    s = np.logspace(s0, -6, N)
+    for i in range(N):
+        # calculate discrete cosine transform
+        GAMMA = 1.0/(1.0 + s[i]*LAMBDA)
+        DISCOS = GAMMA*scipy.fftpack.dctn(W*(ZI - z0) + z0, norm='ortho')
+        # update interpolated grid
+        z0 = epsilon*scipy.fftpack.idctn(DISCOS, norm='ortho') + \
+            (1.0 - epsilon)*z0
+
+    # reset original values
+    z0[W] = np.copy(zs[W])
+    # return the inpainted grid
+    return z0
+
 # PURPOSE: bilinear interpolation of input data to output data
 def bilinear(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        idata: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
+        xs: np.ndarray,
+        ys: np.ndarray,
+        zs: np.ndarray,
+        X: np.ndarray,
+        Y: np.ndarray,
         fill_value: float = np.nan,
         extrapolate: bool = False,
-        dtype: str | np.dtype = np.float64
+        dtype: str | np.dtype = np.float64,
+        **kwargs
     ):
     """
     Bilinear interpolation of input data to output coordinates
 
     Parameters
     ----------
-    ilon: np.ndarray
-        longitude of tidal model
-    ilat: np.ndarray
-        latitude of tidal model
-    idata: np.ndarray
+    xs: np.ndarray
+        x-coordinates of tidal model
+    ys: np.ndarray
+        y-coordinates of tidal model
+    zs: np.ndarray
         tide model data
-    lat: np.ndarray
-        output latitude
-    lon: np.ndarray
-        output longitude
+    X: np.ndarray
+        output x-coordinates
+    Y: np.ndarray
+        output y-coordinates
     fill_value: float, default np.nan
         invalid value
     extrapolate: bool, default False
@@ -116,11 +207,11 @@ def bilinear(
         interpolated data
     """
     # verify that input data is masked array
-    if not isinstance(idata, np.ma.MaskedArray):
-        idata = np.ma.array(idata)
-        idata.mask = np.zeros_like(idata, dtype=bool)
+    if not isinstance(zs, np.ma.MaskedArray):
+        zs = np.ma.array(zs)
+        zs.mask = np.zeros_like(zs, dtype=bool)
     # interpolate gridded data values to data
-    npts = len(lon)
+    npts = len(X)
     # allocate to output interpolated data array
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
@@ -129,15 +220,15 @@ def bilinear(
     # for each point
     for i in range(npts):
         # calculating the indices for the original grid
-        ix = np.searchsorted(ilon, lon[i]) - 1
-        iy = np.searchsorted(ilat, lat[i]) - 1
+        ix = np.searchsorted(xs, X[i]) - 1
+        iy = np.searchsorted(ys, Y[i]) - 1
         # check that all points are within valid bounds
-        bounds = (ix >= 0) & (iy >= 0) & (ix < len(ilon)) & (iy < len(ilat))
+        bounds = (ix >= 0) & (iy >= 0) & (ix < len(xs)) & (iy < len(ys))
         if not (extrapolate or bounds):
             continue
         # clip to handle extrapolation
-        ix = np.clip(ix, a_min=0, a_max=len(ilon) - 2)
-        iy = np.clip(iy, a_min=0, a_max=len(ilat) - 2)
+        ix = np.clip(ix, a_min=0, a_max=len(xs) - 2)
+        iy = np.clip(iy, a_min=0, a_max=len(ys) - 2)
         # corner data values for adjacent grid cells
         IM = np.ma.zeros((4), fill_value=fill_value, dtype=dtype)
         IM.mask = np.ones((4), dtype=bool)
@@ -145,22 +236,22 @@ def bilinear(
         WM = np.zeros((4))
         # build data and weight arrays
         for j,XI,YI in zip([0,1,2,3],[ix,ix+1,ix,ix+1],[iy,iy,iy+1,iy+1]):
-            IM.data[j] = idata.data[YI,XI].astype(dtype)
-            IM.mask[j] = idata.mask[YI,XI]
-            WM[3-j] = np.abs(lon[i]-ilon[XI])*np.abs(lat[i]-ilat[YI])
+            IM.data[j] = zs.data[YI,XI].astype(dtype)
+            IM.mask[j] = zs.mask[YI,XI]
+            WM[3-j] = np.abs(X[i]-xs[XI])*np.abs(Y[i]-ys[YI])
         # if on corner value: use exact
-        if (np.isclose(lat[i],ilat[iy]) & np.isclose(lon[i],ilon[ix])):
-            data.data[i] = idata.data[iy,ix].astype(dtype)
-            data.mask[i] = idata.mask[iy,ix]
-        elif (np.isclose(lat[i],ilat[iy+1]) & np.isclose(lon[i],ilon[ix])):
-            data.data[i] = idata.data[iy+1,ix].astype(dtype)
-            data.mask[i] = idata.mask[iy+1,ix]
-        elif (np.isclose(lat[i],ilat[iy]) & np.isclose(lon[i],ilon[ix+1])):
-            data.data[i] = idata.data[iy,ix+1].astype(dtype)
-            data.mask[i] = idata.mask[iy,ix+1]
-        elif (np.isclose(lat[i],ilat[iy+1]) & np.isclose(lon[i],ilon[ix+1])):
-            data.data[i] = idata.data[iy+1,ix+1].astype(dtype)
-            data.mask[i] = idata.mask[iy+1,ix+1]
+        if (np.isclose(Y[i],ys[iy]) & np.isclose(X[i],xs[ix])):
+            data.data[i] = zs.data[iy,ix].astype(dtype)
+            data.mask[i] = zs.mask[iy,ix]
+        elif (np.isclose(Y[i],ys[iy+1]) & np.isclose(X[i],xs[ix])):
+            data.data[i] = zs.data[iy+1,ix].astype(dtype)
+            data.mask[i] = zs.mask[iy+1,ix]
+        elif (np.isclose(Y[i],ys[iy]) & np.isclose(X[i],xs[ix+1])):
+            data.data[i] = zs.data[iy,ix+1].astype(dtype)
+            data.mask[i] = zs.mask[iy,ix+1]
+        elif (np.isclose(Y[i],ys[iy+1]) & np.isclose(X[i],xs[ix+1])):
+            data.data[i] = zs.data[iy+1,ix+1].astype(dtype)
+            data.mask[i] = zs.mask[iy+1,ix+1]
         elif np.any(np.isfinite(IM) & (~IM.mask)):
             # find valid indices for data summation and weight matrix
             ii, = np.nonzero(np.isfinite(IM) & (~IM.mask))
@@ -171,11 +262,11 @@ def bilinear(
     return data
 
 def spline(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        idata: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
+        xs: np.ndarray,
+        ys: np.ndarray,
+        zs: np.ndarray,
+        X: np.ndarray,
+        Y: np.ndarray,
         fill_value: float = None,
         dtype: str | np.dtype = np.float64,
         reducer=np.ceil,
@@ -189,16 +280,16 @@ def spline(
 
     Parameters
     ----------
-    ilon: np.ndarray
-        longitude of tidal model
-    ilat: np.ndarray
-        latitude of tidal model
-    idata: np.ndarray
+    xs: np.ndarray
+        x-coordinates of tidal model
+    ys: np.ndarray
+        y-coordinates of tidal model
+    zs: np.ndarray
         tide model data
-    lat: np.ndarray
-        output latitude
-    lon: np.ndarray
-        output longitude
+    X: np.ndarray
+        output x-coordinates
+    Y: np.ndarray
+        output y-coordinates
     fill_value: float or NoneType, default None
         invalid value
     dtype: np.dtype, default np.float64
@@ -221,43 +312,43 @@ def spline(
     kwargs.setdefault('kx', 1)
     kwargs.setdefault('ky', 1)
     # verify that input data is masked array
-    if not isinstance(idata, np.ma.MaskedArray):
-        idata = np.ma.array(idata)
-        idata.mask = np.zeros_like(idata, dtype=bool)
+    if not isinstance(zs, np.ma.MaskedArray):
+        zs = np.ma.array(zs)
+        zs.mask = np.zeros_like(zs, dtype=bool)
     # interpolate gridded data values to data
-    npts = len(lon)
+    npts = len(X)
     # allocate to output interpolated data array
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
     # construct splines for input data and mask
-    if np.iscomplexobj(idata):
-        s1 = scipy.interpolate.RectBivariateSpline(ilon, ilat,
-            idata.data.real.T, **kwargs)
-        s2 = scipy.interpolate.RectBivariateSpline(ilon, ilat,
-            idata.data.imag.T, **kwargs)
-        s3 = scipy.interpolate.RectBivariateSpline(ilon, ilat,
-            idata.mask.T, **kwargs)
+    if np.iscomplexobj(zs):
+        s1 = scipy.interpolate.RectBivariateSpline(xs, ys,
+            zs.data.real.T, **kwargs)
+        s2 = scipy.interpolate.RectBivariateSpline(xs, ys,
+            zs.data.imag.T, **kwargs)
+        s3 = scipy.interpolate.RectBivariateSpline(xs, ys,
+            zs.mask.T, **kwargs)
         # evaluate the spline at input coordinates
-        data.data.real[:] = s1.ev(lon, lat)
-        data.data.imag[:] = s2.ev(lon, lat)
-        data.mask[:] = reducer(s3.ev(lon, lat)).astype(bool)
+        data.data.real[:] = s1.ev(X, Y)
+        data.data.imag[:] = s2.ev(X, Y)
+        data.mask[:] = reducer(s3.ev(X, Y)).astype(bool)
     else:
-        s1 = scipy.interpolate.RectBivariateSpline(ilon, ilat,
-            idata.data.T, **kwargs)
-        s2 = scipy.interpolate.RectBivariateSpline(ilon, ilat,
-            idata.mask.T, **kwargs)
+        s1 = scipy.interpolate.RectBivariateSpline(xs, ys,
+            zs.data.T, **kwargs)
+        s2 = scipy.interpolate.RectBivariateSpline(xs, ys,
+            zs.mask.T, **kwargs)
         # evaluate the spline at input coordinates
-        data.data[:] = s1.ev(lon, lat).astype(dtype)
-        data.mask[:] = reducer(s2.ev(lon, lat)).astype(bool)
+        data.data[:] = s1.ev(X, Y).astype(dtype)
+        data.mask[:] = reducer(s2.ev(X, Y)).astype(bool)
     # return interpolated values
     return data
 
 def regulargrid(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        idata: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
+        xs: np.ndarray,
+        ys: np.ndarray,
+        zs: np.ndarray,
+        X: np.ndarray,
+        Y: np.ndarray,
         fill_value: float = None,
         dtype: str | np.dtype = np.float64,
         reducer=np.ceil,
@@ -271,16 +362,16 @@ def regulargrid(
 
     Parameters
     ----------
-    ilon: np.ndarray
-        longitude of tidal model
-    ilat: np.ndarray
-        latitude of tidal model
-    idata: np.ndarray
+    xs: np.ndarray
+        x-coordinates of tidal model
+    ys: np.ndarray
+        y-coordinates of tidal model
+    zs: np.ndarray
         tide model data
-    lat: np.ndarray
-        output latitude
-    lon: np.ndarray
-        output longitude
+    X: np.ndarray
+        output x-coordinates
+    Y: np.ndarray
+        output y-coordinates
     fill_value: float or NoneType, default None
         invalid value
     dtype: np.dtype, default np.float64
@@ -309,32 +400,32 @@ def regulargrid(
     kwargs.setdefault('bounds_error', False)
     kwargs.setdefault('method', 'linear')
     # verify that input data is masked array
-    if not isinstance(idata, np.ma.MaskedArray):
-        idata = np.ma.array(idata)
-        idata.mask = np.zeros_like(idata, dtype=bool)
+    if not isinstance(zs, np.ma.MaskedArray):
+        zs = np.ma.array(zs)
+        zs.mask = np.zeros_like(zs, dtype=bool)
     # interpolate gridded data values to data
-    npts = len(lon)
+    npts = len(X)
     # allocate to output interpolated data array
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
     # use scipy regular grid to interpolate values for a given method
-    r1 = scipy.interpolate.RegularGridInterpolator((ilat, ilon),
-        idata.data, fill_value=fill_value, **kwargs)
-    r2 = scipy.interpolate.RegularGridInterpolator((ilat, ilon),
-        idata.mask, fill_value=1, **kwargs)
+    r1 = scipy.interpolate.RegularGridInterpolator((ys, xs),
+        zs.data, fill_value=fill_value, **kwargs)
+    r2 = scipy.interpolate.RegularGridInterpolator((ys, xs),
+        zs.mask, fill_value=1, **kwargs)
     # evaluate the interpolator at input coordinates
-    data.data[:] = r1.__call__(np.c_[lat, lon])
-    data.mask[:] = reducer(r2.__call__(np.c_[lat, lon])).astype(bool)
+    data.data[:] = r1.__call__(np.c_[Y, X])
+    data.mask[:] = reducer(r2.__call__(np.c_[Y, X])).astype(bool)
     # return interpolated values
     return data
 
 # PURPOSE: Nearest-neighbor extrapolation of valid data to output data
 def extrapolate(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        idata: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
+        xs: np.ndarray,
+        ys: np.ndarray,
+        zs: np.ndarray,
+        X: np.ndarray,
+        Y: np.ndarray,
         fill_value: float = None,
         dtype: str | np.dtype = np.float64,
         cutoff: int | float = np.inf,
@@ -348,20 +439,20 @@ def extrapolate(
 
     Parameters
     ----------
-    x: np.ndarray
+    xs: np.ndarray
         x-coordinates of tidal model
-    y: np.ndarray
+    ys: np.ndarray
         y-coordinates of tidal model
-    data: np.ndarray
-        Tide model data
-    XI: np.ndarray
-        Output x-coordinates
-    YI: np.ndarray
-        Output y-coordinates
+    zs: np.ndarray
+        tide model data
+    X: np.ndarray
+        output x-coordinates
+    Y: np.ndarray
+        output y-coordinates
     fill_value: float, default np.nan
-        Invalid value
+        invalid value
     dtype: np.dtype, default np.float64
-        Output data type
+        output data type
     cutoff: float, default np.inf
         return only neighbors within distance [km]
 
@@ -378,10 +469,10 @@ def extrapolate(
     if hasattr(kwargs, 'EPSG') and (kwargs['EPSG'] == '4326'):
         is_geographic = True
     # verify output dimensions
-    lon = np.atleast_1d(lon)
-    lat = np.atleast_1d(lat)
+    X = np.atleast_1d(X)
+    Y = np.atleast_1d(Y)
     # extrapolate valid data values to data
-    npts = len(lon)
+    npts = len(X)
     # return none if no invalid points
     if (npts == 0):
         return
@@ -390,32 +481,32 @@ def extrapolate(
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
     # initially set all data to fill value
-    data.data[:] = idata.fill_value
+    data.data[:] = zs.fill_value
 
     # create combined valid mask
-    valid_mask = (~idata.mask) & np.isfinite(idata.data)
+    valid_mask = (~zs.mask) & np.isfinite(zs.data)
     # reduce to model points within bounds of input points
-    valid_bounds = np.ones_like(idata.mask, dtype=bool)
+    valid_bounds = np.ones_like(zs.mask, dtype=bool)
 
     # calculate coordinates for nearest-neighbors
     if is_geographic:
         # global or regional equirectangular model
         # calculate meshgrid of model coordinates
-        gridlon, gridlat = np.meshgrid(ilon, ilat)
+        gridlon, gridlat = np.meshgrid(xs, ys)
         # ellipsoidal major axis in kilometers
         a_axis = 6378.137
         # calculate Cartesian coordinates of input grid
         gridx, gridy, gridz = pyTMD.spatial.to_cartesian(
             gridlon, gridlat, a_axis=a_axis)
         # calculate Cartesian coordinates of output coordinates
-        xs, ys, zs = pyTMD.spatial.to_cartesian(
-            lon, lat, a_axis=a_axis)
+        XI, YI, ZI = pyTMD.spatial.to_cartesian(
+            X, Y, a_axis=a_axis)
         # range of output points in cartesian coordinates
-        xmin, xmax = (np.min(xs), np.max(xs))
-        ymin, ymax = (np.min(ys), np.max(ys))
-        zmin, zmax = (np.min(zs), np.max(zs))
+        xmin, xmax = (np.min(XI), np.max(XI))
+        ymin, ymax = (np.min(YI), np.max(YI))
+        zmin, zmax = (np.min(ZI), np.max(ZI))
         # reduce to model points within bounds of input points
-        valid_bounds = np.ones_like(idata.mask, dtype=bool)
+        valid_bounds = np.ones_like(zs.mask, dtype=bool)
         valid_bounds &= (gridx >= (xmin - 2.0*cutoff))
         valid_bounds &= (gridx <= (xmax + 2.0*cutoff))
         valid_bounds &= (gridy >= (ymin - 2.0*cutoff))
@@ -432,18 +523,18 @@ def extrapolate(
         tree = scipy.spatial.cKDTree(np.c_[gridx[indy, indx],
             gridy[indy, indx], gridz[indy, indx]])
         # flattened valid data array
-        flattened = idata.data[indy, indx]
+        flattened = zs.data[indy, indx]
         # output coordinates
-        points = np.c_[xs, ys, zs]
+        points = np.c_[XI, YI, ZI]
     else:
         # projected model
         # calculate meshgrid of model coordinates
-        gridx, gridy = np.meshgrid(ilon, ilat)
+        gridx, gridy = np.meshgrid(xs, ys)
         # range of output points
-        xmin, xmax = (np.min(lon), np.max(lon))
-        ymin, ymax = (np.min(lat), np.max(lat))
+        xmin, xmax = (np.min(X), np.max(X))
+        ymin, ymax = (np.min(Y), np.max(Y))
         # reduce to model points within bounds of input points
-        valid_bounds = np.ones_like(idata.mask, dtype=bool)
+        valid_bounds = np.ones_like(zs.mask, dtype=bool)
         valid_bounds &= (gridx >= (xmin - 2.0*cutoff))
         valid_bounds &= (gridx <= (xmax + 2.0*cutoff))
         valid_bounds &= (gridy >= (ymin - 2.0*cutoff))
@@ -458,9 +549,9 @@ def extrapolate(
         tree = scipy.spatial.cKDTree(np.c_[gridx[indy, indx],
             gridy[indy, indx]])
         # flattened valid data array
-        flattened = idata.data[indy, indx]
+        flattened = zs.data[indy, indx]
         # output coordinates
-        points = np.c_[lon, lat]
+        points = np.c_[X, Y]
 
     # query output data points and find nearest neighbor within cutoff
     dd, ii = tree.query(points, k=1, distance_upper_bound=cutoff)

@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2025: use numpy degree to radian conversions
         add functions for converting constituents to an xarray Dataset
+        suppress pyproj user warnings about using PROJ4 strings
     Updated 02/2025: add RHO to rho1 to known mappable constituents
         add more known constituents to string parser function
     Updated 11/2024: added property for Extended Doodson numbers
@@ -30,10 +31,13 @@ from __future__ import division, annotations
 
 import re
 import copy
+import warnings
 import numpy as np
 import pyTMD.arguments
 from pyTMD.utilities import import_dependency
 from dataclasses import dataclass
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # attempt imports
 xr = import_dependency('xarray')
@@ -188,13 +192,20 @@ class constituents:
         """
         Convert constituents to an xarray Dataset
 
+        Parameters
+        ----------
+        attrs: dict, default {}
+            Attributes to assign to the xarray Dataset
+        variables: list, default ["bathymetry"]
+            Auxiliary variables to include in the xarray Dataset
+
         Returns
         -------
         ds: xarray.Dataset
             Dataset of tide model constituents
         """
         kwargs.setdefault('attrs', {})
-        kwargs.setdefault('auxiliary', ["bathymetry"])
+        kwargs.setdefault('variables', ["bathymetry"])
         # create a dictionary of constituent data
         data = {}
         # data coordinates (standardize to x and y)
@@ -210,7 +221,7 @@ class constituents:
             data["data_vars"][field]["dims"] = ("y", "x")
             data["data_vars"][field]["data"] = getattr(self, field)
         # append auxiliary variables if present
-        for var in kwargs['auxiliary']:
+        for var in kwargs['variables']:
             if hasattr(self, var):
                 data["data_vars"][var] = {}
                 data["data_vars"][var]["dims"] = ("y", "x")
