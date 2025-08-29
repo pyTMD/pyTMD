@@ -57,14 +57,17 @@ UPDATE HISTORY:
 
 from __future__ import annotations
 
-import logging
+import warnings
 import numpy as np
 from pyTMD.utilities import import_dependency
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 # attempt imports
 pyproj = import_dependency('pyproj')
 
 __all__ = [
     'crs',
+    'from_input'
 ]
 
 class crs:

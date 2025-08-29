@@ -140,7 +140,7 @@ def inpaint(
     masked = np.logical_not(W)
     _, ii = tree.query(np.c_[xgrid[masked], ygrid[masked]], k=1)
     # copy valid original values
-    z0 = np.zeros_like(zs)
+    z0 = np.zeros((ny, nx), dtype=zs.dtype)
     z0[W] = np.copy(zs[W])
     # copy nearest neighbors
     z0[masked] = zs[W][ii]
@@ -149,7 +149,7 @@ def inpaint(
         return z0
 
     # copy data to new array with 0 values for mask
-    ZI = np.zeros_like(zs)
+    ZI = np.zeros((ny, nx), dtype=zs.dtype)
     ZI[W] = np.copy(z0[W])
 
     # smoothness parameters
