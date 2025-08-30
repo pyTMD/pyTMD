@@ -5,6 +5,7 @@ Test the interpolation and extrapolation routines
 
 UPDATE HISTORY:
     Updated 08/2025: added 1d interpolation routine test
+        added inpaint interpolation test based on 2D franke function
     Updated 04/2023: test geodetic conversion additionally as arrays
         using pathlib to define and expand paths
     Updated 12/2022: refactored interpolation routines into new module
@@ -37,6 +38,15 @@ def download_nodes(N=324):
     yield
     # remove the node file
     filepath.joinpath(matfile).unlink(missing_ok=True)
+
+# Franke's 2D evaluation function
+def franke_2d(x,y):
+	F1 = 0.75*np.exp(-((9.0*x-2.0)**2 + (9.0*y-2.0)**2)/4.0)
+	F2 = 0.75*np.exp(-((9.0*x+1.0)**2/49.0-(9.0*y+1.0)/10.0))
+	F3 = 0.5*np.exp(-((9.0*x-7.0)**2 + (9.0*y-3.0)**2)/4.0)
+	F4 = 0.2*np.exp(-((9.0*x-4.0)**2 + (9.0*y-7.0)**2))
+	F = F1 + F2 + F3 - F4
+	return F
 
 # Franke's 3D evaluation function
 def franke_3d(x,y,z):
@@ -146,6 +156,30 @@ def test_interpolate(METHOD, N=324):
     # verify that coordinates are within tolerance
     eps = np.finfo(np.float16).eps
     assert np.all(np.isclose(val,test,atol=eps))
+
+# PURPOSE: test gap-filling over a 2D grid
+def test_gap_fill(nx=250, ny=250, percent=30, N=100):
+    # normalized coordinates
+    xpts = np.arange(nx)/np.float64(nx)
+    ypts = np.arange(ny)/np.float64(ny)
+    XI,YI = np.meshgrid(xpts, ypts)
+    # calculate values at grid points
+    val = franke_2d(XI,YI)
+    # create masked array
+    ZI = np.ma.MaskedArray(val.copy())
+    ZI.mask = np.zeros((ny,nx), dtype=bool)
+    # number of points to be removed
+    size = int(percent*nx*ny/100.0)
+    # create random points to be removed from the grid
+    indx = np.random.randint(0, high=nx, size=size)
+    indy = np.random.randint(0, high=ny, size=size)
+    ZI.mask[indy,indx] = True
+    # replace masked points with NaN
+    ZI.filled(np.nan)
+    # calculate gap-filled values with inpainting
+    test = pyTMD.interpolate.inpaint(xpts, ypts, ZI, N=N)
+    # verify that coordinates are within tolerance
+    assert np.all(np.isclose(val, test, atol=0.01))
 
 # PURPOSE: test extrapolation over a sphere
 def test_extrapolate(N=324):

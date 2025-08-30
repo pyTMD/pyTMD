@@ -2011,6 +2011,9 @@ _ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
 # Cartwright and Tayler (1971) table with radiational tides
 # Hs1: amplitude for epoch span 1 (1900 epoch)
 _ct1971_table_6 = get_data_path(['data','ct1971_tab6.txt'])
+# Woodworth (1990) tables with updated and 3rd-degree values
+_w1990_table_1 = get_data_path(['data','w1990_tab1.txt'])
+_w1990_table_2 = get_data_path(['data','w1990_tab2.txt'])
 
 def _parse_tide_potential_table(
         table: str | pathlib.Path,

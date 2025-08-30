@@ -26,6 +26,7 @@ UPDATE HISTORY:
         add correction of anelastic effects for long-period body tides
         use sign convention from IERS for complex body tide Love numbers
         include mantle anelastic effects when inferring long-period tides
+        allow definition of nominal Love numbers for degree-2 constituents
         added option to include mantle anelastic effects for LPET predict
         switch time decimal in pole tides to nominal years of 365.25 days
         convert angles with numpy radians and degrees functions
@@ -1394,7 +1395,7 @@ def solid_earth_tide(
         Solid Earth tide in meters in Cartesian coordinates
     """
     # set default keyword arguments
-    # nominal Love and Shida numbers
+    # nominal Love and Shida numbers for degrees 2 and 3
     kwargs.setdefault('h2', 0.6078)
     kwargs.setdefault('l2', 0.0847)
     kwargs.setdefault('h3', 0.292)
@@ -1873,6 +1874,10 @@ def body_tide(
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    h2: float or None, default None
+        Degree-2 Love number of vertical displacement
+    l2: float or None, default None
+        Degree-2 Love (Shida) number of horizontal displacement
     h3: float, default 0.291
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
@@ -1884,7 +1889,9 @@ def body_tide(
         Solid Earth tide in meters
     """
     # set default keyword arguments
-    # nominal Love and Shida numbers for degree-3
+    # nominal Love and Shida numbers for degrees 2 and 3
+    kwargs.setdefault('h2', None)
+    kwargs.setdefault('l2', None)
     kwargs.setdefault('h3', 0.291)
     kwargs.setdefault('l3', 0.015)
     # validate method and output tide system
@@ -1949,7 +1956,11 @@ def body_tide(
         # calculate angular frequency of constituent
         omega = pyTMD.arguments._frequency(coef, method=method)
         # determine love numbers for constituent
-        if (method == 'IERS'):
+        if (kwargs['h2'] is not None) and (kwargs['l2'] is not None):
+            # user-defined Love numbers for all constituents
+            h2 = np.complex128(kwargs['h2'])
+            l2 = np.complex128(kwargs['l2'])
+        elif (method == 'IERS'):
             # IERS: including both in-phase and out-of-phase components
             # 1) using resonance formula for tides in the diurnal band
             # 2) adjusting some long-period tides for anelastic effects
