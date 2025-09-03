@@ -47,6 +47,7 @@ jobs:
           flake8
           pytest
           pytest-cov
+          pytest-xdist
           cython
           geopandas
           jplephem
@@ -79,7 +80,7 @@ jobs:
       if: steps.secrets.outputs.accessible == 'true'
       run: |
         pip install --no-deps .
-        pytest --verbose --capture=no --cov=./ --cov-report=xml \
+        pytest --cov=./ --cov-report=xml \
             --aws-access=${{ secrets.AWS_ACCESS_KEY_ID }} \
             --aws-secret=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             --aws-region=${{ secrets.AWS_REGION_NAME }}

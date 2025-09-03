@@ -61,7 +61,7 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
 aws = ["xarray", "dask", "zarr>=3", "h5netcdf", "geopandas", "pyarrow", "obstore", "s3fs"]
-dev = ["flake8", "pytest>=4.6", "pytest-cov", "oct2py", "boto3"]
+dev = ["flake8", "pytest>=4.6", "pytest-cov", "pytest-xdist", "oct2py", "boto3"]
 
 [project.scripts]
 "arcticdata_tides.py" = "pyTMD.scripts.arcticdata_tides:main" 
@@ -76,6 +76,7 @@ exclude = ["providers*", "run*", "test*"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 norecursedirs = ".git"
+addopts = "-n auto --verbose --capture=no"
 python_files = [
     "test*.py"
 ]
@@ -125,6 +126,12 @@ doc = { features = ["doc"], solve-group = "default" }
 [tool.pixi.tasks]
 start = { cmd = "jupyter lab", cwd = "doc/source/notebooks", description = "Start JupyterLab in the notebooks directory" }
 docs = { cmd = "make html", cwd = "doc", description = "Create HTML documentation with sphinx" }
+
+[tool.pixi.tasks.test]
+args = [ "flags", { "arg" = "test", "default" = "." } ]
+cmd = "pytest {{ flags }} {{ test }}"
+cwd = "test"
+description = "Run the pytest suite"
 
 [tool.pixi.dependencies]
 numpy = "*"
