@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 u"""
-test_download_and_read.py (08/2025)
-Tests that CATS2008 data can be downloaded from the US Antarctic Program (USAP)
-Tests that AOTIM-5-2018 data can be downloaded from the NSF ArcticData server
-Tests the read program to verify that constituents are being extracted
+test_otis_read.py (08/2025)
+Tests for OTIS-formatted tide model data
+
+Tests that constituents are being extracted
 Tests that interpolated results are comparable to Matlab TMD program
     https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
 
@@ -22,6 +22,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 09/2025: added check if running on GitHub Actions or locally
+        renamed test_download_and_read.py to test_otis_read.py
     Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
     Updated 12/2024: create test files from matlab program for comparison

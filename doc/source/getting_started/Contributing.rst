@@ -40,7 +40,7 @@ Providing information and examples will help us resolve issues faster.
 Contributing Code
 -----------------
 We follow a standard Forking Workflow for code changes and additions.
-Submitted code goes through the pull request process for `continuous integration (CI) testing <./Contributing.html#continuous-integration>`_ and comments.
+Submitted code goes through the pull request process for `continuous integration (CI) testing <../project/Testing.html#continuous-integration>`_ and comments.
 
 General Guidelines
 ^^^^^^^^^^^^^^^^^^
@@ -74,19 +74,6 @@ Adding Model Providers
 Model providers can be added to their respective `JSON files <https://github.com/pyTMD/pyTMD/tree/main/providers>`_.
 The main database can then be updated by running the `merge providers <https://github.com/pyTMD/pyTMD/blob/main/providers/_providers_to_database.py>`_ script.
 
-Continuous Integration
-^^^^^^^^^^^^^^^^^^^^^^
-We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (``ubuntu-latest``), Mac (``macos-latest``) and Windows (``windows-latest``) Operating Systems.
-The configuration files for this service are in the `GitHub workflows <https://github.com/pyTMD/pyTMD/tree/main/.github/workflows>`_ directory.
-The workflows use ``mamba`` and the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ file to install the required dependencies and build the environment.
-
-The GitHub Actions jobs include:
-
-* Running `flake8 <https://flake8.pycqa.org/en/latest/>`_ to check the code for style and compilation errors
-* Running the test suite on multiple combinations of OS and Python version
-* Uploading test coverage statistics to `Codecov <https://app.codecov.io/gh/pyTMD/pyTMD>`_
-* Uploading source and wheel distributions to `PyPI <https://pypi.org/project/pyTMD/>`_ (on releases)
-
 Semantic Commit Messages
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -105,5 +92,5 @@ where ``<type>`` is one of the following:
 - ``docs``: changing the documentation
 - ``style``: changing the line order or adding comments
 - ``refactor``: changing the names of variables or programs
-- ``ci``: changing the `continuous integration <./Contributing.html#continuous-integration>`_ configuration files or scripts
-- ``test``: adding or updating `continuous integration tests <./Contributing.html#continuous-integration>`_
+- ``ci``: changing the `continuous integration <../project/Testing.html#continuous-integration>`_ configuration files or scripts
+- ``test``: adding or updating `continuous integration tests <../project/Testing.html#continuous-integration>`_
