@@ -21,6 +21,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
     Updated 12/2024: create test files from matlab program for comparison
@@ -49,6 +50,7 @@ UPDATE HISTORY:
         will install octave and oct2py in development requirements
     Written 08/2020
 """
+import os
 import re
 import io
 import copy
@@ -57,7 +59,6 @@ import json
 import boto3
 import shutil
 import pytest
-import inspect
 import pathlib
 import zipfile
 import posixpath
@@ -76,9 +77,8 @@ import timescale.time
 pd = pyTMD.utilities.import_dependency('pandas')
 oct2py = pyTMD.utilities.import_dependency('oct2py')
 
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
+# check if running on GitHub Actions CI
+GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
 # PURPOSE: calculate the matlab serial date from calendar date
 # http://scienceworld.wolfram.com/astronomy/JulianDate.html
@@ -92,9 +92,13 @@ def convert_calendar_serial(year, month, day, hour=0.0, minute=0.0, second=0.0):
 
 # PURPOSE: Test and Verify CATS2008 model read and prediction programs
 class Test_CATS2008:
+    @pytest.fixture(autouse=True)
+    def init(self, directory):
+        self.directory = pathlib.Path(directory).expanduser().absolute()
+
     # PURPOSE: Download CATS2008 from US Antarctic Program
     @pytest.fixture(scope="class", autouse=False)
-    def download_CATS2008(self):
+    def download_CATS2008(self, directory):
         # download CATS2008 zip file and read as virtual file object
         HOST = ['https://www.usap-dc.org','dataset','usap-dc','601235',
             '2019-12-19T23:26:43.6Z','CATS2008.zip?dataset_id=601235']
@@ -108,7 +112,7 @@ class Test_CATS2008:
         # verify that model files are within downloaded zip file
         assert all(m)
         # output tide directory for model
-        modelpath = filepath.joinpath('CATS2008')
+        modelpath = directory.joinpath('CATS2008')
         # extract each member (model and configuration files)
         for member in m:
             # strip directories from member filename
@@ -118,7 +122,7 @@ class Test_CATS2008:
         # close the zipfile object
         zfile.close()
         # output control file for tide model
-        CFname = filepath.joinpath('Model_CATS2008')
+        CFname = directory.joinpath('Model_CATS2008')
         fid = CFname.open(mode='w', encoding='utf8')
         for model_file in ['hf.CATS2008.out','uv.CATS2008.out','grid_CATS2008']:
             print(modelpath.joinpath(model_file), file=fid)
@@ -134,8 +138,9 @@ class Test_CATS2008:
         CFname.unlink(missing_ok=True)
 
     # PURPOSE: Download CATS2008 from AWS S3 bucket
-    @pytest.fixture(scope="class", autouse=True)
+    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
     def AWS_CATS2008(self,
+            directory,
             aws_access_key_id,
             aws_secret_access_key,
             aws_region_name
@@ -149,11 +154,11 @@ class Test_CATS2008:
         s3 = session.resource('s3')
         bucket = s3.Bucket('pytmd')
         # model parameters for CATS2008
-        modelpath = filepath.joinpath('CATS2008')
+        modelpath = directory.joinpath('CATS2008')
         # recursively create model directory
         modelpath.mkdir(parents=True, exist_ok=True)
         # output control file for tide model
-        CFname = filepath.joinpath('Model_CATS2008')
+        CFname = directory.joinpath('Model_CATS2008')
         fid = CFname.open(mode='w', encoding='utf8')
         # retrieve each model file from s3
         for model_file in ['hf.CATS2008.out','uv.CATS2008.out','grid_CATS2008']:
@@ -187,11 +192,11 @@ class Test_CATS2008:
 
     # PURPOSE: Download Antarctic Tide Gauge Database from US Antarctic Program
     @pytest.fixture(scope="class", autouse=False)
-    def download_AntTG(self):
+    def download_AntTG(self, directory):
         # download Tide Gauge Database text file
         HOST = ['https://www.usap-dc.org','dataset','usap-dc','601358',
             '2020-07-10T19:50:08.8Z','AntTG_ocean_height_v1.txt?dataset_id=601358']
-        local = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        local = directory.joinpath('AntTG_ocean_height_v1.txt')
         pyTMD.utilities.from_http(HOST, local=local)
         assert local.exists()
         # run tests
@@ -200,8 +205,9 @@ class Test_CATS2008:
         local.unlink(missing_ok=True)
 
     # PURPOSE: Download Antarctic Tide Gauge Database from AWS
-    @pytest.fixture(scope="class", autouse=True)
+    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
     def AWS_AntTG(self,
+            directory,
             aws_access_key_id,
             aws_secret_access_key,
             aws_region_name
@@ -217,7 +223,7 @@ class Test_CATS2008:
         # retrieve Tide Gauge Database text file
         obj = bucket.Object(key='AntTG_ocean_height_v1.txt')
         response = obj.get()
-        local = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        local = directory.joinpath('AntTG_ocean_height_v1.txt')
         with local.open(mode='wb') as destination:
             shutil.copyfileobj(response['Body'], destination)
         assert local.exists()
@@ -228,31 +234,31 @@ class Test_CATS2008:
 
     # PURPOSE: create verification from Matlab program
     @pytest.fixture(scope="class", autouse=False)
-    def update_verify_CATS2008(self):
+    def update_verify_CATS2008(self, directory):
         # compute validation data from Matlab TMD program using octave
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         octave = copy.copy(oct2py.octave)
-        TMDpath = filepath.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
+        TMDpath = directory.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
         octave.addpath(octave.genpath(str(TMDpath)))
-        octave.addpath(str(filepath))
+        octave.addpath(str(directory))
         # turn off octave warnings
         octave.warning('off', 'all')
         # iterate over type: heights versus currents
         for TYPE in ['z', 'U', 'V']:
             # model parameters for CATS2008
             if (TYPE == 'z'):
-                model = pyTMD.io.model(filepath).elevation('CATS2008')
+                model = pyTMD.io.model(directory).elevation('CATS2008')
             else:
-                model = pyTMD.io.model(filepath).current('CATS2008')
+                model = pyTMD.io.model(directory).current('CATS2008')
             # path to tide model files
             modelpath = model.grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
-            CFname = filepath.joinpath('Model_CATS2008')
+            CFname = directory.joinpath('Model_CATS2008')
             assert CFname.exists()
 
             # open Antarctic Tide Gauge (AntTG) database
-            AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+            AntTG = directory.joinpath('AntTG_ocean_height_v1.txt')
             with AntTG.open(mode='r', encoding='utf8') as f:
                 file_contents = f.read().splitlines()
             # counts the number of lines in the header
@@ -304,33 +310,33 @@ class Test_CATS2008:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+            output_file = directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
     # PURPOSE: create ellipse verification from Matlab program
     @pytest.fixture(scope="class", autouse=False)
-    def update_tidal_ellipse(self):
+    def update_tidal_ellipse(self, directory):
         # model parameters for CATS2008
-        model = pyTMD.io.model(filepath).current('CATS2008')
+        model = pyTMD.io.model(directory).current('CATS2008')
         modelpath = model.grid_file.parent
         TYPES = ['U','V']
 
         # compute validation data from Matlab TMD program using octave
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         octave = copy.copy(oct2py.octave)
-        TMDpath = filepath.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
+        TMDpath = directory.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
         octave.addpath(octave.genpath(str(TMDpath)))
-        octave.addpath(str(filepath))
+        octave.addpath(str(directory))
         octave.addpath(str(modelpath))
         # turn off octave warnings
         octave.warning('off', 'all')
         # input control file for model
-        CFname = filepath.joinpath('Model_CATS2008')
+        CFname = directory.joinpath('Model_CATS2008')
         assert CFname.exists()
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -394,14 +400,14 @@ class Test_CATS2008:
             df[s].attrs['longitude'] = station_lon[i]
 
         # save to (gzipped) csv
-        output_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        output_file = directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         with gzip.open(output_file, 'wb') as f:
             df.to_csv(f, index_label='ellipse')
 
     # PURPOSE: Test read program that grids and constituents are as expected
     def test_read_CATS2008(self, ny=2026, nx=1663):
         # model parameters for CATS2008
-        modelpath = filepath.joinpath('CATS2008')
+        modelpath = self.directory.joinpath('CATS2008')
         grid_file = modelpath.joinpath('grid_CATS2008')
         elevation_file = modelpath.joinpath('hf.CATS2008.out')
         transport_file = modelpath.joinpath('uv.CATS2008.out')
@@ -426,7 +432,7 @@ class Test_CATS2008:
     def test_check_CATS2008(self):
         lons = np.zeros((10)) + 178.0
         lats = -45.0 - np.arange(10)*5.0
-        obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=filepath,
+        obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=self.directory,
             MODEL='CATS2008', EPSG=4326)
         exp = np.array([False, False, False, False, True,
             True, True, True, False, False])
@@ -435,10 +441,10 @@ class Test_CATS2008:
     # PURPOSE: Tests that interpolated results are comparable to AntTG database
     def test_compare_CATS2008(self):
         # model parameters for CATS2008
-        model = pyTMD.io.model(filepath).elevation('CATS2008')
+        model = pyTMD.io.model(self.directory).elevation('CATS2008')
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -520,12 +526,12 @@ class Test_CATS2008:
     def test_verify_CATS2008(self, TYPE):
         # model parameters for CATS2008
         if (TYPE == 'z'):
-            model = pyTMD.io.model(filepath).elevation('CATS2008')
+            model = pyTMD.io.model(self.directory).elevation('CATS2008')
         else:
-            model = pyTMD.io.model(filepath).current('CATS2008')
+            model = pyTMD.io.model(self.directory).current('CATS2008')
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -577,7 +583,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)
@@ -615,11 +621,11 @@ class Test_CATS2008:
     # PURPOSE: Tests that tidal ellipse results are comparable to Matlab program
     def test_tidal_ellipse(self):
         # model parameters for CATS2008
-        model = pyTMD.io.model(filepath).current('CATS2008')
+        model = pyTMD.io.model(self.directory).current('CATS2008')
         TYPES = ['U','V']
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -665,7 +671,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         df = pd.read_csv(validation_file, index_col='ellipse')
 
         # save complex amplitude for each current
@@ -724,7 +730,7 @@ class Test_CATS2008:
     @pytest.mark.parametrize("SOLVER", ['lstsq','gelsy','gelss','gelsd','bvls'])
     def test_solve(self, SOLVER):
         # get model parameters
-        model = pyTMD.io.model(filepath).elevation('CATS2008')
+        model = pyTMD.io.model(self.directory).elevation('CATS2008')
 
         # calculate a forecast every minute
         minutes = np.arange(366*1440)
@@ -767,12 +773,12 @@ class Test_CATS2008:
     def test_compare_constituents(self, TYPE, METHOD):
         # model parameters for CATS2008
         if (TYPE == 'z'):
-            model = pyTMD.io.model(filepath).elevation('CATS2008')
+            model = pyTMD.io.model(self.directory).elevation('CATS2008')
         else:
-            model = pyTMD.io.model(filepath).current('CATS2008')
+            model = pyTMD.io.model(self.directory).current('CATS2008')
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -844,11 +850,11 @@ class Test_CATS2008:
     # PURPOSE: Tests that interpolated results are comparable
     def test_CATS2008_xarray(self):
         # read data and convert to xarray datatree
-        m = pyTMD.io.model(filepath)
+        m = pyTMD.io.model(self.directory)
         dtree = m.to_datatree('CATS2008')
 
         # open Antarctic Tide Gauge (AntTG) database
-        AntTG = filepath.joinpath('AntTG_ocean_height_v1.txt')
+        AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
         with AntTG.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # counts the number of lines in the header
@@ -953,7 +959,7 @@ class Test_CATS2008:
         delta_time = np.random.random((100))*86400
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_elevations(x, y, delta_time,
-            DIRECTORY=filepath, MODEL='CATS2008', GZIP=False,
+            DIRECTORY=self.directory, MODEL='CATS2008', GZIP=False,
             EPOCH=timescale.time._j2000_epoch, TYPE='drift', TIME='UTC',
             EPSG=3031, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
         assert np.any(tide)
@@ -977,7 +983,7 @@ class Test_CATS2008:
         delta_time = np.random.random((100))*86400
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_currents(x, y, delta_time,
-            DIRECTORY=filepath, MODEL='CATS2008', GZIP=False,
+            DIRECTORY=self.directory, MODEL='CATS2008', GZIP=False,
             EPOCH=timescale.time._j2000_epoch, TYPE='drift', TIME='UTC',
             EPSG=3031, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
         # iterate over zonal and meridional currents
@@ -988,7 +994,7 @@ class Test_CATS2008:
     @pytest.mark.parametrize("MODEL", ['CATS2008'])
     def test_definition_file(self, MODEL):
         # get model parameters
-        model = pyTMD.io.model(filepath).elevation(MODEL)
+        model = pyTMD.io.model(self.directory).elevation(MODEL)
         # create model definition file
         fid = io.StringIO()
         attrs = ['name','format','grid_file','model_file','type','projection']
@@ -1003,9 +1009,13 @@ class Test_CATS2008:
 
 # PURPOSE: Test and Verify AOTIM-5-2018 model read and prediction programs
 class Test_AOTIM5_2018:
+    @pytest.fixture(autouse=True)
+    def init(self, directory):
+        self.directory = pathlib.Path(directory).expanduser().absolute()
+
     # PURPOSE: Download AOTIM-5-2018 from NSF ArcticData server
-    @pytest.fixture(scope="class", autouse=True)
-    def download_AOTIM5_2018(self):
+    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
+    def download_AOTIM5_2018(self, directory):
         # build host url for model
         doi = '10.18739/A21R6N14K'
         resource_map_doi = f'resource_map_doi:{doi}'
@@ -1023,7 +1033,7 @@ class Test_AOTIM5_2018:
         # verify that model files are within downloaded zip file
         assert all(m)
         # output tide directory for model
-        modelpath = filepath.joinpath('Arc5km2018')
+        modelpath = directory.joinpath('Arc5km2018')
         # extract each member (model and configuration files)
         for member in m:
             # strip directories from member filename
@@ -1034,7 +1044,7 @@ class Test_AOTIM5_2018:
         # close the zipfile object
         zfile.close()
         # output control file for tide model
-        CFname = filepath.joinpath('Model_Arc5km2018')
+        CFname = directory.joinpath('Model_Arc5km2018')
         fid = CFname.open(mode='w', encoding='utf8')
         for model_file in ['h_Arc5km2018','UV_Arc5km2018','grid_Arc5km2018']:
             print(modelpath.joinpath(model_file), file=fid)
@@ -1050,11 +1060,11 @@ class Test_AOTIM5_2018:
         CFname.unlink(missing_ok=True)
 
     # PURPOSE: Download Arctic Tidal Current Atlas list of records
-    @pytest.fixture(scope="class", autouse=True)
-    def download_Arctic_Tide_Atlas(self):
+    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
+    def download_Arctic_Tide_Atlas(self, directory):
         HOST = ['https://arcticdata.io','metacat','d1','mn','v2','object',
             'urn%3Auuid%3Ae3abe2cc-f903-44de-9758-0c6bfc5b66c9']
-        local = filepath.joinpath('List_of_records.txt')
+        local = directory.joinpath('List_of_records.txt')
         pyTMD.utilities.from_http(HOST, local=local)
         assert local.exists()
         # run tests
@@ -1064,31 +1074,31 @@ class Test_AOTIM5_2018:
 
     # PURPOSE: create verification from Matlab program
     @pytest.fixture(scope="class", autouse=False)
-    def update_AOTIM5_2018(self):
+    def update_AOTIM5_2018(self, directory):
         # compute validation data from Matlab TMD program using octave
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         octave = copy.copy(oct2py.octave)
-        TMDpath = filepath.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
+        TMDpath = directory.joinpath('..','TMD_Matlab_Toolbox','TMD').absolute()
         octave.addpath(octave.genpath(str(TMDpath)))
-        octave.addpath(str(filepath))
+        octave.addpath(str(directory))
         # turn off octave warnings
         octave.warning('off', 'all')
         # iterate over type: heights versus currents
         for TYPE in ['z', 'U', 'V']:
             # model parameters for AOTIM-5-2018
             if (TYPE == 'z'):
-                model = pyTMD.io.model(filepath).elevation('AOTIM-5-2018')
+                model = pyTMD.io.model(directory).elevation('AOTIM-5-2018')
             else:
-                model = pyTMD.io.model(filepath).current('AOTIM-5-2018')
+                model = pyTMD.io.model(directory).current('AOTIM-5-2018')
             # path to tide model files
             modelpath = model.grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
-            CFname = filepath.joinpath('Model_Arc5km2018')
+            CFname = directory.joinpath('Model_Arc5km2018')
             assert CFname.exists()
 
             # open Arctic Tidal Current Atlas list of records
-            ATLAS = filepath.joinpath('List_of_records.txt')
+            ATLAS = directory.joinpath('List_of_records.txt')
             with ATLAS.open(mode='r', encoding='utf8') as f:
                 file_contents = f.read().splitlines()
             # skip 2 header rows
@@ -1125,7 +1135,7 @@ class Test_AOTIM5_2018:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+            output_file = directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -1135,12 +1145,12 @@ class Test_AOTIM5_2018:
     def test_verify_AOTIM5_2018(self, TYPE):
         # model parameters for AOTIM-5-2018
         if (TYPE == 'z'):
-            model = pyTMD.io.model(filepath).elevation('AOTIM-5-2018')
+            model = pyTMD.io.model(self.directory).elevation('AOTIM-5-2018')
         else:
-            model = pyTMD.io.model(filepath).current('AOTIM-5-2018')
+            model = pyTMD.io.model(self.directory).current('AOTIM-5-2018')
 
         # open Arctic Tidal Current Atlas list of records
-        ATLAS = filepath.joinpath('List_of_records.txt')
+        ATLAS = self.directory.joinpath('List_of_records.txt')
         with ATLAS.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # skip 2 header rows
@@ -1174,7 +1184,7 @@ class Test_AOTIM5_2018:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+        validation_file = self.directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)
@@ -1217,12 +1227,12 @@ class Test_AOTIM5_2018:
     def test_compare_constituents(self, TYPE, METHOD):
         # model parameters for AOTIM-5-2018
         if (TYPE == 'z'):
-            model = pyTMD.io.model(filepath).elevation('AOTIM-5-2018')
+            model = pyTMD.io.model(self.directory).elevation('AOTIM-5-2018')
         else:
-            model = pyTMD.io.model(filepath).current('AOTIM-5-2018')
+            model = pyTMD.io.model(self.directory).current('AOTIM-5-2018')
 
         # open Arctic Tidal Current Atlas list of records
-        ATLAS = filepath.joinpath('List_of_records.txt')
+        ATLAS = self.directory.joinpath('List_of_records.txt')
         with ATLAS.open(mode='r', encoding='utf8') as f:
             file_contents = f.read().splitlines()
         # skip 2 header rows
@@ -1293,7 +1303,7 @@ class Test_AOTIM5_2018:
         delta_time = 0.0
         # calculate tide map
         tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-            DIRECTORY=filepath, MODEL='AOTIM-5-2018', GZIP=False,
+            DIRECTORY=self.directory, MODEL='AOTIM-5-2018', GZIP=False,
             EPOCH=timescale.time._j2000_epoch, TYPE='grid', TIME='UTC',
             EPSG=3413, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
         assert np.any(tide)
@@ -1302,7 +1312,7 @@ class Test_AOTIM5_2018:
     @pytest.mark.parametrize("MODEL", ['AOTIM-5-2018'])
     def test_definition_file(self, MODEL):
         # get model parameters
-        model = pyTMD.io.model(filepath).elevation(MODEL)
+        model = pyTMD.io.model(self.directory).elevation(MODEL)
         # create model definition file
         fid = io.StringIO()
         attrs = ['name','format','grid_file','model_file','type','projection']

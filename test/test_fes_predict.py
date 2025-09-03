@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_fes_predict.py (06/2025)
+test_fes_predict.py (09/2025)
 Tests that FES2014 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to FES2014 program
@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
     Updated 07/2024: add parametrize over cropping the model fields
@@ -32,13 +33,12 @@ UPDATE HISTORY:
     Updated 02/2021: replaced numpy bool to prevent deprecation warning
     Written 08/2020
 """
+import os
 import io
 import json
 import boto3
 import shutil
 import pytest
-import inspect
-import pathlib
 import posixpath
 import numpy as np
 import pyTMD.io
@@ -49,13 +49,16 @@ import pyTMD.predict
 import pyTMD.arguments
 import timescale.time
 
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
+# check if running on GitHub Actions CI
+GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
 # PURPOSE: Download FES2014 constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=True)
-def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
+@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
+def download_model(directory,
+        aws_access_key_id,
+        aws_secret_access_key,
+        aws_region_name
+    ):
     # get aws session object
     session = boto3.Session(
         aws_access_key_id=aws_access_key_id,
@@ -66,7 +69,7 @@ def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
     bucket = s3.Bucket('pytmd')
 
     # model parameters for FES2014
-    model = pyTMD.io.model(filepath,compressed=True,
+    model = pyTMD.io.model(directory,compressed=True,
         verify=False).elevation('FES2014')
     # recursively create model directory
     model_directory = model.model_file[0].parent
@@ -87,10 +90,10 @@ def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
     shutil.rmtree(model_directory)
 
 # PURPOSE: Tests check point program
-def test_check_FES2014():
+def test_check_FES2014(directory):
     lons = np.zeros((10)) + 178.0
     lats = -45.0 - np.arange(10)*5.0
-    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=filepath,
+    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=directory,
         MODEL='FES2014', GZIP=True, EPSG=4326)
     exp = np.array([True, True, True, True, True,
         True, True, True, False, False])
@@ -99,9 +102,9 @@ def test_check_FES2014():
 # PURPOSE: Tests that interpolated results are comparable to FES program
 @pytest.mark.parametrize("METHOD", ['spline'])
 @pytest.mark.parametrize("CROP", [False, True])
-def test_verify_FES2014(METHOD, CROP):
+def test_verify_FES2014(directory, METHOD, CROP):
     # model parameters for FES2014
-    m = pyTMD.io.model(filepath,compressed=True).elevation('FES2014')
+    m = pyTMD.io.model(directory,compressed=True).elevation('FES2014')
     # constituent files included in test
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
@@ -113,7 +116,7 @@ def test_verify_FES2014(METHOD, CROP):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']
@@ -158,9 +161,9 @@ def test_verify_FES2014(METHOD, CROP):
 # parameterize interpolation method
 @pytest.mark.parametrize("METHOD", ['spline'])
 # PURPOSE: Tests that interpolated results are comparable
-def test_compare_FES2014(METHOD):
+def test_compare_FES2014(directory, METHOD):
     # model parameters for FES2014
-    m = pyTMD.io.model(filepath,compressed=True).elevation('FES2014')
+    m = pyTMD.io.model(directory,compressed=True).elevation('FES2014')
     # constituent files included in test
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
@@ -172,7 +175,7 @@ def test_compare_FES2014(METHOD):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']
@@ -238,9 +241,9 @@ def test_compare_FES2014(METHOD):
 
 # PURPOSE: test definition file functionality
 @pytest.mark.parametrize("MODEL", ['FES2014'])
-def test_definition_file(MODEL):
+def test_definition_file(directory, MODEL):
     # get model parameters
-    model = pyTMD.io.model(filepath,compressed=True).elevation(MODEL)
+    model = pyTMD.io.model(directory,compressed=True).elevation(MODEL)
     # create model definition file
     fid = io.StringIO()
     attrs = ['name','format','model_file','compressed','type','scale','version']

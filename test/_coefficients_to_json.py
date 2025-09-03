@@ -3,17 +3,10 @@ coefficients_to_json.py (10/2024)
 Converts the coefficients table to a json file
 """
 import re
-import copy
 import json
-import inspect
-import pathlib
 import argparse
 import pyTMD.utilities
 from collections import OrderedDict
-
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
 
 def coefficients_table():
     coefficients = OrderedDict()

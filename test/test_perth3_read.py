@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_perth3_read.py (08/2025)
+test_perth3_read.py (09/2025)
 Tests that GOT4.7 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to NASA PERTH3 program
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
@@ -37,14 +38,13 @@ UPDATE HISTORY:
         replaced numpy bool/int to prevent deprecation warnings
     Written 08/2020
 """
+import os
 import io
 import gzip
 import json
 import boto3
 import shutil
 import pytest
-import inspect
-import pathlib
 import posixpath
 import numpy as np
 import xarray as xr
@@ -55,13 +55,16 @@ import pyTMD.compute
 import pyTMD.predict
 import timescale.time
 
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
+# check if running on GitHub Actions CI
+GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
 # PURPOSE: Download GOT4.7 constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=True)
-def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
+@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
+def download_model(directory,
+        aws_access_key_id,
+        aws_secret_access_key,
+        aws_region_name
+    ):
     # get aws session object
     session = boto3.Session(
         aws_access_key_id=aws_access_key_id,
@@ -72,7 +75,7 @@ def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
     bucket = s3.Bucket('pytmd')
 
     # model parameters for GOT4.7
-    model = pyTMD.io.model(filepath,compressed=True,
+    model = pyTMD.io.model(directory, compressed=True,
         verify=False).elevation('GOT4.7')
     # recursively create model directory
     model_directory = model.model_file[0].parent
@@ -96,9 +99,9 @@ def download_model(aws_access_key_id,aws_secret_access_key,aws_region_name):
 @pytest.mark.parametrize("METHOD", ['spline','linear','bilinear'])
 @pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to PERTH3 program
-def test_verify_GOT47(METHOD, CROP):
+def test_verify_GOT47(directory, METHOD, CROP):
     # model parameters for GOT4.7
-    model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
+    model = pyTMD.io.model(directory,compressed=True).elevation('GOT4.7')
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
@@ -106,7 +109,7 @@ def test_verify_GOT47(METHOD, CROP):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -161,9 +164,9 @@ def test_verify_GOT47(METHOD, CROP):
 # parameterize interpolation method
 @pytest.mark.parametrize("METHOD", ['spline','nearest'])
 # PURPOSE: Tests that interpolated results are comparable
-def test_compare_GOT47(METHOD):
+def test_compare_GOT47(directory, METHOD):
     # model parameters for GOT4.7
-    model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
+    model = pyTMD.io.model(directory,compressed=True).elevation('GOT4.7')
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
@@ -171,7 +174,7 @@ def test_compare_GOT47(METHOD):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -223,9 +226,9 @@ def test_compare_GOT47(METHOD):
         assert np.all(np.abs(difference) <= eps)
 
 # PURPOSE: Tests that xarray-based results are comparable
-def test_GOT47_xarray():
+def test_GOT47_xarray(directory):
     # model parameters for GOT4.7
-    model = pyTMD.io.model(filepath,compressed=True).elevation('GOT4.7')
+    model = pyTMD.io.model(directory,compressed=True).elevation('GOT4.7')
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
@@ -233,7 +236,7 @@ def test_GOT47_xarray():
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -270,10 +273,10 @@ def test_GOT47_xarray():
         assert np.all(np.abs(difference) <= eps)
 
 # PURPOSE: Tests check point program
-def test_check_GOT47():
+def test_check_GOT47(directory):
     lons = np.zeros((10)) + 178.0
     lats = -45.0 - np.arange(10)*5.0
-    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=filepath,
+    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=directory,
         MODEL='GOT4.7', GZIP=True, EPSG=4326)
     exp = np.array([True, True, True, True, True,
         True, True, True, False, False])
@@ -283,7 +286,7 @@ def test_check_GOT47():
 @pytest.mark.parametrize("METHOD", ['spline','nearest','bilinear'])
 @pytest.mark.parametrize("EXTRAPOLATE", [True])
 # PURPOSE: test the tide correction wrapper function
-def test_Ross_Ice_Shelf(METHOD, EXTRAPOLATE):
+def test_Ross_Ice_Shelf(directory, METHOD, EXTRAPOLATE):
     # create an image around the Ross Ice Shelf
     xlimits = np.array([-750000,550000])
     ylimits = np.array([-1450000,-300000])
@@ -296,16 +299,16 @@ def test_Ross_Ice_Shelf(METHOD, EXTRAPOLATE):
     delta_time = 0.0
     # calculate tide map
     tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-        DIRECTORY=filepath, MODEL='GOT4.7', GZIP=True,
+        DIRECTORY=directory, MODEL='GOT4.7', GZIP=True,
         EPOCH=timescale.time._atlas_sdp_epoch, TYPE='grid', TIME='GPS',
         EPSG=3031, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
     assert np.any(tide)
 
 # PURPOSE: test definition file functionality
 @pytest.mark.parametrize("MODEL", ['GOT4.7'])
-def test_definition_file(MODEL):
+def test_definition_file(directory, MODEL):
     # get model parameters
-    model = pyTMD.io.model(filepath,compressed=True).elevation(MODEL)
+    model = pyTMD.io.model(directory,compressed=True).elevation(MODEL)
     # create model definition file
     fid = io.StringIO()
     attrs = ['name','format','model_file','compressed','type','scale']
@@ -326,8 +329,8 @@ def test_extend_array():
     assert np.all(test == valid)
 
 # PURPOSE: test the catch in the correction wrapper function
-def test_unlisted_model():
+def test_unlisted_model(directory):
     msg = "Unlisted tide model"
     with pytest.raises(Exception, match=msg):
         pyTMD.compute.tide_elevations(None, None, None,
-            DIRECTORY=filepath, MODEL='invalid')
+            DIRECTORY=directory, MODEL='invalid')

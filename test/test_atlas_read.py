@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_atlas_read.py (06/2025)
+test_atlas_read.py (09/2025)
 Tests that ATLAS compact and netCDF4 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 
@@ -18,6 +18,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
     Updated 07/2024: add parametrize over cropping the model fields
@@ -33,6 +34,7 @@ UPDATE HISTORY:
         replaced numpy bool/int to prevent deprecation warnings
     Written 09/2020
 """
+import os
 import re
 import io
 import gzip
@@ -40,8 +42,6 @@ import json
 import boto3
 import shutil
 import pytest
-import inspect
-import pathlib
 import posixpath
 import numpy as np
 import pyTMD.io
@@ -50,13 +50,13 @@ import pyTMD.arguments
 import pyTMD.utilities
 import timescale.time
 
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
+# check if running on GitHub Actions CI
+GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
 # PURPOSE: Download TPXO8 ATLAS compact constituents from AWS S3 bucket
-# @pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=False)
 def download_TPXO8(
+        directory,
         aws_access_key_id,
         aws_secret_access_key,
         aws_region_name
@@ -71,7 +71,7 @@ def download_TPXO8(
     bucket = s3.Bucket('pytmd')
 
     # model parameters for TPXO8-ATLAS
-    model_directory = filepath.joinpath('tpxo8_atlas')
+    model_directory = directory.joinpath('tpxo8_atlas')
     # recursively create model directory
     model_directory.mkdir(parents=True, exist_ok=True)
     model_files = ['grid_tpxo8atlas_30_v1',
@@ -92,8 +92,9 @@ def download_TPXO8(
     shutil.rmtree(model_directory)
 
 # PURPOSE: Download TPXO9 ATLAS V2 netCDF constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
 def download_TPXO9_v2(
+        directory,
         aws_access_key_id,
         aws_secret_access_key,
         aws_region_name
@@ -108,7 +109,7 @@ def download_TPXO9_v2(
     bucket = s3.Bucket('pytmd')
 
     # model parameters for TPXO9-atlas-v2
-    model = pyTMD.io.model(filepath,compressed=True,verify=False
+    model = pyTMD.io.model(directory,compressed=True,verify=False
         ).elevation('TPXO9-atlas-v2-nc')
     # recursively create model directory
     model_directory = model.model_file[0].parent
@@ -141,9 +142,9 @@ def download_TPXO9_v2(
 @pytest.mark.parametrize("EXTRAPOLATE", [False])
 @pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_read_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
+def test_read_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(filepath,compressed=True).elevation('TPXO9-atlas-v2-nc')
+    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
     constituents = ['m2','s2','k1','o1']
     # convert units from millimeters to meters
     m.scale = 1.0/1000.0
@@ -152,7 +153,7 @@ def test_read_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -178,9 +179,9 @@ def test_read_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
 # parameterize interpolation method
 @pytest.mark.parametrize("METHOD", ['spline'])
 # PURPOSE: Tests that interpolated results are comparable
-def test_compare_TPXO9_v2(METHOD):
+def test_compare_TPXO9_v2(directory, METHOD):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(filepath,compressed=True).elevation('TPXO9-atlas-v2-nc')
+    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
     constituents = ['m2','s2','k1','o1']
     # keep units consistent with test outputs
     m.scale = 1.0
@@ -189,7 +190,7 @@ def test_compare_TPXO9_v2(METHOD):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -233,9 +234,9 @@ def test_compare_TPXO9_v2(METHOD):
 @pytest.mark.parametrize("CROP", [False, True])
 @pytest.mark.skip(reason='Need to validate over grounded point')
 # PURPOSE: Tests that interpolated results are comparable to OTPS2 program
-def test_verify_TPXO8(METHOD, EXTRAPOLATE, CROP):
+def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP):
     # model parameters for TPXO8-atlas
-    m = pyTMD.io.model(filepath,compressed=False).elevation('TPXO8-atlas')
+    m = pyTMD.io.model(directory,compressed=False).elevation('TPXO8-atlas')
     # constituents for test
     constituents = ['m2','s2']
 
@@ -244,7 +245,7 @@ def test_verify_TPXO8(METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(filepath.joinpath('predict_tide.out.gz'),'r') as f:
+    with gzip.open(directory.joinpath('predict_tide.out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 13
@@ -307,9 +308,9 @@ def test_verify_TPXO8(METHOD, EXTRAPOLATE, CROP):
 @pytest.mark.parametrize("EXTRAPOLATE", [False])
 @pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_verify_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
+def test_verify_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(filepath,compressed=True).elevation('TPXO9-atlas-v2-nc')
+    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
     constituents = ['m2','s2','k1','o1']
     # convert units from millimeters to meters
     m.scale = 1.0/1000.0
@@ -319,7 +320,7 @@ def test_verify_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2, k1, o1)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(filepath.joinpath('predict_tide_sample_out.gz'),'r') as f:
+    with gzip.open(directory.joinpath('predict_tide_sample_out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 6
@@ -375,7 +376,7 @@ def test_verify_TPXO9_v2(METHOD, EXTRAPOLATE, CROP):
 @pytest.mark.parametrize("EXTRAPOLATE", [False])
 # PURPOSE: test the tide correction wrapper function
 @pytest.mark.skip(reason='does not presently validate the ATLAS outputs')
-def test_Ross_Ice_Shelf(MODEL, METHOD, EXTRAPOLATE):
+def test_Ross_Ice_Shelf(directory, MODEL, METHOD, EXTRAPOLATE):
     # create an image around the Ross Ice Shelf
     xlimits = np.array([-750000,550000])
     ylimits = np.array([-1450000,-300000])
@@ -388,16 +389,16 @@ def test_Ross_Ice_Shelf(MODEL, METHOD, EXTRAPOLATE):
     delta_time = 0.0
     # calculate tide map
     tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-        DIRECTORY=filepath, MODEL=MODEL, GZIP=True,
+        DIRECTORY=directory, MODEL=MODEL, GZIP=True,
         EPOCH=(2000,1,1,0,0,0), TYPE='grid', TIME='TAI',
         EPSG=3031, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
     assert np.any(tide)
 
 # PURPOSE: test definition file functionality
 @pytest.mark.parametrize("MODEL", ['TPXO9-atlas-v2-nc'])
-def test_definition_file(MODEL):
+def test_definition_file(directory, MODEL):
     # get model parameters
-    model = pyTMD.io.model(filepath,compressed=True).elevation(MODEL)
+    model = pyTMD.io.model(directory,compressed=True).elevation(MODEL)
     # create model definition file
     fid = io.StringIO()
     attrs = ['name','format','grid_file','model_file',
