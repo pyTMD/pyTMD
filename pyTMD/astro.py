@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
         convert arcseconds to radians with asec2rad function in math.py
         convert microarcseconds to radians with masec2rad function in math.py
@@ -86,6 +87,7 @@ jplephem.spk = import_dependency('jplephem.spk')
 
 __all__ = [
     "mean_longitudes",
+    "planetary_longitudes",
     "phase_angles",
     "doodson_arguments",
     "delaunay_arguments",
@@ -249,6 +251,56 @@ def mean_longitudes(
     Ps = normalize_angle(Ps)
     # return as tuple
     return (S, H, P, N, Ps)
+
+# PURPOSE: compute the mean longitudes of the 5 closest planets
+def planetary_longitudes(MJD: np.ndarray):
+    r"""
+    Computes the astronomical mean longitudes of the 5 closest planets
+    :cite:p:`Meeus:1991vh,Simon:1994vo`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    LMe: np.ndarray
+        mean longitude of Mercury (degrees)
+    LVe: np.ndarray
+        mean longitude of Venus (degrees)
+    LMa: np.ndarray
+        mean longitude of Mars (degrees)
+    LJu: np.ndarray
+        mean longitude of Jupiter (degrees)
+    LSa: np.ndarray
+        mean longitude of Saturn (degrees)
+    """
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000)/_century
+    # mean longitudes of Mercury
+    mercury_longitude = np.array([252.250906, 149474.0722491, 3.035e-4, 1.8e-8])
+    LMe = polynomial_sum(mercury_longitude, T)
+    # mean longitudes of Venus
+    venus_longitude = np.array([181.9798001, 58519.2130302, 3.1014e-4, 1.5e-8])
+    LVe = polynomial_sum(venus_longitude, T)
+    # mean longitudes of Mars
+    mars_longitude = np.array([355.433, 19141.6964471, 3.1052e-4, 1.e-8])
+    LMa = polynomial_sum(mars_longitude, T)
+    # mean longitudes of Jupiter
+    jupiter_longitude = np.array([34.351519, 3036.3027748, 2.233e-4, 3.7e-8])
+    LJu = polynomial_sum(jupiter_longitude, T)
+    # mean longitudes of Saturn
+    saturn_longitude = np.array([50.077444, 1223.5110686, 5.1908-4, -3.0e-8])
+    LSa = polynomial_sum(saturn_longitude, T)
+    # take the modulus of each
+    LMe = normalize_angle(LMe)
+    LVe = normalize_angle(LVe)
+    LMa = normalize_angle(LMa)
+    LJu = normalize_angle(LJu)
+    LSa = normalize_angle(LSa)
+    # return as tuple
+    return (LMe, LVe, LMa, LJu, LSa)
 
 # PURPOSE: computes the phase angles of astronomical means
 def phase_angles(MJD: np.ndarray):

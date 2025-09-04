@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 predict.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -22,6 +22,8 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 09/2025: make permanent tide amplitude an input parameter
+        can choose different tide potential catalogs for body tides
     Updated 08/2025: add simplified solid earth tide prediction function
         add correction of anelastic effects for long-period body tides
         use sign convention from IERS for complex body tide Love numbers
@@ -1798,11 +1800,12 @@ def _frequency_dependence_long_period(
 def _free_to_mean(
         XYZ: np.ndarray,
         h2: float | np.ndarray,
-        l2: float | np.ndarray
+        l2: float | np.ndarray,
+        H0: float = -0.31460
     ):
     """
     Calculate offsets for converting the permanent tide from
-    a tide-free to a mean-tide state
+    a tide-free to a mean-tide state :cite:p:`Mathews:1997js`
 
     Parameters
     ----------
@@ -1812,6 +1815,8 @@ def _free_to_mean(
         Degree-2 Love number of vertical displacement
     l2: float or np.ndarray
         Degree-2 Love (Shida) number of horizontal displacement
+    H0: float, default -0.31460
+        Mean amplitude of the permanent tide (meters)
     """
     # Compute the normalized position vector of coordinates
     radius = np.sqrt(np.sum(XYZ**2, axis=1))
@@ -1819,8 +1824,6 @@ def _free_to_mean(
     cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
     sinla = XYZ[:,1]/cosphi/radius
     cosla = XYZ[:,0]/cosphi/radius
-    # time-independent constituent of amplitude (Mathews et al. 1997)
-    H0 = -0.31460
     # in Mathews et al. (1997): dR0=-0.1196 m with h2=0.6026
     dR0 = np.sqrt(5.0/(4.0*np.pi))*h2*H0
     # in Mathews et al. (1997): dN0=-0.0247 m with l2=0.0831
@@ -1835,6 +1838,18 @@ def _free_to_mean(
     # return the corrections
     return np.c_[DX, DY, DZ]
 
+# tide potential tables
+_tide_potential_table = {}
+# Cartwright and Tayler (1971) table with 3rd-degree values
+# Cartwright and Edden (1973) table with updated values
+_tide_potential_table['CTE1973'] = pyTMD.arguments._cte1973_table
+# Hartmann and Wenzel (1995) tidal potential catalog
+_tide_potential_table['HW1995'] = pyTMD.arguments._hw1995_table
+# Tamura (1987) tidal potential catalog
+_tide_potential_table['T1987'] = pyTMD.arguments._t1987_table
+# Woodworth (1990) tables with updated and 3rd-degree values
+_tide_potential_table['W1990'] = pyTMD.arguments._w1990_table
+
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
 # using a simplified approach based on Cartwright and Tayler (1971)
 def body_tide(
@@ -1844,6 +1859,7 @@ def body_tide(
         deltat: float | np.ndarray = 0.0,
         method: str = 'ASTRO5',
         tide_system: str = 'tide_free',
+        catalog: str = 'CTE1973',
         **kwargs
     ):
     """
@@ -1874,6 +1890,15 @@ def body_tide(
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    catalog: str, default 'CTE1973'
+        Name of the tide potential catalog
+
+            - ``'CTE1973'``: :cite:t:`Cartwright:1973em`
+            - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
+            - ``'T1987'``: :cite:t:`Tamura:1987tp`
+            - ``'W1990'``: :cite:t:`Woodworth:1990`
+    include_planets: bool, default False
+        Include tide potentials from planetary bodies
     h2: float or None, default None
         Degree-2 Love number of vertical displacement
     l2: float or None, default None
@@ -1882,6 +1907,10 @@ def body_tide(
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
         Degree-3 Love (Shida) number of horizontal displacement
+    h4: float, default 0.18
+        Degree-4 Love number of vertical displacement
+    l4: float, default 0.01
+        Degree-4 Love (Shida) number of horizontal displacement
 
     Returns
     -------
@@ -1889,14 +1918,18 @@ def body_tide(
         Solid Earth tide in meters
     """
     # set default keyword arguments
-    # nominal Love and Shida numbers for degrees 2 and 3
+    kwargs.setdefault('include_planets', False)
+    # nominal Love and Shida numbers for degrees 2, 3, and 4
     kwargs.setdefault('h2', None)
     kwargs.setdefault('l2', None)
     kwargs.setdefault('h3', 0.291)
     kwargs.setdefault('l3', 0.015)
+    kwargs.setdefault('h4', 0.18)
+    kwargs.setdefault('l4', 0.01)
     # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
+    assert catalog in _tide_potential_table.keys()
 
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
@@ -1915,8 +1948,15 @@ def body_tide(
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
     k = 90.0 + np.zeros((nt))
-    # astronomical mean longitudes
-    fargs = np.c_[tau, s, h, p, n, pp, k]
+
+    # astronomical and planetary mean longitudes
+    if kwargs['include_planets']:
+        # calculate planetary mean longitudes
+        # me: Mercury, ve: Venus, ma: Mars, ju: Jupiter, sa: Saturn
+        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD)
+        fargs = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
+    else:
+        fargs = np.c_[tau, s, h, p, n, pp, k]
 
     # longitudes and colatitudes in radians
     phi = np.radians(lon)
@@ -1926,15 +1966,22 @@ def body_tide(
     # latitudinal, longitudinal and radial components
     zeta = np.zeros((nt, 3))
 
-    # calculate the summation over all degree-2 constituents
-    l = 2
-    # parse the Cartwright and Edden (1973) table for degree-2 constituents
-    CTE = pyTMD.arguments._parse_tide_potential_table(
-        pyTMD.arguments._ce1973_table_1)
+    # check if tide catalog includes planetary contributions
+    if catalog in ('HW1995','T1987',):
+        include_planets = True
+    else:
+        include_planets = False
+    # parse tide potential table for constituents
+    table = _tide_potential_table[catalog]
+    CTE = pyTMD.arguments._parse_tide_potential_table(table,
+        skiprows=1, columns=1, include_degree=True,
+        include_planets=include_planets)
     # for each line in the table
     for i, line in enumerate(CTE):
-        # skip the permanent tide if using a mean-tide system
-        if (i == 0) and (tide_system.lower() == 'mean_tide'):
+        # spherical harmonic degree
+        l = line['l']
+        # currently only calculating for low-degree harmonics
+        if (l > 4):
             continue
         # spherical harmonic dependence (order)
         TAU = line['tau']
@@ -1948,72 +1995,66 @@ def body_tide(
         # use cosines for (l + tau) even
         # and sines for (l + tau) odd
         K = -1.0*np.mod(l + TAU, 2)
-        # determine constituent phase using equilibrium arguments
+        # Doodson coefficients
         coef = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
-        G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
-        # convert phase angles to radians
-        phase = np.radians(G)
+        # create array of equilibrium arguments
+        if kwargs['include_planets']:
+            # planetary mean longitudes
+            LMe = line['lme']
+            LVe = line['lve']
+            LMa = line['lma']
+            LJu = line['lju']
+            LSa = line['lsa']
+            # coefficients including planetary terms
+            coef = np.hstack([*coef, LMe, LVe, LMa, LJu, LSa])
         # calculate angular frequency of constituent
-        omega = pyTMD.arguments._frequency(coef, method=method)
-        # determine love numbers for constituent
-        if (kwargs['h2'] is not None) and (kwargs['l2'] is not None):
-            # user-defined Love numbers for all constituents
-            h2 = np.complex128(kwargs['h2'])
-            l2 = np.complex128(kwargs['l2'])
-        elif (method == 'IERS'):
-            # IERS: including both in-phase and out-of-phase components
-            # 1) using resonance formula for tides in the diurnal band
-            # 2) adjusting some long-period tides for anelastic effects
-            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega,
-                method=method)
-            # 3) including latitudinal dependence
-            h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
-            l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
-        else:
-            # use resonance formula for tides in the diurnal band
-            h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
-                method=method, astype=np.complex128)
-        # calculate spherical harmonics (and derivatives)
-        S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
-        dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
-        # convert potentials for constituent and add to the total
-        # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += line['Hs3']*(l2.real*dS.real - l2.imag*dS.imag)
-        zeta[:,1] -= line['Hs3']*TAU*(l2.real*S.imag - l2.imag*S.real)
-        zeta[:,2] += line['Hs3']*(h2.real*S.real - h2.imag*S.imag)
-
-    # calculate the summation over all degree-3 constituents
-    l = 3
-    # parse the Cartwright and Tayler (1971) table for degree-3 constituents
-    CTE = pyTMD.arguments._parse_tide_potential_table(
-        pyTMD.arguments._ct1971_table_5)
-    # for each line in the table
-    for i, line in enumerate(CTE):
-        # spherical harmonic dependence (order)
-        TAU = line['tau']
-        # Doodson coefficients for constituent
-        S = line['s']
-        H = line['h']
-        P = line['p']
-        # convert N for ascending lunar node (from N')
-        N = -1.0*line['n']
-        PP = line['pp']
-        # use cosines for (l + tau) even
-        # and sines for (l + tau) odd
-        K = -1.0*np.mod(l + TAU, 2)
+        omega = pyTMD.arguments._frequency(coef, method=method,
+            include_planets=kwargs['include_planets'])
+        # skip the permanent tide if using a mean-tide system
+        if (omega == 0) and (tide_system.lower() == 'mean_tide'):
+            continue
         # determine constituent phase using equilibrium arguments
-        coef = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
         G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
         # convert phase angles to radians
         phase = np.radians(G)
         # calculate spherical harmonics (and derivatives)
         S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
-        # convert potentials for constituent and add to the total
-        # (latitudinal, longitudinal and radial components)
-        zeta[:,0] += line['Hs3']*kwargs['l3']*dS.real
-        zeta[:,1] -= line['Hs3']*TAU*kwargs['l3']*S.imag
-        zeta[:,2] += line['Hs3']*kwargs['h3']*S.real
+        # add components for degree and order to output body tides
+        if (l == 2):
+            # determine love numbers for constituent
+            if (kwargs['h2'] is not None) and (kwargs['l2'] is not None):
+                # user-defined Love numbers for all constituents
+                h2 = np.complex128(kwargs['h2'])
+                l2 = np.complex128(kwargs['l2'])
+            elif (method == 'IERS'):
+                # IERS: including both in-phase and out-of-phase components
+                # 1) using resonance formula for tides in the diurnal band
+                # 2) adjusting some long-period tides for anelastic effects
+                h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega,
+                    method=method)
+                # 3) including latitudinal dependence
+                h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
+                l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
+            else:
+                # use resonance formula for tides in the diurnal band
+                h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
+                    method=method, astype=np.complex128)
+            # convert potentials for constituent and add to the total
+            # (latitudinal, longitudinal and radial components)
+            zeta[:,0] += line['Hs1']*(l2.real*dS.real - l2.imag*dS.imag)
+            zeta[:,1] -= line['Hs1']*TAU*(l2.real*S.imag - l2.imag*S.real)
+            zeta[:,2] += line['Hs1']*(h2.real*S.real - h2.imag*S.imag)
+        elif (l == 3):
+            # convert potentials for degree-3 constituents
+            zeta[:,0] += line['Hs1']*kwargs['l3']*dS.real
+            zeta[:,1] -= line['Hs1']*TAU*kwargs['l3']*S.imag
+            zeta[:,2] += line['Hs1']*kwargs['h3']*S.real
+        elif (l == 4):
+            # convert potentials for degree-4 constituents
+            zeta[:,0] += line['Hs1']*kwargs['l4']*dS.real
+            zeta[:,1] -= line['Hs1']*TAU*kwargs['l4']*S.imag
+            zeta[:,2] += line['Hs1']*kwargs['h4']*S.real
 
     # return the body tides
     return zeta

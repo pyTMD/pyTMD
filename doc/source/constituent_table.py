@@ -48,8 +48,8 @@ cons['k2'] = ('k2', 'Lunisolar declinational semidiurnal')
 cons['eta2'] = ('\u03B72', '')
 cons['m3'] = ('m3', 'Principal lunar terdiurnal')
 
-# Cartwright and Edden (1973) table with updated values
-table = pyTMD.arguments._ce1973_table_1
+# tide potential table with updated values
+table = pyTMD.arguments._cte1973_table
 # read the table
 CTE = pyTMD.arguments._parse_tide_potential_table(table)
 
@@ -61,7 +61,7 @@ print('Constituent,Doodson Number,Frequency (cpd),Description', file=fid)
 for c,params in cons.items():
     DO = pyTMD.arguments.doodson_number(c).astype(str).zfill(7)
     i, = np.nonzero(CTE['DO'] == DO)
-    amp = 100.0*np.abs(CTE['Hs3'][i])
+    amp = 100.0*np.abs(CTE['Hs1'][i])
     omega, = pyTMD.arguments.frequency(c)
     freq = 86400.0*omega/(2.0*np.pi)
     period = 1.0/freq

@@ -5,13 +5,15 @@ Ocean and Load Tides
 --------------------
 
 The rise and fall of the oceanic tides are a major source of the vertical variability of the ocean surface.
-Ocean tides are typically observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
+Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
+A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
+Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
 .. note::
     Different measurement techniques can have different `vertical datums <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_!
+    Tide gauges measure the height of the ocean surface relative to the land upon which they are situated (*ocean tides only*).
+    Satellite altimeters measure the height of the ocean surface relative to the center of mass of the Earth system (*combination of ocean and earth tides*).
 
-Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
-A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
 Tidal oscillations for both ocean and load tides can be decomposed into a series of tidal constituents (or partial tides) of particular frequencies that are associated with the relative positions of the sun, moon and Earth.
 These tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents`].
 
