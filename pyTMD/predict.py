@@ -1838,17 +1838,17 @@ def _free_to_mean(
     # return the corrections
     return np.c_[DX, DY, DZ]
 
-# tide potential catalogs
-_tide_potential_catalogs = {}
+# tide potential tables
+_tide_potential_table = {}
 # Cartwright and Tayler (1971) table with 3rd-degree values
 # Cartwright and Edden (1973) table with updated values
-_tide_potential_catalogs['CTE1973'] = pyTMD.arguments._cte1973_table
+_tide_potential_table['CTE1973'] = pyTMD.arguments._cte1973_table
 # Hartmann and Wenzel (1995) tidal potential catalog
-_tide_potential_catalogs['HW1995'] = pyTMD.arguments._hw1995_table
+_tide_potential_table['HW1995'] = pyTMD.arguments._hw1995_table
 # Tamura (1987) tidal potential catalog
-_tide_potential_catalogs['T1987'] = pyTMD.arguments._t1987_table
+_tide_potential_table['T1987'] = pyTMD.arguments._t1987_table
 # Woodworth (1990) tables with updated and 3rd-degree values
-_tide_potential_catalogs['W1990'] = pyTMD.arguments._w1990_table
+_tide_potential_table['W1990'] = pyTMD.arguments._w1990_table
 
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
 # using a simplified approach based on Cartwright and Tayler (1971)
@@ -1892,6 +1892,11 @@ def body_tide(
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
     catalog: str, default 'CTE1973'
         Name of the tide potential catalog
+
+            - ``'CTE1973'``
+            - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
+            - ``'T1987'``
+            - ``'W1990'``
     include_planets: bool, default False
         Include tide potentials from planetary bodies
     h2: float or None, default None
@@ -1924,7 +1929,7 @@ def body_tide(
     # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
-    assert catalog in _tide_potential_catalogs.keys()
+    assert catalog in _tide_potential_table.keys()
 
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
@@ -1967,7 +1972,7 @@ def body_tide(
     else:
         include_planets = False
     # parse tide potential table for constituents
-    table = _tide_potential_catalogs[catalog]
+    table = _tide_potential_table[catalog]
     CTE = pyTMD.arguments._parse_tide_potential_table(table,
         skiprows=1, columns=1, include_degree=True,
         include_planets=include_planets)
