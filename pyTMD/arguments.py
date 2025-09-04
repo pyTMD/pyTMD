@@ -1996,8 +1996,8 @@ def _complex_love_numbers(
         # frequency dependence of Love number l2
         L2 = np.zeros((4), dtype=np.complex128)
         L2[0] = 0.84963e-1 - 0.7395e-3j
-        L2[1] = -0.22107e-3 - 0.9446e-5j
-        L2[2] = 0.54710e-5 - 0.2990e-6j
+        L2[1] = -0.22107e-3 - 0.9646e-5j
+        L2[2] = -0.54710e-5 - 0.2990e-6j
         L2[3] = -0.29904e-7 - 0.7717e-8j
         # estimate the complex Love number fors diurnal tides
         # equation 6.9 of IERS conventions 2010
