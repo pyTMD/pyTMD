@@ -19,6 +19,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.astro.mean_longitudes
 
+.. autofunction:: pyTMD.astro.planetary_longitudes
+
 .. autofunction:: pyTMD.astro.doodson_arguments
 
 .. autofunction:: pyTMD.astro.delaunay_arguments

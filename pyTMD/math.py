@@ -178,7 +178,7 @@ def legendre(
     Parameters
     ----------
     l: int
-        degree of the Legendre polynomials (0 to 6)
+        degree of the Legendre polynomials (0 to 4)
     x: np.ndarray
         elements ranging from -1 to 1
 
