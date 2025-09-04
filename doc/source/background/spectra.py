@@ -25,13 +25,13 @@ frange.append([0, 0.5])
 frange.append([0.80, 1.15])
 frange.append([1.75, 2.10])
 
-# run for degree-2 constituents
-l = 2
-# parse the Cartwright and Edden (1973) table for degree-2 constituents
+# parse the tide potential table
 CTE = pyTMD.arguments._parse_tide_potential_table(
-    pyTMD.arguments._ce1973_table_1)
+    pyTMD.arguments._cte1973_table)
 # for each spectral line
 for i, line in enumerate(CTE):
+    # spherical harmonic degree
+    l = line['l']
     # spherical harmonic dependence (order)
     TAU = line['tau']
     # Doodson coefficients for constituent
@@ -54,7 +54,7 @@ for i, line in enumerate(CTE):
     # convert to frequency (solar days per cycle)
     f = np.abs(omega*86400.0)/(2.0*np.pi)
     # amplitude in cm
-    amp = 100.0*np.abs(line['Hs3'])
+    amp = 100.0*np.abs(line['Hs1'])
     # get the constituent ID based on the first 6 arguments
     cons = pyTMD.arguments._to_constituent_id(arguments,
         arguments=6, raise_error=False)
@@ -68,39 +68,6 @@ for i, line in enumerate(CTE):
         elif (f >= fr[0]) and (f <= fr[1]):
             ax2[j].semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
             break
-
-# run for degree-3 constituents
-l = 3
-# parse the Cartwright and Tayler (1971) table for degree-3 constituents
-CTE = pyTMD.arguments._parse_tide_potential_table(
-    pyTMD.arguments._ct1971_table_5)
-# for each line in the table
-for i, line in enumerate(CTE):
-    # spherical harmonic dependence (order)
-    TAU = line['tau']
-    # Doodson coefficients for constituent
-    S = line['s']
-    H = line['h']
-    P = line['p']
-    # convert N for ascending lunar node
-    N = -1.0*line['n']
-    PP = line['pp']
-    # use cosines for (l + tau) even
-    # and sines for (l + tau) odd
-    K = -1.0*np.mod(l + TAU, 2)
-    # determine constituent phase using equilibrium arguments
-    arguments = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
-    # calculate the angular frequency
-    omega = pyTMD.arguments._frequency(arguments, method='ASTRO5')
-    # convert to frequency (solar days per cycle)
-    f = np.abs(omega*86400.0)/(2.0*np.pi)
-    # amplitude in cm
-    amp = 100.0*np.abs(line['Hs3'])
-    # plot amplitudes
-    ax1.semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
-    for j, fr in enumerate(frange):
-        if (f >= fr[0]) and (f <= fr[1]):
-            ax2[j].semilogy([f, f], [0.0, amp], color='0.4', zorder=1)
 
 # create inset axes and set ticks
 plot_colors = ['k', 'k', 'k']

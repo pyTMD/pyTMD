@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 math.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 09/2025: added degree 4 to legendre polynomials function
     Updated 08/2025: add asec2rad and masec2rad functions for arcseconds
     Updated 07/2025: add deriv and phase arguments to sph_harm function
         add Legendre polynomial derivatives with respect to theta
@@ -177,7 +178,7 @@ def legendre(
     Parameters
     ----------
     l: int
-        degree of the Legendre polynomials (0 to 3)
+        degree of the Legendre polynomials (0 to 6)
     x: np.ndarray
         elements ranging from -1 to 1
 
@@ -196,7 +197,7 @@ def legendre(
     l = np.int64(l)
     m = np.int64(m)
     # assert values
-    assert (l >= 0) and (l <= 3), 'Degree must be between 0 and 3'
+    assert (l >= 0) and (l <= 4), 'Degree must be between 0 and 4'
     assert (m >= 0) and (m <= l), 'Order must be between 0 and l'
     # verify dimensions
     singular_values = (np.ndim(x) == 0)
@@ -206,8 +207,8 @@ def legendre(
     # size of the x array
     nx = len(x)
     # complete matrix of associated legendre functions
-    # up to degree and order 3
-    Plm = np.zeros((4, 4, nx), dtype=np.float64)
+    # up to degree and order 4
+    Plm = np.zeros((5, 5, nx), dtype=np.float64)
     # since tides only use low-degree harmonics:
     # functions are hard coded rather than using a recursion relation
     if deriv:
@@ -221,6 +222,11 @@ def legendre(
         Plm[3, 1, :] = -1.5*x*(10.0*u**2 - 5.0*x**2 + 1.0)
         Plm[3, 2, :] = 15.0*u*(3.0*x**2 - 1.0)
         Plm[3, 3, :] = 45.0*x*u**2
+        Plm[4, 0, :] = -2.5*(7.0*x**2 - 3.0)*u*x
+        Plm[4, 1, :] = 2.5*(28.0*x**4 - 27.0*x**2 + 3.0)
+        Plm[4, 2, :] = (105*x**2 - 105*u**2 - 15.0)*u*x
+        Plm[4, 3, :] = (420.0*x**3 - 105.0)*u**2
+        Plm[4, 4, :] = 420.0*x*u**3
     else:
         # calculate Legendre polynomials
         Plm[0, 0, :] = 1.0
@@ -229,10 +235,15 @@ def legendre(
         Plm[2, 0, :] = 0.5*(3.0*x**2 - 1.0)
         Plm[2, 1, :] = 3.0*x*u
         Plm[2, 2, :] = 3.0*u**2
-        Plm[3, 0, :] = 0.5*(5.0*x**3 - 3.0*x)
+        Plm[3, 0, :] = 0.5*(5.0*x**2 - 3.0)*x
         Plm[3, 1, :] = 1.5*(5.0*x**2 - 1.0)*u
         Plm[3, 2, :] = 15.0*x*u**2
         Plm[3, 3, :] = 15.0*u**3
+        Plm[4, 0, :] = 0.125*(35.0*x**4 - 30.0*x**2 + 3.0)
+        Plm[4, 1, :] = 2.5*(7.0*x**2 - 3.0)*u*x
+        Plm[4, 2, :] = 7.5*(7.0*x**2 - 1.0)*u**2
+        Plm[4, 3, :] = 105.0*x*u**3
+        Plm[4, 4, :] = 105.0*u**4        
     # return values
     if singular_values:
         return np.power(-1.0, m)*Plm[l, m, 0]
@@ -306,7 +317,7 @@ def sph_harm(
     Parameters
     ----------
     l: int
-        degree of the spherical harmonics (0 to 3)
+        degree of the spherical harmonics (0 to 4)
     theta: np.ndarray
         colatitude in radians
     phi: np.ndarray

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 arguments.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 Calculates the nodal corrections for tidal constituents
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -39,6 +39,7 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 09/2025: added spherical harmonic degree to tide potential tables
     Updated 08/2025: add Cartwright and Tayler table with radiational tides
         make frequency function a wrapper around one that calculates using
             Doodson coefficients (Cartwright numbers)
@@ -1773,6 +1774,8 @@ def _frequency(
             - ``'Meeus'``
             - ``'ASTRO5'`` 
             - ``'IERS'``
+    include_planets: bool, default False
+        Include planetary terms in the frequency calculation
 
     Returns
     -------
@@ -1781,6 +1784,7 @@ def _frequency(
     """
     # set default keyword arguments
     kwargs.setdefault('method', 'Cartwright')
+    kwargs.setdefault('include_planets', False)
     # Modified Julian Dates at J2000
     MJD = np.array([51544.5, 51544.55])
     # time interval in seconds
@@ -1799,7 +1803,13 @@ def _frequency(
     k = 90.0 + np.zeros((nt))
 
     # determine equilibrium arguments
-    fargs = np.c_[tau, s, h, p, n, pp, k]
+    if kwargs['include_planets']:
+        lm, lv, la, lj, ls = pyTMD.astro.planetary_longitudes(MJD)
+        fargs = np.c_[tau, s, h, p, n, pp, k, lm, lv, la, lj, ls]
+    else:
+        fargs = np.c_[tau, s, h, p, n, pp, k]
+
+    # calculate the rates of change of the fundamental arguments
     rates = (fargs[1,:] - fargs[0,:])/deltat
     fd = np.dot(rates, coef)
     # convert to radians per second
@@ -2002,22 +2012,23 @@ def _complex_love_numbers(
 # Hs1: amplitude for epoch span 1 (1900 epoch)
 _d1921_table = get_data_path(['data','d1921_tab.txt'])
 # Cartwright and Tayler (1971) table with 3rd-degree values
-# Hs1: amplitude for epoch span 1 (1861-09-21 to 1879-09-22)
-# Hs2: amplitude for epoch span 2 (1915-05-16 to 1933-05-22)
-# Hs3: amplitude for epoch span 2 (1951-05-23 to 1969-05-22)
-_ct1971_table_5 = get_data_path(['data','ct1971_tab5.txt'])
 # Cartwright and Edden (1973) table with updated values
-_ce1973_table_1 = get_data_path(['data','ce1973_tab1.txt'])
+_cte1973_table = get_data_path(['data','cte1973_tab.txt'])
 # Cartwright and Tayler (1971) table with radiational tides
-# Hs1: amplitude for epoch span 1 (1900 epoch)
 _ct1971_table_6 = get_data_path(['data','ct1971_tab6.txt'])
+# Hartmann and Wenzel (1995) tidal potential catalog
+_hw1995_table = get_data_path(['data','hw1995_tab.txt'])
+# Tamura (1987) tidal potential catalog
+_t1987_table = get_data_path(['data','t1987_tab.txt'])
 # Woodworth (1990) tables with updated and 3rd-degree values
-_w1990_table_1 = get_data_path(['data','w1990_tab1.txt'])
-_w1990_table_2 = get_data_path(['data','w1990_tab2.txt'])
+_w1990_table = get_data_path(['data','w1990_tab.txt'])
 
 def _parse_tide_potential_table(
         table: str | pathlib.Path,
-        columns: int = 3,
+        skiprows: int = 1,
+        columns: int = 1,
+        include_degree: bool = True,
+        include_planets: bool = False
     ):
     """Parse tables of tide-generating potential
 
@@ -2025,12 +2036,18 @@ def _parse_tide_potential_table(
     ----------
     table: str or pathlib.Path
         table of tide-generating potentials
-    columns: int, default 3
+    skiprows: int, default 1
+        number of header rows to skip in the table
+    columns: int, default 1
         number of amplitude columns in the table
+    include_degree: bool, default True
+        table includes spherical harmonic degree
+    include_planets: bool, default False
+        table includes coefficients for mean longitudes of planets
 
     Returns
     -------
-    CTE: float
+    CTE: np.ndarray
         Cartwright-Tayler-Edden table values
     """
     # verify table path
@@ -2038,15 +2055,32 @@ def _parse_tide_potential_table(
     with table.open(mode='r', encoding='utf8') as f:
         file_contents = f.readlines()
     # number of lines in the file
-    file_lines = len(file_contents)
-    # tau: coefficient for mean lunar time
+    file_lines = len(file_contents) - int(skiprows)
+    # names: names of the columns in the table
+    # formats: data types for each column in the table
+    names = []
+    formats = []
+    # l: spherical harmonic degree
+    if include_degree:
+        names.append('l')
+        formats.append('i')
+    # tau: spherical harmonic dependence (order)
     # s: coefficient for mean longitude of moon
     # h: coefficient for mean longitude of sun
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
-    names = ['tau','s','h','p','n','pp']
-    formats = ['i','i','i','i','i','i']
+    names.extend(['tau','s','h','p','n','pp'])
+    formats.extend(['i','i','i','i','i','i'])
+    # lm: coefficient for mean longitude of Mercury
+    # lv: coefficient for mean longitude of Venus
+    # la: coefficient for mean longitude of Mars
+    # lj: coefficient for mean longitude of Jupiter
+    # ls: coefficient for mean longitude of Saturn
+    if include_planets:
+        names.extend(['lm','lv','la','lj','ls'])
+        formats.extend(['i','i','i','i','i'])
+    # tide potential amplitudes (Cartwright and Tayler norm)
     for c in range(columns):
         # add amplitude columns to names and formats
         names.append(f'Hs{c+1}')
@@ -2055,16 +2089,14 @@ def _parse_tide_potential_table(
     names.append('DO')
     formats.append('U7')
     # create a structured numpy dtype for the table
-    # names: names of the columns in the table
-    # formats: data types for each column in the table
     dtype = np.dtype({'names':names, 'formats':formats})
     CTE = np.zeros((file_lines), dtype=dtype)
-    # number of output columns
-    columns = len(names)
+    # total number of output columns
+    total_columns = len(names)
     # iterate over each line in the file
-    for i,line in enumerate(file_contents):
-        # drop last column with values from Doodson (1921)
-        CTE[i] = np.array(tuple(line.split()[:columns]), dtype=dtype)
+    for i,line in enumerate(file_contents[skiprows:]):
+        # drop last column(s) with values from Doodson (1921)
+        CTE[i] = np.array(tuple(line.split()[:total_columns]), dtype=dtype)
     # return the table values
     return CTE
 
