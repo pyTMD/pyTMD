@@ -1893,10 +1893,10 @@ def body_tide(
     catalog: str, default 'CTE1973'
         Name of the tide potential catalog
 
-            - ``'CTE1973'``
+            - ``'CTE1973'``: :cite:t:`Cartwright:1973em`
             - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
-            - ``'T1987'``
-            - ``'W1990'``
+            - ``'T1987'``: :cite:t:`Tamura:1987tp`
+            - ``'W1990'``: :cite:t:`Woodworth:1990`
     include_planets: bool, default False
         Include tide potentials from planetary bodies
     h2: float or None, default None
