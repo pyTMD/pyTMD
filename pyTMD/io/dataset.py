@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 dataset.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 09/2025: added argument to limit the list of constituents
+        when converting to an xarray DataArray
     Written 08/2025
 """
 from pyTMD.utilities import import_dependency
@@ -27,13 +29,14 @@ class dataset:
         # initialize dataset
         self._ds = ds
 
-    def to_dataarray(self):
+    def to_dataarray(self, **kwargs):
         """
         Converts ``Dataset`` to a ``DataArray`` with constituents as a dimension
         """
+        kwargs.setdefault('constituents', self.constituents)
         # reduce dataset to constituents and convert to dataarray
-        da = self._ds[self.constituents].to_dataarray().assign_coords(
-            variable=self.constituents).T
+        da = self._ds[kwargs['constituents']].to_dataarray().assign_coords(
+            variable=kwargs['constituents']).T
         return da
 
     @property

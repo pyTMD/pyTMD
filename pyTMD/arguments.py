@@ -2072,13 +2072,13 @@ def _parse_tide_potential_table(
     # pp: coefficient for mean longitude of solar perigee
     names.extend(['tau','s','h','p','n','pp'])
     formats.extend(['i','i','i','i','i','i'])
-    # lm: coefficient for mean longitude of Mercury
-    # lv: coefficient for mean longitude of Venus
-    # la: coefficient for mean longitude of Mars
-    # lj: coefficient for mean longitude of Jupiter
-    # ls: coefficient for mean longitude of Saturn
+    # lme: coefficient for mean longitude of Mercury
+    # lve: coefficient for mean longitude of Venus
+    # lma: coefficient for mean longitude of Mars
+    # lju: coefficient for mean longitude of Jupiter
+    # lsa: coefficient for mean longitude of Saturn
     if include_planets:
-        names.extend(['lm','lv','la','lj','ls'])
+        names.extend(['lme','lve','lma','lju','lsa'])
         formats.extend(['i','i','i','i','i'])
     # tide potential amplitudes (Cartwright and Tayler norm)
     for c in range(columns):

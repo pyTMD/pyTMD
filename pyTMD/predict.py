@@ -1902,6 +1902,10 @@ def body_tide(
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
         Degree-3 Love (Shida) number of horizontal displacement
+    h4: float, default 0.18
+        Degree-4 Love number of vertical displacement
+    l4: float, default 0.01
+        Degree-4 Love (Shida) number of horizontal displacement
 
     Returns
     -------
@@ -1910,11 +1914,13 @@ def body_tide(
     """
     # set default keyword arguments
     kwargs.setdefault('include_planets', False)
-    # nominal Love and Shida numbers for degrees 2 and 3
+    # nominal Love and Shida numbers for degrees 2, 3, and 4
     kwargs.setdefault('h2', None)
     kwargs.setdefault('l2', None)
     kwargs.setdefault('h3', 0.291)
     kwargs.setdefault('l3', 0.015)
+    kwargs.setdefault('h4', 0.18)
+    kwargs.setdefault('l4', 0.01)
     # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
@@ -1941,8 +1947,9 @@ def body_tide(
     # astronomical and planetary mean longitudes
     if kwargs['include_planets']:
         # calculate planetary mean longitudes
-        lm, lv, la, lj, ls = pyTMD.astro.planetary_longitudes(MJD)
-        fargs = np.c_[tau, s, h, p, n, pp, k, lm, lv, la, lj, ls]
+        # me: Mercury, ve: Venus, ma: Mars, ju: Jupiter, sa: Saturn
+        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD)
+        fargs = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
     else:
         fargs = np.c_[tau, s, h, p, n, pp, k]
 
@@ -1968,7 +1975,7 @@ def body_tide(
     for i, line in enumerate(CTE):
         # spherical harmonic degree
         l = line['l']
-        # currently only calculating for degrees 2 and 3
+        # currently only calculating for low-degree harmonics
         if (l > 4):
             continue
         # spherical harmonic dependence (order)
@@ -1988,13 +1995,13 @@ def body_tide(
         # create array of equilibrium arguments
         if kwargs['include_planets']:
             # planetary mean longitudes
-            LM = line['lm']
-            LV = line['lv']
-            LA = line['la']
-            LJ = line['lj']
-            LS = line['ls']
+            LMe = line['lme']
+            LVe = line['lve']
+            LMa = line['lma']
+            LJu = line['lju']
+            LSa = line['lsa']
             # coefficients including planetary terms
-            coef = np.hstack([*coef, LM, LV, LA, LJ, LS])
+            coef = np.hstack([*coef, LMe, LVe, LMa, LJu, LSa])
         # calculate angular frequency of constituent
         omega = pyTMD.arguments._frequency(coef, method=method,
             include_planets=kwargs['include_planets'])
@@ -2034,11 +2041,15 @@ def body_tide(
             zeta[:,1] -= line['Hs1']*TAU*(l2.real*S.imag - l2.imag*S.real)
             zeta[:,2] += line['Hs1']*(h2.real*S.real - h2.imag*S.imag)
         elif (l == 3):
-            # convert potentials for constituent and add to the total
-            # (latitudinal, longitudinal and radial components)
+            # convert potentials for degree-3 constituents
             zeta[:,0] += line['Hs1']*kwargs['l3']*dS.real
             zeta[:,1] -= line['Hs1']*TAU*kwargs['l3']*S.imag
             zeta[:,2] += line['Hs1']*kwargs['h3']*S.real
+        elif (l == 4):
+            # convert potentials for degree-4 constituents
+            zeta[:,0] += line['Hs1']*kwargs['l4']*dS.real
+            zeta[:,1] -= line['Hs1']*TAU*kwargs['l4']*S.imag
+            zeta[:,2] += line['Hs1']*kwargs['h4']*S.real
 
     # return the body tides
     return zeta

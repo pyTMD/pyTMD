@@ -1,4 +1,4 @@
-l  tau  s   h   p   n   pp  lm  lv  la  lj  ls         Hs1         body
+l  tau  s   h   p   n  pp  lme lve lma lju lsa         Hs1         body
 2   0   0   0   0   0   0   0   0   0   0   0  -2.150574677662e-01  MO
 4   0   0   0   0   0   0   0   0   0   0   0  +1.358096219378e-05  MO
 2   0   0   0   0   0   0   0   0   0   0   0  -9.953529097786e-02  SU

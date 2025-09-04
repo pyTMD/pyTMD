@@ -1,4 +1,4 @@
-l  tau  s   h   p   n   pp  lm  lv  la  lj  ls         Hs1         DO
+l  tau  s   h   p   n  pp  lme lve lma lju lsa         Hs1            DO
 2   0   0   0   0   0   0   0   0   0   0   0  -3.145932052996e-01  055.555
 4   0   0   0   0   0   0   0   0   0   0   0  +1.365679306765e-05  055.555
 2   0   0   0   0   1   0   0   0   0   0   0  +2.792989410987e-02  055.565

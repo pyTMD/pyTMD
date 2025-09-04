@@ -1,6 +1,8 @@
 xarray Integration
 ==================
 
+Running these example recipes require an `aws installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include some of the optional dependencies.
+
 Save model to a zarr store
 ##########################
 
