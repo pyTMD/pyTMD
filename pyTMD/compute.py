@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (09/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -28,10 +28,11 @@ Calculates radial ocean pole load tide displacements following IERS Convention
 (2010) guidelines for correcting elevation or imagery data
     https://iers-conventions.obspm.fr/chapter7.php
 
-Ocean Pole Tides (SET)
+Solid Earth Tides (SET)
 Calculates radial Solid Earth tide displacements following IERS Convention
 (2010) guidelines for correcting elevation or imagery data
     https://iers-conventions.obspm.fr/chapter7.php
+Or by using a tide potential catalog following Cartwright and Tayler (1971)
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -62,6 +63,8 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 09/2025: added wrapper for calculating solid earth tides
+        using a tide potential catalog following Cartwright and Tayler (1971)
     Updated 08/2025: convert angles with numpy radians and degrees functions
         pass kwargs to computation of long-period equilibrium tides
         use timescale shortcut wrapper functions to create Timescale objects
@@ -1343,13 +1346,49 @@ def OPT_displacements(
 # PURPOSE: compute solid earth tidal elevations
 def SET_displacements(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
+        METHOD: str = 'ephemerides',
+        **kwargs
+    ):
+    """
+    Compute solid earth tidal elevations (body tides) at points and times
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates in projection EPSG
+    y: np.ndarray
+        y-coordinates in projection EPSG
+    delta_time: np.ndarray
+        seconds since EPOCH or datetime array
+    METHOD: str, default 'IERS'
+        method for calculating solid earth tidal elevations
+
+            - ``'ephemerides'``: following :cite:t:`Petit:2010tp` guidelines
+            - ``'catalog'``: using tide potential catalogs
+    """
+    if (METHOD.lower() == 'ephemerides'):
+        return _ephemeride_SET(
+            x, y, delta_time,
+            **kwargs
+        )
+    elif (METHOD.lower() == 'catalog'):
+        return _catalog_SET(
+            x, y, delta_time,
+            **kwargs
+        )
+    else:
+        raise ValueError(f"Invalid METHOD: {METHOD}")
+
+# PURPOSE: compute solid earth tides following IERS conventions
+def _ephemeride_SET(
+        x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
         EPSG: str | int = 4326,
         EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
         TYPE: str | None = 'drift',
         TIME: str = 'UTC',
         ELLIPSOID: str = 'WGS84',
-        TIDE_SYSTEM='tide_free',
-        EPHEMERIDES='approximate',
+        TIDE_SYSTEM: str = 'tide_free',
+        EPHEMERIDES: str = 'approximate',
         **kwargs
     ):
     """
@@ -1516,6 +1555,162 @@ def SET_displacements(
                 tide_system=TIDE_SYSTEM)
             # calculate components of solid earth tides
             SE = np.einsum('ti...,ji...->tj...', dxi, R[s,:,:])
+            # reshape to output dimensions
+            tide_se[s,:] = SE[:,2].copy()
+
+    # return the solid earth tide displacements
+    return tide_se
+
+# PURPOSE: compute body tides following Cartwright and Tayler (1971)
+def _catalog_SET(
+        x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
+        EPSG: str | int = 4326,
+        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
+        TYPE: str | None = 'drift',
+        TIME: str = 'UTC',
+        CATALOG: str = 'CTE1973',
+        TIDE_SYSTEM: str = 'tide_free',
+        EPHEMERIDES: str = 'IERS',
+        INCLUDE_PLANETS: bool = False,
+        **kwargs
+    ):
+    """
+    Compute solid earth tidal elevations at points and times
+    using a tide-potential catalog following :cite:t:`Cartwright:1971iz`
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates in projection EPSG
+    y: np.ndarray
+        y-coordinates in projection EPSG
+    delta_time: np.ndarray
+        seconds since EPOCH or datetime array
+    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+        Input coordinate system
+    EPOCH: tuple, default (2000,1,1,0,0,0)
+        Time period for calculating delta times
+    TYPE: str or NoneType, default 'drift'
+        Input data type
+
+            - ``None``: determined from input variable dimensions
+            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'grid'``: spatial grids or images
+            - ``'time series'``: time series at a single point
+    TIME: str, default 'UTC'
+        Time type if need to compute leap seconds to convert to UTC
+
+            - ``'GPS'``: leap seconds needed
+            - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
+            - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
+            - ``'UTC'``: no leap seconds needed
+            - ``'datetime'``: numpy datatime array in UTC
+    CATALOG: str, default 'CTE1973'
+        Name of the tide potential catalog
+
+            - ``'CTE1973'``: :cite:t:`Cartwright:1973em`
+            - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
+            - ``'T1987'``: :cite:t:`Tamura:1987tp`
+            - ``'W1990'``: Woodworth updates to ``'CTE1973'``
+    TIDE_SYSTEM: str, default 'tide_free'
+        Permanent tide system for the output solid Earth tide
+
+            - ``'tide_free'``: no permanent direct and indirect tidal potentials
+            - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    EPHEMERIDES: str, default 'IERS'
+        Method for calculating astronomical mean longitudes
+
+            - ``'Cartwright'``: use coefficients from David Cartwright
+            - ``'Meeus'``: use coefficients from Meeus Astronomical Algorithms
+            - ``'ASTRO5'``: use Meeus Astronomical coefficients from ``ASTRO5``
+            - ``'IERS'``: convert from IERS Delaunay arguments
+    INCLUDE_PLANETS: bool, default False
+        Include tide potentials from planetary bodies
+
+    Returns
+    -------
+    tide_se: np.ndarray
+        solid earth tide at coordinates and time in meters
+    """
+
+    # validate input arguments
+    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert TIDE_SYSTEM.lower() in ('mean_tide', 'tide_free')
+    assert CATALOG in pyTMD.predict._tide_potential_table.keys()
+    assert EPHEMERIDES.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
+    # determine input data type based on variable dimensions
+    if not TYPE:
+        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
+    assert TYPE.lower() in ('grid', 'drift', 'time series')
+    # reform coordinate dimensions for input grids
+    # or verify coordinate dimension shapes
+    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        x,y = np.meshgrid(np.copy(x),np.copy(y))
+    elif (TYPE.lower() == 'grid'):
+        x = np.atleast_2d(x)
+        y = np.atleast_2d(y)
+    elif TYPE.lower() in ('time series', 'drift'):
+        x = np.atleast_1d(x)
+        y = np.atleast_1d(y)
+
+    # converting x,y from EPSG to latitude/longitude
+    crs1 = pyTMD.crs().from_input(EPSG)
+    crs2 = pyproj.CRS.from_epsg(4326)
+    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
+    lon, lat = transformer.transform(x.flatten(), y.flatten())
+
+    # verify that delta time is an array
+    delta_time = np.atleast_1d(delta_time)
+    # convert delta times or datetimes objects to timescale
+    if (TIME.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time.flatten())
+    else:
+        ts = timescale.from_deltatime(delta_time,
+            epoch=EPOCH, standard=TIME)
+    # number of time points
+    nt = len(ts)
+
+    # calculate radial displacement at time
+    if (TYPE == 'grid'):
+        ny,nx = np.shape(x)
+        tide_se = np.zeros((ny,nx,nt))
+        for i in range(nt):
+            # reshape time to match spatial
+            t = ts.tide[i] + np.ones((ny*nx))
+            deltat = ts.tt_ut1 + np.ones((ny*nx))
+            # calculate body tides
+            SE = pyTMD.predict.body_tide(t, lon, lat, 
+                deltat=deltat,
+                method=EPHEMERIDES,
+                tide_system=TIDE_SYSTEM,
+                catalog=CATALOG,
+                include_planets=INCLUDE_PLANETS,
+                **kwargs)
+            # reshape to output dimensions
+            tide_se[:,:,i] = np.reshape(SE[:,2], (ny,nx))
+    elif (TYPE == 'drift'):
+        # calculate body tides
+        SE = pyTMD.predict.body_tide(ts.tide, lon, lat, 
+            deltat=ts.tt_ut1,
+            method=EPHEMERIDES,
+            tide_system=TIDE_SYSTEM,
+            catalog=CATALOG,
+            include_planets=INCLUDE_PLANETS,
+            **kwargs)
+        # reshape to output dimensions
+        tide_se = SE[:,2].copy()
+    elif (TYPE == 'time series'):
+        nstation = len(x)
+        tide_se = np.zeros((nstation,nt))
+        for s in range(nstation):
+            # calculate body tides
+            SE = pyTMD.predict.body_tide(ts.tide, lon[s], lat[s], 
+                deltat=ts.tt_ut1,
+                method=EPHEMERIDES,
+                tide_system=TIDE_SYSTEM,
+                catalog=CATALOG,
+                include_planets=INCLUDE_PLANETS,
+                **kwargs)
             # reshape to output dimensions
             tide_se[s,:] = SE[:,2].copy()
 

@@ -69,9 +69,14 @@ Similar to ocean tides, solid Earth tides (or body tides) are tidal deformations
 However, while ocean tides are apparent to observers on the coast, solid Earth tides are typically more difficult to observe due to the reference frame of the observer moving.
 The tidal deformation of the Earth is to a very high degree instantaneous, with the Earth's response to the gravitational potential of the moon and sun being nearly immediate.
 The total gravitational potential at a position on the Earth's surface due to a celestial object is directly related to the distance between the Earth and the object, and the mass of that object :cite:p:`Agnew:2015kw,Wahr:1981ea`.
-Analytical approximate positions for the sun and moon can be calculated within ``pyTMD``, and high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 
-Within ``pyTMD``, the tidal deformation of the Earth is modeled using the :term:`Love and Shida Numbers` formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:p:`Wahr:1981ea,Mathews:1997js`.
+Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two methods:
+1) using ephemerides and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea,Mathews:1997js`, or
+2) using tide potential catalogs and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
+For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
+These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth.
+
+For both methods, the elastic response of the Earth to the tidal potential is calculated using :term:`Love and Shida Numbers`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1979vx,Wahr:1981ea`.
 However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Ray:2017jx`.
