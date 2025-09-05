@@ -2033,13 +2033,16 @@ def body_tide(
                 # 2) adjusting some long-period tides for anelastic effects
                 h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega,
                     method=method)
-                # 3) including latitudinal dependence
-                h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
-                l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
+                # 3) including complex latitudinal dependence
+                h2 -= (0.615e-3 + 0.122e-4j)*(1.0 - 1.5*np.sin(th)**2)
+                l2 += (0.19334e-3 - 0.3819e-5j)*(1.0 - 1.5*np.sin(th)**2)
             else:
                 # use resonance formula for tides in the diurnal band
                 h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
                     method=method, astype=np.complex128)
+                # include latitudinal dependence
+                h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
+                l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
             # convert potentials for constituent and add to the total
             # (latitudinal, longitudinal and radial components)
             zeta[:,0] += line['Hs1']*(l2.real*dS.real - l2.imag*dS.imag)
