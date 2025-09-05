@@ -23,6 +23,7 @@ compute
 - Calculates radial solid earth tides (SET) at points and times
 
   * Following `IERS Convention (2010) guidelines <https://iers-conventions.obspm.fr/chapter7.php>`_
+  * Using a tide potential catalog following :cite:t:`Cartwright:1971iz`
 
 Calling Sequence
 ----------------
@@ -56,3 +57,8 @@ Calling Sequence
 .. autofunction:: pyTMD.compute.OPT_displacements
 
 .. autofunction:: pyTMD.compute.SET_displacements
+
+.. autofunction:: pyTMD.compute._ephemeride_SET
+
+.. autofunction:: pyTMD.compute._catalog_SET
+

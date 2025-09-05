@@ -1896,7 +1896,7 @@ def body_tide(
             - ``'CTE1973'``: :cite:t:`Cartwright:1973em`
             - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
             - ``'T1987'``: :cite:t:`Tamura:1987tp`
-            - ``'W1990'``: :cite:t:`Woodworth:1990`
+            - ``'W1990'``: Woodworth updates to ``'CTE1973'``
     include_planets: bool, default False
         Include tide potentials from planetary bodies
     h2: float or None, default None

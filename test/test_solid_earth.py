@@ -1,5 +1,5 @@
 """
-test_solid_earth.py (07/2025)
+test_solid_earth.py (09/2025)
 Tests the steps for calculating the solid earth tides
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2025: check body tides for both tide-free and mean-tide
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
     Updated 04/2025: moved astronomical tests to test_astro.py
     Updated 04/2024: use timescale for temporal operations
@@ -183,6 +184,9 @@ def test_solid_earth_radial(EPHEMERIDES):
     tide_earth_free2mean = np.array([-0.09726650,-0.09726728,
         -0.09726749,-0.09726755,-0.11400376,-0.11400391,
         -0.11400412,-0.11400434])
+    # check permanent tide offsets (additive correction in ICESat-2)
+    # expected results (mean-tide)
+    tide_expected = tide_earth - tide_earth_free2mean
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         EPSG=4326, TYPE='drift', TIME='datetime', ELLIPSOID='WGS84',
@@ -192,9 +196,6 @@ def test_solid_earth_radial(EPHEMERIDES):
         TIDE_SYSTEM='mean_tide', EPHEMERIDES=EPHEMERIDES)
     # as using estimated ephemerides, assert within 1/2 mm
     assert np.isclose(tide_earth, tide_free, atol=5e-4).all()
-    # check permanent tide offsets (additive correction in ICESat-2)
-    # expected results (mean-tide)
-    tide_expected = tide_earth - tide_earth_free2mean
     # sign differences with ATLAS product: correction is subtractive
     predicted = -0.06029 + 0.180873*np.sin(latitudes*np.pi/180.0)**2
     assert np.isclose(tide_expected, tide_mean, atol=5e-4).all()
@@ -202,8 +203,9 @@ def test_solid_earth_radial(EPHEMERIDES):
     assert np.isclose(tide_mean-tide_free, predicted, atol=5e-4).all()
 
 # parameterize method
+@pytest.mark.parametrize("CATALOG", ['CTE1973','T1987'])
 @pytest.mark.parametrize("METHOD", ['ASTRO5','IERS'])
-def test_body_tides(METHOD):
+def test_body_tides(CATALOG, METHOD):
     """Test simplified solid tides using predictions from ICESat-2
     """
     times = np.array(['2018-10-14 00:21:48','2018-10-14 00:21:48',
@@ -220,10 +222,32 @@ def test_body_tides(METHOD):
     tide_earth = np.array([-0.14320290,-0.14320324,
         -0.14320339,-0.14320345,-0.11887791,-0.11887763,
         -0.11887724,-0.11887683])
+    # tide_mean = tide_free + tide_earth_free2mean
+    tide_earth_free2mean = np.array([-0.09726650,-0.09726728,
+        -0.09726749,-0.09726755,-0.11400376,-0.11400391,
+        -0.11400412,-0.11400434])
+    # check permanent tide offsets (additive correction in ICESat-2)
+    # expected results (mean-tide)
+    tide_expected = tide_earth - tide_earth_free2mean
     # predict tides using simplified body tides
     # using tide potentials from Cartwright and Tayler (1971)
     ts = timescale.from_datetime(times)
     tide_free = pyTMD.predict.body_tide(ts.tide, longitudes, latitudes,
-        deltat=ts.tt_ut1, tide_system='tide_free', method=METHOD)
+        deltat=ts.tt_ut1, tide_system='tide_free', method=METHOD,
+        catalog=CATALOG)
+    tide_mean = pyTMD.predict.body_tide(ts.tide, longitudes, latitudes,
+        deltat=ts.tt_ut1, tide_system='mean_tide', method=METHOD,
+        catalog=CATALOG)
     # since we are using simplified body tides: assert within 2 mm
     assert np.isclose(tide_earth, tide_free[:,2], atol=2e-3).all()
+    assert np.isclose(tide_expected, tide_mean[:,2], atol=2e-3).all()
+    # predict radial solid earth tides
+    tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
+        EPSG=4326, TYPE='drift', TIME='datetime', TIDE_SYSTEM='tide_free',
+        METHOD='catalog', EPHEMERIDES=METHOD, CATALOG=CATALOG)
+    tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
+        EPSG=4326, TYPE='drift', TIME='datetime', TIDE_SYSTEM='mean_tide',
+        METHOD='catalog', EPHEMERIDES=METHOD, CATALOG=CATALOG)
+    # since we are using simplified body tides: assert within 2 mm
+    assert np.isclose(tide_earth, tide_free, atol=2e-3).all()
+    assert np.isclose(tide_expected, tide_mean, atol=2e-3).all()
