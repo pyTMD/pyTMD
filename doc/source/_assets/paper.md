@@ -32,17 +32,18 @@ affiliations:
  - name: Department of Geophysics, Colorado School of Mines, United States
    index: 3
 
-date: 06 August 2025
+date: 10 September 2025
 bibliography: pytmd-refs.bib
 ---
 
 # Summary
 
-`pyTMD` is an open-source tidal prediction software that aims to simplify the calculation of ocean and Earth tides. It is designed to be able to handle a wide range of model formats and can incorporate different physics schemes. This flexibility allows `pyTMD` to be tailored to fit specific use cases, while still allowing ease of use.
+`pyTMD` is an open-source tidal prediction software that aims to simplify the calculation of ocean and Earth tides. It is not an ocean or load tide model, but a tool for using tidal constants provided by tide models to predict the height deflections or currents at particular locations and times. It is designed to be able to handle a wide range of model formats and can incorporate different physics schemes. This flexibility allows `pyTMD` to be tailored to fit specific use cases, while still allowing ease of use.
 
 # Statement of need
 
-There are several ocean tide prediction software options available. The OSU Tidal Inversion Software (`OTIS`) and OSU Tidal Prediction Software (`OTPS`) were developed by Lana Erofeeva and Gary Egbert. The Tidal Model Driver ([`TMD`](https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5)) MATLAB Toolbox was developed by Laurie Padman, Lana Erofeeva and Susan Howard. An updated version of the MATLAB Toolbox ([`TMD3`](https://github.com/chadagreene/tide-model-driver)) was developed by Chad Greene. The NASA GSFC PREdict Tidal Heights (`PERTH3`) software was developed by Richard Ray and Remko Scharroo. An updated and more versatile version of the NASA GSFC Fortran software ([`PERTH5`](https://codeberg.org/rray/perth5)) was developed by Richard Ray. [`pyFES`](https://cnes.github.io/aviso-fes/) was produced by LEGOS, NOVELTIS and CLS Ocean and Climate Division, and funded by CNES [@Lyard:2025tr]. These software options are typically created by or for the model providers, and support their specific model formats.
+There are several ocean tide prediction software options available. The OSU Tidal Inversion Software (`OTIS`) and OSU Tidal Prediction Software (`OTPS`) are Fortran programs developed by Lana Erofeeva and Gary Egbert for the [TPXO](https://www.tpxo.net/home) family of models. The Tidal Model Driver ([`TMD`](https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5)) is a MATLAB Toolbox developed by Laurie Padman, Lana Erofeeva and Susan Howard for the same family of models. An updated version of the MATLAB Toolbox ([`TMD3`](https://github.com/chadagreene/tide-model-driver)) was developed by Chad Greene. [`pyFES`](https://cnes.github.io/aviso-fes/) is a Python library produced by LEGOS, NOVELTIS and CLS Ocean and Climate Division, and funded by CNES [@Lyard:2025tr] for the Finite Element Solution (FES) family of models. 
+The NASA GSFC PREdict Tidal Heights (`PERTH3`) software is a Fortran program developed by Richard Ray and Remko Scharroo for the Goddard Ocean Tide (GOT) family of models. An updated and more versatile version of the NASA GSFC Fortran software ([`PERTH5`](https://codeberg.org/rray/perth5)) was developed by Richard Ray. `PERTH5` is a more generalized program, and can read from multiple different tide model formats. These software options are typically created by or for the model providers, and, with the exception of `PERTH5`, singly support their specific model formats.  
 
 `pyTMD` is a generalized tide program that allows users to calculate both tide deflections and currents. As a tide model driver, `pyTMD` can read from a broad suite of models, and use different physics schemes in the internal calculations. Over 50 different models are presently supported within `pyTMD`, and additional models can be defined with a JSON file. 
 
@@ -58,7 +59,7 @@ Tides are frequently decomposed into harmonic constants, or constituents, associ
 
 Long-period ocean tides can additionally be predicted assuming an "equilibrium response" [@Doodson:1921kt; @Cartwright:1971iz; @Cartwright:1973em]. Here, the oceanic surface is estimated to respond instantaneously to the tide-producing forces of the moon and sun, and is not influenced by inertia, currents or the irregular distribution of land [@Schureman:1958ty; @Proudman:1960jj; @Ray:2014fu]. 
 
-Separately, `pyTMD` has some baseline capability to decompose a time series into tidal constants (constituent amplitudes and phases) using the harmonic method outlined in @Foreman:1989dt and @Foreman:2009bg.
+Separately, `pyTMD` has baseline capability to decompose a time series into tidal constants (constituent amplitudes and phases) using the harmonic method outlined in @Foreman:1989dt and @Foreman:2009bg.
 
 ## Pole Tides
 
@@ -66,7 +67,7 @@ The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celesti
 
 ## Solid Earth Tides
 
-The tidal deformation of the solid Earth is modeled in `pyTMD` using the Love and Shida number formalism from @Wahr:1981ea and @Mathews:1997js as described in @Petit:2010tp. `pyTMD.astro` has options for calculating approximate ephemerides following @Meeus:1991vh and @Montenbruck:1989uk or using high-resolution JPL ephemerides from @Park:2021fa using the `jplephem` package [@Rhodes:2011to]. The calculation for solid Earth tides includes the frequency-dependent and dissipative mantle anelasticity corrections from @Mathews:1997js. 
+The tidal deformation of the solid Earth is modeled in `pyTMD` using one of two methods: 1) the ephemerides formalism from @Wahr:1981ea and @Mathews:1997js as described in @Petit:2010tp, and 2) the tide catalog formalism outlined in @Cartwright:1971iz. For the ephemerides method, `pyTMD.astro` has options for calculating approximate ephemerides following @Meeus:1991vh and @Montenbruck:1989uk or using high-resolution JPL ephemerides from @Park:2021fa using the `jplephem` package [@Rhodes:2011to]. The calculation for solid Earth tides includes multiple Love and Shida number corrections, including the frequency-dependent and dissipative mantle anelasticity corrections from @Mathews:1997js. 
 
 ## Time
 
