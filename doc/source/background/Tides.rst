@@ -26,7 +26,7 @@ The tide height (or current) at any time can be estimated through a summation of
     h(t) = z_0 +\sum_{k=1}^{n} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
 
 where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag provided by the tide model, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`Nodal Corrections`].
-Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents`].
+Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents` and :ref:`fig-sphharm`].
 
 .. plot:: ./background/spectra.py
     :show-source-link: False
@@ -87,7 +87,7 @@ Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two me
 2) using tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
 For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth.
-For the catalog method, some tide potential catalogs additionally include the potentials induced by the motions of the closest planetary bodies [see :ref:`tab-catalogs`].
+For the catalog method, some tide potential catalogs additionally include the potentials induced by the motions of the closest planetary bodies [see :ref:`tab-catalogs`] and higher degree harmonics [see :ref:`fig-sphharm`].
 
 For both methods, the elastic response of the Earth to the tidal potential is calculated using :term:`Love and Shida Numbers`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
