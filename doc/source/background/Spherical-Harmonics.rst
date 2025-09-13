@@ -6,7 +6,7 @@ Spherical Harmonics
 -------------------
 
 The tide potential at colatitude :math:`\theta` and longitude :math:`\phi` is often expressed in terms of spherical harmonic functions :math:`Y_l^m(\theta,\phi)` of degree :math:`l` and order :math:`m` :cite:p:`Doodson:1921kt`.
-The degree 2 spherical harmonic terms are the dominant source of tidal excitation, and induce the semi-diurnal (from :math:`Y_2^2`), diurnal (from :math:`Y_2^1`) and long-period (from :math:`Y_2^0`) tides.
+The degree 2 spherical harmonic terms are the dominant source of tidal excitation, and induce the semi-diurnal (from :math:`Y_2^2`), diurnal (from :math:`Y_2^1`) and long-period (from :math:`Y_2^0`) tides :cite:p:`Ray:2020gn`.
 
 .. plot:: ./background/sphharm.py
     :show-source-link: False
