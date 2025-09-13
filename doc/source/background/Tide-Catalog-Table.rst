@@ -9,6 +9,7 @@ Tide Potential Catalogs
 
 .. list-table:: Tide Potential Catalogs
     :header-rows: 1
+    :align: center
 
     * - Short Name
       - Constituents

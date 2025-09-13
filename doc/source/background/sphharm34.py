@@ -32,7 +32,7 @@ for n, l in enumerate(range(lmin, lmax+1)):
         # plot the surface
         ax.pcolormesh(lon, lat, Y_lm.real,
             transform=ccrs.PlateCarree(),
-            cmap='viridis')
+            cmap='viridis', rasterized=True)
         # set the title
         ax.set_title(f'$l={l}, m={tau}$')
         # add coastlines and set global

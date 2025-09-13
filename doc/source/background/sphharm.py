@@ -43,7 +43,7 @@ for tau in range(0, l+1):
         # plot the surface
         ax.pcolormesh(lon, lat, Y_lm.real,
             transform=ccrs.PlateCarree(),
-            cmap='viridis')
+            cmap='viridis', rasterized=True)
         # add coastlines and set global
         ax.coastlines()
         ax.set_global()

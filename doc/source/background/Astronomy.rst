@@ -12,6 +12,7 @@ The rates of change of these arguments are the fundamental frequencies of the as
 
 .. list-table:: Astronomical Arguments
     :header-rows: 1
+    :align: center
 
     * - Argument
       - Description
@@ -47,6 +48,7 @@ When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as th
 
 .. list-table:: Delaunay Arguments
     :header-rows: 1
+    :align: center
 
     * - Argument
       - Description
