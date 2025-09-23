@@ -25,7 +25,7 @@ The tide height (or current) at any time can be estimated through a summation of
 
     h(t) = z_0 +\sum_{k=1}^{n} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
 
-where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag provided by the tide model, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`Nodal Corrections`].
+where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`Nodal Corrections`].
 Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents` and :ref:`fig-sphharm`].
 
 .. plot:: ./background/spectra.py
