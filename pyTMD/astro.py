@@ -282,10 +282,10 @@ def planetary_longitudes(MJD: np.ndarray):
     mercury_longitude = np.array([252.250906, 149474.0722491, 3.035e-4, 1.8e-8])
     LMe = polynomial_sum(mercury_longitude, T)
     # mean longitudes of Venus
-    venus_longitude = np.array([181.9798001, 58519.2130302, 3.1014e-4, 1.5e-8])
+    venus_longitude = np.array([181.979801, 58519.2130302, 3.1014e-4, 1.5e-8])
     LVe = polynomial_sum(venus_longitude, T)
     # mean longitudes of Mars
-    mars_longitude = np.array([355.433, 19141.6964471, 3.1052e-4, 1.e-8])
+    mars_longitude = np.array([355.433, 19141.6964471, 3.1052e-4, 1.6e-8])
     LMa = polynomial_sum(mars_longitude, T)
     # mean longitudes of Jupiter
     jupiter_longitude = np.array([34.351519, 3036.3027748, 2.233e-4, 3.7e-8])

@@ -40,6 +40,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 09/2025: added spherical harmonic degree to tide potential tables
+        added IERS Conventions references for Love number calculations
     Updated 08/2025: add Cartwright and Tayler table with radiational tides
         make frequency function a wrapper around one that calculates using
             Doodson coefficients (Cartwright numbers)
@@ -1929,7 +1930,7 @@ def _complex_love_numbers(
     omega: np.ndarray
         angular frequency (radians per second)
     kwargs: dict
-        additional keyword arguments for love number calculation
+        additional keyword arguments for Love number calculation
 
     Returns
     -------
@@ -1940,20 +1941,24 @@ def _complex_love_numbers(
     l2: complex
         Degree-2 Love (Shida) number of horizontal displacement
     """
-    # (number of sidereal days per solar day)
+    # number of sidereal days per solar day
     sidereal_ratio = 1.002737909
-    # number of seconds in a sidereal day (approx 86164.1)
+    # number of seconds in a sidereal day (approximately 86164.1)
     sidereal_day = 86400.0/sidereal_ratio
     # frequency in cycles per sidereal day
     f = omega*sidereal_day/(2.0*np.pi)
     # Love numbers for different frequency bands
     if (omega == 0.0):
-        # use real-valued body tide love numbers for permanent tide
+        # use real-valued body tide Love numbers for the permanent tide
+        # to prevent singularities in frequency-dependent model
         h2, k2, l2 = _love_numbers(omega, **kwargs)
     elif (omega > 1e-4):
         # in-phase and out-of-phase components for the semi-diurnal band
-        h2 = 0.6078 - 0.0022j
+        # table 7.3a (IERS conventions 2010)
+        h2 = 0.6078 - 0.0025j
+        # table 6.5c (IERS conventions 2010)
         k2 = 0.30102 - 0.0013j
+        # table 7.3a (IERS conventions 2010)
         l2 = 0.0847 - 0.0007j
     elif (omega < 2e-5):
         # compute in-phase and out-of-phase components for the long period band
@@ -1963,9 +1968,12 @@ def _complex_love_numbers(
         fm = sidereal_day/200.0
         factor = np.tan(alpha*np.pi/2.0)**(-1)
         anelasticity_model = factor*(1.0 - (fm/f)**alpha) + 1j*(fm/f)**alpha
-        # model for the variation of love numbers across the zonal tide band
+        # model for the variation of Love numbers across the zonal tide band
+        # equation 7.4a (IERS conventions 2010)
         h2 = 0.5998 - 9.96e-4*anelasticity_model
+        # equation 6.12 (IERS conventions 2010)
         k2 = 0.29525 - 5.796e-4*anelasticity_model
+        # equation 7.4b (IERS conventions 2010)
         l2 = 0.0831 - 3.01e-4*anelasticity_model
     else:
         # in-phase and out-of-phase components for the diurnal band
@@ -1981,31 +1989,35 @@ def _complex_love_numbers(
         sigma[2] = 1.0023181 + 0.000025j
         # prograde free core nutation
         sigma[3] = 0.999026 + 0.000780j
-        # frequency dependence of Love number h2
+        # frequency dependence of Love number h2 (vertical)
+        # table 7.1 (IERS conventions 2010)
         H2 = np.zeros((4), dtype=np.complex128)
         H2[0] = 0.60671 - 0.242e-2j
         H2[1] = -0.15777e-2 - 0.7630e-4j
         H2[2] = 0.18053e-3 - 0.6292e-5j
         H2[3] = -0.18616e-5 + 0.1379e-6j
-        # frequency dependence of Love number k2
+        # frequency dependence of Love number k2 (potential)
+        # table 6.4 (IERS conventions 2010)
         K2 = np.zeros((4), dtype=np.complex128)
         K2[0] = 0.29954 - 0.1412e-2j
         K2[1] = -0.77896e-3 - 0.3711e-4j
         K2[2] = 0.90963e-4 - 0.2963e-5j
         K2[3] = -0.11416e-5 + 0.5325e-7j
-        # frequency dependence of Love number l2
+        # frequency dependence of Love number l2 (horizontal)
+        # table 7.1 (IERS conventions 2010)
         L2 = np.zeros((4), dtype=np.complex128)
         L2[0] = 0.84963e-1 - 0.7395e-3j
         L2[1] = -0.22107e-3 - 0.9646e-5j
         L2[2] = -0.54710e-5 - 0.2990e-6j
         L2[3] = -0.29904e-7 - 0.7717e-8j
-        # estimate the complex Love number fors diurnal tides
-        # equation 6.9 of IERS conventions 2010
+        # estimate the complex Love numbers for diurnal tides
+        # equation 6.9 (IERS conventions 2010)
         h2 = np.sum(H2/(f - sigma))
         k2 = np.sum(K2/(f - sigma))
         l2 = np.sum(L2/(f - sigma))
 
     # return the Love numbers as a complex number
+    # to include the in-phase and out-of-phase components
     return np.array([h2, k2, l2], dtype=np.complex128)
 
 # Doodson (1921) table with values missing from Cartwright tables
