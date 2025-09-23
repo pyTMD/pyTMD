@@ -243,7 +243,7 @@ def legendre(
         Plm[4, 1, :] = 2.5*(7.0*x**2 - 3.0)*u*x
         Plm[4, 2, :] = 7.5*(7.0*x**2 - 1.0)*u**2
         Plm[4, 3, :] = 105.0*x*u**3
-        Plm[4, 4, :] = 105.0*u**4        
+        Plm[4, 4, :] = 105.0*u**4
     # return values
     if singular_values:
         return np.power(-1.0, m)*Plm[l, m, 0]

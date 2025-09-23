@@ -24,6 +24,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 09/2025: make permanent tide amplitude an input parameter
         can choose different tide potential catalogs for body tides
+        generalize the calculation of body tides for degrees 3+
     Updated 08/2025: add simplified solid earth tide prediction function
         add correction of anelastic effects for long-period body tides
         use sign convention from IERS for complex body tide Love numbers
@@ -1909,7 +1910,7 @@ def body_tide(
         Degree-3 Love (Shida) number of horizontal displacement
     h4: float, default 0.18
         Degree-4 Love number of vertical displacement
-    l4: float, default 0.01
+    l4: float, default 0.014
         Degree-4 Love (Shida) number of horizontal displacement
 
     Returns
@@ -1925,7 +1926,7 @@ def body_tide(
     kwargs.setdefault('h3', 0.291)
     kwargs.setdefault('l3', 0.015)
     kwargs.setdefault('h4', 0.18)
-    kwargs.setdefault('l4', 0.01)
+    kwargs.setdefault('l4', 0.014)
     # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
@@ -2022,7 +2023,7 @@ def body_tide(
         dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
         # add components for degree and order to output body tides
         if (l == 2):
-            # determine love numbers for constituent
+            # determine Love numbers for degree 2
             if (kwargs['h2'] is not None) and (kwargs['l2'] is not None):
                 # user-defined Love numbers for all constituents
                 h2 = np.complex128(kwargs['h2'])
@@ -2048,16 +2049,15 @@ def body_tide(
             zeta[:,0] += line['Hs1']*(l2.real*dS.real - l2.imag*dS.imag)
             zeta[:,1] -= line['Hs1']*TAU*(l2.real*S.imag - l2.imag*S.real)
             zeta[:,2] += line['Hs1']*(h2.real*S.real - h2.imag*S.imag)
-        elif (l == 3):
-            # convert potentials for degree-3 constituents
-            zeta[:,0] += line['Hs1']*kwargs['l3']*dS.real
-            zeta[:,1] -= line['Hs1']*TAU*kwargs['l3']*S.imag
-            zeta[:,2] += line['Hs1']*kwargs['h3']*S.real
-        elif (l == 4):
-            # convert potentials for degree-4 constituents
-            zeta[:,0] += line['Hs1']*kwargs['l4']*dS.real
-            zeta[:,1] -= line['Hs1']*TAU*kwargs['l4']*S.imag
-            zeta[:,2] += line['Hs1']*kwargs['h4']*S.real
+        else:
+            # use nominal Love numbers for all other degrees
+            hl = kwargs.get(f'h{l}', 0)
+            ll = kwargs.get(f'l{l}', 0)
+            # convert potentials for constituent and add to the total
+            # (latitudinal, longitudinal and radial components)
+            zeta[:,0] += line['Hs1']*ll*dS.real
+            zeta[:,1] -= line['Hs1']*TAU*ll*S.imag
+            zeta[:,2] += line['Hs1']*hl*S.real
 
     # return the body tides
     return zeta
