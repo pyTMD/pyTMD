@@ -106,6 +106,15 @@ precision = 2
 
 [tool.ruff]
 line-length = 80
+indent-width = 4
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+docstring-code-format = false
 
 [tool.pixi.workspace]
 name = "pytmd"
