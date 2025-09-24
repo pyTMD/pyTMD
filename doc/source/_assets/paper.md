@@ -64,7 +64,7 @@ The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celesti
 
 ## Solid Earth Tides
 
-The tidal deformation of the solid Earth can be modeled in `pyTMD` using one of the following two methods: 1) the ephemerides formalism from @Wahr:1981ea and @Mathews:1997js as described in @Petit:2010tp, and 2) the tide catalog formalism outlined in @Cartwright:1971iz. For the ephemerides method, `pyTMD.astro` has options for calculating approximate ephemerides following @Meeus:1991vh and @Montenbruck:1989uk or using high-resolution JPL ephemerides from @Park:2021fa with the `jplephem` package [@Rhodes:2011to]. For both cases, the calculation for solid Earth tides includes multiple Love and Shida number corrections including the frequency-dependent and dissipative mantle anelasticity corrections from @Mathews:1997js. 
+The tidal deformation of the solid Earth can be modeled in `pyTMD` using one of the following two methods: 1) the ephemerides formalism from @Wahr:1981ea and @Mathews:1997js as described in @Petit:2010tp, and 2) the tide catalog formalism outlined in @Cartwright:1971iz. For the ephemerides method, `pyTMD.astro` has options for calculating approximate ephemerides following @Meeus:1991vh and @Montenbruck:1989uk or using high-resolution JPL ephemerides from @Park:2021fa with the `jplephem` package [@Rhodes:2011to]. For both calculation methods, `pyTMD` can include multiple adjustments to the Love and Shida numbers including the frequency-dependent and the mantle anelasticity corrections from @Mathews:1997js. 
 
 # Acknowledgements
 
