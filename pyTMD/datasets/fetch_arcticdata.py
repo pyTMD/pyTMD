@@ -81,7 +81,7 @@ def fetch_arcticdata(MODEL: str,
     """
 
     # create logger for verbosity level
-    logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # digital object identifier (doi) for each Arctic tide model
     DOI = {}
@@ -112,7 +112,7 @@ def fetch_arcticdata(MODEL: str,
     logger.info(f'{posixpath.join(*HOST)} -->\n')
     zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=TIMEOUT))
     # find model files within zip file
-    rx = re.compile(r'(grid|h[0]?|UV[0]?|Model|xy)_(.*?)',re.VERBOSE)
+    rx = re.compile(r'(grid|h[0]?|UV[0]?|Model|xy)_(.*?)', re.VERBOSE)
     members = [m for m in zfile.filelist if rx.search(m.filename)]
     # extract each member
     for m in members:
@@ -138,7 +138,6 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory for location of tide models
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
         type=pathlib.Path, default=_default_path,
         help='Working data directory')

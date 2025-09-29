@@ -135,32 +135,32 @@ def reduce_otis(MODEL,
     crs1 = pyTMD.crs().from_input(PROJECTION)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    xbox = np.array([BOUNDS[0],BOUNDS[1],BOUNDS[1],BOUNDS[0],BOUNDS[0]])
-    ybox = np.array([BOUNDS[2],BOUNDS[2],BOUNDS[3],BOUNDS[3],BOUNDS[2]])
-    lon,lat = transformer.transform(xbox,ybox)
+    xbox = np.array([BOUNDS[0], BOUNDS[1], BOUNDS[1], BOUNDS[0], BOUNDS[0]])
+    ybox = np.array([BOUNDS[2], BOUNDS[2], BOUNDS[3], BOUNDS[3], BOUNDS[2]])
+    lon, lat = transformer.transform(xbox, ybox)
 
     # convert bounds from latitude/longitude to model coordinates
-    x,y = pyTMD.crs().convert(lon,lat,model.projection,'F')
+    x, y = pyTMD.crs().convert(lon, lat, model.projection, 'F')
 
     # find indices to reduce to xmin,xmax,ymin,ymax
-    gridx,gridy = np.meshgrid(xi,yi)
-    indy,indx = np.nonzero((gridx >= x.min()) & (gridx <= x.max()) &
+    gridx, gridy = np.meshgrid(xi, yi)
+    indy, indx = np.nonzero((gridx >= x.min()) & (gridx <= x.max()) &
         (gridy >= y.min()) & (gridy <= y.max()))
     nx = np.count_nonzero((xi >= x.min()) & (xi <= x.max()))
     ny = np.count_nonzero((yi >= y.min()) & (yi <= y.max()))
     # calculate new grid limits and convert back to grid-cell edges
-    dx = np.abs(xi[1]-xi[0])
-    dy = np.abs(yi[1]-yi[0])
-    xlim = np.array([xi[indx[0]]-dx/2.0,xi[indx[-1]]+dx/2.0],dtype='>f4')
-    ylim = np.array([yi[indy[0]]-dy/2.0,yi[indy[-1]]+dy/2.0],dtype='>f4')
+    dx = np.abs(xi[1] - xi[0])
+    dy = np.abs(yi[1] - yi[0])
+    xlim = np.array([xi[indx[0]] - dx/2.0, xi[indx[-1]] + dx/2.0], dtype='>f4')
+    ylim = np.array([yi[indy[0]] - dy/2.0, yi[indy[-1]] + dy/2.0], dtype='>f4')
     # reduce grid and mask to new bounds
-    hz1 = np.zeros((ny,nx),dtype='>f4')
-    mz1 = np.zeros((ny,nx),dtype='>i4')
+    hz1 = np.zeros((ny,nx), dtype='>f4')
+    mz1 = np.zeros((ny,nx), dtype='>i4')
     hz1[:,:] = hz[indy,indx].reshape(ny,nx)
     mz1[:,:] = mz[indy,indx].reshape(ny,nx)
     # output reduced grid to file
     new_grid_file = create_unique_filename(model.grid_file)
-    pyTMD.io.OTIS.output_otis_grid(new_grid_file,xlim,ylim,hz1,mz1,iob,dt)
+    pyTMD.io.OTIS.output_otis_grid(new_grid_file, xlim, ylim, hz1, mz1, iob, dt)
     # change the permissions level to MODE
     new_grid_file.chmod(mode=MODE)
 
@@ -178,10 +178,10 @@ def reduce_otis(MODEL,
         for i,c in enumerate(constituents):
             # read constituent from elevation file
             if (model.format == 'ATLAS-compact'):
-                z0,zlocal = pyTMD.io.OTIS.read_atlas_elevation(
+                z0, zlocal = pyTMD.io.OTIS.read_atlas_elevation(
                     model_file['z'], i, c)
-                xi,yi,z=pyTMD.io.OTIS.combine_atlas_model(x0, y0, z0, pmask,
-                    zlocal, variable='z')
+                xi, yi, z = pyTMD.io.OTIS.combine_atlas_model(x0, y0, z0,
+                    pmask, zlocal, variable='z')
             else:
                 z = pyTMD.io.OTIS.read_otis_elevation(model_file['z'], i)
             # reduce elevation to new bounds
@@ -210,15 +210,15 @@ def reduce_otis(MODEL,
             if (model.format == 'ATLAS-compact'):
                 u0,v0,uvlocal = pyTMD.io.OTIS.read_atlas_transport(
                     model_file['u'], i, c)
-                xi,yi,u = pyTMD.io.OTIS.combine_atlas_model(x0, y0, u0, pmask,
-                    uvlocal, variable='u')
-                xi,yi,v = pyTMD.io.OTIS.combine_atlas_model(x0, y0, v0, pmask,
-                    uvlocal, variable='v')
+                xi, yi, u = pyTMD.io.OTIS.combine_atlas_model(x0, y0, u0,
+                    pmask, uvlocal, variable='u')
+                xi, yi, v = pyTMD.io.OTIS.combine_atlas_model(x0, y0, v0,
+                    pmask, uvlocal, variable='v')
             else:
-                u,v = pyTMD.io.OTIS.read_otis_transport(model_file['u'],i)
+                u, v = pyTMD.io.OTIS.read_otis_transport(model_file['u'], i)
             # reduce transport components to new bounds
-            u1[:,:,i] = u[indy,indx].reshape(ny,nx)
-            v1[:,:,i] = v[indy,indx].reshape(ny,nx)
+            u1[:,:,i] = u[indy,indx].reshape(ny, nx)
+            v1[:,:,i] = v[indy,indx].reshape(ny, nx)
         # output reduced transport components
         new_model_file['uv'] = create_unique_filename(model_file['u'])
         pyTMD.io.OTIS.output_otis_transport(new_model_file['u'], u1, v1,
@@ -261,7 +261,6 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line options
     # set data directory containing the tidal data
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
         type=pathlib.Path, default=_default_path,
         help='Working data directory')

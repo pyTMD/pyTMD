@@ -143,13 +143,13 @@ def fetch_aviso_fes(MODEL: str,
         today = time.strftime('%Y-%m-%d',time.localtime())
         LOGFILE = DIRECTORY.joinpath(f'AVISO_FES_tides_{today}.log')
         fid = LOGFILE.open(mode='w', encoding='utf8')
-        logger = pyTMD.utilities.build_logger(__name__,stream=fid,
+        logger = pyTMD.utilities.build_logger(__name__, stream=fid,
             level=logging.INFO)
         logger.info(f'AVISO FES Sync Log ({today})')
         logger.info(f'\tMODEL: {MODEL}')
     else:
         # standard output (terminal output)
-        logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
+        logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # download the FES tide model files
     if MODEL in ('FES1999','FES2004','FES2012','FES2014'):
@@ -159,7 +159,8 @@ def fetch_aviso_fes(MODEL: str,
             CURRENTS=CURRENTS,
             EXTRAPOLATED=EXTRAPOLATED,
             GZIP=GZIP,
-            MODE=MODE)
+            MODE=MODE
+        )
     elif MODEL in ('FES2022',):
         aviso_fes_list(MODEL, f, logger,
             DIRECTORY=DIRECTORY,
@@ -167,7 +168,8 @@ def fetch_aviso_fes(MODEL: str,
             CURRENTS=CURRENTS,
             EXTRAPOLATED=EXTRAPOLATED,
             GZIP=GZIP,
-            MODE=MODE)
+            MODE=MODE
+        )
 
     # close the ftp connection
     f.quit()
@@ -463,7 +465,7 @@ def ftp_download(logger, f, remote_path, local_dir,
             # recursively create output directory if non-existent
             local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
             # extract file to local directory
-            with tar.extractfile(m) as f_in,opener(local_file, 'wb') as f_out:
+            with tar.extractfile(m) as f_in, opener(local_file, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
             # get last modified date of remote file within tar file
             # keep remote modification time of file and local access time
@@ -480,7 +482,7 @@ def ftp_download(logger, f, remote_path, local_dir,
         output = f'{stem}.gz' if sfx in ('.asc','.nc') and GZIP else stem
         local_file = local_dir.joinpath(output)
         # check if the local file exists
-        if local_file.exists() and newer(mtime,local_file.stat().st_mtime):
+        if local_file.exists() and newer(mtime, local_file.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             return
@@ -493,7 +495,7 @@ def ftp_download(logger, f, remote_path, local_dir,
         f.retrbinary(f'RETR {remote_file}', fileobj.write, blocksize=CHUNK)
         fileobj.seek(0)
         # decompress lzma file and extract contents to local directory
-        with lzma.open(fileobj) as f_in,opener(local_file, 'wb') as f_out:
+        with lzma.open(fileobj) as f_in, opener(local_file, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
         # get last modified date of remote file within tar file
         # keep remote modification time of file and local access time

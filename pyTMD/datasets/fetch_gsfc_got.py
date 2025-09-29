@@ -85,7 +85,7 @@ def fetch_gsfc_got(MODEL: str,
     """
 
     # create logger for verbosity level
-    logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
     # if compressing the output files
     opener = gzip.open if GZIP else open
 
@@ -144,8 +144,8 @@ def fetch_gsfc_got(MODEL: str,
         # recursively create output directory if non-existent
         local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
         # extract file to local directory
-        with tar.extractfile(m) as fi,opener(local_file, 'wb') as fo:
-            shutil.copyfileobj(fi, fo)
+        with tar.extractfile(m) as f_in, opener(local_file, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
         # get last modified date of remote file within tar file
         # keep remote modification time of file and local access time
         os.utime(local_file, (local_file.stat().st_atime, m.mtime))

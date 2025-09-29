@@ -140,7 +140,7 @@ def verify_box_tpxo(MODEL, folder_id,
         logger.info(f'\t{str(local)}')
         # compare checksums to validate download
         sha1 = pyTMD.utilities.get_hash(local, algorithm='sha1')
-        if sha1 != entry['sha1']:
+        if (sha1 != entry['sha1']):
             logger.critical(f'Remote checksum: {entry["sha1"]}')
             logger.critical(f'Local checksum: {sha1}')
             raise Exception('Checksum verification failed')
