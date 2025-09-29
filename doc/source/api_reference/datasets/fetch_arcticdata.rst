@@ -1,6 +1,6 @@
-===================
-arcticdata_tides.py
-===================
+================
+fetch_arcticdata
+================
 
 - Download Arctic Ocean Tide Models from the `NSF ArcticData <https://arcticdata.io>`_ archive
 
@@ -12,14 +12,16 @@ arcticdata_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/arcticdata_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/datasets/fetch_arcticdata.py
 
-Calling Sequence
-################
+.. autofunction:: pyTMD.datasets.fetch_arcticdata
+
+CLI
+===
 
 .. argparse::
-    :module: pyTMD.scripts.arcticdata_tides
+    :module: pyTMD.datasets.fetch_arcticdata
     :func: arguments
-    :prog: arcticdata_tides.py
+    :prog: fetch_arcticdata.py
     :nodescription:
     :nodefault:

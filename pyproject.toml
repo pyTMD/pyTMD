@@ -64,11 +64,15 @@ aws = ["xarray", "dask", "zarr>=3", "h5netcdf", "geopandas", "pyarrow", "obstore
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "pytest-xdist", "oct2py", "boto3"]
 
 [project.scripts]
-"arcticdata_tides.py" = "pyTMD.scripts.arcticdata_tides:main" 
-"aviso_fes_tides.py" = "pyTMD.scripts.aviso_fes_tides:main" 
-"gsfc_got_tides.py" = "pyTMD.scripts.gsfc_got_tides:main" 
-"reduce_OTIS_files.py" = "pyTMD.scripts.reduce_OTIS_files:main" 
-"verify_box_tpxo.py" = "pyTMD.scripts.verify_box_tpxo:main" 
+"fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
+"fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
+"fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
+"reduce_otis.py" = "pyTMD.datasets.reduce_otis:main" 
+"verify_box_tpxo.py" = "pyTMD.datasets.verify_box_tpxo:main" 
+"arcticdata_tides.py" = "pyTMD.datasets.fetch_arcticdata:main" 
+"aviso_fes_tides.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
+"gsfc_got_tides.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
+"reduce_OTIS_files.py" = "pyTMD.datasets.reduce_otis:main" 
 
 [tool.setuptools.packages.find]
 exclude = ["providers*", "run*", "test*"]
@@ -93,7 +97,7 @@ source = [
 omit = [
     "setup.py",
     "conf.py",
-    "pyTMD/scripts/*",
+    "pyTMD/datasets/*",
     "pyTMD/compute_tide_corrections.py",
     "test/_coefficients_to_json.py",
     "test/_def_to_json.py",

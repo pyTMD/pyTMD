@@ -13,11 +13,13 @@ Ocean and load tide constituent files are available from different modeling grou
 ``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
 OTIS and ATLAS formatted data use binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
 They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
-Arctic Ocean models can be downloaded from the NSF ArcticData server using the `arcticdata_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/arcticdata_tides.py>`_ program.
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
 GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
-The FES models can be downloaded using the `aviso_fes_tides.py <https://github.com/pyTMD/pyTMD/blob/main/scripts/aviso_fes_tides.py>`_ program for users registered with AVISO.
+
+OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the ``pyTMD.datasets.fetch_arcticdata`` function.
+GOT models can be downloaded from the NASA GSFC server using the ``pyTMD.datasets.fetch_gsfc_got`` function.
+Users registered with AVISO can download FES models from their ftp server using the ``pyTMD.datasets.fetch_aviso_fes`` function.
 
 Model Database
 ##############
@@ -48,9 +50,12 @@ All presently available models are stored within a `JSON database <https://githu
 Directories
 ###########
 
-``pyTMD`` uses a tree structure for storing the tidal constituent data.
+``pyTMD`` uses a tree structure for storing and accessing the tidal constituent data.
 This structure was chosen based on the different formats of each tide model.
-Presently, the following models and their directories are parameterized within ``pyTMD``.
+The base of the tree structure (in the table below as ``<path_to_tide_models>``) can be the default internal directory (``pyTMD/data``) or a user-specified (external) directory.
+Several models can be programmatically downloaded from their providers to their parameterized directories using the fetching routines in ``pyTMD.datasets``.
+
+Presently, the following models and their directories are parameterized within ``pyTMD``:
 
 .. csv-table::
    :file: ../_assets/elevation-models.csv
@@ -60,9 +65,10 @@ Presently, the following models and their directories are parameterized within `
     See :ref:`tab-currents` for the table of directories for models with tidal currents. 
 
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
+If you wish to add a new model to the ``pyTMD`` database, please see the `contribution guidelines <./Contributing.html>`_.
 
 .. note::
-    Any alternative model parameterized with a definition file will have to fit a presently supported file standard.
+    Any model parameterized with a definition file or added to the database will have to fit a presently supported file standard.
 
 Definition Files
 ################

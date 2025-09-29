@@ -125,6 +125,7 @@ Project Details
     api_reference/astro.rst
     api_reference/compute.rst
     api_reference/crs.rst
+    api_reference/datasets/datasets.rst
     api_reference/ellipse.rst
     api_reference/interpolate.rst
     api_reference/io/io.rst
@@ -133,17 +134,6 @@ Project Details
     api_reference/solve/solve.rst
     api_reference/spatial.rst
     api_reference/utilities.rst
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-    :caption: Utilities
-
-    api_reference/scripts/arcticdata_tides.rst
-    api_reference/scripts/aviso_fes_tides.rst
-    api_reference/scripts/gsfc_got_tides.rst
-    api_reference/scripts/reduce_OTIS_files.rst
-    api_reference/scripts/verify_box_tpxo.rst
 
 .. toctree::
     :maxdepth: 1

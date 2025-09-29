@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-reduce_OTIS_files.py
+reduce_otis.py
 Written by Tyler Sutterley (07/2025)
 Read OTIS-format tidal files and reduce to a regional subset
 
@@ -72,6 +72,9 @@ import timescale.time
 # attempt imports
 pyproj = pyTMD.utilities.import_dependency('pyproj')
 
+# default data directory for tide models
+_default_path = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: keep track of threads
 def info(args):
     logging.debug(pathlib.Path(sys.argv[0]).name)
@@ -82,16 +85,33 @@ def info(args):
     logging.debug(f'process id: {os.getpid():d}')
 
 # PURPOSE: reads OTIS-format tidal files and reduces to a regional subset
-def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
+def reduce_otis(MODEL,
+        DIRECTORY: str | pathlib.Path | None = _default_path,
         BOUNDS=4*[None],
         PROJECTION='4326',
         MODE=0o775
     ):
+    """
+    Reads OTIS-format tidal files and reduces to a regional subset
+
+    Parameters
+    ----------
+    MODEL: str
+        Tide model to use
+    DIRECTORY: str or pathlib.Path
+        Working data directory
+    BOUNDS: list, default 4*[None]
+        Grid bounds for reducing model [xmin,xmax,ymin,ymax]
+    PROJECTION: str, default '4326'
+        Spatial projection as EPSG code or PROJ4 string
+    MODE: oct, default 0o775
+        Permission mode of the output files
+    """
     # get parameters for tide model grid
     try:
-        model = pyTMD.io.model(directory=tide_dir).elevation(TIDE_MODEL)
+        model = pyTMD.io.model(directory=DIRECTORY).elevation(MODEL)
     except Exception as exc:
-        model = pyTMD.io.model(directory=tide_dir).current(TIDE_MODEL)
+        model = pyTMD.io.model(directory=DIRECTORY).current(MODEL)
     # directionaries with input and output files
     model_file = {}
     new_model_file = {}
@@ -146,7 +166,7 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
     # reduce elevation files to bounds
     try:
         # get parameters for tide model
-        model = model.elevation(TIDE_MODEL)
+        model = model.elevation(MODEL)
     except Exception as exc:
         pass
     else:
@@ -175,7 +195,7 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
     # reduce transport files to bounds
     try:
         # get parameters for tide model
-        model = model.current(TIDE_MODEL)
+        model = model.current(MODEL)
     except Exception as exc:
         pass
     else:
@@ -241,7 +261,7 @@ def arguments():
     # set data directory containing the tidal data
     default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_path,
         help='Working data directory')
     # tide model to use
     model_choices = ('CATS0201','CATS2008','CATS2008_load','TPXO9-atlas',
@@ -284,10 +304,12 @@ def main():
     # try to run regional program
     try:
         info(args)
-        make_regional_OTIS_files(args.directory, args.tide,
+        reduce_otis(args.tide,
+            DIRECTORY=args.directory,
             BOUNDS=args.bounds,
             PROJECTION=args.projection,
-            MODE=args.mode)
+            MODE=args.mode
+        )
     except Exception as exc:
         # if there has been an error exception
         # print the type, value, and stack trace of the

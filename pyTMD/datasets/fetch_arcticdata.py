@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-arcticdata_tides.py
+fetch_arcticdata.py
 Written by Tyler Sutterley (07/2025)
 Download Arctic Ocean Tide Models from the NSF ArcticData archive
 
@@ -11,7 +11,7 @@ Arc2kmTM: https://arcticdata.io/catalog/view/doi:10.18739/A2D21RK6K
 Gr1kmTM: https://arcticdata.io/catalog/view/doi:10.18739/A2B853K18
 
 CALLING SEQUENCE:
-    python arcticdata_tides.py --tide=Gr1kmTM
+    python fetch_arcticdata.py --tide=Gr1kmTM
 
 COMMAND LINE OPTIONS:
     --help: list the command line options
@@ -54,11 +54,29 @@ import argparse
 import posixpath
 import pyTMD.utilities
 
+# default data directory for tide models
+_default_path = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
-def arcticdata_tides(MODEL: str,
-    DIRECTORY: str | pathlib.Path | None = None,
-    TIMEOUT: int | None = None,
-    MODE: oct = 0o775):
+def fetch_arcticdata(MODEL: str,
+        DIRECTORY: str | pathlib.Path | None = _default_path,
+        TIMEOUT: int | None = None,
+        MODE: oct = 0o775
+    ):
+    """
+    Download Arctic Ocean Tide Models from the NSF ArcticData archive
+    
+    Parameters
+    ----------
+    MODEL: str
+        Arctic tide model to download
+    DIRECTORY: str or pathlib.Path
+        Working data directory
+    TIMEOUT: int, default None
+        Timeout in seconds for blocking operations
+    MODE: oct, default 0o775
+        Local permissions mode of the files downloaded
+    """
 
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
@@ -120,7 +138,7 @@ def arguments():
     # working data directory for location of tide models
     default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_path,
         help='Working data directory')
     # Arctic Ocean tide model to download
     parser.add_argument('--tide','-T',
@@ -147,10 +165,11 @@ def main():
     # check internet connection before attempting to run program
     if pyTMD.utilities.check_connection('https://arcticdata.io'):
         for m in args.tide:
-            arcticdata_tides(m,
+            fetch_arcticdata(m,
                 DIRECTORY=args.directory,
                 TIMEOUT=args.timeout,
-                MODE=args.mode)
+                MODE=args.mode
+            )
 
 # run main program
 if __name__ == '__main__':

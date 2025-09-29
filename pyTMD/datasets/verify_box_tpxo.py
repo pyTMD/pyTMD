@@ -49,9 +49,15 @@ import argparse
 import posixpath
 import pyTMD.utilities
 
+# default data directory for tide models
+_default_path = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: create an opener for box with a supplied user access token
-def build_opener(token, context=pyTMD.utilities._default_ssl_context,
-    redirect=True):
+def build_opener(
+        token,
+        context=pyTMD.utilities._default_ssl_context,
+        redirect=True
+    ):
     """
     Build ``urllib`` opener for box with supplied user access token
 
@@ -82,14 +88,17 @@ def build_opener(token, context=pyTMD.utilities._default_ssl_context,
     return opener
 
 # PURPOSE: verify downloaded TPXO9-atlas files with box server
-def verify_box_tpxo(tide_dir, folder_id, TIDE_MODEL=None,
-    CURRENTS=False, MODE=None):
+def verify_box_tpxo(MODEL, folder_id,
+        DIRECTORY: str | pathlib.Path | None = _default_path, 
+        CURRENTS=False,
+        MODE=None
+    ):
 
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # check if local directory exists and recursively create if not
-    m = pyTMD.io.model(directory=tide_dir).elevation(TIDE_MODEL)
+    m = pyTMD.io.model(directory=DIRECTORY).elevation(MODEL)
     localpath = m.model_file[0].parent
     # create output directory if non-existent
     localpath.mkdir(MODE, parents=True, exist_ok=True)
@@ -103,9 +112,9 @@ def verify_box_tpxo(tide_dir, folder_id, TIDE_MODEL=None,
     rx = re.compile(r'^({0})'.format(r'|'.join(regex_patterns)), re.VERBOSE)
 
     # box api url
-    HOST = posixpath.join('https://api.box.com','2.0')
+    HOST = posixpath.join('https://api.box.com', '2.0')
     # get folder contents
-    folder_url = posixpath.join(HOST,'folders',folder_id,'items')
+    folder_url = posixpath.join(HOST, 'folders', folder_id, 'items')
     request = pyTMD.utilities.urllib2.Request(folder_url)
     response = pyTMD.utilities.urllib2.urlopen(request)
     folder_contents = json.loads(response.read())
@@ -150,9 +159,8 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_path,
         help='Working data directory')
     # box user access token
     parser.add_argument('--token','-t',
@@ -187,8 +195,11 @@ def main():
     opener = build_opener(args.token)
     # check internet connection before attempting to run program
     if pyTMD.utilities.check_connection('https://app.box.com/'):
-        verify_box_tpxo(args.directory, args.folder, TIDE_MODEL=args.tide,
-            CURRENTS=args.currents, MODE=args.mode)
+        verify_box_tpxo(args.tide, args.folder,
+            DIRECTORY=args.directory,
+            CURRENTS=args.currents,
+            MODE=args.mode
+        )
 
 # run main program
 if __name__ == '__main__':

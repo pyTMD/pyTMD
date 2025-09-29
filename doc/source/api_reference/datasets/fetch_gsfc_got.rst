@@ -1,6 +1,6 @@
-=================
-gsfc_got_tides.py
-=================
+==============
+fetch_gsfc_got
+==============
 
 - Download `Goddard Ocean Tide (GOT) models <https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models>`_
 
@@ -13,14 +13,16 @@ gsfc_got_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/gsfc_got_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/datasets/fetch_gsfc_got.py
 
-Calling Sequence
-################
+.. autofunction:: pyTMD.datasets.fetch_gsfc_got
+
+CLI
+===
 
 .. argparse::
-    :module: pyTMD.scripts.gsfc_got_tides
+    :module: pyTMD.datasets.fetch_gsfc_got
     :func: arguments
-    :prog: gsfc_got_tides.py
+    :prog: fetch_gsfc_got.py
     :nodescription:
     :nodefault:

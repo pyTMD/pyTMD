@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 u"""
-gsfc_got_tides.py
+fetch_gsfc_got.py
 Written by Tyler Sutterley (0/2025)
 Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
-    python gsfc_got_tides.py --tide=GOT5.6
+    python fetch_gsfc_got.py --tide=GOT5.6
 
 COMMAND LINE OPTIONS:
     --help: list the command line options
@@ -51,13 +51,36 @@ import argparse
 import posixpath
 import pyTMD.utilities
 
+# default data directory for tide models
+_default_path = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
-def gsfc_got_tides(MODEL: str,
-    DIRECTORY: str | pathlib.Path | None = None,
-    FORMAT: str = 'netcdf',
-    GZIP: bool = False,
-    TIMEOUT: int | None = None,
-    MODE: oct = 0o775):
+def fetch_gsfc_got(MODEL: str,
+        DIRECTORY: str | pathlib.Path | None = _default_path,
+        FORMAT: str = 'netcdf',
+        GZIP: bool = False,
+        TIMEOUT: int | None = None,
+        MODE: oct = 0o775
+    ):
+    """
+    Download Goddard Ocean Tide (GOT) models from NASA Goddard Space Flight
+    Center (GSFC)
+
+    Parameters
+    ----------
+    MODEL: str
+        GOT tide model to download
+    DIRECTORY: str or pathlib.Path
+        Working data directory
+    FORMAT: str, default 'netcdf'
+        GOT tide model format to download
+    GZIP: bool, default False
+        Compress output ascii and netCDF4 tide files
+    TIMEOUT: int, default None
+        Timeout in seconds for blocking operations
+    MODE: oct, default 0o775
+        Local permissions mode of the files downloaded
+    """
 
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
@@ -128,6 +151,16 @@ def gsfc_got_tides(MODEL: str,
 
 # PURPOSE: compare the modification time of two files
 def newer(t1: int, t2: int) -> bool:
+    """
+    Compare the modification time of two files
+    
+    Parameters
+    ----------
+    t1: int
+        Modification time of first file
+    t2: int
+        Modification time of second file
+    """
     return (pyTMD.utilities.even(t1) <= pyTMD.utilities.even(t2))
 
 # PURPOSE: create argument parser
@@ -141,9 +174,8 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory for location of tide models
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_path,
         help='Working data directory')
     # Goddard Ocean Tide model to download
     parser.add_argument('--tide','-T',
@@ -179,12 +211,13 @@ def main():
     # check internet connection before attempting to run program
     if pyTMD.utilities.check_connection('https://earth.gsfc.nasa.gov'):
         for m in args.tide:
-            gsfc_got_tides(m,
+            fetch_gsfc_got(m,
                 DIRECTORY=args.directory,
                 FORMAT=args.format,
                 GZIP=args.gzip,
                 TIMEOUT=args.timeout,
-                MODE=args.mode)
+                MODE=args.mode
+            )
 
 # run main program
 if __name__ == '__main__':

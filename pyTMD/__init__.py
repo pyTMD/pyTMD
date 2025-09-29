@@ -22,6 +22,7 @@ import pyTMD.spatial
 import pyTMD.tools
 import pyTMD.utilities
 import pyTMD.version
+from pyTMD import datasets
 from pyTMD import io
 from pyTMD import solve
 from pyTMD.crs import crs
