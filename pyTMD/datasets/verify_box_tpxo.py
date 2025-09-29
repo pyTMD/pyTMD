@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 verify_box_tpxo.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (09/2025)
 Verifies downloaded TPXO9-atlas global tide models from the box file
     sharing service
 
@@ -26,6 +26,7 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 09/2025: made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
     Updated 01/2025: scrubbed use of pathlib.os to just use os directly
     Updated 09/2024: use model class to define output directory

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 fetch_gsfc_got.py
-Written by Tyler Sutterley (0/2025)
+Written by Tyler Sutterley (09/2025)
 Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
@@ -32,6 +32,8 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 09/2025: renamed module and function to fetch_gsfc_got
+        made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
     Updated 01/2025: scrubbed use of pathlib.os to just use os directly
     Updated 09/2024: added Ray and Erofeeva (2014) long-period tide model

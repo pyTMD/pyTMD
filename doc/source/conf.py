@@ -47,7 +47,7 @@ for module_name in ['model_table', 'constituent_table']:
 
 # download a tide model for rendering documentation
 if on_rtd:
-    subprocess.run(['gsfc_got_tides.py','--tide','GOT4.10'])
+    subprocess.run(['fetch_gsfc_got.py','--tide','GOT4.10'])
 
 # -- General configuration ---------------------------------------------------
 

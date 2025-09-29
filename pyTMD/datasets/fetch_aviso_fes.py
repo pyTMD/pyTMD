@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 fetch_aviso_fes.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (09/2025)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -43,6 +43,8 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 09/2025: renamed module and function to fetch_aviso_fes
+        made a callable function and added function docstrings
     Updated 07/2025: added extrapolation option for FES2014 tide model
         add a default directory for tide models
     Updated 01/2025: new ocean tide directory for latest FES2022 version
@@ -402,6 +404,32 @@ def ftp_download(logger, f, remote_path, local_dir,
         CHUNK=8192,
         MODE=0o775
     ):
+    """
+    Pull file from a remote ftp server and decompress if tar file
+    
+    Parameters
+    ----------
+    logger: logging.logger object
+        Logger for outputting file transfer information
+    f: ftplib.FTP object
+        Active ftp connection to AVISO server
+    remote_path: list
+        Remote path components to file on ftp server
+    local_dir: str or pathlib.Path
+        Local directory to save file
+    LZMA: bool, default None
+        Decompress lzma-compressed file
+    TARMODE: str, default None
+        Mode for reading tar-compressed file
+    FLATTEN: bool, default None
+        Flatten tar file structure when extracting files
+    GZIP: bool, default False
+        Compress output ascii and netCDF4 tide files
+    CHUNK: int, default 8192
+        Block size for downloading files from ftp server
+    MODE: oct, default 0o775
+        Local permissions mode of the files downloaded
+    """
     # remote and local directory for data product
     remote_file = posixpath.join('auxiliary','tide_model',*remote_path)
     # if compressing the output file

@@ -30,6 +30,8 @@ PROGRAM DEPENDENCIES:
     crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
+    Updated 09/2025: renamed module and function to reduce_otis
+        made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
     Updated 11/2024: use "stem" instead of "basename"
     Updated 07/2024: renamed format for ATLAS to ATLAS-compact
