@@ -89,98 +89,98 @@ import ftplib
 import pyTMD.utilities
 
 # default data directory for tide models
-_default_path = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_data_path('data')
 
 # PURPOSE: download local AVISO FES files with ftp server
-def fetch_aviso_fes(MODEL: str,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
-        USER: str = '',
-        PASSWORD: str = '',
-        LOAD: bool = False,
-        CURRENTS: bool = False,
-        EXTRAPOLATED: bool = False,
-        GZIP: bool = False,
-        TIMEOUT: int | None = None,
-        LOG: bool = False,
-        MODE: oct = 0o775
+def fetch_aviso_fes(model: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        user: str = '',
+        password: str = '',
+        load: bool = False,
+        currents: bool = False,
+        extrapolated: bool = False,
+        compressed: bool = False,
+        timeout: int | None = None,
+        log: bool = False,
+        mode: oct = 0o775
     ):
     """
     Download AVISO FES global tide models from the AVISO FTP server
 
     Parameters
     ----------
-    MODEL: str
+    model: str
         FES tide model to download
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    USER: str, default ''
+    user: str, default ''
         Username for AVISO Login
-    PASSWORD: str, default ''
+    password: str, default ''
         Password for AVISO Login
-    LOAD: bool, default False
+    load: bool, default False
         Download load tide model outputs
-    CURRENTS: bool, default False
+    currents: bool, default False
         Download tide model current outputs
-    EXTRAPOLATED: bool, default False
+    extrapolated: bool, default False
         Download extrapolated tide model outputs
-    GZIP: bool, default False
+    compressed: bool, default False
         Compress output ascii and netCDF4 tide files
-    TIMEOUT: int, default None
+    timeout: int, default None
         Timeout in seconds for blocking operations
-    LOG: bool, default False
+    log: bool, default False
         Output log of files downloaded
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
     # connect and login to AVISO ftp server
-    f = ftplib.FTP('ftp-access.aviso.altimetry.fr', timeout=TIMEOUT)
-    f.login(USER, PASSWORD)
+    f = ftplib.FTP('ftp-access.aviso.altimetry.fr', timeout=timeout)
+    f.login(user, password)
 
     # create log file with list of downloaded files (or print to terminal)
-    if LOG:
+    if log:
         # format: AVISO_FES_tides_2002-04-01.log
         today = time.strftime('%Y-%m-%d',time.localtime())
-        LOGFILE = DIRECTORY.joinpath(f'AVISO_FES_tides_{today}.log')
-        fid = LOGFILE.open(mode='w', encoding='utf8')
+        logfile = directory.joinpath(f'AVISO_FES_tides_{today}.log')
+        fid = logfile.open(mode='w', encoding='utf8')
         logger = pyTMD.utilities.build_logger(__name__, stream=fid,
             level=logging.INFO)
         logger.info(f'AVISO FES Sync Log ({today})')
-        logger.info(f'\tMODEL: {MODEL}')
+        logger.info(f'\tMODEL: {model}')
     else:
         # standard output (terminal output)
         logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # download the FES tide model files
-    if MODEL in ('FES1999','FES2004','FES2012','FES2014'):
-        aviso_fes_tar(MODEL, f, logger,
-            DIRECTORY=DIRECTORY,
-            LOAD=LOAD,
-            CURRENTS=CURRENTS,
-            EXTRAPOLATED=EXTRAPOLATED,
-            GZIP=GZIP,
-            MODE=MODE
+    if model in ('FES1999','FES2004','FES2012','FES2014'):
+        aviso_fes_tar(model, f, logger,
+            directory=directory,
+            load=load,
+            currents=currents,
+            extrapolated=extrapolated,
+            GZIP=compressed,
+            MODE=mode
         )
-    elif MODEL in ('FES2022',):
-        aviso_fes_list(MODEL, f, logger,
-            DIRECTORY=DIRECTORY,
-            LOAD=LOAD,
-            CURRENTS=CURRENTS,
-            EXTRAPOLATED=EXTRAPOLATED,
-            GZIP=GZIP,
-            MODE=MODE
+    elif model in ('FES2022',):
+        aviso_fes_list(model, f, logger,
+            DIRECTORY=directory,
+            LOAD=load,
+            CURRENTS=currents,
+            EXTRAPOLATED=extrapolated,
+            GZIP=compressed,
+            MODE=mode
         )
 
     # close the ftp connection
     f.quit()
     # close log file and set permissions level to MODE
-    if LOG:
-        LOGFILE.chmod(mode=MODE)
+    if log:
+        logfile.chmod(mode=mode)
 
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading tar files and extracting contents
 def aviso_fes_tar(MODEL, f, logger,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
+        DIRECTORY: str | pathlib.Path | None = _default_directory,
         LOAD: bool = False,
         CURRENTS: bool = False,
         EXTRAPOLATED: bool = False,
@@ -294,7 +294,7 @@ def aviso_fes_tar(MODEL, f, logger,
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading individual files
 def aviso_fes_list(MODEL, f, logger,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
+        DIRECTORY: str | pathlib.Path | None = _default_directory,
         LOAD: bool = False,
         CURRENTS: bool = False,
         EXTRAPOLATED: bool = False,
@@ -564,7 +564,7 @@ def arguments():
         help='Path to .netrc file for authentication')
     # working data directory
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # FES tide models
     choices = ['FES1999','FES2004','FES2012','FES2014','FES2022']
@@ -628,16 +628,16 @@ def main():
     if pyTMD.utilities.check_ftp_connection(HOST,args.user,args.password):
         for m in args.tide:
             fetch_aviso_fes(m,
-                DIRECTORY=args.directory,
-                USER=args.user,
-                PASSWORD=args.password,
-                LOAD=args.load,
-                CURRENTS=args.currents,
-                EXTRAPOLATED=args.extrapolated,
-                GZIP=args.gzip,
-                TIMEOUT=args.timeout,
-                LOG=args.log,
-                MODE=args.mode
+                directory=args.directory,
+                user=args.user,
+                password=args.password,
+                load=args.load,
+                currents=args.currents,
+                extrapolated=args.extrapolated,
+                compressed=args.gzip,
+                timeout=args.timeout,
+                log=args.log,
+                mode=args.mode
             )
 
 # run main program

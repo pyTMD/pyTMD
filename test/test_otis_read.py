@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_otis_read.py (08/2025)
+test_otis_read.py (10/2025)
 Tests for OTIS-formatted tide model data
 
 Tests that constituents are being extracted
@@ -21,6 +21,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
     Updated 09/2025: added check if running on GitHub Actions or locally
         renamed test_download_and_read.py to test_otis_read.py
     Updated 08/2025: added xarray tests to verify implementation
@@ -60,6 +61,7 @@ import json
 import boto3
 import shutil
 import pytest
+import inspect
 import pathlib
 import zipfile
 import posixpath
@@ -78,6 +80,9 @@ import timescale.time
 pd = pyTMD.utilities.import_dependency('pandas')
 oct2py = pyTMD.utilities.import_dependency('oct2py')
 
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 # check if running on GitHub Actions CI
 GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
@@ -311,7 +316,7 @@ class Test_CATS2008:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -401,7 +406,7 @@ class Test_CATS2008:
             df[s].attrs['longitude'] = station_lon[i]
 
         # save to (gzipped) csv
-        output_file = directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        output_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         with gzip.open(output_file, 'wb') as f:
             df.to_csv(f, index_label='ellipse')
 
@@ -584,7 +589,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)
@@ -672,7 +677,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         df = pd.read_csv(validation_file, index_col='ellipse')
 
         # save complex amplitude for each current
@@ -1136,7 +1141,7 @@ class Test_AOTIM5_2018:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -1185,7 +1190,7 @@ class Test_AOTIM5_2018:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)

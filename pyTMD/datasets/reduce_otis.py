@@ -75,7 +75,7 @@ import timescale.time
 pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 # default data directory for tide models
-_default_path = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_data_path('data')
 
 # PURPOSE: keep track of threads
 def info(args):
@@ -87,11 +87,11 @@ def info(args):
     logging.debug(f'process id: {os.getpid():d}')
 
 # PURPOSE: reads OTIS-format tidal files and reduces to a regional subset
-def reduce_otis(MODEL,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
-        BOUNDS=4*[None],
-        PROJECTION='4326',
-        MODE=0o775
+def reduce_otis(MODEL: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        bounds=4*[None],
+        projection='4326',
+        mode=0o775
     ):
     """
     Reads OTIS-format tidal files and reduces to a regional subset
@@ -111,9 +111,9 @@ def reduce_otis(MODEL,
     """
     # get parameters for tide model grid
     try:
-        model = pyTMD.io.model(directory=DIRECTORY).elevation(MODEL)
+        model = pyTMD.io.model(directory=directory).elevation(MODEL)
     except Exception as exc:
-        model = pyTMD.io.model(directory=DIRECTORY).current(MODEL)
+        model = pyTMD.io.model(directory=directory).current(MODEL)
     # directionaries with input and output files
     model_file = {}
     new_model_file = {}
@@ -132,11 +132,11 @@ def reduce_otis(MODEL,
         xi,yi,hz,mz,iob,dt = pyTMD.io.OTIS.read_otis_grid(model.grid_file)
 
     # converting bounds x,y from projection to latitude/longitude
-    crs1 = pyTMD.crs().from_input(PROJECTION)
+    crs1 = pyTMD.crs().from_input(projection)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    xbox = np.array([BOUNDS[0], BOUNDS[1], BOUNDS[1], BOUNDS[0], BOUNDS[0]])
-    ybox = np.array([BOUNDS[2], BOUNDS[2], BOUNDS[3], BOUNDS[3], BOUNDS[2]])
+    xbox = np.array([bounds[0], bounds[1], bounds[1], bounds[0], bounds[0]])
+    ybox = np.array([bounds[2], bounds[2], bounds[3], bounds[3], bounds[2]])
     lon, lat = transformer.transform(xbox, ybox)
 
     # convert bounds from latitude/longitude to model coordinates
@@ -161,8 +161,8 @@ def reduce_otis(MODEL,
     # output reduced grid to file
     new_grid_file = create_unique_filename(model.grid_file)
     pyTMD.io.OTIS.output_otis_grid(new_grid_file, xlim, ylim, hz1, mz1, iob, dt)
-    # change the permissions level to MODE
-    new_grid_file.chmod(mode=MODE)
+    # change the permissions level to mode
+    new_grid_file.chmod(mode=mode)
 
     # combine ATLAS sub-grids into single output grid
     # reduce elevation files to bounds
@@ -190,8 +190,8 @@ def reduce_otis(MODEL,
         new_model_file['z'] = create_unique_filename(model_file['z'])
         pyTMD.io.OTIS.output_otis_elevation(new_model_file['z'], z1,
             xlim, ylim, constituents)
-        # change the permissions level to MODE
-        new_model_file['z'].chmod(mode=MODE)
+        # change the permissions level to mode
+        new_model_file['z'].chmod(mode=mode)
 
     # combine ATLAS sub-grids into single output grid
     # reduce transport files to bounds
@@ -223,8 +223,8 @@ def reduce_otis(MODEL,
         new_model_file['uv'] = create_unique_filename(model_file['u'])
         pyTMD.io.OTIS.output_otis_transport(new_model_file['u'], u1, v1,
             xlim, ylim, constituents)
-        # change the permissions level to MODE
-        new_model_file['u'].chmod(mode=MODE)
+        # change the permissions level to mode
+        new_model_file['u'].chmod(mode=mode)
 
 # PURPOSE: create a unique filename adding a numerical instance if existing
 def create_unique_filename(filename):
@@ -262,7 +262,7 @@ def arguments():
     # command line options
     # set data directory containing the tidal data
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # tide model to use
     model_choices = ('CATS0201','CATS2008','CATS2008_load','TPXO9-atlas',
@@ -306,10 +306,10 @@ def main():
     try:
         info(args)
         reduce_otis(args.tide,
-            DIRECTORY=args.directory,
-            BOUNDS=args.bounds,
-            PROJECTION=args.projection,
-            MODE=args.mode
+            directory=args.directory,
+            bounds=args.bounds,
+            projection=args.projection,
+            mode=args.mode
         )
     except Exception as exc:
         # if there has been an error exception

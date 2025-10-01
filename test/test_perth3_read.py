@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_perth3_read.py (09/2025)
+test_perth3_read.py (10/2025)
 Tests that GOT4.7 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to NASA PERTH3 program
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
@@ -45,6 +46,8 @@ import json
 import boto3
 import shutil
 import pytest
+import inspect
+import pathlib
 import posixpath
 import numpy as np
 import xarray as xr
@@ -55,6 +58,9 @@ import pyTMD.compute
 import pyTMD.predict
 import timescale.time
 
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 # check if running on GitHub Actions CI
 GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
@@ -109,7 +115,7 @@ def test_verify_GOT47(directory, METHOD, CROP):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -174,7 +180,7 @@ def test_compare_GOT47(directory, METHOD):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -236,7 +242,7 @@ def test_GOT47_xarray(directory):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2

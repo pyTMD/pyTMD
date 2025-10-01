@@ -57,26 +57,26 @@ import posixpath
 import pyTMD.utilities
 
 # default data directory for tide models
-_default_path = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_data_path('data')
 
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
-def fetch_arcticdata(MODEL: str,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
-        TIMEOUT: int | None = None,
-        MODE: oct = 0o775
+def fetch_arcticdata(model: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        timeout: int | None = None,
+        mode: oct = 0o775
     ):
     """
     Download Arctic Ocean Tide Models from the NSF ArcticData archive
     
     Parameters
     ----------
-    MODEL: str
+    model: str
         Arctic tide model to download
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    TIMEOUT: int, default None
+    timeout: int, default None
         Timeout in seconds for blocking operations
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
@@ -99,18 +99,18 @@ def fetch_arcticdata(MODEL: str,
     LOCAL['Gr1kmTM'] = 'Gr1kmTM'
 
     # recursively create directories if non-existent
-    DIRECTORY = pathlib.Path(DIRECTORY).expanduser().absolute()
-    local_dir = DIRECTORY.joinpath(LOCAL[MODEL])
-    local_dir.mkdir(MODE, parents=True, exist_ok=True)
+    directory = pathlib.Path(directory).expanduser().absolute()
+    local_dir = directory.joinpath(LOCAL[model])
+    local_dir.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # build host url for model
-    resource_map_doi = f'resource_map_doi:{DOI[MODEL]}'
+    resource_map_doi = f'resource_map_doi:{DOI[model]}'
     HOST = ['https://arcticdata.io','metacat','d1','mn','v2','packages',
         pyTMD.utilities.quote_plus(posixpath.join('application','bagit-097')),
         pyTMD.utilities.quote_plus(resource_map_doi)]
     # download zipfile from host
     logger.info(f'{posixpath.join(*HOST)} -->\n')
-    zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=TIMEOUT))
+    zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=timeout))
     # find model files within zip file
     rx = re.compile(r'(grid|h[0]?|UV[0]?|Model|xy)_(.*?)', re.VERBOSE)
     members = [m for m in zfile.filelist if rx.search(m.filename)]
@@ -123,7 +123,7 @@ def fetch_arcticdata(MODEL: str,
         # extract file
         zfile.extract(m, path=local_dir)
         # change permissions mode
-        local_file.chmod(mode=MODE)
+        local_file.chmod(mode=mode)
     # close the zipfile object
     zfile.close()
 
@@ -139,7 +139,7 @@ def arguments():
     # command line parameters
     # working data directory for location of tide models
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # Arctic Ocean tide model to download
     parser.add_argument('--tide','-T',
@@ -167,9 +167,9 @@ def main():
     if pyTMD.utilities.check_connection('https://arcticdata.io'):
         for m in args.tide:
             fetch_arcticdata(m,
-                DIRECTORY=args.directory,
-                TIMEOUT=args.timeout,
-                MODE=args.mode
+                directory=args.directory,
+                timeout=args.timeout,
+                mode=args.mode
             )
 
 # run main program

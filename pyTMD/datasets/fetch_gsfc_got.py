@@ -54,15 +54,15 @@ import posixpath
 import pyTMD.utilities
 
 # default data directory for tide models
-_default_path = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_data_path('data')
 
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
-def fetch_gsfc_got(MODEL: str,
-        DIRECTORY: str | pathlib.Path | None = _default_path,
-        FORMAT: str = 'netcdf',
-        GZIP: bool = False,
-        TIMEOUT: int | None = None,
-        MODE: oct = 0o775
+def fetch_gsfc_got(model: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        format: str = 'netcdf',
+        compressed: bool = False,
+        timeout: int | None = None,
+        mode: oct = 0o775
     ):
     """
     Download Goddard Ocean Tide (GOT) models from NASA Goddard Space Flight
@@ -70,24 +70,24 @@ def fetch_gsfc_got(MODEL: str,
 
     Parameters
     ----------
-    MODEL: str
+    model: str
         GOT tide model to download
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    FORMAT: str, default 'netcdf'
+    format: str, default 'netcdf'
         GOT tide model format to download
-    GZIP: bool, default False
+    compressed: bool, default False
         Compress output ascii and netCDF4 tide files
-    TIMEOUT: int, default None
+    timeout: int, default None
         Timeout in seconds for blocking operations
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
     # if compressing the output files
-    opener = gzip.open if GZIP else open
+    opener = gzip.open if compressed else open
 
     # url for each tide model tarfile
     PATH = {}
@@ -107,33 +107,37 @@ def fetch_gsfc_got(MODEL: str,
     TAR['RE14'] = 'r'
 
     # recursively create directories if non-existent
-    DIRECTORY = pathlib.Path(DIRECTORY).expanduser().absolute()
-    DIRECTORY.mkdir(MODE, parents=True, exist_ok=True)
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # build host url for model
-    URL = ['https://earth.gsfc.nasa.gov','sites','default','files',*PATH[MODEL]]
+    url = ['https://earth.gsfc.nasa.gov','sites','default','files',*PATH[model]]
     # download tarfile from host
-    logger.info(f'{posixpath.join(*URL)} -->\n')
-    fileobj = pyTMD.utilities.from_http(URL, timeout=TIMEOUT)
+    logger.info(f'{posixpath.join(*url)} -->\n')
+    fileobj = pyTMD.utilities.from_http(url, timeout=timeout)
     # open the tar file
-    tar = tarfile.open(name=PATH[MODEL][-1], fileobj=fileobj, mode=TAR[MODEL])
+    tar = tarfile.open(name=PATH[model][-1], fileobj=fileobj, mode=TAR[model])
     # read tar file and extract all files
     member_files = [m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)]
     for m in member_files:
         # extract file contents to new file
         base, sfx = posixpath.splitext(m.name)
         # skip files that are not in the desired format
-        if (sfx == '.nc') and (FORMAT == 'ascii'):
+        if (sfx == '.nc') and (format == 'ascii'):
             continue
-        elif (sfx == '.d') and (FORMAT == 'netcdf'):
+        elif (sfx == '.d') and (format == 'netcdf'):
             continue
         elif re.match(r'^.DS', posixpath.basename(m.name)):
             continue
         elif re.match(r'^._', posixpath.basename(m.name)):
             continue
         # output file name
-        output = f'{m.name}.gz' if sfx in ('.d','.nc') and GZIP else m.name
-        local_file = DIRECTORY.joinpath(*posixpath.split(output))
+        if sfx in ('.d','.nc') and compressed:
+            output = f'{m.name}.gz'
+        else:
+            output = m.name
+        # create local file path
+        local_file = directory.joinpath(*posixpath.split(output))
         # check if the local file exists
         if local_file.exists() and newer(m.mtime, local_file.stat().st_mtime):
             # check the modification time of the local file
@@ -142,14 +146,14 @@ def fetch_gsfc_got(MODEL: str,
         # print the file being transferred
         logger.info(f'\t{str(local_file)}')
         # recursively create output directory if non-existent
-        local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
+        local_file.parent.mkdir(mode=mode, parents=True, exist_ok=True)
         # extract file to local directory
         with tar.extractfile(m) as f_in, opener(local_file, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
         # get last modified date of remote file within tar file
         # keep remote modification time of file and local access time
         os.utime(local_file, (local_file.stat().st_atime, m.mtime))
-        local_file.chmod(mode=MODE)
+        local_file.chmod(mode=mode)
 
 # PURPOSE: compare the modification time of two files
 def newer(t1: int, t2: int) -> bool:
@@ -177,7 +181,7 @@ def arguments():
     # command line parameters
     # working data directory for location of tide models
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # Goddard Ocean Tide model to download
     parser.add_argument('--tide','-T',
@@ -214,11 +218,11 @@ def main():
     if pyTMD.utilities.check_connection('https://earth.gsfc.nasa.gov'):
         for m in args.tide:
             fetch_gsfc_got(m,
-                DIRECTORY=args.directory,
-                FORMAT=args.format,
-                GZIP=args.gzip,
-                TIMEOUT=args.timeout,
-                MODE=args.mode
+                directory=args.directory,
+                format=args.format,
+                compressed=args.gzip,
+                timeout=args.timeout,
+                mode=args.mode
             )
 
 # run main program

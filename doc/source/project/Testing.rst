@@ -9,6 +9,12 @@ Running the test suite requires a `dev installation <../getting_started/Install.
 
     python -m pip install --editable '.[dev]'
 
+Test Data Access
+^^^^^^^^^^^^^^^^
+The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
+During `continuous integration (CI) testing <./Testing.html#continuous-integration>`_, the data files are accessed from the project's s3 bucket.
+For project developers, the data files can be fetched from a permanent open research repository using the ``pyTMD.datasets.fetch_test_data`` function.
+
 Running the Test Suite
 ^^^^^^^^^^^^^^^^^^^^^^
 

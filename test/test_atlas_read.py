@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_atlas_read.py (09/2025)
+test_atlas_read.py (10/2025)
 Tests that ATLAS compact and netCDF4 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 
@@ -18,6 +18,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
@@ -42,6 +43,8 @@ import json
 import boto3
 import shutil
 import pytest
+import inspect
+import pathlib
 import posixpath
 import numpy as np
 import pyTMD.io
@@ -50,6 +53,9 @@ import pyTMD.arguments
 import pyTMD.utilities
 import timescale.time
 
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 # check if running on GitHub Actions CI
 GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
@@ -153,7 +159,7 @@ def test_read_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -190,7 +196,7 @@ def test_compare_TPXO9_v2(directory, METHOD):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -245,7 +251,7 @@ def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(directory.joinpath('predict_tide.out.gz'),'r') as f:
+    with gzip.open(filepath.joinpath('predict_tide.out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 13
@@ -320,7 +326,7 @@ def test_verify_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2, k1, o1)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(directory.joinpath('predict_tide_sample_out.gz'),'r') as f:
+    with gzip.open(filepath.joinpath('predict_tide_sample_out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 6

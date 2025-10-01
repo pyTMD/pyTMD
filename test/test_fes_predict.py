@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_fes_predict.py (09/2025)
+test_fes_predict.py (10/2025)
 Tests that FES2014 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to FES2014 program
@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
@@ -39,6 +40,8 @@ import json
 import boto3
 import shutil
 import pytest
+import inspect
+import pathlib
 import posixpath
 import numpy as np
 import pyTMD.io
@@ -49,6 +52,9 @@ import pyTMD.predict
 import pyTMD.arguments
 import timescale.time
 
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 # check if running on GitHub Actions CI
 GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
 
@@ -116,7 +122,7 @@ def test_verify_FES2014(directory, METHOD, CROP):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']
@@ -175,7 +181,7 @@ def test_compare_FES2014(directory, METHOD):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']

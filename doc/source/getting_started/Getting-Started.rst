@@ -17,9 +17,18 @@ ATLAS netCDF formatted data use netCDF4 files for each constituent and variable 
 GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
 
+Data Access
+###########
+
+Some tide models can be programmatically downloaded using the fetching routines in ``pyTMD.datasets``.
 OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the ``pyTMD.datasets.fetch_arcticdata`` function.
 GOT models can be downloaded from the NASA GSFC server using the ``pyTMD.datasets.fetch_gsfc_got`` function.
-Users registered with AVISO can download FES models from their ftp server using the ``pyTMD.datasets.fetch_aviso_fes`` function.
+Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the ``pyTMD.datasets.fetch_aviso_fes`` function.
+
+Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
+TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
+OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA system to prevent automated access.
+See the links in `Directories <./Getting-Started.html#directories>`_ for the references to specific tide models.
 
 Model Database
 ##############

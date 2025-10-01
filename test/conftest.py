@@ -1,13 +1,13 @@
 import pytest
 import inspect
 import pathlib
+from pyTMD.utilities import get_data_path
 
-# current file path
-filename = inspect.getframeinfo(inspect.currentframe()).filename
-filepath = pathlib.Path(filename).absolute().parent
+# default working data directory for tide models
+_default_directory = get_data_path('data')
 
 def pytest_addoption(parser):
-    parser.addoption("--directory", action="store", help="Directory for test data", default=filepath, type=pathlib.Path)
+    parser.addoption("--directory", action="store", help="Directory for test data", default=_default_directory, type=pathlib.Path)
     parser.addoption("--aws-access", action="store", help="AWS Access Key ID")
     parser.addoption("--aws-secret", action="store", help="AWS Secret Key")
     parser.addoption("--aws-region", action="store", help="AWS Region Name")

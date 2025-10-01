@@ -138,9 +138,11 @@ doc = { features = ["doc"], solve-group = "default" }
 
 [tool.pixi.tasks]
 start = { cmd = "jupyter lab", cwd = "doc/source/notebooks", description = "Start JupyterLab in the notebooks directory" }
+
+[tool.pixi.feature.doc.tasks]
 docs = { cmd = "make html", cwd = "doc", description = "Create HTML documentation with sphinx" }
 
-[tool.pixi.tasks.test]
+[tool.pixi.feature.dev.tasks.test]
 args = [ "flags", { "arg" = "test", "default" = "." } ]
 cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
