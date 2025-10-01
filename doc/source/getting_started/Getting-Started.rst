@@ -27,8 +27,8 @@ Users registered with AVISO [see :ref:`aviso-registration`] can download FES mod
 
 Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
-OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA system to prevent automated access.
-See the links in `Directories <./Getting-Started.html#directories>`_ for the references to specific tide models.
+OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
+See the model links in :ref:`directories` for the references to specific tide models.
 
 Model Database
 ##############
@@ -55,6 +55,8 @@ All presently available models are stored within a `JSON database <https://githu
 - Hamburg direct data Assimilation Methods for Tides (HAMTIDE) models :cite:p:`Taguchi:2014ht`
 - Technical University of Denmark (DTU) tide models :cite:p:`Andersen:2023ei`
 - TOPEX/POSEIDON (TPXO) global tide models :cite:p:`Egbert:2002ge`
+
+.. _directories:
 
 Directories
 ###########
