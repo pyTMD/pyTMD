@@ -61,12 +61,13 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas", "xarray"]
 aws = ["dask", "geopandas", "h5netcdf", "obstore", "pyarrow", "s3fs", "zarr>=3"]
-dev = ["boto3", "flake8", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
+dev = ["flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
 "fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
 "fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
 "fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
+"fetch_test_data.py" = "pyTMD.datasets.fetch_test_data:main" 
 "reduce_otis.py" = "pyTMD.datasets.reduce_otis:main" 
 "verify_box_tpxo.py" = "pyTMD.datasets.verify_box_tpxo:main" 
 "arcticdata_tides.py" = "pyTMD.datasets.fetch_arcticdata:main" 
@@ -136,17 +137,35 @@ aws = { features = ["all", "aws"], solve-group = "default" }
 dev = { features = ["all", "dev", "doc"], solve-group = "default" }
 doc = { features = ["doc"], solve-group = "default" }
 
-[tool.pixi.tasks]
-start = { cmd = "jupyter lab", cwd = "doc/source/notebooks", description = "Start JupyterLab in the notebooks directory" }
+[tool.pixi.tasks.start]
+cmd = "jupyter lab"
+cwd = "doc/source/notebooks"
+description = "Start JupyterLab in the notebooks directory"
 
-[tool.pixi.feature.doc.tasks]
-docs = { cmd = "make html", cwd = "doc", description = "Create HTML documentation with sphinx" }
+[tool.pixi.tasks.export-env]
+args = [ { "arg" = "flags", "default" = "" } ]
+cmd = "pixi workspace export conda-environment {{ flags }} > environment.yml"
+description = "Export workspace to a conda environment file" 
+
+[tool.pixi.feature.doc.tasks.docs]
+cmd = "make html"
+cwd = "doc"
+description = "Create HTML documentation with sphinx"
+
+[tool.pixi.feature.dev.tasks.fetch]
+cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch_test_data()'"
+description = "Fetch data needed to run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.test]
 args = [ "flags", { "arg" = "test", "default" = "." } ]
 cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
 description = "Run the pytest suite"
+
+[tool.pixi.feature.dev.tasks.lint]
+args = [ { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" }, { "arg" = "test", "default" = "." } ]
+cmd = "flake8 {{ test }} --count {{ flags }} --statistics --extend-exclude 'build/,run/,*.ipynb_checkpoints/,.pixi/'"
+description = "Run flake8 to check for compilation errors"
 
 [tool.pixi.dependencies]
 numpy = "*"
@@ -177,8 +196,8 @@ s3fs = "*"
 zarr = ">=3"
 
 [tool.pixi.feature.dev.dependencies]
-boto3 = "*"
 flake8 = "*"
+gh = "*"
 oct2py = "*"
 pytest = "*"
 pytest-cov = "*"

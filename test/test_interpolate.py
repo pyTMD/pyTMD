@@ -28,7 +28,7 @@ filepath = pathlib.Path(filename).absolute().parent
 # PURPOSE: Download max determinant nodes from spherepts
 # https://github.com/gradywright/spherepts
 @pytest.fixture(scope="module", autouse=True)
-def download_nodes(N=324):
+def download_nodes(N=324, cleanup=False):
     matfile = f'md{N:05d}.mat'
     HOST = ['https://github.com','gradywright','spherepts','raw',
         'master','nodes','max_determinant',matfile]
@@ -37,7 +37,8 @@ def download_nodes(N=324):
         verbose=True)
     yield
     # remove the node file
-    filepath.joinpath(matfile).unlink(missing_ok=True)
+    if cleanup:
+        filepath.joinpath(matfile).unlink(missing_ok=True)
 
 # Franke's 2D evaluation function
 def franke_2d(x,y):

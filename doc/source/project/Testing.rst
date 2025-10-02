@@ -12,8 +12,8 @@ Running the test suite requires a `dev installation <../getting_started/Install.
 Test Data Access
 ^^^^^^^^^^^^^^^^
 The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
-During `continuous integration (CI) testing <./Testing.html#continuous-integration>`_, the data files are accessed from the project's s3 bucket.
 For project developers, the data files can be fetched from a permanent open research repository using the ``pyTMD.datasets.fetch_test_data`` function.
+During `continuous integration (CI) testing <./Testing.html#continuous-integration>`_, these files similarly accessed from the open data repository.
 
 Running the Test Suite
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -63,7 +63,7 @@ Continuous Integration
 ^^^^^^^^^^^^^^^^^^^^^^
 We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (``ubuntu-latest``), Mac (``macos-latest``) and Windows (``windows-latest``) Operating Systems.
 The configuration files for this service are in the `GitHub workflows <https://github.com/pyTMD/pyTMD/tree/main/.github/workflows>`_ directory.
-The workflows use ``mamba`` and the `environment.yml <https://github.com/pyTMD/pyTMD/blob/main/environment.yml>`_ file to install the required dependencies and build the environment.
+The workflows use ``pixi`` to install the required dependencies and build the custom environment.
 
 The GitHub Actions jobs include:
 

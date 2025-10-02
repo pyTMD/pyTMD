@@ -16,39 +16,27 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.11]
     env:
       OS: ${{ matrix.os }}
-      PYTHON: ${{ matrix.python-version }}
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up mamba ${{ matrix.python-version }}
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        micromamba-version: 'latest'
-        environment-file: environment.yml
-        init-shell: bash
-        environment-name: pyTMD
-        cache-environment: true
-        post-cleanup: 'all'
-        create-args: >-
-          python=${{ matrix.python-version }}
-          flake8
-          gh
+    - name: Set up pixi environment
+      uses: prefix-dev/setup-pixi@v0.9.1
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pixi run lint
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        pixi run lint "--exit-zero --max-complexity=10 --max-line-length=127"
     - name: Merge Providers
       run: |
+        # install the package in editable mode
         pip install --no-deps --editable .
-        python providers/_providers_to_database.py --pretty -vv
+        pixi run python providers/_providers_to_database.py --pretty -vv
     - name: Check for changes
       id: changes
       run: |

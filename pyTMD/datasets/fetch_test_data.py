@@ -96,7 +96,7 @@ def from_figshare(
     """
     # figshare host
     HOST = ['https://api.figshare.com', 'v2', 'articles', article]
-    # Create and submit request.
+    # Create and submit request
     response = pyTMD.utilities.from_http(HOST,
         timeout=timeout, context=context)
     resp = json.loads(response.read())

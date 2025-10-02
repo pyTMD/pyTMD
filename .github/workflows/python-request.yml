@@ -20,80 +20,44 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.13]
+        os: [ubuntu-latest, windows-latest]
     env:
       OS: ${{ matrix.os }}
-      PYTHON: ${{ matrix.python-version }}
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up mamba ${{ matrix.python-version }}
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        micromamba-version: 'latest'
-        environment-file: environment.yml
-        init-shell: bash
-        environment-name: pyTMD
-        cache-environment: true
-        post-cleanup: 'all'
-        create-args: >-
-          blas
-          boto3
-          python=${{ matrix.python-version }}
-          flake8
-          pytest
-          pytest-cov
-          pytest-xdist
-          cython
-          geopandas
-          jplephem
-          pyarrow
-          xarray
+    - name: Set up pixi environment
+      uses: prefix-dev/setup-pixi@v0.9.1
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pixi run lint
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: "Check if repository secrets are accessible"
-      id: secrets
-      run: |
-        if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == '' ] ; then
-            echo "accessible=false" >> $GITHUB_OUTPUT;
-            echo "::debug::GitHub secrets unavailable for Actions";
-        else
-            echo "accessible=true" >> $GITHUB_OUTPUT;
-            echo "::debug::GitHub secrets available for Actions";
-        fi
+        pixi run lint "--exit-zero --max-complexity=10 --max-line-length=127"
     - name: Checkout Matlab TMD Toolbox
-      if: steps.secrets.outputs.accessible == 'true'
       uses: actions/checkout@v4
       with:
         repository: EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         path: TMD_Matlab_Toolbox
         ref: master
     - name: Test with pytest
-      if: steps.secrets.outputs.accessible == 'true'
       run: |
-        pip install --no-deps .
-        pytest -n 0 --cov=./ --cov-report=xml \
-            --aws-access=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --aws-secret=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            --aws-region=${{ secrets.AWS_REGION_NAME }}
+        # install the package in editable mode
+        pip install --no-deps --editable .
+        # download test data and run tests
+        pixi run fetch
+        pixi run test "--cov=./ --cov-report=xml"
     - name: Upload coverage to Codecov
-      if: steps.secrets.outputs.accessible == 'true'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
         verbose: true
     - name: Archive code coverage results
-      if: steps.secrets.outputs.accessible == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-report-${{ matrix.os }}
-        path: ./coverage.xml
+        path: ./test/coverage.xml

@@ -79,3 +79,13 @@ repository defines the required packages and versions for the environment.
 .. code-block:: bash
 
     pixi shell
+
+To see the available tasks within the ``pyTMD`` workspace:
+
+.. code-block:: bash
+
+    pixi task list
+
+.. note::
+
+    ``pixi`` is under active development and may change in future releases

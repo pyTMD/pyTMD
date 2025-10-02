@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 utilities.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (10/2025)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,7 @@ PYTHON DEPENDENCIES:
         https://pypi.python.org/pypi/lxml
 
 UPDATE HISTORY:
+    Updated 10/2025: allow additional keyword arguments to http functions
     Updated 07/2025: removed (now) unused functions that were moved to timescale
         add tilde compression for file paths (squash home directory)
     Updated 01/2025: added function to list a directory from the UHSLC
@@ -706,7 +707,8 @@ def http_list(
         parser = lxml.etree.HTMLParser(),
         format: str = '%Y-%m-%d %H:%M',
         pattern: str = '',
-        sort: bool = False
+        sort: bool = False,
+        **kwargs
     ):
     """
     List a directory on an Apache http Server
@@ -741,7 +743,7 @@ def http_list(
     # try listing from http
     try:
         # Create and submit request.
-        request = urllib2.Request(posixpath.join(*HOST))
+        request = urllib2.Request(posixpath.join(*HOST), **kwargs)
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
@@ -782,7 +784,8 @@ def from_http(
         chunk: int = 16384,
         verbose: bool = False,
         fid = sys.stdout,
-        mode: oct = 0o775
+        mode: oct = 0o775,
+        **kwargs
     ):
     """
     Download a file from a http host
@@ -822,7 +825,7 @@ def from_http(
     # try downloading from http
     try:
         # Create and submit request.
-        request = urllib2.Request(posixpath.join(*HOST))
+        request = urllib2.Request(posixpath.join(*HOST), **kwargs)
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except:
         raise Exception('Download error from {0}'.format(posixpath.join(*HOST)))
