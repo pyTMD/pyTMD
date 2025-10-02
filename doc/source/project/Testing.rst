@@ -53,7 +53,7 @@ To run in series and disable parallelization, set the number of processes to 0:
 
 .. code-block:: bash
 
-    pytest --n 0
+    pytest -n 0
 
 .. code-block:: bash
 
