@@ -59,9 +59,9 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
-all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas"]
-aws = ["xarray", "dask", "zarr>=3", "h5netcdf", "geopandas", "pyarrow", "obstore", "s3fs"]
-dev = ["flake8", "pytest>=4.6", "pytest-cov", "pytest-xdist", "oct2py", "boto3"]
+all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas", "xarray"]
+aws = ["dask", "geopandas", "h5netcdf", "obstore", "pyarrow", "s3fs", "zarr>=3"]
+dev = ["boto3", "flake8", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
 "fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
@@ -165,23 +165,23 @@ ipywidgets = "*"
 jplephem = "*"
 pandas = "*"
 notebook = "*"
+xarray = "*"
 
 [tool.pixi.feature.aws.dependencies]
-xarray = "*"
 dask = "*"
-zarr = ">=3"
-h5netcdf = "*"
 geopandas = "*"
-pyarrow = "*"
+h5netcdf = "*"
 obstore = "*"
+pyarrow = "*"
 s3fs = "*"
+zarr = ">=3"
 
 [tool.pixi.feature.dev.dependencies]
+boto3 = "*"
 flake8 = "*"
+oct2py = "*"
 pytest = "*"
 pytest-cov = "*"
-boto3 = "*"
-oct2py = "*"
 
 [tool.pixi.feature.doc.dependencies]
 docutils = "*"
