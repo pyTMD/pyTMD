@@ -26,6 +26,7 @@ UPDATE HISTORY:
 import ssl
 import json
 import shutil
+import logging
 import pathlib
 import zipfile
 import argparse
@@ -57,8 +58,10 @@ def fetch_test_data(
     # create download directory if it doesn't exist
     directory = pathlib.Path(directory).expanduser().absolute()
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
+    # create logger for verbosity level
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
     if (provider == 'figshare'):
-        from_figshare(directory=directory, **kwargs)
+        from_figshare(directory=directory, logger=logger, **kwargs)
     else:
         raise ValueError(f'Unknown data provider: {provider}')
 
@@ -69,6 +72,7 @@ def from_figshare(
         timeout: int | None = None,
         context: ssl.SSLContext = _default_ssl_context,
         chunk: int | None = 16384,
+        logger: logging.Logger | None = None,
         mode: oct = 0o775,
         **kwargs
     ):
@@ -89,12 +93,12 @@ def from_figshare(
         MD5 hash of local file
     chunk: int, default 16384
         chunk size for transfer encoding
-    verbose: bool, default False
-        print file transfer information
+    logger: logging.logger object
+        Logger for outputting file transfer information
     mode: oct, default 0o775
         permissions mode of output local file
     """
-    # figshare host
+    # figshare host for articles
     HOST = ['https://api.figshare.com', 'v2', 'articles', article]
     # Create and submit request
     response = pyTMD.utilities.from_http(HOST,
@@ -108,6 +112,8 @@ def from_figshare(
         # skip download if checksums match
         if (original_md5 == f['supplied_md5']):
             continue
+        # output file information
+        logger.info(f["download_url"])
         # get remote file as a byte-stream
         remote_buffer = pyTMD.utilities.from_http(f['download_url'],
             timeout=timeout, context=context)

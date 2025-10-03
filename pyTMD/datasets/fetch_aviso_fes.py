@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 fetch_aviso_fes.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (10/2025)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -32,7 +32,6 @@ COMMAND LINE OPTIONS:
         (FES2014 and FES2022)
     -G, --gzip: compress output ascii and netCDF4 tide files
     -t X, --timeout X: timeout in seconds for blocking operations
-    --log: output log of files downloaded
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -43,6 +42,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 10/2025: remove printing to log file
     Updated 09/2025: renamed module and function to fetch_aviso_fes
         made a callable function and added function docstrings
     Updated 07/2025: added extrapolation option for FES2014 tide model
@@ -101,7 +101,6 @@ def fetch_aviso_fes(model: str,
         extrapolated: bool = False,
         compressed: bool = False,
         timeout: int | None = None,
-        log: bool = False,
         mode: oct = 0o775
     ):
     """
@@ -127,8 +126,6 @@ def fetch_aviso_fes(model: str,
         Compress output ascii and netCDF4 tide files
     timeout: int, default None
         Timeout in seconds for blocking operations
-    log: bool, default False
-        Output log of files downloaded
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -137,19 +134,8 @@ def fetch_aviso_fes(model: str,
     f = ftplib.FTP('ftp-access.aviso.altimetry.fr', timeout=timeout)
     f.login(user, password)
 
-    # create log file with list of downloaded files (or print to terminal)
-    if log:
-        # format: AVISO_FES_tides_2002-04-01.log
-        today = time.strftime('%Y-%m-%d',time.localtime())
-        logfile = directory.joinpath(f'AVISO_FES_tides_{today}.log')
-        fid = logfile.open(mode='w', encoding='utf8')
-        logger = pyTMD.utilities.build_logger(__name__, stream=fid,
-            level=logging.INFO)
-        logger.info(f'AVISO FES Sync Log ({today})')
-        logger.info(f'\tMODEL: {model}')
-    else:
-        # standard output (terminal output)
-        logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
+    # create logger for verbosity level
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # download the FES tide model files
     if model in ('FES1999','FES2004','FES2012','FES2014'):
@@ -173,9 +159,6 @@ def fetch_aviso_fes(model: str,
 
     # close the ftp connection
     f.quit()
-    # close log file and set permissions level to MODE
-    if log:
-        logfile.chmod(mode=mode)
 
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading tar files and extracting contents
@@ -592,11 +575,6 @@ def arguments():
     parser.add_argument('--timeout','-t',
         type=int, default=360,
         help='Timeout in seconds for blocking operations')
-    # Output log file in form
-    # AVISO_FES_tides_2002-04-01.log
-    parser.add_argument('--log','-l',
-        default=False, action='store_true',
-        help='Output log file')
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument('--mode','-M',
         type=lambda x: int(x,base=8), default=0o775,
@@ -636,7 +614,6 @@ def main():
                 extrapolated=args.extrapolated,
                 compressed=args.gzip,
                 timeout=args.timeout,
-                log=args.log,
                 mode=args.mode
             )
 
