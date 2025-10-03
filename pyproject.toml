@@ -135,7 +135,7 @@ default = { solve-group = "default" }
 all = { features = ["all"], solve-group = "default" }
 aws = { features = ["all", "aws"], solve-group = "default" }
 dev = { features = ["all", "dev", "doc"], solve-group = "default" }
-doc = { features = ["doc"], solve-group = "default" }
+doc = { features = ["all", "doc"], solve-group = "default" }
 
 [tool.pixi.tasks.start]
 cmd = "jupyter lab"
@@ -148,7 +148,8 @@ cmd = "pixi workspace export conda-environment {{ flags }} > environment.yml"
 description = "Export workspace to a conda environment file" 
 
 [tool.pixi.feature.doc.tasks.docs]
-cmd = "make html"
+args = [ { "arg" = "flags", "default" = "" } ]
+cmd = "make html {{ flags }}"
 cwd = "doc"
 description = "Create HTML documentation with sphinx"
 

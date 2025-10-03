@@ -15,6 +15,12 @@ The test suite requires access to some tide model data files [see `Data Access <
 For project developers, the data files can be fetched from a permanent open research repository using the ``pyTMD.datasets.fetch_test_data`` function.
 During `continuous integration (CI) testing <./Testing.html#continuous-integration>`_, these files similarly accessed from the open data repository.
 
+Fetching the data using ``pixi``:
+
+.. code-block:: bash
+
+    pixi run fetch
+
 Running the Test Suite
 ^^^^^^^^^^^^^^^^^^^^^^
 
