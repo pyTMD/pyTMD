@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
-arcticdata_tides.py
-Written by Tyler Sutterley (07/2025)
+fetch_arcticdata.py
+Written by Tyler Sutterley (09/2025)
 Download Arctic Ocean Tide Models from the NSF ArcticData archive
 
 AODTM-5: https://arcticdata.io/catalog/view/doi:10.18739/A2901ZG3N
@@ -11,7 +11,7 @@ Arc2kmTM: https://arcticdata.io/catalog/view/doi:10.18739/A2D21RK6K
 Gr1kmTM: https://arcticdata.io/catalog/view/doi:10.18739/A2B853K18
 
 CALLING SEQUENCE:
-    python arcticdata_tides.py --tide=Gr1kmTM
+    python fetch_arcticdata.py --tide=Gr1kmTM
 
 COMMAND LINE OPTIONS:
     --help: list the command line options
@@ -33,6 +33,8 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 09/2025: renamed module and function to fetch_arcticdata
+        made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
     Updated 05/2023: added option to change connection timeout
     Updated 04/2023: using pathlib to define and expand paths
@@ -54,14 +56,32 @@ import argparse
 import posixpath
 import pyTMD.utilities
 
+# default data directory for tide models
+_default_directory = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
-def arcticdata_tides(MODEL: str,
-    DIRECTORY: str | pathlib.Path | None = None,
-    TIMEOUT: int | None = None,
-    MODE: oct = 0o775):
+def fetch_arcticdata(model: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        timeout: int | None = None,
+        mode: oct = 0o775
+    ):
+    """
+    Download Arctic Ocean Tide Models from the NSF ArcticData archive
+    
+    Parameters
+    ----------
+    model: str
+        Arctic tide model to download
+    directory: str or pathlib.Path
+        Working data directory
+    timeout: int, default None
+        Timeout in seconds for blocking operations
+    mode: oct, default 0o775
+        Local permissions mode of the files downloaded
+    """
 
     # create logger for verbosity level
-    logger = pyTMD.utilities.build_logger(__name__,level=logging.INFO)
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # digital object identifier (doi) for each Arctic tide model
     DOI = {}
@@ -79,20 +99,20 @@ def arcticdata_tides(MODEL: str,
     LOCAL['Gr1kmTM'] = 'Gr1kmTM'
 
     # recursively create directories if non-existent
-    DIRECTORY = pathlib.Path(DIRECTORY).expanduser().absolute()
-    local_dir = DIRECTORY.joinpath(LOCAL[MODEL])
-    local_dir.mkdir(MODE, parents=True, exist_ok=True)
+    directory = pathlib.Path(directory).expanduser().absolute()
+    local_dir = directory.joinpath(LOCAL[model])
+    local_dir.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # build host url for model
-    resource_map_doi = f'resource_map_doi:{DOI[MODEL]}'
+    resource_map_doi = f'resource_map_doi:{DOI[model]}'
     HOST = ['https://arcticdata.io','metacat','d1','mn','v2','packages',
         pyTMD.utilities.quote_plus(posixpath.join('application','bagit-097')),
         pyTMD.utilities.quote_plus(resource_map_doi)]
     # download zipfile from host
     logger.info(f'{posixpath.join(*HOST)} -->\n')
-    zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=TIMEOUT))
+    zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=timeout))
     # find model files within zip file
-    rx = re.compile(r'(grid|h[0]?|UV[0]?|Model|xy)_(.*?)',re.VERBOSE)
+    rx = re.compile(r'(grid|h[0]?|UV[0]?|Model|xy)_(.*?)', re.VERBOSE)
     members = [m for m in zfile.filelist if rx.search(m.filename)]
     # extract each member
     for m in members:
@@ -103,7 +123,7 @@ def arcticdata_tides(MODEL: str,
         # extract file
         zfile.extract(m, path=local_dir)
         # change permissions mode
-        local_file.chmod(mode=MODE)
+        local_file.chmod(mode=mode)
     # close the zipfile object
     zfile.close()
 
@@ -118,9 +138,8 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory for location of tide models
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # Arctic Ocean tide model to download
     parser.add_argument('--tide','-T',
@@ -147,10 +166,11 @@ def main():
     # check internet connection before attempting to run program
     if pyTMD.utilities.check_connection('https://arcticdata.io'):
         for m in args.tide:
-            arcticdata_tides(m,
-                DIRECTORY=args.directory,
-                TIMEOUT=args.timeout,
-                MODE=args.mode)
+            fetch_arcticdata(m,
+                directory=args.directory,
+                timeout=args.timeout,
+                mode=args.mode
+            )
 
 # run main program
 if __name__ == '__main__':

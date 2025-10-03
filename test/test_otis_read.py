@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_otis_read.py (08/2025)
+test_otis_read.py (10/2025)
 Tests for OTIS-formatted tide model data
 
 Tests that constituents are being extracted
@@ -15,12 +15,12 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
     Oct2Py: Python to GNU Octave Bridge
         https://oct2py.readthedocs.io/en/latest/
-    boto3: Amazon Web Services (AWS) SDK for Python
-        https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
+        fetch data from pyTMD developers test data repository
     Updated 09/2025: added check if running on GitHub Actions or locally
         renamed test_download_and_read.py to test_otis_read.py
     Updated 08/2025: added xarray tests to verify implementation
@@ -51,35 +51,25 @@ UPDATE HISTORY:
         will install octave and oct2py in development requirements
     Written 08/2020
 """
-import os
-import re
 import io
 import copy
 import gzip
 import json
-import boto3
-import shutil
 import pytest
+import inspect
 import pathlib
-import zipfile
-import posixpath
 import numpy as np
 import xarray as xr
-import pyTMD.io
-import pyTMD.io.model
-import pyTMD.compute
-import pyTMD.predict
-import pyTMD.utilities
-import pyTMD.ellipse
-import pyTMD.solve
-import timescale.time
+import pyTMD
+import timescale
 
 # attempt imports
 pd = pyTMD.utilities.import_dependency('pandas')
 oct2py = pyTMD.utilities.import_dependency('oct2py')
 
-# check if running on GitHub Actions CI
-GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 
 # PURPOSE: calculate the matlab serial date from calendar date
 # http://scienceworld.wolfram.com/astronomy/JulianDate.html
@@ -96,142 +86,6 @@ class Test_CATS2008:
     @pytest.fixture(autouse=True)
     def init(self, directory):
         self.directory = pathlib.Path(directory).expanduser().absolute()
-
-    # PURPOSE: Download CATS2008 from US Antarctic Program
-    @pytest.fixture(scope="class", autouse=False)
-    def download_CATS2008(self, directory):
-        # download CATS2008 zip file and read as virtual file object
-        HOST = ['https://www.usap-dc.org','dataset','usap-dc','601235',
-            '2019-12-19T23:26:43.6Z','CATS2008.zip?dataset_id=601235']
-        FILE = pyTMD.utilities.from_http(HOST)
-        zfile = zipfile.ZipFile(FILE)
-        print(f'{posixpath.join(*HOST)} -->\n')
-        # find model files within zip file
-        rx = re.compile(r'(grid|h[0f]?|UV[0]?|Model|xy)[_\.](.*?)', re.I)
-        m = [m for m in zfile.filelist
-            if rx.match(posixpath.basename(m.filename))]
-        # verify that model files are within downloaded zip file
-        assert all(m)
-        # output tide directory for model
-        modelpath = directory.joinpath('CATS2008')
-        # extract each member (model and configuration files)
-        for member in m:
-            # strip directories from member filename
-            member.filename = posixpath.basename(member.filename)
-            print(f'\t{modelpath.joinpath(member.filename)}\n')
-            zfile.extract(member, path=modelpath)
-        # close the zipfile object
-        zfile.close()
-        # output control file for tide model
-        CFname = directory.joinpath('Model_CATS2008')
-        fid = CFname.open(mode='w', encoding='utf8')
-        for model_file in ['hf.CATS2008.out','uv.CATS2008.out','grid_CATS2008']:
-            print(modelpath.joinpath(model_file), file=fid)
-        print('xy_ll_CATS2008', file=fid)
-        fid.close()
-        # verify control file
-        assert CFname.exists()
-        # run tests
-        yield
-        # clean up model
-        shutil.rmtree(modelpath)
-        # clean up
-        CFname.unlink(missing_ok=True)
-
-    # PURPOSE: Download CATS2008 from AWS S3 bucket
-    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
-    def AWS_CATS2008(self,
-            directory,
-            aws_access_key_id,
-            aws_secret_access_key,
-            aws_region_name
-        ):
-        # get aws session object
-        session = boto3.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_region_name)
-        # get s3 object and bucket object for pytmd data
-        s3 = session.resource('s3')
-        bucket = s3.Bucket('pytmd')
-        # model parameters for CATS2008
-        modelpath = directory.joinpath('CATS2008')
-        # recursively create model directory
-        modelpath.mkdir(parents=True, exist_ok=True)
-        # output control file for tide model
-        CFname = directory.joinpath('Model_CATS2008')
-        fid = CFname.open(mode='w', encoding='utf8')
-        # retrieve each model file from s3
-        for model_file in ['hf.CATS2008.out','uv.CATS2008.out','grid_CATS2008']:
-            # retrieve CATS2008 model files
-            obj = bucket.Object(key=posixpath.join('CATS2008',model_file))
-            response = obj.get()
-            local = modelpath.joinpath(model_file)
-            with local.open(mode='wb') as destination:
-                shutil.copyfileobj(response['Body'], destination)
-            assert local.exists()
-            # print to model control file
-            print(local, file=fid)
-        # retrieve CATS2008 coordinate file
-        model_file = 'xy_ll_CATS2008.m'
-        obj = bucket.Object(key=posixpath.join('CATS2008',model_file))
-        response = obj.get()
-        local = modelpath.joinpath(model_file)
-        with local.open(mode='wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        # print coordinate conversion function to model control file
-        print('xy_ll_CATS2008', file=fid)
-        fid.close()
-        # verify control file
-        assert CFname.exists()
-        # run tests
-        yield
-        # clean up model
-        shutil.rmtree(modelpath)
-        # clean up
-        CFname.unlink(missing_ok=True)
-
-    # PURPOSE: Download Antarctic Tide Gauge Database from US Antarctic Program
-    @pytest.fixture(scope="class", autouse=False)
-    def download_AntTG(self, directory):
-        # download Tide Gauge Database text file
-        HOST = ['https://www.usap-dc.org','dataset','usap-dc','601358',
-            '2020-07-10T19:50:08.8Z','AntTG_ocean_height_v1.txt?dataset_id=601358']
-        local = directory.joinpath('AntTG_ocean_height_v1.txt')
-        pyTMD.utilities.from_http(HOST, local=local)
-        assert local.exists()
-        # run tests
-        yield
-        # clean up
-        local.unlink(missing_ok=True)
-
-    # PURPOSE: Download Antarctic Tide Gauge Database from AWS
-    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
-    def AWS_AntTG(self,
-            directory,
-            aws_access_key_id,
-            aws_secret_access_key,
-            aws_region_name
-        ):
-        # get aws session object
-        session = boto3.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_region_name)
-        # get s3 object and bucket object for pytmd data
-        s3 = session.resource('s3')
-        bucket = s3.Bucket('pytmd')
-        # retrieve Tide Gauge Database text file
-        obj = bucket.Object(key='AntTG_ocean_height_v1.txt')
-        response = obj.get()
-        local = directory.joinpath('AntTG_ocean_height_v1.txt')
-        with local.open(mode='wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        assert local.exists()
-        # run tests
-        yield
-        # clean up
-        local.unlink(missing_ok=True)
 
     # PURPOSE: create verification from Matlab program
     @pytest.fixture(scope="class", autouse=False)
@@ -311,7 +165,7 @@ class Test_CATS2008:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -401,7 +255,7 @@ class Test_CATS2008:
             df[s].attrs['longitude'] = station_lon[i]
 
         # save to (gzipped) csv
-        output_file = directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        output_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         with gzip.open(output_file, 'wb') as f:
             df.to_csv(f, index_label='ellipse')
 
@@ -584,7 +438,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)
@@ -672,7 +526,7 @@ class Test_CATS2008:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
         df = pd.read_csv(validation_file, index_col='ellipse')
 
         # save complex amplitude for each current
@@ -1014,65 +868,6 @@ class Test_AOTIM5_2018:
     def init(self, directory):
         self.directory = pathlib.Path(directory).expanduser().absolute()
 
-    # PURPOSE: Download AOTIM-5-2018 from NSF ArcticData server
-    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
-    def download_AOTIM5_2018(self, directory):
-        # build host url for model
-        doi = '10.18739/A21R6N14K'
-        resource_map_doi = f'resource_map_doi:{doi}'
-        HOST = ['https://arcticdata.io','metacat','d1','mn','v2','packages',
-            pyTMD.utilities.quote_plus(posixpath.join('application','bagit-097')),
-            pyTMD.utilities.quote_plus(resource_map_doi)]
-        # download zipfile from host
-        FILE = pyTMD.utilities.from_http(HOST)
-        zfile = zipfile.ZipFile(FILE)
-        print(f'{posixpath.join(*HOST)} -->\n')
-        # find model files within zip file
-        rx = re.compile(r'(grid|h[0f]?|UV[0]?|Model|xy)[_\.](.*?)', re.I)
-        m = [m for m in zfile.filelist
-            if rx.match(posixpath.basename(m.filename))]
-        # verify that model files are within downloaded zip file
-        assert all(m)
-        # output tide directory for model
-        modelpath = directory.joinpath('Arc5km2018')
-        # extract each member (model and configuration files)
-        for member in m:
-            # strip directories from member filename
-            member.filename = posixpath.basename(member.filename)
-            print(f'\t{modelpath.joinpath(member.filename)}\n')
-            # extract file
-            zfile.extract(member, path=modelpath)
-        # close the zipfile object
-        zfile.close()
-        # output control file for tide model
-        CFname = directory.joinpath('Model_Arc5km2018')
-        fid = CFname.open(mode='w', encoding='utf8')
-        for model_file in ['h_Arc5km2018','UV_Arc5km2018','grid_Arc5km2018']:
-            print(modelpath.joinpath(model_file), file=fid)
-        print('xy_ll_Arc5km2018', file=fid)
-        fid.close()
-        # verify control file
-        assert CFname.exists()
-        # run tests
-        yield
-        # clean up model
-        shutil.rmtree(modelpath)
-        # clean up
-        CFname.unlink(missing_ok=True)
-
-    # PURPOSE: Download Arctic Tidal Current Atlas list of records
-    @pytest.fixture(scope="class", autouse=GITHUB_ACTIONS)
-    def download_Arctic_Tide_Atlas(self, directory):
-        HOST = ['https://arcticdata.io','metacat','d1','mn','v2','object',
-            'urn%3Auuid%3Ae3abe2cc-f903-44de-9758-0c6bfc5b66c9']
-        local = directory.joinpath('List_of_records.txt')
-        pyTMD.utilities.from_http(HOST, local=local)
-        assert local.exists()
-        # run tests
-        yield
-        # clean up
-        local.unlink(missing_ok=True)
-
     # PURPOSE: create verification from Matlab program
     @pytest.fixture(scope="class", autouse=False)
     def update_AOTIM5_2018(self, directory):
@@ -1136,7 +931,7 @@ class Test_AOTIM5_2018:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -1185,7 +980,7 @@ class Test_AOTIM5_2018:
 
         # read validation data from Matlab TMD program
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-        validation_file = self.directory.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+        validation_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
         df = pd.read_csv(validation_file)
         # number of days
         ndays = len(df.time.values)

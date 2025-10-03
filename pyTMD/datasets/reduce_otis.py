@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-reduce_OTIS_files.py
+reduce_otis.py
 Written by Tyler Sutterley (07/2025)
 Read OTIS-format tidal files and reduce to a regional subset
 
@@ -30,6 +30,8 @@ PROGRAM DEPENDENCIES:
     crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
+    Updated 09/2025: renamed module and function to reduce_otis
+        made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
     Updated 11/2024: use "stem" instead of "basename"
     Updated 07/2024: renamed format for ATLAS to ATLAS-compact
@@ -72,6 +74,9 @@ import timescale.time
 # attempt imports
 pyproj = pyTMD.utilities.import_dependency('pyproj')
 
+# default data directory for tide models
+_default_directory = pyTMD.utilities.get_data_path('data')
+
 # PURPOSE: keep track of threads
 def info(args):
     logging.debug(pathlib.Path(sys.argv[0]).name)
@@ -82,16 +87,33 @@ def info(args):
     logging.debug(f'process id: {os.getpid():d}')
 
 # PURPOSE: reads OTIS-format tidal files and reduces to a regional subset
-def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
-        BOUNDS=4*[None],
-        PROJECTION='4326',
-        MODE=0o775
+def reduce_otis(MODEL: str,
+        directory: str | pathlib.Path | None = _default_directory,
+        bounds=4*[None],
+        projection='4326',
+        mode=0o775
     ):
+    """
+    Reads OTIS-format tidal files and reduces to a regional subset
+
+    Parameters
+    ----------
+    MODEL: str
+        Tide model to use
+    DIRECTORY: str or pathlib.Path
+        Working data directory
+    BOUNDS: list, default 4*[None]
+        Grid bounds for reducing model [xmin,xmax,ymin,ymax]
+    PROJECTION: str, default '4326'
+        Spatial projection as EPSG code or PROJ4 string
+    MODE: oct, default 0o775
+        Permission mode of the output files
+    """
     # get parameters for tide model grid
     try:
-        model = pyTMD.io.model(directory=tide_dir).elevation(TIDE_MODEL)
+        model = pyTMD.io.model(directory=directory).elevation(MODEL)
     except Exception as exc:
-        model = pyTMD.io.model(directory=tide_dir).current(TIDE_MODEL)
+        model = pyTMD.io.model(directory=directory).current(MODEL)
     # directionaries with input and output files
     model_file = {}
     new_model_file = {}
@@ -110,43 +132,43 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
         xi,yi,hz,mz,iob,dt = pyTMD.io.OTIS.read_otis_grid(model.grid_file)
 
     # converting bounds x,y from projection to latitude/longitude
-    crs1 = pyTMD.crs().from_input(PROJECTION)
+    crs1 = pyTMD.crs().from_input(projection)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    xbox = np.array([BOUNDS[0],BOUNDS[1],BOUNDS[1],BOUNDS[0],BOUNDS[0]])
-    ybox = np.array([BOUNDS[2],BOUNDS[2],BOUNDS[3],BOUNDS[3],BOUNDS[2]])
-    lon,lat = transformer.transform(xbox,ybox)
+    xbox = np.array([bounds[0], bounds[1], bounds[1], bounds[0], bounds[0]])
+    ybox = np.array([bounds[2], bounds[2], bounds[3], bounds[3], bounds[2]])
+    lon, lat = transformer.transform(xbox, ybox)
 
     # convert bounds from latitude/longitude to model coordinates
-    x,y = pyTMD.crs().convert(lon,lat,model.projection,'F')
+    x, y = pyTMD.crs().convert(lon, lat, model.projection, 'F')
 
     # find indices to reduce to xmin,xmax,ymin,ymax
-    gridx,gridy = np.meshgrid(xi,yi)
-    indy,indx = np.nonzero((gridx >= x.min()) & (gridx <= x.max()) &
+    gridx, gridy = np.meshgrid(xi, yi)
+    indy, indx = np.nonzero((gridx >= x.min()) & (gridx <= x.max()) &
         (gridy >= y.min()) & (gridy <= y.max()))
     nx = np.count_nonzero((xi >= x.min()) & (xi <= x.max()))
     ny = np.count_nonzero((yi >= y.min()) & (yi <= y.max()))
     # calculate new grid limits and convert back to grid-cell edges
-    dx = np.abs(xi[1]-xi[0])
-    dy = np.abs(yi[1]-yi[0])
-    xlim = np.array([xi[indx[0]]-dx/2.0,xi[indx[-1]]+dx/2.0],dtype='>f4')
-    ylim = np.array([yi[indy[0]]-dy/2.0,yi[indy[-1]]+dy/2.0],dtype='>f4')
+    dx = np.abs(xi[1] - xi[0])
+    dy = np.abs(yi[1] - yi[0])
+    xlim = np.array([xi[indx[0]] - dx/2.0, xi[indx[-1]] + dx/2.0], dtype='>f4')
+    ylim = np.array([yi[indy[0]] - dy/2.0, yi[indy[-1]] + dy/2.0], dtype='>f4')
     # reduce grid and mask to new bounds
-    hz1 = np.zeros((ny,nx),dtype='>f4')
-    mz1 = np.zeros((ny,nx),dtype='>i4')
+    hz1 = np.zeros((ny,nx), dtype='>f4')
+    mz1 = np.zeros((ny,nx), dtype='>i4')
     hz1[:,:] = hz[indy,indx].reshape(ny,nx)
     mz1[:,:] = mz[indy,indx].reshape(ny,nx)
     # output reduced grid to file
     new_grid_file = create_unique_filename(model.grid_file)
-    pyTMD.io.OTIS.output_otis_grid(new_grid_file,xlim,ylim,hz1,mz1,iob,dt)
-    # change the permissions level to MODE
-    new_grid_file.chmod(mode=MODE)
+    pyTMD.io.OTIS.output_otis_grid(new_grid_file, xlim, ylim, hz1, mz1, iob, dt)
+    # change the permissions level to mode
+    new_grid_file.chmod(mode=mode)
 
     # combine ATLAS sub-grids into single output grid
     # reduce elevation files to bounds
     try:
         # get parameters for tide model
-        model = model.elevation(TIDE_MODEL)
+        model = model.elevation(MODEL)
     except Exception as exc:
         pass
     else:
@@ -156,10 +178,10 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
         for i,c in enumerate(constituents):
             # read constituent from elevation file
             if (model.format == 'ATLAS-compact'):
-                z0,zlocal = pyTMD.io.OTIS.read_atlas_elevation(
+                z0, zlocal = pyTMD.io.OTIS.read_atlas_elevation(
                     model_file['z'], i, c)
-                xi,yi,z=pyTMD.io.OTIS.combine_atlas_model(x0, y0, z0, pmask,
-                    zlocal, variable='z')
+                xi, yi, z = pyTMD.io.OTIS.combine_atlas_model(x0, y0, z0,
+                    pmask, zlocal, variable='z')
             else:
                 z = pyTMD.io.OTIS.read_otis_elevation(model_file['z'], i)
             # reduce elevation to new bounds
@@ -168,14 +190,14 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
         new_model_file['z'] = create_unique_filename(model_file['z'])
         pyTMD.io.OTIS.output_otis_elevation(new_model_file['z'], z1,
             xlim, ylim, constituents)
-        # change the permissions level to MODE
-        new_model_file['z'].chmod(mode=MODE)
+        # change the permissions level to mode
+        new_model_file['z'].chmod(mode=mode)
 
     # combine ATLAS sub-grids into single output grid
     # reduce transport files to bounds
     try:
         # get parameters for tide model
-        model = model.current(TIDE_MODEL)
+        model = model.current(MODEL)
     except Exception as exc:
         pass
     else:
@@ -188,21 +210,21 @@ def make_regional_OTIS_files(tide_dir, TIDE_MODEL,
             if (model.format == 'ATLAS-compact'):
                 u0,v0,uvlocal = pyTMD.io.OTIS.read_atlas_transport(
                     model_file['u'], i, c)
-                xi,yi,u = pyTMD.io.OTIS.combine_atlas_model(x0, y0, u0, pmask,
-                    uvlocal, variable='u')
-                xi,yi,v = pyTMD.io.OTIS.combine_atlas_model(x0, y0, v0, pmask,
-                    uvlocal, variable='v')
+                xi, yi, u = pyTMD.io.OTIS.combine_atlas_model(x0, y0, u0,
+                    pmask, uvlocal, variable='u')
+                xi, yi, v = pyTMD.io.OTIS.combine_atlas_model(x0, y0, v0,
+                    pmask, uvlocal, variable='v')
             else:
-                u,v = pyTMD.io.OTIS.read_otis_transport(model_file['u'],i)
+                u, v = pyTMD.io.OTIS.read_otis_transport(model_file['u'], i)
             # reduce transport components to new bounds
-            u1[:,:,i] = u[indy,indx].reshape(ny,nx)
-            v1[:,:,i] = v[indy,indx].reshape(ny,nx)
+            u1[:,:,i] = u[indy,indx].reshape(ny, nx)
+            v1[:,:,i] = v[indy,indx].reshape(ny, nx)
         # output reduced transport components
         new_model_file['uv'] = create_unique_filename(model_file['u'])
         pyTMD.io.OTIS.output_otis_transport(new_model_file['u'], u1, v1,
             xlim, ylim, constituents)
-        # change the permissions level to MODE
-        new_model_file['u'].chmod(mode=MODE)
+        # change the permissions level to mode
+        new_model_file['u'].chmod(mode=mode)
 
 # PURPOSE: create a unique filename adding a numerical instance if existing
 def create_unique_filename(filename):
@@ -239,9 +261,8 @@ def arguments():
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line options
     # set data directory containing the tidal data
-    default_path = pyTMD.utilities.get_data_path('data')
     parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=default_path,
+        type=pathlib.Path, default=_default_directory,
         help='Working data directory')
     # tide model to use
     model_choices = ('CATS0201','CATS2008','CATS2008_load','TPXO9-atlas',
@@ -284,10 +305,12 @@ def main():
     # try to run regional program
     try:
         info(args)
-        make_regional_OTIS_files(args.directory, args.tide,
-            BOUNDS=args.bounds,
-            PROJECTION=args.projection,
-            MODE=args.mode)
+        reduce_otis(args.tide,
+            directory=args.directory,
+            bounds=args.bounds,
+            projection=args.projection,
+            mode=args.mode
+        )
     except Exception as exc:
         # if there has been an error exception
         # print the type, value, and stack trace of the

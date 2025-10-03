@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_atlas_read.py (09/2025)
+test_atlas_read.py (10/2025)
 Tests that ATLAS compact and netCDF4 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 
@@ -12,12 +12,12 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
     netCDF4: Python interface to the netCDF C library
         https://unidata.github.io/netcdf4-python/netCDF4/index.html
-    boto3: Amazon Web Services (AWS) SDK for Python
-        https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
+        fetch data from pyTMD developers test data repository
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
@@ -34,108 +34,20 @@ UPDATE HISTORY:
         replaced numpy bool/int to prevent deprecation warnings
     Written 09/2020
 """
-import os
 import re
 import io
 import gzip
 import json
-import boto3
-import shutil
 import pytest
-import posixpath
+import inspect
+import pathlib
 import numpy as np
-import pyTMD.io
-import pyTMD.io.model
-import pyTMD.arguments
-import pyTMD.utilities
-import timescale.time
+import pyTMD
+import timescale
 
-# check if running on GitHub Actions CI
-GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
-
-# PURPOSE: Download TPXO8 ATLAS compact constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=False)
-def download_TPXO8(
-        directory,
-        aws_access_key_id,
-        aws_secret_access_key,
-        aws_region_name
-    ):
-    # get aws session object
-    session = boto3.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region_name)
-    # get s3 object and bucket object for pytmd data
-    s3 = session.resource('s3')
-    bucket = s3.Bucket('pytmd')
-
-    # model parameters for TPXO8-ATLAS
-    model_directory = directory.joinpath('tpxo8_atlas')
-    # recursively create model directory
-    model_directory.mkdir(parents=True, exist_ok=True)
-    model_files = ['grid_tpxo8atlas_30_v1',
-        'hf.tpxo8_atlas_30_v1',
-        'uv.tpxo8_atlas_30_v1']
-    # retrieve each model file from s3
-    for f in model_files:
-        # retrieve constituent file
-        obj = bucket.Object(key=posixpath.join('tpxo8_atlas',f))
-        response = obj.get()
-        # save constituent data
-        with open(model_directory.joinpath(f), 'wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        assert model_directory.joinpath(f).exists()
-    # run tests
-    yield
-    # clean up model
-    shutil.rmtree(model_directory)
-
-# PURPOSE: Download TPXO9 ATLAS V2 netCDF constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
-def download_TPXO9_v2(
-        directory,
-        aws_access_key_id,
-        aws_secret_access_key,
-        aws_region_name
-    ):
-    # get aws session object
-    session = boto3.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region_name)
-    # get s3 object and bucket object for pytmd data
-    s3 = session.resource('s3')
-    bucket = s3.Bucket('pytmd')
-
-    # model parameters for TPXO9-atlas-v2
-    model = pyTMD.io.model(directory,compressed=True,verify=False
-        ).elevation('TPXO9-atlas-v2-nc')
-    # recursively create model directory
-    model_directory = model.model_file[0].parent
-    model_directory.mkdir(parents=True, exist_ok=True)
-    # retrieve grid file from s3
-    key = posixpath.join('TPXO9_atlas_v2',model.grid_file.name)
-    obj = bucket.Object(key=key)
-    response = obj.get()
-    # save grid data
-    with model.grid_file.open(mode='wb') as destination:
-        shutil.copyfileobj(response['Body'], destination)
-    assert model.grid_file.exists()
-    # retrieve each model file from s3
-    for model_file in model.model_file:
-        # retrieve constituent file
-        key = posixpath.join('TPXO9_atlas_v2',model_file.name)
-        obj = bucket.Object(key=key)
-        response = obj.get()
-        # save constituent data
-        with model_file.open(mode='wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        assert model_file.exists()
-    # run tests
-    yield
-    # clean up model
-    shutil.rmtree(model_directory)
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 
 # parameterize interpolation method
 @pytest.mark.parametrize("METHOD", ['spline','nearest'])
@@ -153,7 +65,7 @@ def test_read_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -190,7 +102,7 @@ def test_compare_TPXO9_v2(directory, METHOD):
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
     formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(directory.joinpath('extract_HC_sample_out.gz'),
+    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
     # extract amplitude and phase from tide model
@@ -245,7 +157,7 @@ def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(directory.joinpath('predict_tide.out.gz'),'r') as f:
+    with gzip.open(filepath.joinpath('predict_tide.out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 13
@@ -320,7 +232,7 @@ def test_verify_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
     # read validation dataset (m2, s2, k1, o1)
     # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(directory.joinpath('predict_tide_sample_out.gz'),'r') as f:
+    with gzip.open(filepath.joinpath('predict_tide_sample_out.gz'),'r') as f:
         file_contents = f.read().decode('ISO-8859-1').splitlines()
     # number of validation data points
     nval = len(file_contents) - 6

@@ -1,17 +1,5 @@
 codecov:
   require_ci_to_pass: yes
   notify:
-    after_n_builds: 6
+    after_n_builds: 2
     wait_for_ci: yes
-
-coverage:
-  precision: 2
-  round: down
-  range: "70...90"
-  status:
-    project:
-      default: false
-      tests:
-        paths: "test/"
-      source:
-        paths: "pyTMD/"

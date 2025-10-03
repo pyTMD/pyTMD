@@ -4,8 +4,10 @@
 Examples
 ========
 
-.. note::
-  Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include all of the optional dependencies.
+.. important::
+  Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ to include all of the optional dependencies.
+
+  Some notebooks require first downloading a tide model [see details on `data access <../getting_started/Getting-Started.html#data-access>`_].
 
 .. toctree::
    :maxdepth: 1

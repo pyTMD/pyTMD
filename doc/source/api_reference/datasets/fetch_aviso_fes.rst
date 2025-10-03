@@ -1,6 +1,6 @@
-==================
-aviso_fes_tides.py
-==================
+===============
+fetch_aviso_fes
+===============
 
 - Downloads the FES (Finite Element Solution) global tide model from `AVISO <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html>`_
 - Decompresses the model tar files into the constituent files and auxiliary files
@@ -11,14 +11,16 @@ aviso_fes_tides.py
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/scripts/aviso_fes_tides.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/datasets/fetch_aviso_fes.py
 
-Calling Sequence
-################
+.. autofunction:: pyTMD.datasets.fetch_aviso_fes
+
+CLI
+===
 
 .. argparse::
-    :module: pyTMD.scripts.aviso_fes_tides
+    :module: pyTMD.datasets.fetch_aviso_fes
     :func: arguments
-    :prog: aviso_fes_tides.py
+    :prog: fetch_aviso_fes.py
     :nodescription:
     :nodefault:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_perth3_read.py (09/2025)
-Tests that GOT4.7 data can be downloaded from AWS S3 bucket
+test_perth3_read.py (10/2025)
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to NASA PERTH3 program
 
@@ -11,12 +10,12 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
-    boto3: Amazon Web Services (AWS) SDK for Python
-        https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
+        fetch data from pyTMD developers test data repository
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 08/2025: added xarray tests to verify implementation
     Updated 06/2025: subset to specific constituents when reading model
@@ -38,62 +37,20 @@ UPDATE HISTORY:
         replaced numpy bool/int to prevent deprecation warnings
     Written 08/2020
 """
-import os
 import io
 import gzip
 import json
-import boto3
-import shutil
 import pytest
-import posixpath
+import inspect
+import pathlib
 import numpy as np
 import xarray as xr
-import pyTMD.io
-import pyTMD.io.model
-import pyTMD.utilities
-import pyTMD.compute
-import pyTMD.predict
-import timescale.time
+import pyTMD
+import timescale
 
-# check if running on GitHub Actions CI
-GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
-
-# PURPOSE: Download GOT4.7 constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
-def download_model(directory,
-        aws_access_key_id,
-        aws_secret_access_key,
-        aws_region_name
-    ):
-    # get aws session object
-    session = boto3.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region_name)
-    # get s3 object and bucket object for pytmd data
-    s3 = session.resource('s3')
-    bucket = s3.Bucket('pytmd')
-
-    # model parameters for GOT4.7
-    model = pyTMD.io.model(directory, compressed=True,
-        verify=False).elevation('GOT4.7')
-    # recursively create model directory
-    model_directory = model.model_file[0].parent
-    model_directory.mkdir(parents=True, exist_ok=True)
-    # retrieve each model file from s3
-    for model_file in model.model_file:
-        # retrieve constituent file
-        f = model_file.name
-        obj = bucket.Object(key=posixpath.join('GOT4.7','grids_oceantide',f))
-        response = obj.get()
-        # save constituent data
-        with model_file.open(mode='wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        assert model_file.exists()
-    # run tests
-    yield
-    # clean up model
-    shutil.rmtree(model_directory)
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 
 # parameterize interpolation method
 @pytest.mark.parametrize("METHOD", ['spline','linear','bilinear'])
@@ -109,7 +66,7 @@ def test_verify_GOT47(directory, METHOD, CROP):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -174,7 +131,7 @@ def test_compare_GOT47(directory, METHOD):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2
@@ -236,7 +193,7 @@ def test_GOT47_xarray(directory):
     model.scale = 1.0
 
     # read validation dataset
-    with gzip.open(directory.joinpath('perth_output_got4.7.gz'),'r') as fid:
+    with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
         file_contents = fid.read().decode('ISO-8859-1').splitlines()
     # extract latitude, longitude, time (Modified Julian Days) and tide data
     npts = len(file_contents) - 2

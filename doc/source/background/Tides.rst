@@ -14,8 +14,19 @@ Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltm
     Tide gauges measure the height of the ocean surface relative to the land upon which they are situated (*ocean tides only*).
     Satellite altimeters measure the height of the ocean surface relative to the center of mass of the Earth system (*combination of ocean and earth tides*).
 
-Tidal oscillations for both ocean and load tides can be decomposed into a series of tidal constituents (or partial tides) of particular frequencies that are associated with the relative positions of the sun, moon and Earth.
-These tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents`].
+``pyTMD`` uses the harmonic method for tide prediction, which is based on harmonic analysis and decomposition.
+Here, tidal oscillations for both ocean and load tides are decomposed into a series of tidal constituents (or partial tides) of particular frequencies.
+These frequencies are associated with particular astronomical forcings, which are largely based on the relative positions of the sun, moon and Earth.
+The tide height (or current) at any time can be estimated through a summation of all available tidal constituents :cite:p:`Doodson:1921kt,Foreman:1989dt`:
+
+.. math::
+    :label: 1.1
+    :name: eq:1.1
+
+    h(t) = z_0 +\sum_{k=1}^{n} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
+
+where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`Nodal Corrections`].
+Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents` and :ref:`fig-sphharm`].
 
 .. plot:: ./background/spectra.py
     :show-source-link: False
@@ -47,12 +58,13 @@ This resonance affects the instantaneous elastic response of the solid Earth to 
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
 For any given time, ``pyTMD.astro`` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
+These can be summed together to estimate the equilibrium phase (:math:`G`).
 
 .. math::
-    :label: 1.1
-    :name: eq:1.1
+    :label: 1.2
+    :name: eq:1.2
 
-    \sigma(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
+    G(t) = d_1\tau + d_2 S + d_3 H + d_4 P + d_5 N + d_6 Ps + d_7 k
 
 .. tip::
 
@@ -71,10 +83,11 @@ The tidal deformation of the Earth is to a very high degree instantaneous, with 
 The total gravitational potential at a position on the Earth's surface due to a celestial object is directly related to the distance between the Earth and the object, and the mass of that object :cite:p:`Agnew:2015kw,Wahr:1981ea`.
 
 Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two methods:
-1) using ephemerides and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea,Mathews:1997js`, or
-2) using tide potential catalogs and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
+1) using :term:`Ephemerides` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`, or
+2) using tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
 For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth.
+For the catalog method, some tide potential catalogs additionally include the potentials induced by the motions of the closest planetary bodies [see :ref:`tab-catalogs`] and higher degree harmonics [see :ref:`fig-sphharm`].
 
 For both methods, the elastic response of the Earth to the tidal potential is calculated using :term:`Love and Shida Numbers`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
@@ -87,16 +100,16 @@ However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are depen
     :caption: Diurnal frequency dependence of :term:`Love and Shida Numbers` from :cite:t:`Wahr:1979vx`
     :align: center
 
-In addition to the ups and downs of tides, there is a considerable portion of tidal potential and displacement that does not vary in time, a *permanent tide* that is due to the Earth being in the presence of the Sun and Moon (and other planetary bodies).
+In addition to the ups and downs of tides, there is a considerable portion of tidal potential and displacement that does not vary in time, a ":term:`Permanent Tide`" that is due to the Earth being in the presence of the Sun and Moon (and other planetary bodies).
 The `Earth is lower in polar areas and higher in equatorial areas <https://www.ngs.noaa.gov/PUBS_LIB/EGM96_GEOID_PAPER/egm96_geoid_paper.html>`_ than it would without those gravitational effects.
-The `IERS formalism <https://iers-conventions.obspm.fr/>`_ for determining station locations is to remove all cyclical and permanent components of the tides, which is known as a "tide-free" system.
+The `IERS formalism <https://iers-conventions.obspm.fr/>`_ for determining station locations is to remove all cyclical and permanent components of the tides, which is known as a ":term:`Tide-Free`" system.
 This is the default "tide-system" within ``pyTMD``.
-Alternatively, the permanent tide components can be added back in order to calculate the station locations in a "mean-tide" state.
+Alternatively, the permanent tide components can be added back in order to calculate the station locations in a ":term:`Mean Tide`" state.
 The radial difference in terms of latitude between the mean-tide and tide-free systems is:
 
 .. math::
-    :label: 1.2
-    :name: eq:1.2
+    :label: 1.3
+    :name: eq:1.3
 
     \delta r(\varphi) = -0.120582 \left(\frac{3}{2} sin^2 \varphi - \frac{1}{2} \right)
 
@@ -115,8 +128,8 @@ For ocean pole tides, ``pyTMD`` uses the equilibrium response model from :cite:t
 The currently accepted formalism for estimating the reference position of the Earth's figure axis at a given date is the `IERS 2018 secular pole model <https://iers-conventions.obspm.fr/chapter7.php>`_:
 
 .. math::
-    :label: 1.3
-    :name: eq:1.3
+    :label: 1.4
+    :name: eq:1.4
 
     \bar{x}_s(t) &= 0.055 + 0.001677(t - 2000.0)\\
     \bar{y}_s(t) &= 0.3205 + 0.00346(t - 2000.0)
@@ -126,8 +139,8 @@ The time-dependent offsets from the reference rotation pole position, also known
 
 
 .. math::
-    :label: 1.4
-    :name: eq:1.4
+    :label: 1.5
+    :name: eq:1.5
 
     m_1(t) &= x_p(t) - \bar{x}_s(t)\\
     m_2(t) &= -(y_p(t) - \bar{y}_s(t))

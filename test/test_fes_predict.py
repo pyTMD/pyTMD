@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_fes_predict.py (09/2025)
+test_fes_predict.py (10/2025)
 Tests that FES2014 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 Tests that interpolated results are comparable to FES2014 program
@@ -13,12 +13,12 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
     netCDF4: Python interface to the netCDF C library
         https://unidata.github.io/netcdf4-python/netCDF4/index.html
-    boto3: Amazon Web Services (AWS) SDK for Python
-        https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 10/2025: split directories between validation and model data
+        fetch data from pyTMD developers test data repository
     Updated 09/2025: added check if running on GitHub Actions or locally
     Updated 06/2025: subset to specific constituents when reading model
     Updated 09/2024: drop support for the ascii definition file format
@@ -33,61 +33,18 @@ UPDATE HISTORY:
     Updated 02/2021: replaced numpy bool to prevent deprecation warning
     Written 08/2020
 """
-import os
 import io
 import json
-import boto3
-import shutil
 import pytest
-import posixpath
+import inspect
+import pathlib
 import numpy as np
-import pyTMD.io
-import pyTMD.io.model
-import pyTMD.compute
-import pyTMD.utilities
-import pyTMD.predict
-import pyTMD.arguments
-import timescale.time
+import pyTMD
+import timescale
 
-# check if running on GitHub Actions CI
-GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS', False)
-
-# PURPOSE: Download FES2014 constituents from AWS S3 bucket
-@pytest.fixture(scope="module", autouse=GITHUB_ACTIONS)
-def download_model(directory,
-        aws_access_key_id,
-        aws_secret_access_key,
-        aws_region_name
-    ):
-    # get aws session object
-    session = boto3.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region_name)
-    # get s3 object and bucket object for pytmd data
-    s3 = session.resource('s3')
-    bucket = s3.Bucket('pytmd')
-
-    # model parameters for FES2014
-    model = pyTMD.io.model(directory,compressed=True,
-        verify=False).elevation('FES2014')
-    # recursively create model directory
-    model_directory = model.model_file[0].parent
-    model_directory.mkdir(parents=True, exist_ok=True)
-    # retrieve each model file from s3
-    for model_file in model.model_file:
-        # retrieve constituent file
-        f = model_file.name
-        obj = bucket.Object(key=posixpath.join('fes2014','ocean_tide',f))
-        response = obj.get()
-        # save constituent data
-        with model_file.open(mode='wb') as destination:
-            shutil.copyfileobj(response['Body'], destination)
-        assert model_file.exists()
-    # run tests
-    yield
-    # clean up model
-    shutil.rmtree(model_directory)
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 
 # PURPOSE: Tests check point program
 def test_check_FES2014(directory):
@@ -116,7 +73,7 @@ def test_verify_FES2014(directory, METHOD, CROP):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']
@@ -175,7 +132,7 @@ def test_compare_FES2014(directory, METHOD):
     names = ('CNES','Hour','Latitude','Longitude','Short_tide','LP_tide',
         'Pure_tide','Geo_tide','Rad_tide')
     formats = ('f','i','f','f','f','f','f','f','f')
-    file_contents = np.loadtxt(directory.joinpath('fes_slev.txt.gz'),
+    file_contents = np.loadtxt(filepath.joinpath('fes_slev.txt.gz'),
         skiprows=1,dtype=dict(names=names,formats=formats))
     longitude = file_contents['Longitude']
     latitude = file_contents['Latitude']
