@@ -202,6 +202,7 @@ gh = "*"
 oct2py = "*"
 pytest = "*"
 pytest-cov = "*"
+pytest-xdist = "*"
 
 [tool.pixi.feature.doc.dependencies]
 docutils = "*"
