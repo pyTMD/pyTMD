@@ -70,6 +70,6 @@ The tidal deformation of the solid Earth can be modeled in `pyTMD` using one of 
 
 `pyTMD` was first supported through an appointment to the NASA Postdoctoral Program (NPP) at NASA Goddard Space Flight Center (GSFC), and currently supported under the NASA Cryospheric Sciences Program (Grant Number 80NSSC22K0379). The software was developed with the goal of supporting science applications for airborne and satellite altimetry in preparation for the launch of the NASA ICESat-2 mission. It was designed for scientific and technical purposes, and not for coastal navigation or applications risking life or property.
 
-We wish to acknowledge the invaluable comments, contributions, and support from Karen Alley (University of Manitoba), Robbi Bishop-Taylor (Geoscience Australia), Kelly Brunt (NSF) and Richard Ray (NASA GSFC) towards the development of `pyTMD`. We additionally wish to acknowledge the comments, issues and discussions of all contributors to the `pyTMD` GitHub repository.
+We wish to acknowledge the invaluable comments, contributions, and support from Karen Alley (University of Manitoba), Robbi Bishop-Taylor (Geoscience Australia), Kelly Brunt (NSF) and Richard Ray (NASA GSFC) towards the development of `pyTMD`. We additionally wish to acknowledge the comments, issues and discussions of all contributors to the `pyTMD` GitHub repository, and the contributions and comments from our two JOSS reviewers Romain Caneill and Guilherme Castelão.
 
 # References
