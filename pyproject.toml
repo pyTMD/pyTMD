@@ -59,7 +59,7 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
-all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "matplotlib", "notebook", "pandas", "xarray"]
+all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas", "xarray"]
 aws = ["dask", "geopandas", "h5netcdf", "obstore", "pyarrow", "s3fs", "zarr>=3"]
 dev = ["flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
@@ -158,7 +158,7 @@ cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch_test_data()'"
 description = "Fetch data needed to run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.test]
-args = [ "flags", { "arg" = "test", "default" = "." } ]
+args = [ { "arg" = "flags", "default" = "" }, { "arg" = "test", "default" = "." } ]
 cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
 description = "Run the pytest suite"
@@ -183,6 +183,7 @@ matplotlib = "*"
 ipyleaflet = "*"
 ipywidgets = "*"
 jplephem = "*"
+jupyterlab = "*"
 pandas = "*"
 notebook = "*"
 xarray = "*"

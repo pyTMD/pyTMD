@@ -14061,7 +14061,7 @@ packages:
 - pypi: ./
   name: pytmd
   version: 2.2.8
-  sha256: 6d751bb7b0a7bfa701c5eb62adaf3fb27ec9f4720113c605faa7ea1150675c24
+  sha256: 385e3ec2db39cf4e1b26139c558f689fb66dc3d3669e41f5eebdfe7b6960aaa1
   requires_dist:
   - lxml
   - netcdf4
@@ -14083,6 +14083,7 @@ packages:
   - ipyleaflet ; extra == 'all'
   - ipywidgets ; extra == 'all'
   - jplephem ; extra == 'all'
+  - jupyterlab ; extra == 'all'
   - matplotlib ; extra == 'all'
   - notebook ; extra == 'all'
   - pandas ; extra == 'all'
