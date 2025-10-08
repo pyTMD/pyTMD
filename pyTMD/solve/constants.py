@@ -64,7 +64,7 @@ def constants(t: float | np.ndarray,
         infer_iter: int = 1
     ):
     """
-    Estimate the harmonic constants for an elevation time series
+    Estimate the harmonic constants for a time series
     :cite:p:`Egbert:2002ge,Foreman:2009bg,Ray:1999vm`
 
     Parameters
@@ -72,7 +72,7 @@ def constants(t: float | np.ndarray,
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
     ht: np.ndarray
-        elevation time series (meters)
+        input time series (elevation or currents)
     constituents: str, list or np.ndarray
         tidal constituent ID(s)
     deltat: float or np.ndarray, default 0.0
@@ -89,7 +89,7 @@ def constants(t: float | np.ndarray,
         - ``'bvls'``: bounded-variable least-squares
     order: int, default 0
         degree of the polynomial to add to fit
-    infer_minor: bool, default True
+    infer_minor: bool, default False
         infer minor tidal constituents
     minor_constituents: list or None, default None
         Specify constituents to infer
@@ -103,7 +103,7 @@ def constants(t: float | np.ndarray,
     Returns
     -------
     amp: np.ndarray
-        amplitude of each harmonic constant (meters)
+        amplitude of each harmonic constant (units of input data)
     phase: np.ndarray
         phase of each harmonic constant (degrees)
     """
