@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constants.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (10/2025)
 Routines for estimating the harmonic constants for ocean tides
 
 REFERENCES:
@@ -25,6 +25,7 @@ PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
 
 UPDATE HISTORY:
+    Updated 10/2025: added option to infer minor constituents (post-fit)
     Updated 08/2025: use numpy degree to radian conversions
     Updated 06/2025: verify that height values are all finite
     Updated 05/2025: added option to include higher order polynomials
@@ -40,6 +41,7 @@ import numpy as np
 import scipy.linalg
 import scipy.optimize
 import pyTMD.arguments
+import pyTMD.predict
 
 __all__ = [
     'constants'
@@ -55,8 +57,11 @@ def constants(t: float | np.ndarray,
         corrections: str = 'OTIS',
         solver: str = 'lstsq',
         order: int = 0,
+        infer_minor: bool = False,
+        minor_constituents: list = [],
         bounds: tuple = (-np.inf, np.inf),
-        max_iter: int | None = None
+        max_iter: int | None = None,
+        infer_iter: int = 1
     ):
     """
     Estimate the harmonic constants for an elevation time series
@@ -84,10 +89,16 @@ def constants(t: float | np.ndarray,
         - ``'bvls'``: bounded-variable least-squares
     order: int, default 0
         degree of the polynomial to add to fit
+    infer_minor: bool, default True
+        infer minor tidal constituents
+    minor_constituents: list or None, default None
+        Specify constituents to infer
     bounds: tuple, default (None, None)
         Lower and upper bounds on parameters for ``'bvls'``
     max_iter: int or None, default None
         Maximum number of iterations for ``'bvls'``
+    infer_iter: int, default 1
+        Maximum number of iterations for inferring minor constituents
 
     Returns
     -------
@@ -152,6 +163,33 @@ def constants(t: float | np.ndarray,
         p = scipy.optimize.lsq_linear(M, ht,
             method=solver, bounds=bounds,
             max_iter=max_iter).x
+
+    # infer minor using a post-fit technique
+    infer_iter = np.maximum(1, infer_iter) if infer_minor else 0  
+    # iterate solutions to improve minor constituent estimates
+    for i in range(infer_iter):
+        # indices for the sine and cosine terms
+        # skip over the polynomial terms
+        isin = 2*np.arange(nc) + order + 2
+        icos = 2*np.arange(nc) + order + 1
+        # complex model amplitudes for major constituents
+        hmajor = p[icos] + 1j*p[isin]
+        # inferred minor constituent time series
+        hminor = pyTMD.predict.infer_minor(t, hmajor, constituents,
+            deltat=deltat, corrections=corrections,
+            minor=minor_constituents)
+        # corrected height (without minor constituents)
+        hcorr = ht - hminor
+        # rerun least-squares fit with minor constituents removed
+        if (solver == 'lstsq'):
+            p, res, rnk, s = np.linalg.lstsq(M, hcorr, rcond=-1)
+        elif solver in ('gelsd', 'gelsy', 'gelss'):
+            p, res, rnk, s = scipy.linalg.lstsq(M, hcorr,
+                lapack_driver=solver)
+        elif (solver == 'bvls'):
+            p = scipy.optimize.lsq_linear(M, hcorr,
+                method=solver, bounds=bounds,
+                max_iter=max_iter).x
 
     # calculate amplitude and phase for each constituent
     amp = np.zeros((nc))
