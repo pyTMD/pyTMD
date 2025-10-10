@@ -21,9 +21,9 @@ Data Access
 ###########
 
 Some tide models can be programmatically downloaded using the fetching routines in ``pyTMD.datasets``.
-OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the ``pyTMD.datasets.fetch_arcticdata`` function.
-GOT models can be downloaded from the NASA GSFC server using the ``pyTMD.datasets.fetch_gsfc_got`` function.
-Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the ``pyTMD.datasets.fetch_aviso_fes`` function.
+OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the :func:`pyTMD.datasets.fetch_arcticdata` function.
+GOT models can be downloaded from the NASA GSFC server using the :func:`pyTMD.datasets.fetch_gsfc_got` function.
+Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the :func:`pyTMD.datasets.fetch_aviso_fes` function.
 
 Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
@@ -84,7 +84,7 @@ If you wish to add a new model to the ``pyTMD`` database, please see the `contri
 Definition Files
 ################
 
-For models not currently within the ``pyTMD`` `database <./Getting-Started.html#model-database>`_, the model parameters can be set with a definition file in JSON format.
+For models not currently within the ``pyTMD`` `database <./Getting-Started.html#model-database>`_, the model parameters can be set in :py:class:`pyTMD.io.model` with a definition file in JSON format.
 The JSON definition files follow a similar structure as the main ``pyTMD`` database, but for individual entries.
 The JSON format directly maps the parameter names with their values stored in the appropriate data type (strings, lists, numbers, booleans, etc).
 For FES-type models of currents, the two lists of model files (``u`` and ``v``) are stored in a name-value pair objects (similar to a python dictionary).
@@ -162,19 +162,16 @@ The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in lati
 Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
-For all cases with projected models, ``pyTMD`` will `convert from latitude and longitude to the model coordinate system <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/crs.py>`_ to calculate the local tidal constants.
+For all cases with projected models, :py:class:`pyTMD.crs` will convert from latitude and longitude to the model coordinate system to calculate the local tidal constants.
 
 Interpolation
 #############
 
 For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from ``scipy``
-along with a built-in `bilinear <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ interpolation routine.
-The default interpolator uses a `biharmonic spline <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RectBivariateSpline.html>`_
-function to interpolate from the model coordinate system to the output coordinates.
-There are options to use nearest and linear interpolators with the
-`regular grid <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ function.
-For coastal or near-grounded points, the model can be extrapolated using a
-`nearest-neighbor <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/interpolate.py>`_ routine.
+along with a built-in bilinear interpolation routine :func:`pyTMD.interpolate.bilinear`.
+The default interpolator :func:`pyTMD.interpolate.spline` uses a biharmonic spline function to interpolate from the model coordinate system to the output coordinates.
+There are options to use nearest and linear interpolators with the :func:`pyTMD.interpolate.regulargrid` function.
+For coastal or near-grounded points, the model can be extrapolated with :func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 
