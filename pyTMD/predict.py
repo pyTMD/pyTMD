@@ -373,7 +373,7 @@ def infer_minor(
     # return the inferred values
     return dh
 
-# PURPOSE: infer short-period tides for minor constituents
+# PURPOSE: infer short-period minor constituents
 def _infer_short_period(
         t: float | np.ndarray,
         zmajor: np.ndarray,
@@ -507,6 +507,7 @@ def _infer_short_period(
     # return the inferred values
     return dh
 
+# PURPOSE: infer semi-diurnal minor constituents
 def _infer_semi_diurnal(
         t: float | np.ndarray,
         zmajor: np.ndarray,
@@ -660,6 +661,7 @@ def _infer_semi_diurnal(
     # return the inferred values
     return dh
 
+# PURPOSE: infer diurnal minor constituents
 def _infer_diurnal(
         t: float | np.ndarray,
         zmajor: np.ndarray,
@@ -824,7 +826,7 @@ def _infer_diurnal(
     # return the inferred values
     return dh
 
-# PURPOSE: infer long-period tides for minor constituents
+# PURPOSE: infer long-period minor constituents
 def _infer_long_period(
         t: float | np.ndarray,
         zmajor: np.ndarray,

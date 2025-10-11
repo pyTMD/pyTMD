@@ -114,7 +114,7 @@ It should not be used for coastal navigation or any application that may risk li
 
 ## Contributing
 
-This project contains work and contributions from the [scientific community](./CONTRIBUTORS.rst).
+This project contains work and contributions from the [scientific community](./CONTRIBUTORS.md).
 If you would like to contribute to the project, please have a look at the [contribution guidelines](./doc/source/getting_started/Contributing.rst), [open issues](https://github.com/pyTMD/pyTMD/issues) and [discussions board](https://github.com/pyTMD/pyTMD/discussions).
 
 ## Credits

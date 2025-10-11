@@ -56,7 +56,7 @@ This resonance affects the instantaneous elastic response of the solid Earth to 
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, ``pyTMD.astro`` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
+For any given time, :func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 These can be summed together to estimate the equilibrium phase (:math:`G`).
 
@@ -71,7 +71,7 @@ These can be summed together to estimate the equilibrium phase (:math:`G`).
     ``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
 
 Together the Doodson coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used by ``pyTMD`` to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal values :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
-After the determination of the major constituents, ``pyTMD`` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
+After the determination of the major constituents, :func:`pyTMD.predict.infer_minor` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 
 
 Solid Earth Tides
@@ -83,8 +83,8 @@ The tidal deformation of the Earth is to a very high degree instantaneous, with 
 The total gravitational potential at a position on the Earth's surface due to a celestial object is directly related to the distance between the Earth and the object, and the mass of that object :cite:p:`Agnew:2015kw,Wahr:1981ea`.
 
 Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two methods:
-1) using :term:`Ephemerides` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`, or
-2) using tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
+1) :func:`pyTMD.predict.solid_earth_tide` uses :term:`Ephemerides` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`, or
+2) :func:`pyTMD.predict.body_tide` uses tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
 For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth.
 For the catalog method, some tide potential catalogs additionally include the potentials induced by the motions of the closest planetary bodies [see :ref:`tab-catalogs`] and higher degree harmonics [see :ref:`fig-sphharm`].
@@ -123,7 +123,7 @@ Load and ocean pole tides are driven by these variations, the corresponding elas
 These variations are centimeter scale in both the vertical and horizontal, and should be taken into account when comparing observations over periods longer than two months.
 
 The formalism for estimating the pole tides within ``pyTMD`` is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
-For ocean pole tides, ``pyTMD`` uses the equilibrium response model from :cite:t:`Desai:2002ev` as recommended by IERS Conventions :cite:p:`Petit:2010tp`.
+For ocean pole tides, :func:`pyTMD.predict.ocean_pole_tide` uses the equilibrium response model from :cite:t:`Desai:2002ev` as recommended by IERS Conventions :cite:p:`Petit:2010tp`.
 ``pyTMD`` uses the ``timescale`` library for reading the Earth Orientation Parameters (EOPs) necessary for computing load pole and ocean pole tide variations.
 The currently accepted formalism for estimating the reference position of the Earth's figure axis at a given date is the `IERS 2018 secular pole model <https://iers-conventions.obspm.fr/chapter7.php>`_:
 

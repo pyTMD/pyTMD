@@ -99,7 +99,6 @@ omit = [
     "setup.py",
     "conf.py",
     "pyTMD/datasets/*",
-    "pyTMD/compute_tide_corrections.py",
     "test/_coefficients_to_json.py",
     "test/_def_to_json.py",
     "providers/*.py",
