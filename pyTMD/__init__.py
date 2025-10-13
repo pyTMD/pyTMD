@@ -28,14 +28,11 @@ from pyTMD import solve
 from pyTMD.crs import crs
 
 # Deprecated functions
-from pyTMD.compute_tide_corrections import (
-    compute_corrections,
-    compute_tide_corrections,
-    compute_LPET_corrections,
-    compute_LPT_corrections,
-    compute_OPT_corrections,
-    compute_SET_corrections,
-)
+def compute_tide_corrections(*args, **kwargs):
+    """Wrapper function to compute tide corrections
+    Deprecated, use :func:`pyTMD.compute.tide_elevations` instead
+    """
+    return pyTMD.compute.tide_elevations(*args, **kwargs)
 
 # get version information
 __version__ = pyTMD.version.version
