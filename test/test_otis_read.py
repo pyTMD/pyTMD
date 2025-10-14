@@ -260,25 +260,30 @@ class Test_CATS2008:
             df.to_csv(f, index_label='ellipse')
 
     # PURPOSE: Test read program that grids and constituents are as expected
-    def test_read_CATS2008(self, ny=2026, nx=1663):
+    @pytest.mark.parametrize("use_mmap", [False, True])
+    def test_read_CATS2008(self, use_mmap, ny=2026, nx=1663):
         # model parameters for CATS2008
         modelpath = self.directory.joinpath('CATS2008')
         grid_file = modelpath.joinpath('grid_CATS2008')
         elevation_file = modelpath.joinpath('hf.CATS2008.out')
         transport_file = modelpath.joinpath('uv.CATS2008.out')
         # read CATS2008 grid file
-        xi,yi,hz,mz,iob,dt = pyTMD.io.OTIS.read_otis_grid(grid_file)
+        xi,yi,hz,mz,iob,dt = pyTMD.io.OTIS.read_otis_grid(grid_file,
+            use_mmap=use_mmap)
         # check dimensions of input grids
         assert (hz.shape == (ny,nx))
         assert (mz.shape == (ny,nx))
         # check constituent list
-        constituents,nc = pyTMD.io.OTIS.read_constituents(elevation_file)
+        constituents,nc = pyTMD.io.OTIS.read_constituents(elevation_file,
+            use_mmap=use_mmap)
         cons = ['m2','s2','n2','k2','k1','o1','p1','q1','mf','mm']
         assert all(c in constituents for c in cons)
         # check dimensions of input grids from elevation and transport files
         for i,c in enumerate(constituents):
-            z = pyTMD.io.OTIS.read_otis_elevation(elevation_file,i)
-            u,v = pyTMD.io.OTIS.read_otis_transport(transport_file,i)
+            z = pyTMD.io.OTIS.read_otis_elevation(elevation_file, i,
+                use_mmap=use_mmap)
+            u,v = pyTMD.io.OTIS.read_otis_transport(transport_file, i,
+                use_mmap=use_mmap)
             assert (z.shape == (ny,nx))
             assert (u.shape == (ny,nx))
             assert (v.shape == (ny,nx))
@@ -294,7 +299,8 @@ class Test_CATS2008:
         assert np.all(obs == exp)
 
     # PURPOSE: Tests that interpolated results are comparable to AntTG database
-    def test_compare_CATS2008(self):
+    @pytest.mark.parametrize("use_mmap", [False, True])
+    def test_compare_CATS2008(self, use_mmap):
         # model parameters for CATS2008
         model = pyTMD.io.model(self.directory).elevation('CATS2008')
 
@@ -343,7 +349,8 @@ class Test_CATS2008:
 
         # extract amplitude and phase from tide model
         model_amp,model_ph,cons = model.extract_constants(
-            station_lon, station_lat, constituents=constituents)
+            station_lon, station_lat, constituents=constituents,
+            use_mmap=use_mmap)
         # calculate complex constituent oscillations
         # convert amplitudes to cm
         station_z = station_amp*np.exp(-1j*station_ph*np.pi/180.0)
@@ -377,8 +384,9 @@ class Test_CATS2008:
 
     # parameterize type: heights versus currents
     @pytest.mark.parametrize("TYPE", ['z', 'U', 'V'])
+    @pytest.mark.parametrize("use_mmap", [False, True])
     # PURPOSE: Tests that interpolated results are comparable to Matlab program
-    def test_verify_CATS2008(self, TYPE):
+    def test_verify_CATS2008(self, TYPE, use_mmap):
         # model parameters for CATS2008
         if (TYPE == 'z'):
             model = pyTMD.io.model(self.directory).elevation('CATS2008')
@@ -418,7 +426,7 @@ class Test_CATS2008:
 
         # extract amplitude and phase from tide model
         amp,ph,c = model.extract_constants(station_lon, station_lat,
-            type=TYPE, method='spline')
+            type=TYPE, method='spline', use_mmap=use_mmap)
 
         # calculate complex phase in radians for Euler's
         cph = -1j*ph*np.pi/180.0
@@ -474,7 +482,8 @@ class Test_CATS2008:
                 assert np.all(np.abs(difference) < eps)
 
     # PURPOSE: Tests that tidal ellipse results are comparable to Matlab program
-    def test_tidal_ellipse(self):
+    @pytest.mark.parametrize("use_mmap", [False, True])
+    def test_tidal_ellipse(self, use_mmap):
         # model parameters for CATS2008
         model = pyTMD.io.model(self.directory).current('CATS2008')
         TYPES = ['U','V']
@@ -535,7 +544,8 @@ class Test_CATS2008:
         for TYPE in TYPES:
             # extract amplitude and phase from tide model
             amp,ph,c = model.extract_constants(station_lon[valid_stations],
-                station_lat[valid_stations], type=TYPE, method='spline')
+                station_lat[valid_stations], type=TYPE, method='spline',
+                use_mmap=use_mmap)
             # calculate complex phase in radians for Euler's
             cph = -1j*ph*np.pi/180.0
             # calculate constituent oscillation for station

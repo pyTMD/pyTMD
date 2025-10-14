@@ -144,9 +144,10 @@ def test_compare_TPXO9_v2(directory, METHOD):
 @pytest.mark.parametrize("METHOD", ['bilinear'])
 @pytest.mark.parametrize("EXTRAPOLATE", [False])
 @pytest.mark.parametrize("CROP", [False, True])
+@pytest.mark.parametrize("use_mmap", [False, True])
 @pytest.mark.skip(reason='Need to validate over grounded point')
 # PURPOSE: Tests that interpolated results are comparable to OTPS2 program
-def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP):
+def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP, use_mmap):
     # model parameters for TPXO8-atlas
     m = pyTMD.io.model(directory,compressed=False).elevation('TPXO8-atlas')
     # constituents for test
@@ -190,7 +191,8 @@ def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP):
     amp,ph,c = m.extract_constants(
         val['longitude'], val['latitude'],
         constituents=constituents,
-        method=METHOD, extrapolate=EXTRAPOLATE)
+        method=METHOD, extrapolate=EXTRAPOLATE,
+        CROP=CROP, use_mmap=use_mmap)
     # delta time
     deltat = np.zeros_like(val['time'])
     # calculate complex phase in radians for Euler's
