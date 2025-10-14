@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 OTIS.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (10/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from OTIS tide models for
@@ -60,6 +60,8 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 10/2025: refactored binary read programs
+        added option to use memory mapping for reading large files
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
     Updated 05/2025: added option to select constituents to read from model
@@ -215,6 +217,8 @@ def extract_constants(
             - ``'ATLAS'``: reading a global solution with localized solutions
             - ``'OTIS'``: combined global or local solution
             - ``'TMD3'``: combined global or local netCDF4 solution
+    use_mmap: bool, default False
+        Use memory mapping to read binary OTIS or ATLAS files
     constituents: list or None, default None
         Specify constituents to read from model
     crop: bool, default False
@@ -252,6 +256,7 @@ def extract_constants(
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('grid', 'OTIS')
+    kwargs.setdefault('use_mmap', False)
     kwargs.setdefault('constituents', None)
     kwargs.setdefault('crop', False)
     kwargs.setdefault('bounds', None)
@@ -278,15 +283,19 @@ def extract_constants(
     # read the OTIS-format tide grid file
     if (kwargs['grid'] == 'ATLAS'):
         # if reading a global solution with localized solutions
-        x0,y0,hz0,mz0,iob,dt,pmask,local = read_atlas_grid(grid_file)
-        xi,yi,hz = combine_atlas_model(x0,y0,hz0,pmask,local,variable='depth')
-        mz = create_atlas_mask(x0,y0,mz0,local,variable='depth')
+        x0,y0,hz0,mz0,iob,dt,pmask,local = read_atlas_grid(
+            grid_file, use_mmap=kwargs['use_mmap'])
+        xi,yi,hz = combine_atlas_model(x0,y0,hz0,pmask,local,
+            variable='depth')
+        mz = create_atlas_mask(x0,y0,mz0,local,
+            variable='depth')
     elif (kwargs['grid'] == 'TMD3'):
         # if reading a single TMD3 netCDF4 solution
         xi,yi,hz,mz,sf = read_netcdf_grid(grid_file)
     else:
         # if reading a single OTIS solution
-        xi,yi,hz,mz,iob,dt = read_otis_grid(grid_file)
+        xi,yi,hz,mz,iob,dt = read_otis_grid(grid_file,
+            use_mmap=kwargs['use_mmap'])
     # invert tide mask to be True for invalid points
     mz = np.logical_not(mz).astype(mz.dtype)
 
@@ -407,7 +416,8 @@ def extract_constants(
         cons = [read_constituents(m)[0].pop() for m in model_file]
         nc = len(cons)
     else:
-        cons,nc = read_constituents(model_file, grid=kwargs['grid'])
+        cons,nc = read_constituents(model_file,
+            grid=kwargs['grid'], use_mmap=kwargs['use_mmap'])
     # reduce number of constituents
     if kwargs['constituents'] is not None:
         # verify that constituents is a list
@@ -436,7 +446,8 @@ def extract_constants(
         if (kwargs['type'] == 'z'):
             # read z constituent from elevation file
             if (kwargs['grid'] == 'ATLAS'):
-                z0,zlocal = read_atlas_elevation(model_file, i, c)
+                z0,zlocal = read_atlas_elevation(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, z0, pmask, zlocal,
                     variable='z')
             elif (kwargs['grid'] == 'TMD3'):
@@ -445,33 +456,41 @@ def extract_constants(
                 if kwargs['apply_flexure']:
                     hc *= sf
             elif isinstance(model_file,list):
-                hc = read_otis_elevation(model_file[i], 0)
+                hc = read_otis_elevation(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                hc = read_otis_elevation(model_file, i)
+                hc = read_otis_elevation(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
         elif kwargs['type'] in ('U','u'):
             # read u constituent from transport file
             if (kwargs['grid'] == 'ATLAS'):
-                u0,v0,uvlocal = read_atlas_transport(model_file, i, c)
+                u0,v0,uvlocal = read_atlas_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, u0, pmask, uvlocal,
                     variable='u')
             elif (kwargs['grid'] == 'TMD3'):
                 hc = read_netcdf_file(model_file, i, variable='u')
             elif isinstance(model_file,list):
-                hc,v = read_otis_transport(model_file[i], 0)
+                hc,v = read_otis_transport(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                hc,v = read_otis_transport(model_file, i)
+                hc,v = read_otis_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
         elif kwargs['type'] in ('V','v'):
             # read v constituent from transport file
             if (kwargs['grid'] == 'ATLAS'):
-                u0,v0,uvlocal = read_atlas_transport(model_file, i, c)
+                u0,v0,uvlocal = read_atlas_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, v0, pmask, uvlocal,
                     variable='v')
             elif (kwargs['grid'] == 'TMD3'):
                 hc = read_netcdf_file(model_file, i, variable='v')
             elif isinstance(model_file,list):
-                u,hc = read_otis_transport(model_file[i], 0)
+                u,hc = read_otis_transport(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                u,hc = read_otis_transport(model_file, i)
+                u,hc = read_otis_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
 
         # crop tide model data to (buffered) bounds
         if kwargs['crop'] and np.any(bounds):
@@ -578,6 +597,8 @@ def read_constants(
             - ``'ATLAS'``: reading a global solution with localized solutions
             - ``'OTIS'``: combined global or local solution
             - ``'TMD3'``: combined global or local netCDF4 solution
+    use_mmap: bool, default False
+        Use memory mapping to read binary OTIS or ATLAS files
     constituents: list or None, default None
         Specify constituents to read from model
     gap_fill: bool, default False
@@ -599,6 +620,7 @@ def read_constants(
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('grid', 'OTIS')
+    kwargs.setdefault('use_mmap', False)
     kwargs.setdefault('constituents', None)
     kwargs.setdefault('gap_fill', False)
     kwargs.setdefault('crop', False)
@@ -614,8 +636,10 @@ def read_constants(
     # read the OTIS-format tide grid file
     if (kwargs['grid'] == 'ATLAS'):
         # if reading a global solution with localized solutions
-        x0,y0,hz0,mz0,iob,dt,pmask,local = read_atlas_grid(grid_file)
-        xi,yi,hz = combine_atlas_model(x0,y0,hz0,pmask,local,variable='depth')
+        x0,y0,hz0,mz0,iob,dt,pmask,local = read_atlas_grid(
+            grid_file, use_mmap=kwargs['use_mmap'])
+        xi,yi,hz = combine_atlas_model(x0,y0,hz0,pmask,local,
+            variable='depth')
         mz = create_atlas_mask(x0,y0,mz0,local,variable='depth')
     elif (kwargs['grid'] == 'TMD3'):
         # if reading a single TMD3 netCDF4 solution
@@ -701,7 +725,8 @@ def read_constants(
         cons = [read_constituents(m)[0].pop() for m in model_file]
         nc = len(cons)
     else:
-        cons,nc = read_constituents(model_file, grid=kwargs['grid'])
+        cons,nc = read_constituents(model_file,
+            grid=kwargs['grid'], use_mmap=kwargs['use_mmap'])
     # reduce number of constituents
     if kwargs['constituents'] is not None:
         # verify that constituents is a list
@@ -727,7 +752,8 @@ def read_constants(
         if (kwargs['type'] == 'z'):
             # read constituent from elevation file
             if (kwargs['grid'] == 'ATLAS'):
-                z0,zlocal = read_atlas_elevation(model_file, i, c)
+                z0,zlocal = read_atlas_elevation(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, z0, pmask, zlocal,
                     variable='z')
             elif (kwargs['grid'] == 'TMD3'):
@@ -736,33 +762,41 @@ def read_constants(
                 if kwargs['apply_flexure']:
                     hc *= sf
             elif isinstance(model_file,list):
-                hc = read_otis_elevation(model_file[i], 0)
+                hc = read_otis_elevation(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                hc = read_otis_elevation(model_file, i)
+                hc = read_otis_elevation(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
         elif kwargs['type'] in ('U','u'):
             # read constituent from transport file
             if (kwargs['grid'] == 'ATLAS'):
-                u0,v0,uvlocal = read_atlas_transport(model_file, i, c)
+                u0,v0,uvlocal = read_atlas_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, u0, pmask, uvlocal,
                     variable='u')
             elif (kwargs['grid'] == 'TMD3'):
                 hc = read_netcdf_file(model_file, i, variable='u')
             elif isinstance(model_file,list):
-                hc,v = read_otis_transport(model_file[i], 0)
+                hc,v = read_otis_transport(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                hc,v = read_otis_transport(model_file, i)
+                hc,v = read_otis_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
         elif kwargs['type'] in ('V','v'):
             # read constituent from transport file
             if (kwargs['grid'] == 'ATLAS'):
-                u0,v0,uvlocal = read_atlas_transport(model_file, i, c)
+                u0,v0,uvlocal = read_atlas_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
                 _,_,hc = combine_atlas_model(x0, y0, v0, pmask, uvlocal,
                     variable='v')
             elif (kwargs['grid'] == 'TMD3'):
                 hc = read_netcdf_file(model_file, i, variable='v')
             elif isinstance(model_file,list):
-                u,hc = read_otis_transport(model_file[i], 0)
+                u,hc = read_otis_transport(model_file[i], 0,
+                    use_mmap=kwargs['use_mmap'])
             else:
-                u,hc = read_otis_transport(model_file, i)
+                u,hc = read_otis_transport(model_file, i,
+                    use_mmap=kwargs['use_mmap'])
 
         # crop tide model data to (buffered) bounds
         if kwargs['crop'] and np.any(kwargs['bounds']):
@@ -961,15 +995,77 @@ def interpolate_constants(
     # return the interpolated values
     return (amplitude, phase, D)
 
-# PURPOSE: read tide grid file
-def read_otis_grid(input_file: str | pathlib.Path):
+# PURPOSE: read a variable from a raw binary file
+# with the option to use memory-mapping
+def read_raw_binary(
+        input_file: str | pathlib.Path,
+        dtype: np.dtype | str,
+        shape: tuple,
+        use_mmap: bool = False,
+        offset: int = 0,
+        order: str = 'C',
+    ):
     """
-    Read grid file to extract model coordinates, bathymetry, masks and indices
+    Read a variable from a raw binary file
+
+    Parameters
+    ----------
+    input_file: str or pathlib.Path
+        path to input file
+    dtype: numpy.dtype or str
+        variable data type
+    shape: tuple
+        shape of the data
+    use_mmap: bool, default False
+        create a memory-map of the variable 
+    offset: int, default 0
+        offset to apply on read
+    order: str, default 'C'
+        memory layout of array
+
+    Returns
+    -------
+    var: numpy.ndarray
+        data variable
+    """
+    # open the file and read the variable
+    with open(input_file, mode='rb') as fid:
+        if use_mmap:
+            # use memory-mapping
+            var = np.memmap(fid,
+                dtype=np.dtype(dtype),
+                mode='r',
+                offset=offset,
+                shape=shape,
+                order=order
+            )
+        else:
+            # read variable directly
+            count = np.prod(shape)
+            var = np.fromfile(fid,
+                dtype=np.dtype(dtype),
+                offset=offset,
+                count=count
+            )
+            var = var.reshape(shape)
+    # verify data shape
+    var.shape = shape
+    return var
+
+# PURPOSE: read tide grid file
+def read_otis_grid(
+        input_file: str | pathlib.Path,
+        use_mmap: bool = False
+    ):
+    """
+    Read file for model parameters, bathymetry and land-sea mask
 
     Parameters
     ----------
     input_file: str or pathlib.Path
         input grid file
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -980,61 +1076,121 @@ def read_otis_grid(input_file: str | pathlib.Path):
     hz: np.ndarray
         model bathymetry
     mz: np.ndarray
-        land/water mask
+        land-sea mask
     iob: np.ndarray
         open boundary index
     dt: np.ndarray
         time step
+    use_mmap: bool, default False
+        create a memory-map of each variable
     """
-    # open the input file
-    input_file = pathlib.Path(input_file).expanduser()
-    fid = input_file.open(mode='rb')
-    fid.seek(4,0)
+    # verify the input file
+    input_file = pathlib.Path(input_file).expanduser().absolute()
+    # set initial offset (skip 4 bytes)
+    offset = 4
     # read data as big endian
-    # get model dimensions and limits
-    nx, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    ny, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    # extract x and y limits (these could be latitude and longitude)
-    ylim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    xlim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    dt, = np.fromfile(fid, dtype=np.dtype('>f4'), count=1)
+    # get model dimensions   
+    nx, ny = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # extract x and y limits (could be latitude and longitude)
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # read dt from file
+    dt, = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(1,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4
     # convert longitudinal limits (if x == longitude)
     if (xlim[0] < 0) & (xlim[1] < 0) & (dt > 0):
         xlim += 360.0
-    # create x and y arrays arrays (these could be lon and lat values)
+    # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    x = np.linspace(xlim[0]+dx/2.0, xlim[1]-dx/2.0, nx)
-    y = np.linspace(ylim[0]+dy/2.0, ylim[1]-dy/2.0, ny)
-    # read nob and iob from file
-    nob, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read nob from file
+    nob, = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(1,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4
+    # skip 8 bytes
+    offset += 8
+    # read iob from file
     if (nob == 0):
-        fid.seek(20,1)
         iob = []
     else:
-        fid.seek(8,1)
-        iob=np.fromfile(fid, dtype=np.dtype('>i4'), count=2*nob).reshape(nob, 2)
-        fid.seek(8,1)
+        iob = read_raw_binary(input_file,
+            dtype='>i4',
+            shape=(nob, 2),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        offset += 2*4*nob
+    # skip 8 bytes
+    offset += 8
     # read hz matrix
-    hz = np.fromfile(fid, dtype=np.dtype('>f4'), count=nx*ny).reshape(ny, nx)
-    fid.seek(8,1)
+    hz = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*nx*ny
+    # skip 8 bytes
+    offset += 8
     # read mz matrix
-    mz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nx*ny).reshape(ny, nx)
-    # close the file
-    fid.close()
+    mz = read_raw_binary(input_file,
+        dtype='>i4',
+        shape=(ny, nx),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*nx*ny
     # return values
     return (x, y, hz, mz, iob, dt)
 
 # PURPOSE: read tide grid file with localized solutions
-def read_atlas_grid(input_file: str | pathlib.Path):
+def read_atlas_grid(
+        input_file: str | pathlib.Path,
+        use_mmap: bool = False
+    ):
     """
-    Read ATLAS grid file to extract model coordinates, bathymetry, masks and
-    indices for both global and local solutions
-
+    Read file for model parameters, bathymetries and land-sea masks
+    for both global and local solutions
+    
     Parameters
     ----------
     input_file: str or pathlib.Path
         input ATLAS grid file
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1045,7 +1201,7 @@ def read_atlas_grid(input_file: str | pathlib.Path):
     hz: np.ndarray
         model bathymetry
     mz: np.ndarray
-        land/water mask
+        land-sea mask
     iob: np.ndarray
         open boundary index
     dt: float
@@ -1061,69 +1217,181 @@ def read_atlas_grid(input_file: str | pathlib.Path):
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
     file_info = input_file.stat()
-    fid = input_file.open(mode='rb')
-    fid.seek(4,0)
+    # set initial offset (skip 4 bytes)
+    offset = 4
     # read data as big endian
-    # get model dimensions and limits
-    nx, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    ny, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    # extract latitude and longitude limits
-    lats = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    lons = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    dt, = np.fromfile(fid, dtype=np.dtype('>f4'), count=1)
-    # create lon and lat arrays
-    dlon = (lons[1] - lons[0])/nx
-    dlat = (lats[1] - lats[0])/ny
-    x = np.linspace(lons[0]+dlon/2.0,lons[1]-dlon/2.0,nx)
-    y = np.linspace(lats[0]+dlat/2.0,lats[1]-dlat/2.0,ny)
-    # read nob and iob from file
-    nob, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
+    # get model dimensions   
+    nx, ny = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # extract x and y limits (could be latitude and longitude)
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # read dt from file
+    dt, = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(1,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4
+    # x and y coordinate spacing
+    dx = (xlim[1] - xlim[0])/nx
+    dy = (ylim[1] - ylim[0])/ny
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read nob from file
+    nob, = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(1,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4
+    # skip 8 bytes
+    offset += 8
+    # read iob from file
     if (nob == 0):
-        fid.seek(20,1)
         iob = []
     else:
-        fid.seek(8,1)
-        iob=np.fromfile(fid, dtype=np.dtype('>i4'), count=2*nob).reshape(nob, 2)
-        fid.seek(8,1)
+        iob = read_raw_binary(input_file,
+            dtype='>i4',
+            shape=(nob, 2),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        offset += 2*4*nob
+    # skip 8 bytes
+    offset += 8
     # read hz matrix
-    hz = np.fromfile(fid, dtype=np.dtype('>f4'), count=nx*ny).reshape(ny, nx)
-    fid.seek(8,1)
+    hz = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*nx*ny
+    # skip 8 bytes
+    offset += 8
     # read mz matrix
-    mz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nx*ny).reshape(ny, nx)
-    fid.seek(8,1)
+    mz = read_raw_binary(input_file,
+        dtype='>i4',
+        shape=(ny, nx),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*nx*ny
+    # skip 8 bytes
+    offset += 8
     # read pmask matrix
-    pmask = np.fromfile(fid, dtype=np.dtype('>i4'), count=nx*ny).reshape(ny, nx)
-    fid.seek(4,1)
+    pmask = read_raw_binary(input_file,
+        dtype='>i4',
+        shape=(ny, nx),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*nx*ny
+    # skip 8 bytes
+    offset += 8
     # read local models
     nmod = 0
     local = {}
     # while the file position is not at the end of file
-    while (fid.tell() < file_info.st_size):
+    while (offset < file_info.st_size):
         # add 1 to number of models
-        fid.seek(4,1)
         nmod += 1
-        # get local model dimensions and limits
-        nx1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        ny1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nd, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        # extract latitude and longitude limits of local model
-        lt1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-        ln1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+        # get local model dimensions
+        # and number of valid depth indices
+        NX, NY, ND = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(3,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 3*4
+        # extract local x and y limits
+        YLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
+        XLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
         # extract name
-        name = fid.read(20).strip()
-        fid.seek(8,1)
-        iz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nd)
-        jz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nd)
-        fid.seek(8,1)
-        depth = np.ma.zeros((ny1,nx1))
-        depth.mask = np.ones((ny1,nx1), dtype=bool)
-        depth.data[jz-1,iz-1] = np.fromfile(fid, dtype=np.dtype('>f4'), count=nd)
-        depth.mask[jz-1,iz-1] = False
-        fid.seek(4,1)
+        temp = read_raw_binary(input_file,
+            dtype='|S4',
+            shape=(5, ),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        name = b''.join(temp).decode("utf8").strip()
+        offset += 5*4
+        # skip 8 bytes
+        offset += 8
+        # extract local valid indices
+        indx = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(ND,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 4*ND
+        indy = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(ND,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 4*ND
+        # skip 8 bytes
+        offset += 8
+        # extract depth for valid points
+        temp = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(ND, ),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        offset += 4*ND
+        # create local depth
+        depth = np.ma.zeros((NY,NX))
+        depth.mask = np.ones((NY,NX), dtype=bool)
+        depth.data[indy-1,indx-1] = temp[:]
+        depth.mask[indy-1,indx-1] = False
+        # skip 8 bytes
+        offset += 8
         # save to dictionary
-        local[name] = dict(lon=ln1, lat=lt1, depth=depth)
-    # close the file
-    fid.close()
+        local[name] = dict(lon=XLIM, lat=YLIM, depth=depth)
     # return values
     return (x, y, hz, mz, iob, dt, pmask, local)
 
@@ -1147,7 +1415,7 @@ def read_netcdf_grid(input_file: str | pathlib.Path):
     hz: np.ndarray
         model bathymetry
     mz: np.ndarray
-        land/water mask
+        land-sea mask
     sf: np.ndarray
         scaling factor for applying ice flexure
     """
@@ -1175,7 +1443,8 @@ def read_netcdf_grid(input_file: str | pathlib.Path):
 # PURPOSE: read list of constituents from an elevation or transport file
 def read_constituents(
         input_file: str | pathlib.Path,
-        grid: str = 'OTIS'
+        grid: str = 'OTIS',
+        use_mmap: bool = False
     ):
     """
     Read the list of constituents from an elevation or transport file
@@ -1190,6 +1459,8 @@ def read_constituents(
             - ``'ATLAS'``: reading a global solution with localized solutions
             - ``'OTIS'``: combined global or local solution
             - ``'TMD3'``: combined global or local netCDF4 solution
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1211,23 +1482,37 @@ def read_constituents(
         nc = len(constituents)
         fid.close()
     else:
-        # open the file
-        fid = input_file.open(mode='rb')
-        ll, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nx,ny,nc = np.fromfile(fid, dtype=np.dtype('>i4'), count=3)
-        fid.seek(16,1)
-        constituents = [c.decode("utf8").rstrip() for c in fid.read(nc*4).split()]
-        fid.close()
+        # set initial offset (skip 12 bytes)
+        offset = 3*4
+        # read number of constituents
+        nc, = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(1,),
+            use_mmap=False,
+            offset=offset
+        )
+        offset += 5*4
+        # read constituents from file
+        temp = read_raw_binary(input_file,
+            dtype='|S4',
+            shape=(nc, ),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        # decode constituents
+        constituents = [c.decode("utf8").rstrip() for c in temp]
+    # return the constituents
     return (constituents, nc)
 
-# PURPOSE: read elevation file to extract real and imaginary components for
-# constituent
+# PURPOSE: read OTIS elevation file
 def read_otis_elevation(
         input_file: str | pathlib.Path,
-        ic: int
+        ic: int,
+        use_mmap: bool = False
     ):
     """
-    Read elevation file to extract real and imaginary components for constituent
+    Read file for tidal constituent elevations
 
     Parameters
     ----------
@@ -1235,6 +1520,8 @@ def read_otis_elevation(
         input elevation file
     ic: int
         index of constituent
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1242,29 +1529,64 @@ def read_otis_elevation(
         tidal elevation
     """
     # open the input file
-    input_file = pathlib.Path(input_file).expanduser()
-    fid = input_file.open(mode='rb')
-    ll, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    nx,ny,nc = np.fromfile(fid, dtype=np.dtype('>i4'), count=3)
-    # extract x and y limits
-    ylim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    xlim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+    input_file = pathlib.Path(input_file).expanduser().absolute()
+    # set initial offset
+    offset = 0
+    # read data as big endian
+    ll,nx,ny,nc = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(4,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4*4
+    # offset for x and y limits
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # x and y coordinate spacing
+    dx = (xlim[1] - xlim[0])/nx
+    dy = (ylim[1] - ylim[0])/ny
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read constituents from file
+    temp = read_raw_binary(input_file,
+        dtype='|S4',
+        shape=(nc, ),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    constituent = temp[ic].decode("utf8").rstrip()
     # skip records to constituent
-    nskip = ic*(int(nx)*int(ny)*8 + 8) + 8 + int(ll) - 28
-    fid.seek(nskip,1)
+    offset += ic*(int(nx)*int(ny)*8 + 8) + 8 + int(ll) - 28
+    # read elevations for constituent
+    temp = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx, 2),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*2*nx*ny
     # real and imaginary components of elevation
-    h = np.ma.zeros((ny, nx), dtype=np.complex64)
-    h.mask = np.zeros((ny, nx), dtype=bool)
-    for i in range(ny):
-        temp = np.fromfile(fid, dtype=np.dtype('>f4'), count=2*nx)
-        h.data.real[i,:] = temp[0:2*nx-1:2]
-        h.data.imag[i,:] = temp[1:2*nx:2]
+    h = np.ma.array(temp[:,:,0] + 1j*temp[:,:,1])
     # update mask for nan values
-    h.mask[np.isnan(h.data)] = True
+    h.mask = np.isnan(h.data) | (np.abs(h.data) == 0)
     # replace masked values with fill value
     h.data[h.mask] = h.fill_value
-    # close the file
-    fid.close()
     # return the elevation
     return h
 
@@ -1273,7 +1595,7 @@ def read_otis_elevation(
 def read_atlas_elevation(
         input_file: str | pathlib.Path,
         ic: int,
-        constituent: str
+        use_mmap: bool = False
     ):
     """
     Read elevation file with localized solutions to extract real and imaginary
@@ -1285,8 +1607,8 @@ def read_atlas_elevation(
         input ATLAS elevation file
     ic: int
         index of constituent
-    constituent: str
-        tidal constituent ID
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1301,83 +1623,170 @@ def read_atlas_elevation(
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
     file_info = input_file.stat()
-    fid = input_file.open(mode='rb')
-    ll, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    nx,ny,nc = np.fromfile(fid, dtype=np.dtype('>i4'), count=3)
-    # extract x and y limits
-    ylim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    xlim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+    # set initial offset
+    offset = 0
+    # read data as big endian
+    ll,nx,ny,nc = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(4,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4*4
+    # offset for x and y limits
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # x and y coordinate spacing
+    dx = (xlim[1] - xlim[0])/nx
+    dy = (ylim[1] - ylim[0])/ny
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read constituents from file
+    temp = read_raw_binary(input_file,
+        dtype='|S4',
+        shape=(nc, ),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    constituent = temp[ic].decode("utf8").rstrip()
     # skip records to constituent
-    nskip = 8 + int(nc)*4 + int(ic)*(int(nx)*int(ny)*8 + 8)
-    fid.seek(nskip,1)
+    offset += 8 + int(nc)*4 + int(ic)*(int(nx)*int(ny)*8 + 8)
+    # read elevations for constituent
+    temp = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx, 2),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*2*nx*ny
     # real and imaginary components of elevation
-    h = np.ma.zeros((ny, nx), dtype=np.complex64)
+    h = np.ma.array(temp[:,:,0] + 1j*temp[:,:,1])
     h.mask = np.zeros((ny, nx), dtype=bool)
-    for i in range(ny):
-        temp = np.fromfile(fid, dtype=np.dtype('>f4'), count=2*nx)
-        h.data.real[i,:] = temp[0:2*nx-1:2]
-        h.data.imag[i,:] = temp[1:2*nx:2]
     # skip records after constituent
-    nskip = (int(nc) - int(ic) - 1)*(int(nx)*int(ny)*8 + 8) + 4
-    fid.seek(nskip,1)
+    offset += (int(nc) - int(ic) - 1)*(int(nx)*int(ny)*8 + 8) + 4
     # read local models to find constituent
     nmod = 0
     local = {}
     # while the file position is not at the end of file
-    while (fid.tell() < file_info.st_size):
+    while (offset < file_info.st_size):
         # add 1 to number of models
-        fid.seek(4,1)
+        offset += 4
         nmod += 1
-        # get local model dimensions and limits
-        nx1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        ny1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nc1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nz, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        # extract latitude and longitude limits of local model
-        lt1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-        ln1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+        # get local model dimensions, number of constituents
+        # and number of valid elevation indices
+        NX, NY, NC, NZ = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(4,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 4*4
+        # extract local x and y limits
+        YLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
+        XLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
         # extract constituents for localized solution
-        cons = fid.read(nc1*4).strip().decode("utf8").split()
+        temp = read_raw_binary(input_file,
+            dtype='|S4',
+            shape=(NC, ),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        CONSTITUENT = [c.decode("utf8").rstrip() for c in temp]
+        offset += NC*4
         # check if constituent is in list of localized solutions
-        if (constituent in cons):
-            ic1, = [i for i,c in enumerate(cons) if (c == constituent)]
+        if (constituent in CONSTITUENT):
+            IC = CONSTITUENT.index(constituent)
             # extract name
-            name = fid.read(20).strip()
-            fid.seek(8,1)
-            iz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nz)
-            jz = np.fromfile(fid, dtype=np.dtype('>i4'), count=nz)
+            temp = read_raw_binary(input_file,
+                dtype='|S4',
+                shape=(5, ),
+                use_mmap=use_mmap,
+                offset=offset,
+                order='C'
+            )
+            name = b''.join(temp).decode("utf8").strip()
+            offset += 5*4
+            # skip 8 bytes
+            offset += 8
+            # extract local valid indices
+            indx = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NZ,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NZ
+            indy = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NZ,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NZ
             # skip records to constituent
-            nskip = 8 + int(ic1)*(8*int(nz) + 8)
-            fid.seek(nskip,1)
+            offset += 8 + int(IC)*(8*int(NZ) + 8)
+            # read elevation for constituent
+            temp = read_raw_binary(input_file,
+                dtype='>f4',
+                shape=(NZ, 2),
+                use_mmap=use_mmap,
+                offset=offset,
+                order='C'
+            )
+            offset += 4*2*NZ
+            # create local elevation
+            Z = np.ma.zeros((NY, NX), dtype=np.complex64)
+            Z.mask = np.ones((NY, NX), dtype=bool)
             # real and imaginary components of elevation
-            h1 = np.ma.zeros((ny1,nx1), fill_value=np.nan, dtype=np.complex64)
-            h1.mask = np.ones((ny1,nx1), dtype=bool)
-            temp = np.fromfile(fid, dtype=np.dtype('>f4'), count=2*nz)
-            h1.data.real[jz-1,iz-1] = temp[0:2*nz-1:2]
-            h1.data.imag[jz-1,iz-1] = temp[1:2*nz:2]
-            h1.mask[jz-1,iz-1] = False
+            Z.data.real[indy-1,indx-1] = temp[:,0]
+            Z.data.imag[indy-1,indx-1] = temp[:,1]
+            Z.mask[indy-1,indx-1] = False
             # save constituent to dictionary
-            local[name] = dict(lon=ln1,lat=lt1,z=h1)
+            local[name] = dict(lon=XLIM, lat=YLIM, z=Z)
             # skip records after constituent
-            nskip = (int(nc1) - int(ic1) - 1)*(8*int(nz) + 8) + 4
-            fid.seek(nskip,1)
+            offset += (int(NC) - int(IC) - 1)*(8*int(NZ) + 8) + 4
         else:
             # skip records for local model if constituent not in list
-            nskip = 40 + 16*int(nz) + (int(nc1) - 1)*(8*int(nz) + 8)
-            fid.seek(nskip,1)
-    # close the file
-    fid.close()
+            offset += 40 + 16*int(NZ) + (int(NC) - 1)*(8*int(NZ) + 8)
     # return the elevation
     return (h, local)
 
-# PURPOSE: read transport file to extract real and imaginary components for
-# constituent
+# PURPOSE: read OTIS transport file
 def read_otis_transport(
         input_file: str | pathlib.Path,
-        ic: int
+        ic: int,
+        use_mmap: bool = False
     ):
     """
-    Read transport file to extract real and imaginary components for constituent
+    Read file for tidal constituent transports
 
     Parameters
     ----------
@@ -1385,6 +1794,8 @@ def read_otis_transport(
         input transport file
     ic: int
         index of constituent
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1395,34 +1806,65 @@ def read_otis_transport(
     """
     # open the input file
     input_file = pathlib.Path(input_file).expanduser()
-    fid = input_file.open(mode='rb')
-    ll, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    nx,ny,nc = np.fromfile(fid, dtype=np.dtype('>i4'), count=3)
-    # extract x and y limits
-    ylim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    xlim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+    # set initial offset
+    offset = 0
+    # read data as big endian
+    ll,nx,ny,nc = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(4,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4*4
+    # offset for x and y limits
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # x and y coordinate spacing
+    dx = (xlim[1] - xlim[0])/nx
+    dy = (ylim[1] - ylim[0])/ny
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read constituents from file
+    temp = read_raw_binary(input_file,
+        dtype='|S4',
+        shape=(nc, ),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    constituent = temp[ic].decode("utf8").rstrip()
     # skip records to constituent
-    nskip = ic*(int(nx)*int(ny)*16 + 8) + 8 + int(ll) - 28
-    fid.seek(nskip,1)
+    offset += ic*(int(nx)*int(ny)*16 + 8) + 8 + int(ll) - 28
+    # read transports for constituent
+    temp = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx, 4),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
     # real and imaginary components of transport
-    u = np.ma.zeros((ny, nx), dtype=np.complex64)
-    u.mask = np.zeros((ny, nx), dtype=bool)
-    v = np.ma.zeros((ny, nx), dtype=np.complex64)
-    v.mask = np.zeros((ny, nx), dtype=bool)
-    for i in range(ny):
-        temp = np.fromfile(fid, dtype=np.dtype('>f4'), count=4*nx)
-        u.data.real[i,:] = temp[0:4*nx-3:4]
-        u.data.imag[i,:] = temp[1:4*nx-2:4]
-        v.data.real[i,:] = temp[2:4*nx-1:4]
-        v.data.imag[i,:] = temp[3:4*nx:4]
+    u = np.ma.array(temp[:,:,0] + 1j*temp[:,:,1])
+    v = np.ma.array(temp[:,:,2] + 1j*temp[:,:,3])
     # update mask for nan values
-    u.mask[np.isnan(u.data)] = True
-    v.mask[np.isnan(v.data)] = True
+    u.mask = np.isnan(u.data) | (np.abs(u.data) == 0)
+    v.mask = np.isnan(v.data) | (np.abs(v.data) == 0)
     # replace masked values with fill value
     u.data[u.mask] = u.fill_value
     v.data[v.mask] = v.fill_value
-    # close the file
-    fid.close()
     # return the transport components
     return (u, v)
 
@@ -1431,7 +1873,7 @@ def read_otis_transport(
 def read_atlas_transport(
         input_file: str | pathlib.Path,
         ic: int,
-        constituent: str
+        use_mmap: bool = False
     ):
     """
     Read transport file with localized solutions to extract real and imaginary
@@ -1443,8 +1885,8 @@ def read_atlas_transport(
         input ATLAS transport file
     ic: int
         index of constituent
-    constituent: str
-        tidal constituent ID
+    use_mmap: bool, default False
+        use memory mapping to read data
 
     Returns
     -------
@@ -1463,89 +1905,198 @@ def read_atlas_transport(
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
     file_info = input_file.stat()
-    fid = input_file.open(mode='rb')
-    ll, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-    nx,ny,nc = np.fromfile(fid, dtype=np.dtype('>i4'), count=3)
-    # extract x and y limits
-    ylim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-    xlim = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+    # open the input file and get file information
+    input_file = pathlib.Path(input_file).expanduser()
+    file_info = input_file.stat()
+    # set initial offset
+    offset = 0
+    # read data as big endian
+    ll,nx,ny,nc = read_raw_binary(input_file,
+        dtype=np.dtype('>i4'),
+        shape=(4,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 4*4
+    # offset for x and y limits
+    ylim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    xlim = read_raw_binary(input_file,
+        dtype=np.dtype('>f4'),
+        shape=(2,),
+        use_mmap=use_mmap,
+        offset=offset
+    )
+    offset += 2*4
+    # x and y coordinate spacing
+    dx = (xlim[1] - xlim[0])/nx
+    dy = (ylim[1] - ylim[0])/ny
+    # create x and y arrays arrays (these could be lon and lat values)
+    x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
+    y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
+    # read constituents from file
+    temp = read_raw_binary(input_file,
+        dtype='|S4',
+        shape=(nc, ),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    constituent = temp[ic].decode("utf8").rstrip()
     # skip records to constituent
-    nskip = 8 + int(nc)*4 + ic*(int(nx)*int(ny)*16 + 8)
-    fid.seek(nskip,1)
+    offset += 8 + int(nc)*4 + int(ic)*(int(nx)*int(ny)*16 + 8)
+    # read transports for constituent
+    temp = read_raw_binary(input_file,
+        dtype='>f4',
+        shape=(ny, nx, 4),
+        use_mmap=use_mmap,
+        offset=offset,
+        order='C'
+    )
+    offset += 4*4*nx*ny
     # real and imaginary components of transport
-    u = np.ma.zeros((ny, nx), dtype=np.complex64)
-    u.mask = np.zeros((ny, nx), dtype=bool)
-    v = np.ma.zeros((ny, nx), dtype=np.complex64)
-    v.mask = np.zeros((ny, nx), dtype=bool)
-    for i in range(ny):
-        temp = np.fromfile(fid, dtype=np.dtype('>f4'), count=4*nx)
-        u.data.real[i,:] = temp[0:4*nx-3:4]
-        u.data.imag[i,:] = temp[1:4*nx-2:4]
-        v.data.real[i,:] = temp[2:4*nx-1:4]
-        v.data.imag[i,:] = temp[3:4*nx:4]
+    u = np.ma.array(temp[:,:,0] + 1j*temp[:,:,1])
+    v = np.ma.array(temp[:,:,2] + 1j*temp[:,:,3])
     # skip records after constituent
-    nskip = (int(nc) - int(ic) - 1)*(int(nx)*int(ny)*16 + 8) + 4
-    fid.seek(nskip,1)
+    offset += (int(nc) - int(ic) - 1)*(int(nx)*int(ny)*16 + 8) + 4
     # read local models to find constituent
     nmod = 0
     local = {}
     # while the file position is not at the end of file
-    while (fid.tell() < file_info.st_size):
+    while (offset < file_info.st_size):
         # add 1 to number of models
-        fid.seek(4,1)
+        offset += 4
         nmod += 1
-        # get local model dimensions and limits
-        nx1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        ny1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nc1, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nu, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        nv, = np.fromfile(fid, dtype=np.dtype('>i4'), count=1)
-        # extract latitude and longitude limits of local model
-        lt1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
-        ln1 = np.fromfile(fid, dtype=np.dtype('>f4'), count=2)
+        # get local model dimensions, number of constituents
+        # and number of valid elevation indices
+        NX, NY, NC, NU, NV = read_raw_binary(input_file,
+            dtype=np.dtype('>i4'),
+            shape=(5,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 5*4
+        # extract local x and y limits
+        YLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
+        XLIM = read_raw_binary(input_file,
+            dtype=np.dtype('>f4'),
+            shape=(2,),
+            use_mmap=use_mmap,
+            offset=offset
+        )
+        offset += 2*4
         # extract constituents for localized solution
-        cons = fid.read(nc1*4).strip().decode("utf8").split()
+        temp = read_raw_binary(input_file,
+            dtype='|S4',
+            shape=(NC, ),
+            use_mmap=use_mmap,
+            offset=offset,
+            order='C'
+        )
+        CONSTITUENT = [c.decode("utf8").rstrip() for c in temp]
+        offset += NC*4
         # check if constituent is in list of localized solutions
-        if (constituent in cons):
-            ic1, = [i for i,c in enumerate(cons) if (c == constituent)]
+        if (constituent in CONSTITUENT):
+            IC = CONSTITUENT.index(constituent)
             # extract name
-            name = fid.read(20).strip()
-            fid.seek(8,1)
-            iu = np.fromfile(fid, dtype=np.dtype('>i4'), count=nu)
-            ju = np.fromfile(fid, dtype=np.dtype('>i4'), count=nu)
-            fid.seek(8,1)
-            iv = np.fromfile(fid, dtype=np.dtype('>i4'), count=nv)
-            jv = np.fromfile(fid, dtype=np.dtype('>i4'), count=nv)
+            temp = read_raw_binary(input_file,
+                dtype='|S4',
+                shape=(5, ),
+                use_mmap=use_mmap,
+                offset=offset,
+                order='C'
+            )
+            name = b''.join(temp).decode("utf8").strip()
+            offset += 5*4
+            # skip 8 bytes
+            offset += 8
+            # extract local valid indices for zonal transports
+            iux = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NU,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NU
+            iuy = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NU,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NU
+            # skip 8 bytes
+            offset += 8
+            # extract local valid indices for meridional transports
+            ivx = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NV,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NV
+            ivy = read_raw_binary(input_file,
+                dtype=np.dtype('>i4'),
+                shape=(NV,),
+                use_mmap=use_mmap,
+                offset=offset
+            )
+            offset += 4*NV
             # skip records to constituent
-            nskip = 8 + int(ic1)*(8*int(nu) + 8*int(nv) + 16)
-            fid.seek(nskip,1)
+            offset += 8 + int(IC)*(8*int(NU) + 8*int(NV) + 16)
+            # read zonal transport for constituent
+            temp = read_raw_binary(input_file,
+                dtype='>f4',
+                shape=(NU, 2),
+                use_mmap=use_mmap,
+                offset=offset,
+                order='C'
+            )
+            offset += 4*2*NU
+            # create local zonal transport
+            U = np.ma.zeros((NY, NX), dtype=np.complex64)
+            U.mask = np.ones((NY, NX), dtype=bool)
             # real and imaginary components of u transport
-            u1 = np.ma.zeros((ny1,nx1), fill_value=np.nan, dtype=np.complex64)
-            u1.mask = np.ones((ny1,nx1), dtype=bool)
-            tmpu = np.fromfile(fid, dtype=np.dtype('>f4'), count=2*nu)
-            u1.data.real[ju-1,iu-1] = tmpu[0:2*nu-1:2]
-            u1.data.imag[ju-1,iu-1] = tmpu[1:2*nu:2]
-            u1.mask[ju-1,iu-1] = False
-            fid.seek(8,1)
+            U.data.real[iuy-1,iux-1] = temp[:,0]
+            U.data.imag[iuy-1,iux-1] = temp[:,1]
+            U.mask[iuy-1,iux-1] = False
+            # skip 8 bytes
+            offset += 8
+            # read meridional transport for constituent
+            temp = read_raw_binary(input_file,
+                dtype='>f4',
+                shape=(NV, 2),
+                use_mmap=use_mmap,
+                offset=offset,
+                order='C'
+            )
+            offset += 4*2*NV
+            # create local meridional transport
+            V = np.ma.zeros((NY, NX), dtype=np.complex64)
+            V.mask = np.ones((NY, NX), dtype=bool)
             # real and imaginary components of v transport
-            v1 = np.ma.zeros((ny1,nx1), fill_value=np.nan, dtype=np.complex64)
-            v1.mask = np.ones((ny1,nx1), dtype=bool)
-            tmpv = np.fromfile(fid, dtype=np.dtype('>f4'), count=2*nv)
-            v1.data.real[jv-1,iv-1] = tmpv[0:2*nv-1:2]
-            v1.data.imag[jv-1,iv-1] = tmpv[1:2*nv:2]
-            v1.mask[jv-1,iv-1] = False
+            V.data.real[ivy-1,ivx-1] = temp[:,0]
+            V.data.imag[ivy-1,ivx-1] = temp[:,1]
+            V.mask[ivy-1,ivx-1] = False
             # save constituent to dictionary
-            local[name] = dict(lon=ln1,lat=lt1,u=u1,v=v1)
+            local[name] = dict(lon=XLIM, lat=YLIM, u=U, v=V)
             # skip records after constituent
-            nskip = (int(nc1) - int(ic1) - 1)*(8*int(nu) + 8*int(nv) + 16) + 4
-            fid.seek(nskip,1)
+            offset += (int(NC) - int(IC) - 1)*(8*int(NU) + 8*int(NV) + 16) + 4
         else:
             # skip records for local model if constituent not in list
-            nskip = 56 + 16*int(nu) + 16*int(nv) + \
-                (int(nc1) - 1)*(8*int(nu) + 8*int(nv) + 16)
-            fid.seek(nskip,1)
-    # close the file
-    fid.close()
+            offset += 56 + 16*int(NU) + 16*int(NV) 
+            offset += (int(NC) - 1)*(8*int(NU) + 8*int(NV) + 16)
     # return the transport components
     return (u, v, local)
 
@@ -1567,7 +2118,7 @@ def create_atlas_mask(
     yi: np.ndarray
         input y-coordinates of global tide model
     mz: np.ndarray
-        global land/water mask
+        global land-sea mask
     local: dict
         local tidal solutions
     variable: str or NoneType, default None
@@ -1585,7 +2136,7 @@ def create_atlas_mask(
     y30: np.ndarray
         y-coordinates of high-resolution tide model
     m30: np.ndarray
-        high-resolution land/water mask
+        high-resolution land-sea mask
     """
     # create 2 arc-minute grid dimensions
     d30 = 1.0/30.0
@@ -1821,7 +2372,7 @@ def output_otis_grid(
     hz: np.ndarray
         bathymetry
     mz: np.ndarray
-        land/water mask
+        land-sea mask
     iob: np.ndarray
         open boundary index
     dt: float

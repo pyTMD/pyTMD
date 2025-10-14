@@ -32,6 +32,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.io.OTIS.interpolate_constants
 
+.. autofunction:: pyTMD.io.OTIS.read_raw_binary
+
 .. autofunction:: pyTMD.io.OTIS.read_otis_grid
 
 .. autofunction:: pyTMD.io.OTIS.read_atlas_grid
