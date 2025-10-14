@@ -1047,7 +1047,7 @@ def read_raw_binary(
                 offset=offset,
                 count=count
             )
-            var = var.reshape(shape)
+            var = var.reshape(shape, order=order)
     # verify data shape
     var.shape = shape
     return var
