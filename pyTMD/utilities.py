@@ -7,9 +7,12 @@ Download and management utilities for syncing time and auxiliary files
 PYTHON DEPENDENCIES:
     lxml: processing XML and HTML in Python
         https://pypi.python.org/pypi/lxml
+    platformdirs: Python module for determining platform-specific directories
+        https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
     Updated 10/2025: allow additional keyword arguments to http functions
+        added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale
         add tilde compression for file paths (squash home directory)
     Updated 01/2025: added function to list a directory from the UHSLC
@@ -66,6 +69,7 @@ import importlib
 import posixpath
 import subprocess
 import lxml.etree
+import platformdirs
 import calendar, time
 import dateutil.parser
 if sys.version_info[0] == 2:
@@ -79,6 +83,7 @@ else:
 
 __all__ = [
     "get_data_path",
+    "get_cache_path",
     "import_dependency",
     "file_opener",
     "compressuser",
@@ -124,6 +129,31 @@ def get_data_path(relpath: list | str | pathlib.Path):
         return filepath.joinpath(*relpath)
     elif isinstance(relpath, (str, pathlib.Path)):
         return filepath.joinpath(relpath)
+
+# PURPOSE: get the path to the user cache directory
+def get_cache_path(
+        relpath: list | str | pathlib.Path | None = None,
+        appname='pytmd'
+    ):
+    """
+    Get the path to the user cache directory for an application
+
+    Parameters
+    ----------
+    relpath: list, str, pathlib.Path or None
+        relative path
+    appname: str, default 'pytmd'
+        application name
+    """
+    # get platform-specific cache directory
+    filepath = platformdirs.user_cache_path(appname=appname,
+        ensure_exists=True)
+    if isinstance(relpath, list):
+        # use *splat operator to extract from list
+        filepath = filepath.joinpath(*relpath)
+    elif isinstance(relpath, (str, pathlib.Path)):
+        filepath = filepath.joinpath(relpath)
+    return filepath
 
 def import_dependency(
         name: str,
@@ -985,7 +1015,7 @@ def from_jpl_ssd(
     # determine which kernel file to download
     if (local is None):
         # local path to kernel file
-        local = get_data_path(['data',kernel])
+        local = get_cache_path(kernel)
     elif (kernel is None) and (local is not None):
         # verify inputs for remote http host
         local = pathlib.Path(local).expanduser().absolute()

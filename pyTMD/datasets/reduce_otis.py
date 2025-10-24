@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 reduce_otis.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (10/2025)
 Read OTIS-format tidal files and reduce to a regional subset
 
 COMMAND LINE OPTIONS:
@@ -30,6 +30,7 @@ PROGRAM DEPENDENCIES:
     crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
+    Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to reduce_otis
         made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
@@ -75,7 +76,7 @@ import timescale.time
 pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 # default data directory for tide models
-_default_directory = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: keep track of threads
 def info(args):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (10/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -63,6 +63,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: added wrapper for calculating solid earth tides
         using a tide potential catalog following Cartwright and Tayler (1971)
     Updated 08/2025: convert angles with numpy radians and degrees functions
@@ -175,7 +176,7 @@ __all__ = [
 _jd_mjd = 2400000.5
 
 # default working data directory for tide models
-_default_directory = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: wrapper function for computing values
 def corrections(
