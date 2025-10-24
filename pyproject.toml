@@ -28,6 +28,7 @@ dependencies = [
     "lxml",
     "netCDF4",
     "numpy",
+    "platformdirs",
     "pyproj",
     "python-dateutil",
     "scipy>=1.10.1",
@@ -171,6 +172,7 @@ description = "Run flake8 to check for compilation errors"
 numpy = "*"
 netcdf4 = "*"
 lxml = "*"
+platformdirs = "*"
 pyproj = "*"
 python-dateutil = "*"
 scipy = ">=1.16.0"

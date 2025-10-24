@@ -7,6 +7,8 @@ Download and management utilities for syncing time and auxiliary files
 PYTHON DEPENDENCIES:
     lxml: processing XML and HTML in Python
         https://pypi.python.org/pypi/lxml
+    platformdirs: Python module for determining platform-specific directories
+        https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
     Updated 10/2025: allow additional keyword arguments to http functions
@@ -67,6 +69,7 @@ import importlib
 import posixpath
 import subprocess
 import lxml.etree
+import platformdirs
 import calendar, time
 import dateutil.parser
 if sys.version_info[0] == 2:
@@ -143,7 +146,6 @@ def get_cache_path(
         application name
     """
     # get platform-specific cache directory
-    platformdirs = import_dependency('platformdirs')
     filepath = platformdirs.user_cache_path(appname=appname,
         ensure_exists=True)
     if isinstance(relpath, list):
