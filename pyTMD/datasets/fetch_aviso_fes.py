@@ -42,7 +42,8 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
-    Updated 10/2025: remove printing to log file
+    Updated 10/2025: change default directory for tide models to cache
+        remove printing to log file
     Updated 09/2025: renamed module and function to fetch_aviso_fes
         made a callable function and added function docstrings
     Updated 07/2025: added extrapolation option for FES2014 tide model
@@ -89,7 +90,7 @@ import ftplib
 import pyTMD.utilities
 
 # default data directory for tide models
-_default_directory = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: download local AVISO FES files with ftp server
 def fetch_aviso_fes(model: str,

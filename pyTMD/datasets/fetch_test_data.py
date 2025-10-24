@@ -21,6 +21,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 10/2025: change default directory for tide models to cache
     Written 10/2025
 """
 import ssl
@@ -33,7 +34,7 @@ import argparse
 import pyTMD.utilities
 
 # default working data directory for tide models
-_default_directory = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_cache_path()
 # default ssl context
 _default_ssl_context = pyTMD.utilities._default_ssl_context
 

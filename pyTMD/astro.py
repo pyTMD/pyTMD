@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 astro.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (10/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 10/2025: change default directory for JPL SSD kernels to cache
     Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
         convert arcseconds to radians with asec2rad function in math.py
@@ -78,6 +79,7 @@ from pyTMD.math import (
 )
 from pyTMD.utilities import (
     get_data_path,
+    get_cache_path,
     import_dependency,
     from_jpl_ssd
 )
@@ -116,7 +118,7 @@ __all__ = [
 ]
 
 # default JPL Spacecraft and Planet ephemerides kernel
-_default_kernel = get_data_path(['data','de440s.bsp'])
+_default_kernel = get_cache_path('de440s.bsp')
 
 # number of days between the Julian day epoch and MJD
 _jd_mjd = 2400000.5

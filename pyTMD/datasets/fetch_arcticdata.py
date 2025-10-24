@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 fetch_arcticdata.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (10/2025)
 Download Arctic Ocean Tide Models from the NSF ArcticData archive
 
 AODTM-5: https://arcticdata.io/catalog/view/doi:10.18739/A2901ZG3N
@@ -33,6 +33,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to fetch_arcticdata
         made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
@@ -57,7 +58,7 @@ import posixpath
 import pyTMD.utilities
 
 # default data directory for tide models
-_default_directory = pyTMD.utilities.get_data_path('data')
+_default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
 def fetch_arcticdata(model: str,
