@@ -180,7 +180,7 @@ timescale = ">=0.0.8"
 
 [tool.pixi.feature.all.dependencies]
 cartopy = "*"
-matplotlib = "*"
+matplotlib-base = "*"
 ipyleaflet = "*"
 ipywidgets = "*"
 jplephem = "*"
