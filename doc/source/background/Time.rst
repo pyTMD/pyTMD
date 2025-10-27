@@ -2,7 +2,7 @@ Time
 ####
 
 ``pyTMD`` uses the ``timescale`` library to manage conversions between time scales.
-A uniform time scale expresses dates as the count of time elapsed since a reference epoch.
+A uniform time scale expresses dates as the count of time elapsed since a reference :term:`Epoch`.
 The Julian Day (JD) is one such scale, and is the continuous count of days from noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
 The JD time system simplifies the calculation of the number of days between two epochs, and thus is convenient for astronomical purposes.
 The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight and 2) reducing the total number of digits for modern periods.
@@ -14,7 +14,7 @@ The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be cal
 
     MJD = JD - 2400000.5
 
-Julian centuries (36525 days) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
+Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
     :label: 3.2
