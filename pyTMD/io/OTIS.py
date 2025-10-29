@@ -1271,6 +1271,7 @@ def read_atlas_grid(
     # read iob from file
     if (nob == 0):
         iob = []
+        offset += 4
     else:
         iob = read_raw_binary(input_file,
             dtype='>i4',
