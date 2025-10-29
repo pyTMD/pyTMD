@@ -1126,7 +1126,7 @@ def read_otis_grid(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read nob from file
@@ -1255,7 +1255,7 @@ def read_atlas_grid(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read nob from file
@@ -1560,7 +1560,7 @@ def read_otis_elevation(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1653,7 +1653,7 @@ def read_atlas_elevation(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1836,7 +1836,7 @@ def read_otis_transport(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1938,7 +1938,7 @@ def read_atlas_transport(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
