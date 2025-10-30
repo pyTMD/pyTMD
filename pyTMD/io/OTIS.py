@@ -2336,6 +2336,7 @@ def read_netcdf_file(
     hc = np.ma.zeros((ny, nx), dtype=np.complex64)
     hc.mask = np.zeros((ny, nx), dtype=bool)
     # extract constituent and flip y orientation
+    # convert imaginary component to negative to match convention
     if (variable == 'z'):
         hc.data.real[:,:] = fileID.variables['hRe'][ic,::-1,:]
         hc.data.imag[:,:] = -fileID.variables['hIm'][ic,::-1,:]
