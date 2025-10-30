@@ -1804,7 +1804,7 @@ def read_otis_transport(
     u: float
         zonal tidal transport
     v: float
-        meridional zonal transport
+        meridional tidal transport
     """
     # open the input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -1895,14 +1895,14 @@ def read_atlas_transport(
     u: np.ndarray
         global zonal tidal transport
     v: np.ndarray
-        global meridional zonal transport
+        global meridional tidal transport
     local: dict
         local tidal solutions for transport variables
 
         u: np.ndarray
             zonal tidal transport
         v: np.ndarray
-            meridional zonal transport
+            meridional tidal transport
     """
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
@@ -2129,7 +2129,7 @@ def create_atlas_mask(
             - ``'depth'``: model bathymetry
             - ``'z'``: tidal elevation
             - ``'u'``: zonal tidal transport
-            - ``'v'``: meridional zonal transport
+            - ``'v'``: meridional tidal transport
 
     Returns
     -------
@@ -2256,7 +2256,7 @@ def combine_atlas_model(
             - ``'depth'``: model bathymetry
             - ``'z'``: tidal elevation
             - ``'u'``: zonal tidal transport
-            - ``'v'``: meridional zonal transport
+            - ``'v'``: meridional tidal transport
 
     Returns
     -------
