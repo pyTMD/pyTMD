@@ -1907,9 +1907,6 @@ def read_atlas_transport(
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
     file_info = input_file.stat()
-    # open the input file and get file information
-    input_file = pathlib.Path(input_file).expanduser()
-    file_info = input_file.stat()
     # set initial offset
     offset = 0
     # read data as big endian
