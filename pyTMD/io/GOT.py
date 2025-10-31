@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 GOT.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (10/2025)
 
 Reads files for Richard Ray's Goddard Ocean Tide (GOT) models and makes
     initial calculations to run the tide program
@@ -42,6 +42,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 10/2025: simplify ascii read function to use masked_equal
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
     Updated 11/2024: expose buffer distance for cropping tide model data
@@ -588,15 +589,12 @@ def read_ascii_file(
     # latitude range
     ilon = np.array(file_contents[4].split(), dtype=np.float64)
     # mask fill value
-    fill_value = np.array(file_contents[5].split(), dtype=np.float64)
+    fill_value = np.array(file_contents[5].split(), dtype=np.float32)
     # create output variables
     lat = np.linspace(ilat[0],ilat[1],nlat)
     lon = np.linspace(ilon[0],ilon[1],nlon)
-    amp = np.ma.zeros((nlat,nlon), fill_value=fill_value[0], dtype=np.float32)
-    ph = np.ma.zeros((nlat,nlon), fill_value=fill_value[0], dtype=np.float32)
-    # create masks for output variables (0=valid)
-    amp.mask = np.zeros((nlat,nlon),dtype=bool)
-    ph.mask = np.zeros((nlat,nlon),dtype=bool)
+    amp = np.zeros((nlat,nlon), dtype=np.float32)
+    ph = np.zeros((nlat,nlon), dtype=np.float32)
     # starting lines to fill amplitude and phase variables
     l1 = 7
     l2 = 14 + int(nlon//11)*nlat + nlat
@@ -604,26 +602,21 @@ def read_ascii_file(
     for i in range(nlat):
         for j in range(nlon//11):
             j1 = j*11
-            amplitude_data = file_contents[l1].split()
-            amp.data[i,j1:j1+11] = np.array(amplitude_data, dtype=np.float32)
-            phase_data = file_contents[l2].split()
-            ph.data[i,j1:j1+11] = np.array(phase_data, dtype=np.float32)
+            amp[i,j1:j1+11] = np.array(file_contents[l1].split())
+            ph[i,j1:j1+11] = np.array(file_contents[l2].split())
             l1 += 1
             l2 += 1
         # add last tidal variables
         j1 = (j+1)*11; j2 = nlon % 11
-        amplitude_data = file_contents[l1].split()
-        amp.data[i,j1:j1+j2] = np.array(amplitude_data, dtype=np.float32)
-        phase_data = file_contents[l2].split()
-        ph.data[i,j1:j1+j2] = np.array(phase_data, dtype=np.float32)
+        amp[i,j1:j1+j2] = np.array(file_contents[l1].split())
+        ph[i,j1:j1+j2] = np.array(file_contents[l2].split())
         l1 += 1
         l2 += 1
-    # set masks
-    mask = (amp.data == amp.fill_value) | (ph.data == ph.fill_value)
+    # convert to masked arrays
+    amp = np.ma.masked_equal(amp, fill_value[0])
+    ph = np.ma.masked_equal(ph, fill_value[0])
     # calculate complex form of constituent oscillation
-    hc = np.ma.array(amp*np.exp(-1j*ph*np.pi/180.0), mask=mask,
-        fill_value=np.ma.default_fill_value(np.dtype(complex)),
-        dtype=np.complex128)
+    hc = amp*np.exp(-1j*ph*np.pi/180.0)
     # return output variables
     return (hc, lon, lat, cons)
 
