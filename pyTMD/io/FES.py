@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 FES.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (10/2025)
 
 Reads files for a tidal model and makes initial calculations to run tide program
 Includes functions to extract tidal harmonic constants from the
@@ -57,6 +57,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 10/2025: simplify ascii read function to use masked_equal
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
     Updated 11/2024: expose buffer distance for cropping tide model data
@@ -646,39 +647,34 @@ def read_ascii_file(
     nlon, nlat = np.array(file_contents[3].split(), dtype=int)
     # mask fill value
     masked_values = file_contents[4].split()
-    fill_value = np.float64(masked_values[0])
+    fill_value = np.float32(masked_values[0])
     # create output variables
     lat = np.linspace(latmin, latmax, nlat)
     lon = np.linspace(lonmin, lonmax, nlon)
-    amp = np.ma.zeros((nlat,nlon), fill_value=fill_value, dtype=np.float32)
-    ph = np.ma.zeros((nlat,nlon), fill_value=fill_value, dtype=np.float32)
-    # create masks for output variables (0=valid)
-    amp.mask = np.zeros((nlat,nlon),dtype=bool)
-    ph.mask = np.zeros((nlat,nlon),dtype=bool)
+    amp = np.zeros((nlat,nlon), dtype=np.float32)
+    ph = np.zeros((nlat,nlon), dtype=np.float32)
     # starting line to fill amplitude and phase variables
     i1 = 5
     # for each latitude
     for i in range(nlat):
         for j in range(nlon//30):
             j1 = j*30
-            amplitude_data = file_contents[i1].split()
-            amp.data[i,j1:j1+30] = np.array(amplitude_data, dtype=np.float32)
-            phase_data = file_contents[i1+1].split()
-            ph.data[i,j1:j1+30] = np.array(phase_data, dtype=np.float32)
+            # amplitude and phase are on two separate rows
+            amp[i,j1:j1+30] = np.array(file_contents[i1].split())
+            ph[i,j1:j1+30] = np.array(file_contents[i1+1].split())
             i1 += 2
-        # add last tidal variables
+        # add last row of tidal variables
         j1 = (j+1)*30
         j2 = nlon % 30
-        amplitude_data = file_contents[i1].split()
-        amp.data[i,j1:j1+j2] = np.array(amplitude_data, dtype=np.float32)
-        phase_data = file_contents[i1+1].split()
-        ph.data[i,j1:j1+j2] = np.array(phase_data, dtype=np.float32)
+        # amplitude and phase are on two separate rows
+        amp[i,j1:j1+j2] = np.array(file_contents[i1].split())
+        ph[i,j1:j1+j2] = np.array(file_contents[i1+1].split())
         i1 += 2
+    # convert to masked arrays
+    amp = np.ma.masked_equal(amp, fill_value)
+    ph = np.ma.masked_equal(ph, fill_value)
     # calculate complex form of constituent oscillation
-    mask = (amp.data == amp.fill_value) | (ph.data == ph.fill_value)
-    hc = np.ma.array(amp*np.exp(-1j*ph*np.pi/180.0), mask=mask,
-        fill_value=np.ma.default_fill_value(np.dtype(complex)),
-        dtype=np.complex128)
+    hc = amp*np.exp(-1j*ph*np.pi/180.0)
     # return output variables
     return (hc, lon, lat)
 
