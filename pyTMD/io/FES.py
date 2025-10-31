@@ -631,7 +631,7 @@ def read_ascii_file(
     if kwargs['compressed']:
         # read gzipped ascii file
         with gzip.open(input_file, 'rb') as f:
-            file_contents = f.read(input_file).splitlines()
+            file_contents = f.read().splitlines()
     else:
         with open(input_file, mode="r", encoding='utf8') as f:
             file_contents = f.read().splitlines()
