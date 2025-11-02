@@ -1126,7 +1126,7 @@ def read_otis_grid(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read nob from file
@@ -1142,6 +1142,7 @@ def read_otis_grid(
     # read iob from file
     if (nob == 0):
         iob = []
+        offset += 4
     else:
         iob = read_raw_binary(input_file,
             dtype='>i4',
@@ -1254,7 +1255,7 @@ def read_atlas_grid(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read nob from file
@@ -1270,6 +1271,7 @@ def read_atlas_grid(
     # read iob from file
     if (nob == 0):
         iob = []
+        offset += 4
     else:
         iob = read_raw_binary(input_file,
             dtype='>i4',
@@ -1558,7 +1560,7 @@ def read_otis_elevation(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1651,7 +1653,7 @@ def read_atlas_elevation(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1802,7 +1804,7 @@ def read_otis_transport(
     u: float
         zonal tidal transport
     v: float
-        meridional zonal transport
+        meridional tidal transport
     """
     # open the input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -1834,7 +1836,7 @@ def read_otis_transport(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -1893,18 +1895,15 @@ def read_atlas_transport(
     u: np.ndarray
         global zonal tidal transport
     v: np.ndarray
-        global meridional zonal transport
+        global meridional tidal transport
     local: dict
         local tidal solutions for transport variables
 
         u: np.ndarray
             zonal tidal transport
         v: np.ndarray
-            meridional zonal transport
+            meridional tidal transport
     """
-    # open the input file and get file information
-    input_file = pathlib.Path(input_file).expanduser()
-    file_info = input_file.stat()
     # open the input file and get file information
     input_file = pathlib.Path(input_file).expanduser()
     file_info = input_file.stat()
@@ -1936,7 +1935,7 @@ def read_atlas_transport(
     # x and y coordinate spacing
     dx = (xlim[1] - xlim[0])/nx
     dy = (ylim[1] - ylim[0])/ny
-    # create x and y arrays arrays (these could be lon and lat values)
+    # create x and y arrays
     x = np.linspace(xlim[0] + dx/2.0, xlim[1] - dx/2.0, nx)
     y = np.linspace(ylim[0] + dy/2.0, ylim[1] - dy/2.0, ny)
     # read constituents from file
@@ -2127,7 +2126,7 @@ def create_atlas_mask(
             - ``'depth'``: model bathymetry
             - ``'z'``: tidal elevation
             - ``'u'``: zonal tidal transport
-            - ``'v'``: meridional zonal transport
+            - ``'v'``: meridional tidal transport
 
     Returns
     -------
@@ -2254,7 +2253,7 @@ def combine_atlas_model(
             - ``'depth'``: model bathymetry
             - ``'z'``: tidal elevation
             - ``'u'``: zonal tidal transport
-            - ``'v'``: meridional zonal transport
+            - ``'v'``: meridional tidal transport
 
     Returns
     -------
@@ -2334,6 +2333,7 @@ def read_netcdf_file(
     hc = np.ma.zeros((ny, nx), dtype=np.complex64)
     hc.mask = np.zeros((ny, nx), dtype=bool)
     # extract constituent and flip y orientation
+    # convert imaginary component to negative to match convention
     if (variable == 'z'):
         hc.data.real[:,:] = fileID.variables['hRe'][ic,::-1,:]
         hc.data.imag[:,:] = -fileID.variables['hIm'][ic,::-1,:]

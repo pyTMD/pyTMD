@@ -97,12 +97,11 @@ source = [
     "test",
 ]
 omit = [
-    "setup.py",
-    "conf.py",
+    "doc/*",
+    "providers/*.py",
     "pyTMD/datasets/*",
     "test/_coefficients_to_json.py",
     "test/_def_to_json.py",
-    "providers/*.py",
 ]
 
 [tool.coverage.report]
@@ -112,6 +111,14 @@ precision = 2
 [tool.ruff]
 line-length = 80
 indent-width = 4
+exclude = [
+    ".git",
+    ".pixi",
+    "build",
+    "doc",
+    "run",
+    "test",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -119,6 +126,7 @@ convention = "numpy"
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "space"
+line-ending = "auto"
 docstring-code-format = false
 
 [tool.pixi.workspace]
@@ -180,7 +188,7 @@ timescale = ">=0.0.8"
 
 [tool.pixi.feature.all.dependencies]
 cartopy = "*"
-matplotlib = "*"
+matplotlib-base = "*"
 ipyleaflet = "*"
 ipywidgets = "*"
 jplephem = "*"
