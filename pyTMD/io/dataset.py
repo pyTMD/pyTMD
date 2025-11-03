@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 u"""
 dataset.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (11/2025)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
+    pyproj: Python interface to PROJ library
+        https://pypi.org/project/pyproj/
+        https://pyproj4.github.io/pyproj/
     xarray: N-D labeled arrays and datasets in Python
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 11/2025: get crs directly using pyTMD.CRS.from_user_input
     Updated 09/2025: added argument to limit the list of constituents
         when converting to an xarray DataArray
     Written 08/2025
@@ -16,6 +20,7 @@ UPDATE HISTORY:
 from pyTMD.utilities import import_dependency
 # attempt imports
 xr = import_dependency('xarray')
+pyproj = import_dependency('pyproj')
 
 __all__ = [
     'dataset',
@@ -60,8 +65,7 @@ class dataset:
     def crs(self):
         """Coordinate reference system of the ``Dataset``
         """
-        from pyTMD.crs import from_input
         # return the CRS of the dataset
         # default is EPSG:4326 (WGS84)
         CRS = self._ds.attrs.get('crs', 4326)
-        return from_input(CRS)
+        return pyproj.CRS.from_user_input(CRS)
