@@ -9,9 +9,15 @@ PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
+    pyproj: Python interface to PROJ library
+        https://pypi.org/project/pyproj/
+        https://pyproj4.github.io/pyproj/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
     Updated 11/2025: use default cache directory if directory is None
+        added crs property for model coordinate reference system
     Updated 08/2025: use numpy degree to radian conversions
         update node equilibrium tide estimation
         add functions for converting a model to an xarray DataTree object
@@ -84,6 +90,7 @@ from dataclasses import dataclass
 
 # attempt imports
 xr = import_dependency('xarray')
+pyproj = import_dependency('pyproj')
 
 __all__ = [
     'DataBase',
@@ -353,6 +360,14 @@ class model:
             return part2
         else:
             return self.format
+
+    @property
+    def crs(self):
+        """Coordinate reference system of the model
+        """
+        # default is EPSG:4326 (WGS84)
+        CRS = self.get('projection', 4326)
+        return pyproj.CRS.from_user_input(CRS)
 
     @property
     def atl03(self) -> str:
@@ -1345,6 +1360,9 @@ class model:
         properties = ['pyTMD.io.model']
         properties.append(f"    name: {self.name}")
         return '\n'.join(properties)
+    
+    def get(self, key, default=None):
+        return getattr(self, key, default) or default
 
     def __getitem__(self, key):
         return getattr(self, key)

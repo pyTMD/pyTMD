@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 11/2025: get crs directly using pyTMD.CRS.from_user_input
+        set variable name to constituent for to_dataarray method
     Updated 09/2025: added argument to limit the list of constituents
         when converting to an xarray DataArray
     Written 08/2025
@@ -40,8 +41,8 @@ class dataset:
         """
         kwargs.setdefault('constituents', self.constituents)
         # reduce dataset to constituents and convert to dataarray
-        da = self._ds[kwargs['constituents']].to_dataarray().assign_coords(
-            variable=kwargs['constituents']).T
+        da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent').T
+        da = da.assign_coords(constituent=kwargs['constituents'])
         return da
 
     @property
