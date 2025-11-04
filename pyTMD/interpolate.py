@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 11/2025: calculate lambda function after nearest-neighbors
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
@@ -105,7 +106,7 @@ def inpaint(
         input y-coordinates
     zs: np.ndarray
         input data
-    N: int, default 100
+    N: int, default 0
         Number of iterations (0 for nearest neighbors)
     s0: int, default 3
         Smoothing
@@ -125,11 +126,6 @@ def inpaint(
 
     # dimensions of input grid
     ny, nx = np.shape(zs)
-    # calculate lambda function
-    L = np.zeros((ny, nx))
-    L += np.broadcast_to(np.cos(np.pi*np.arange(ny)/ny)[:, None], (ny, nx))
-    L += np.broadcast_to(np.cos(np.pi*np.arange(nx)/nx)[None, :], (ny, nx))
-    LAMBDA = np.power(2.0*(2.0 - L), power)
 
     # calculate initial values using nearest neighbors
     # computation of distance Matrix
@@ -151,6 +147,12 @@ def inpaint(
     # copy data to new array with 0 values for mask
     ZI = np.zeros((ny, nx), dtype=zs.dtype)
     ZI[W] = np.copy(z0[W])
+
+    # calculate lambda function
+    L = np.zeros((ny, nx))
+    L += np.broadcast_to(np.cos(np.pi*np.arange(ny)/ny)[:, None], (ny, nx))
+    L += np.broadcast_to(np.cos(np.pi*np.arange(nx)/nx)[None, :], (ny, nx))
+    LAMBDA = np.power(2.0*(2.0 - L), power)
 
     # smoothness parameters
     s = np.logspace(s0, -6, N)
