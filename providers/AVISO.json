@@ -83,7 +83,14 @@
                 "u",
                 "v"
             ],
-            "version": "FES2014"
+            "version": "FES2014",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         }
     },
     "elevation": {
@@ -128,7 +135,14 @@
             "version": "FES2012",
             "variable": "tide_ocean",
             "scale": 0.01,
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html"
+            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2014": {
             "format": "FES-netcdf",
@@ -173,7 +187,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "FES2014"
+            "version": "FES2014",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2014_extrapolated": {
             "format": "FES-netcdf",
@@ -218,7 +239,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "FES2014"
+            "version": "FES2014",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2014_load": {
             "format": "FES-netcdf",
@@ -263,7 +291,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_load",
-            "version": "FES2014"
+            "version": "FES2014",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2022": {
             "format": "FES-netcdf",
@@ -308,7 +343,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "FES2022"
+            "version": "FES2022",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2022_extrapolated": {
             "format": "FES-netcdf",
@@ -353,7 +395,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "FES2022"
+            "version": "FES2022",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "FES2022_load": {
             "format": "FES-netcdf",
@@ -398,7 +447,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_load",
-            "version": "FES2022"
+            "version": "FES2022",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         }
     }
 }

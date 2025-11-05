@@ -107,7 +107,7 @@ class Dataset:
         # pad global grids along x-dimension (if necessary)
         if self.is_global:
             self._ds = self.pad(n=1)
-        # check longitudinal convention for geographic models
+        # compare longitudinal convention for geographic models
         if self.crs.is_geographic:
             # grid spacing in x-direction
             dx = self._ds.x[1] - self._ds.x[0]

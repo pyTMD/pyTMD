@@ -23,7 +23,13 @@
                 ]
             },
             "name": "TPXO10-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo10-atlas",
             "scale": 0.0001,
             "type": [
@@ -72,7 +78,13 @@
                 ]
             },
             "name": "TPXO10-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo10-atlas",
             "scale": 0.0001,
             "type": [
@@ -88,7 +100,13 @@
                 "u": "TPXO7.2_tmd/u_tpxo7.2"
             },
             "name": "TPXO7.2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/global.html",
             "type": [
                 "u",
@@ -103,7 +121,13 @@
                 "u": "tpxo8_atlas/uv.tpxo8_atlas_30_v1"
             },
             "name": "TPXO8-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
             "type": [
                 "u",
@@ -131,7 +155,13 @@
                 ]
             },
             "name": "TPXO9-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
             "scale": 0.0001,
             "type": [
@@ -174,7 +204,13 @@
                 ]
             },
             "name": "TPXO9-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
             "scale": 0.0001,
             "type": [
@@ -246,7 +282,13 @@
                 ]
             },
             "name": "TPXO9-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.0001,
             "type": [
@@ -324,7 +366,13 @@
                 ]
             },
             "name": "TPXO9-atlas-v3",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.0001,
             "type": [
@@ -355,7 +403,13 @@
                 ]
             },
             "name": "TPXO9-atlas-v4",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.0001,
             "type": [
@@ -499,7 +553,13 @@
                 "u": "TPXO9.1/u_tpxo9.v1"
             },
             "name": "TPXO9.1",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/global.html",
             "type": [
                 "u",
@@ -530,7 +590,13 @@
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2"
             ],
             "name": "TPXO10-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo10-atlas",
             "scale": 0.001,
             "type": "z",
@@ -558,7 +624,13 @@
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2.nc"
             ],
             "name": "TPXO10-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo10-atlas",
             "scale": 0.001,
             "type": "z",
@@ -570,7 +642,13 @@
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/h_tpxo7.2",
             "name": "TPXO7.2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/global.html",
             "type": "z",
             "variable": "tide_ocean",
@@ -581,7 +659,13 @@
             "grid_file": "TPXO7.2_load/grid_tpxo6.2",
             "model_file": "TPXO7.2_load/h_tpxo7.2_load",
             "name": "TPXO7.2_load",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/global.html",
             "type": "z",
             "variable": "tide_load",
@@ -592,7 +676,13 @@
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/hf.tpxo8_atlas_30_v1",
             "name": "TPXO8-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
             "type": "z",
             "variable": "tide_ocean",
@@ -617,7 +707,14 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "v1"
+            "version": "v1",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "TPXO9-atlas": {
             "format": "OTIS",
@@ -637,7 +734,13 @@
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30"
             ],
             "name": "TPXO9-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
             "scale": 0.001,
             "type": "z",
@@ -662,7 +765,13 @@
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30.nc"
             ],
             "name": "TPXO9-atlas",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
             "scale": 0.001,
             "type": "z",
@@ -712,7 +821,13 @@
                 "TPXO9_atlas_v2/h_2n2_tpxo9_atlas_30_v2.nc"
             ],
             "name": "TPXO9-atlas-v2",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.001,
             "type": "z",
@@ -766,7 +881,13 @@
                 "TPXO9_atlas_v3/h_mm_tpxo9_atlas_30_v3.nc"
             ],
             "name": "TPXO9-atlas-v3",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.001,
             "type": "z",
@@ -793,7 +914,13 @@
                 "TPXO9_atlas_v4/h_mm_tpxo9_atlas_30_v4"
             ],
             "name": "TPXO9-atlas-v4",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "https://www.tpxo.net/global/tpxo9-atlas",
             "scale": 0.001,
             "type": "z",
@@ -888,7 +1015,13 @@
             "grid_file": "TPXO9.1/DATA/grid_tpxo9",
             "model_file": "TPXO9.1/DATA/h_tpxo9.v1",
             "name": "TPXO9.1",
-            "projection": "EPSG:4326",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            },
             "reference": "http://volkov.oce.orst.edu/tides/global.html",
             "type": "z",
             "variable": "tide_ocean",
