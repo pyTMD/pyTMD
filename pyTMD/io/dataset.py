@@ -53,7 +53,7 @@ class Dataset:
         da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent').T
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
-    
+
     def inpaint(self, **kwargs):
         """
         Inpaint over missing data in ``Dataset``
@@ -74,8 +74,11 @@ class Dataset:
         ds = self._ds.copy()
         # inpaint each variable in the dataset
         for v in ds.data_vars.keys():
-            ds[v].values = inpaint(self._ds.x, self._ds.y,
-                self._ds[v].values, **kwargs)
+            ds[v].values = inpaint(
+                self._ds.x.values, self._ds.y.values,
+                self._ds[v].values,
+                **kwargs
+            )
         # return the dataset
         return ds
 
@@ -107,7 +110,7 @@ class Dataset:
         # pad global grids along x-dimension (if necessary)
         if self.is_global:
             self._ds = self.pad(n=1)
-        # compare longitudinal convention for geographic models
+        # verify longitudinal convention for geographic models
         if self.crs.is_geographic:
             # grid spacing in x-direction
             dx = self._ds.x[1] - self._ds.x[0]
@@ -187,3 +190,40 @@ class Dataset:
         """
         if self.crs.area_of_use is not None:
             return self.crs.area_of_use.name.replace('.','').lower()
+
+@xr.register_dataarray_accessor('tmd')
+class DataArray:
+    """Accessor for extending an ``xarray.DataArray`` for tidal model data
+    """
+    def __init__(self, da):
+        # initialize dataset
+        self._da = da
+
+    @property
+    def amplitude(self):
+        """
+        Calculate the amplitude of a tide model constituent
+
+        Returns
+        -------
+        amp: xarray.DataArray
+            Tide model constituent amplitude
+        """
+        # calculate constituent amplitude
+        amp = np.sqrt(self._da.real**2 + self._da.imag**2)
+        return amp
+
+    @property
+    def phase(self):
+        """
+        Calculate the phase of a tide model constituent
+
+        Returns
+        -------
+        ph: xarray.DataArray
+            Tide model constituent phase (degrees)
+        """
+        # calculate constituent phase and convert to degrees
+        ph = np.degrees(np.arctan2(-self._da.imag, self._da.real))
+        ph = ph.where(ph >= 0, ph + 360.0, drop=False)
+        return ph

@@ -2,7 +2,7 @@
 dataset
 =======
 
-An ``xarray.Dataset`` extension for tidal model data
+``xarray`` extensions for tidal model data
 
 `Source code`__
 
@@ -11,5 +11,8 @@ An ``xarray.Dataset`` extension for tidal model data
 General Attributes and Methods
 ==============================
 
-.. autoclass:: pyTMD.io.dataset
+.. autoclass:: pyTMD.io.Dataset
+   :members:
+
+.. autoclass:: pyTMD.io.DataArray
    :members:
