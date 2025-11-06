@@ -57,7 +57,14 @@
                 "u",
                 "v"
             ],
-            "version": "HAMTIDE11"
+            "version": "HAMTIDE11",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         }
     },
     "elevation": {
@@ -100,7 +107,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "2023"
+            "version": "2023",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "EOT20": {
             "format": "FES-netcdf",
@@ -128,7 +142,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "EOT20"
+            "version": "EOT20",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "EOT20_load": {
             "format": "FES-netcdf",
@@ -156,7 +177,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_load",
-            "version": "EOT20"
+            "version": "EOT20",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "HAMTIDE11": {
             "format": "FES-netcdf",
@@ -176,7 +204,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "HAMTIDE11"
+            "version": "HAMTIDE11",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         }
     }
 }

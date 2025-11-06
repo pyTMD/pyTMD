@@ -13529,13 +13529,13 @@ packages:
 - pypi: ./
   name: pytmd
   version: 2.2.8
-  sha256: 82136fd758224b7b8b263941ea6889f777dd02426e3612d83ececc6bb17d7bdf
+  sha256: dd2bec5579479500981327f49290d8bb532285bd8dfe1f524e17f71399edb3cb
   requires_dist:
   - lxml
   - netcdf4
   - numpy
   - platformdirs
-  - pyproj
+  - pyproj>=2.5.0
   - python-dateutil
   - scipy>=1.10.1
   - timescale>=0.0.8

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constituents.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (11/2025)
 Basic tide model constituent class
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 11/2025: include filtering mask out from possible parsed names
     Updated 08/2025: use numpy degree to radian conversions
         add functions for converting constituents to an xarray Dataset
         suppress pyproj user warnings about using PROJ4 strings
@@ -365,17 +366,17 @@ class constituents:
         patterns = (r'node|alpha|beta|chi|delta|eps|eta|gamma|lambda|muo|mu|'
             r'nu|pi|psi|phi|rho\d|sigma|tau|theta|ups|zeta|e3|f\d|jk|jo|jp|'
             r'jq|j|kb|kjq|kj|kmsn|km|kn|ko|kpq|kp|kq|kso|ks|k\d|lb|'
-            r'(?<!de)l\d|ma|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|mks|mk|'
-            r'mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|mnu|mn|'
-            r'mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|msm|'
-            r'msnk|msnu|msn|mso|msp|msqm|mst|ms(?!q)|mtm|mt(?![m|ide])|'
+            r'(?<!de)l\d|ma(?![sk])|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|'
+            r'mks|mk|mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|'
+            r'mnu|mn|mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|'
+            r'msm|msnk|msnu|msn|mso|msp|msqm|mst|ms(?!q)|mtm|mt(?![m|ide])|'
             r'(?<![2s|l|la|ga])m[1-9]|na|nb|nkms|nkm|nkp|nks|nk|'
             r'nmks|nmk|nmls|nm|no|np|nq|nsk|nso|ns|(?<!m)n\d|(?<!l)oa|ob|ok|'
             r'ojm|oj|omg|om(?![0|ega])|ook|oop|oo\d|opk|opq|op|oq|os|'
             r'(?<![rh|o|s|tpx])o\d|pjrho|pk|pmn|pm|po|pqo|(?<![al|e])p\d|qj|'
-            r'qk|qms|qm|qp|qs|q\d|rp|r\d|(?<!s)sa|sf|skm|skn|sk|sl(?!ev)|smk|'
-            r'smn|sm|snk|snmk|snm|snu|sn|so|sp|(?<!m)sq|ssa|sta|st(?!a)|'
-            r'(?<![ep|fe|m|mn|mk])s\d|ta|tk|(?<![curren|be])t\d|z\d')
+            r'qk|qms|qm|qp|qs|q\d|rp|r\d|(?<!s)sa|sf|skm|skn|(?<![ma])sk|'
+            r'sl(?!ev)|smk|smn|sm|snk|snmk|snm|snu|sn|so|sp|(?<!m)sq|ssa|sta|'
+            r'st(?!a)|(?<![ep|fe|m|mn|mk])s\d|ta|tk|(?<![curren|be])t\d|z\d')
         # full regular expression pattern for extracting complex and compound
         # constituents with GOT prime nomenclature for 3rd degree terms
         cases = re.compile(r'(\d+)?(\(\w+\))?(\+|\-|\')?(node|alpha|beta|chi|'

@@ -32,21 +32,8 @@ geometry = gpd.points_from_xy(df.x, df.y, crs=3031).to_crs(ds.tmd.crs)
 x = xr.DataArray(geometry.x, dims='i')
 y = xr.DataArray(geometry.y, dims='i')
 
-# check if longitudinal convention needs to be adjusted
-# only check if model is in geographic coordinates
-if geometry.crs.is_geographic:
-    # adjust input longitudes to be consistent with model
-    if (x.min() < 0.0) & (ds.x.max() > 180.0):
-        # input points convention (-180:180)
-        # tide model convention (0:360)
-        x[x < 0.0] += 360.0
-    elif (x.max() > 180.0) & (ds.x.min() < 0.0):
-        # input points convention (0:360)
-        # tide model convention (-180:180)
-        x[x > 180.0] -= 360.0
-
 # interpolate to points and convert to DataArray
-hc = ds.interp(x=x, y=y, method='linear', kwargs={"fill_value": None})
+hc = ds.tmd.interp(x=x, y=y, method='linear')
 hc = hc.tmd.to_dataarray()
 
 # predict tides and infer minor constituents

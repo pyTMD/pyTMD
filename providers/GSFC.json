@@ -19,7 +19,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.10"
+            "version": "4.10",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.10_load": {
             "format": "GOT-ascii",
@@ -40,7 +47,14 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_load",
-            "version": "4.10"
+            "version": "4.10",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.10_nc": {
             "format": "GOT-netcdf",
@@ -61,7 +75,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.10"
+            "version": "4.10",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.10_SAL": {
             "format": "GOT-netcdf",
@@ -80,7 +101,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.10"
+            "version": "4.10",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.7": {
             "format": "GOT-ascii",
@@ -101,7 +129,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.7"
+            "version": "4.7",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.7_load": {
             "format": "GOT-ascii",
@@ -122,7 +157,14 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_load",
-            "version": "4.7"
+            "version": "4.7",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.8": {
             "format": "GOT-ascii",
@@ -143,7 +185,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.8"
+            "version": "4.8",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.8_load": {
             "format": "GOT-ascii",
@@ -164,7 +213,14 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_load",
-            "version": "4.8"
+            "version": "4.8",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT4.8_nc": {
             "format": "GOT-netcdf",
@@ -185,7 +241,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "4.8"
+            "version": "4.8",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.5": {
             "format": "GOT-netcdf",
@@ -212,7 +275,14 @@
             "scale": 0.01,
             "type": "z",
             "variable": "tide_ocean",
-            "version": "5.5"
+            "version": "5.5",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.5_load": {
             "format": "GOT-netcdf",
@@ -239,7 +309,14 @@
             "scale": 0.001,
             "type": "z",
             "variable": "tide_load",
-            "version": "5.5"
+            "version": "5.5",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.5_extrapolated": {
             "format": "GOT-netcdf",
@@ -266,7 +343,14 @@
             "variable": "tide_ocean",
             "version": "5.5",
             "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548"
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.5D": {
             "format": "GOT-netcdf",
@@ -293,7 +377,14 @@
             "variable": "tide_ocean",
             "version": "5.5",
             "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548"
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.5D_extrapolated": {
             "format": "GOT-netcdf",
@@ -320,7 +411,14 @@
             "variable": "tide_ocean",
             "version": "5.5",
             "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548"
+            "reference": "https://ntrs.nasa.gov/citations/19990089548",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.6": {
             "format": "GOT-netcdf",
@@ -351,7 +449,14 @@
             "variable": "tide_ocean",
             "version": "5.6",
             "scale": 0.01,
-            "reference": "https://doi.org/10.1126/sciadv.abd4744"
+            "reference": "https://doi.org/10.1126/sciadv.abd4744",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "GOT5.6_extrapolated": {
             "format": "GOT-netcdf",
@@ -382,7 +487,14 @@
             "variable": "tide_ocean",
             "version": "5.6",
             "scale": 0.01,
-            "reference": "https://doi.org/10.1126/sciadv.abd4744"
+            "reference": "https://doi.org/10.1126/sciadv.abd4744",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         },
         "RE14": {
             "format": "GOT-netcdf",
@@ -399,7 +511,14 @@
             "variable": "tide_lpe",
             "version": "2014",
             "scale": 0.01,
-            "reference": "https://doi.org/10.1002/2013JB010830"
+            "reference": "https://doi.org/10.1002/2013JB010830",
+            "projection": {
+                "proj": "longlat",
+                "ellps": "WGS84",
+                "datum": "WGS84",
+                "lon_wrap": 180,
+                "type": "crs"
+            }
         }
     }
 }

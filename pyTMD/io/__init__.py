@@ -18,6 +18,7 @@ from .model import (
 
 # Attempt to import the dataset module for xarray support
 try:
-    from .dataset import dataset
+    from .dataset import Dataset, DataArray
 except (ImportError, AttributeError):
-    dataset = None
+    Dataset = None
+    DataArray = None

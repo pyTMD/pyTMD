@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 model.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (11/2025)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -9,8 +9,15 @@ PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
+    pyproj: Python interface to PROJ library
+        https://pypi.org/project/pyproj/
+        https://pyproj4.github.io/pyproj/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 11/2025: use default cache directory if directory is None
+        added crs property for model coordinate reference system
     Updated 08/2025: use numpy degree to radian conversions
         update node equilibrium tide estimation
         add functions for converting a model to an xarray DataTree object
@@ -77,18 +84,22 @@ import copy
 import json
 import pathlib
 import numpy as np
-from pyTMD.utilities import import_dependency, get_data_path
+from pyTMD.utilities import import_dependency, get_data_path, get_cache_path
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 # attempt imports
 xr = import_dependency('xarray')
+pyproj = import_dependency('pyproj')
 
 __all__ = [
     'DataBase',
     'load_database',
     'model'
 ]
+
+# default working data directory for tide models
+_default_directory = get_cache_path()
 
 @dataclass
 class DataBase:
@@ -144,7 +155,7 @@ def load_database(extra_databases: list = []):
         # otherwise load parameters from JSON file path
         else:
             # verify that extra database file exists
-            db = pathlib.Path(db).expanduser().absolute()
+            db = pathlib.Path(db).expanduser()
             if not db.exists():
                 raise FileNotFoundError(db)
             # extract JSON data
@@ -268,7 +279,7 @@ class model:
         """
         # set working data directory if unset
         if self.directory is None:
-            self.directory = pathlib.Path().absolute()
+            self.directory = pathlib.Path(_default_directory)
         # select between known tide models
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
@@ -299,7 +310,7 @@ class model:
         """
         # set working data directory if unset
         if self.directory is None:
-            self.directory = pathlib.Path().absolute()
+            self.directory = pathlib.Path(_default_directory)
         # select between tide models
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
@@ -349,6 +360,14 @@ class model:
             return part2
         else:
             return self.format
+
+    @property
+    def crs(self):
+        """Coordinate reference system of the model
+        """
+        # default is EPSG:4326 (WGS84)
+        CRS = self.get('projection', 4326)
+        return pyproj.CRS.from_user_input(CRS)
 
     @property
     def atl03(self) -> str:
@@ -639,7 +658,7 @@ class model:
         """
         # set working data directory if unset
         if self.directory is None:
-            self.directory = pathlib.Path().absolute()
+            self.directory = pathlib.Path(_default_directory)
         # complete model file paths
         if isinstance(model_file, list):
             output_file = [self.pathfinder(f) for f in model_file]
@@ -1341,6 +1360,9 @@ class model:
         properties = ['pyTMD.io.model']
         properties.append(f"    name: {self.name}")
         return '\n'.join(properties)
+    
+    def get(self, key, default=None):
+        return getattr(self, key, default) or default
 
     def __getitem__(self, key):
         return getattr(self, key)
