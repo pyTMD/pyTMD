@@ -807,18 +807,10 @@ class model:
         if isinstance(self[type].model_file, list):
             # multiple file elevation case
             # filter model files to constituents
-            self[type].model_file = [self[type].model_file[self.constituents.index(c)]
+            self[type].model_file = [
+                self[type].model_file[self.constituents.index(c)]
                 for c in constituents if (c in self.constituents)
             ]
-        elif isinstance(self[type].model_file, dict) and \
-            isinstance(self[type].model_file['u'], list):
-            # multiple file currents case
-            for key, val in self[type].model_file.items():
-                # reduce list of model files to constituents
-                # filter model files to constituents
-                self[type].model_file[key] = [val[self.constituents.index(c)]
-                    for c in constituents if (c in self.constituents)
-                ]
         # update list of constituents
         self.parse_constituents(type=type)
         # return self
@@ -855,52 +847,46 @@ class model:
         # import tide model functions
         from pyTMD.io import OTIS, ATLAS, GOT, FES
         # set default keyword arguments
-        kwargs.setdefault('type', self.type)
+        kwargs.setdefault('type', 'z')
         kwargs.setdefault('append_node', False)
         kwargs.setdefault('scale', self.scale)
         kwargs.setdefault('constituents', None)
         # reduce constituents if specified
         self.reduce_constituents(kwargs['constituents'])
+        # model type
+        mtype = kwargs['type'].lower()
+        # extract model file
+        model_file = self[mtype].model_file
         # read tidal constants and interpolate to grid points
         if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                model_file = self.model_file['u']
+            # model grid file
+            if hasattr(self[mtype], 'grid_file'):
+                grid_file = self[mtype].grid_file
             else:
-                model_file = self.model_file
+                grid_file = model_file
             # extract tidal constants for model type
             amp,ph,D,c = OTIS.extract_constants(lon, lat,
-                self.grid_file, model_file, self.projection,
+                grid_file, model_file, self.projection,
                 grid=self.file_format, **kwargs)
         elif self.format in ('ATLAS-netcdf',):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
+            # model grid file
+            grid_file = self[mtype].grid_file
             # extract tidal constants for model type
             amp,ph,D,c = ATLAS.extract_constants(lon, lat,
-                self.grid_file, model_file,
+                grid_file, model_file,
                 compressed=self.compressed, **kwargs)
         elif self.format in ('GOT-ascii', 'GOT-netcdf'):
             # extract tidal constants for model type
             amp,ph,c = GOT.extract_constants(lon, lat,
-                self.model_file, grid=self.file_format,
+                model_file, grid=self.file_format,
                 compressed=self.compressed, **kwargs)
         elif self.format in ('FES-ascii', 'FES-netcdf'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
             # extract tidal constants for model type
             amp,ph = FES.extract_constants(lon, lat,
                 model_file, version=self.version,
                 compressed=self.compressed, **kwargs)
             # available model constituents
-            c = self.constituents
+            c = self.parse_file(model_file)
         # append node equilibrium tide if not in constituents list
         if kwargs['append_node'] and ('node' not in c):
             # calculate node equilibrium tide
@@ -927,44 +913,38 @@ class model:
         # import tide model functions
         from pyTMD.io import OTIS, ATLAS, GOT, FES
         # set default keyword arguments
-        kwargs.setdefault('type', self.type)
+        kwargs.setdefault('type', 'z')
         kwargs.setdefault('append_node', False)
         kwargs.setdefault('constituents', None)
         # reduce constituents if specified
         self.reduce_constituents(kwargs['constituents'])
+        # model type
+        mtype = kwargs['type'].lower()
+        # extract model file
+        model_file = self[mtype].model_file
         # read tidal constants
         if self.format in ('OTIS','ATLAS-compact','TMD3'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                model_file = self.model_file['u']
+            # model grid file
+            if hasattr(self[mtype], 'grid_file'):
+                grid_file = self[mtype].grid_file
             else:
-                model_file = self.model_file
+                grid_file = model_file
             # read tidal constants for model type
-            c = OTIS.read_constants(self.grid_file,
+            c = OTIS.read_constants(grid_file,
                 model_file, self.projection,
                 grid=self.file_format, **kwargs)
         elif self.format in ('ATLAS-netcdf',):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
+            # model grid file
+            grid_file = self[mtype].grid_file
             # read tidal constants for model type
-            c = ATLAS.read_constants(self.grid_file,
+            c = ATLAS.read_constants(grid_file,
                 model_file, compressed=self.compressed, **kwargs)
         elif self.format in ('GOT-ascii','GOT-netcdf'):
             # read tidal constants for model type
-            c = GOT.read_constants(self.model_file,
+            c = GOT.read_constants(model_file,
                 compressed=self.compressed, grid=self.file_format,
                 **kwargs)
         elif self.format in ('FES-ascii','FES-netcdf'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
             # read tidal constants for model type
             c = FES.read_constants(model_file,
                 version=self.version, compressed=self.compressed,
@@ -1015,7 +995,7 @@ class model:
         # import tide model functions
         from pyTMD.io import OTIS, ATLAS, GOT, FES
         # set default keyword arguments
-        kwargs.setdefault('type', self.type)
+        kwargs.setdefault('type', 'z')
         kwargs.setdefault('scale', self.scale)
         # verify constituents have been read
         if not hasattr(self, '_constituents'):
@@ -1118,7 +1098,7 @@ def extract_constants(lon: np.ndarray, lat: np.ndarray, m, **kwargs):
     # verify that constituents are valid class instance
     assert isinstance(m, model)
     # set default keyword arguments
-    kwargs.setdefault('type', m.type)
+    kwargs.setdefault('type', 'z')
     # extract tidal constants
     amp, ph, c = m.extract_constants(lon, lat, **kwargs)
     # return the amplitude, phase, and constituents
@@ -1143,7 +1123,7 @@ def read_constants(m, **kwargs):
     # verify that constituents are valid class instance
     assert isinstance(m, model)
     # set default keyword arguments
-    kwargs.setdefault('type', m.type)
+    kwargs.setdefault('type', 'z')
     # read tidal constants
     m.read_constants(**kwargs)
     # return the tidal constituents
