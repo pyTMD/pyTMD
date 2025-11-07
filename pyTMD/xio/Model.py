@@ -103,19 +103,14 @@ class Model(pyTMD.io.model):
             # xarray DataArrays
             mx = xr.DataArray(mx.astype('f8'), dims=x.dims)
             my = xr.DataArray(my.astype('f8'), dims=y.dims)
-            print('xarray DataArrays')
         elif np.ndim(x) < 2:
             # 1D arrays or scalars
             mx = xr.DataArray(np.atleast_1d(mx).astype('f8'), dims='i')
             my = xr.DataArray(np.atleast_1d(my).astype('f8'), dims='i')
-            print('1D arrays or scalars')
         elif np.ndim(x) == 2:
             # 2D arrays
             mx = xr.DataArray(mx.astype('f8'), dims=('y', 'x'))
             my = xr.DataArray(my.astype('f8'), dims=('y', 'x'))
-            print('2D arrays')
-        else:
-            print('what kind of input is this?')
         # interpolate tidal constants
         ds = self._ds.tmd.interp(x=mx, y=my, method=method)
         # return xarray dataset
