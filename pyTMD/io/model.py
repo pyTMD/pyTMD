@@ -183,45 +183,12 @@ class model:
 
     compressed: bool
         Model files are gzip compressed
-    description: str
-        HDF5 ``description`` attribute string for output tide heights
     directory: str, pathlib.Path or None, default None
         Working data directory for tide models
     extra_databases: list, default []
         Additional databases for model parameters
-    file_format: str
-        File format for model
-    flexure: bool
-        Flexure adjustment field for tide heights is available
-    format: str
-        Model format
-
-            - ``ATLAS-compact``
-            - ``ATLAS-netcdf``
-            - ``GOT-ascii``
-            - ``GOT-netcdf``
-            - ``FES-ascii``
-            - ``FES-netcdf``
-            - ``OTIS``
-            - ``TMD3``
-    grid_file: pathlib.Path
-        Model grid file for ``OTIS``, ``ATLAS-compact``, and ``ATLAS-netcdf`` models
-    gzip: bool
-        Suffix if model is compressed
-    minor: list or None
-        Minor constituents for inference
-    model_file: pathlib.Path or list
-        Model constituent file or list of files
-    name: str
-        Model name
-    projection: str or dict
-        Model projection string or dictionary
-    crs: dict
-        Coordinate reference system of the model
     verify: bool
         Verify that all model files exist
-    version: str
-        Tide model version
     """
     def __init__(self, directory: str | pathlib.Path | None = None, **kwargs):
         # set default keyword arguments
@@ -238,16 +205,9 @@ class model:
             self.directory = pathlib.Path(directory).expanduser()
         # set any extra databases
         self.extra_databases = copy.copy(kwargs['extra_databases'])
-        self.flexure = False
         self.format = None
-        self.z = {}
-        self.u = {}
-        self.v = {}
         self.name = None
-        self.projection = None
-        self.reference = None
         self.verify = copy.copy(kwargs['verify'])
-        self.version = None
 
     def from_database(self, m: str):
         """
@@ -270,6 +230,9 @@ class model:
             raise ValueError(f"Unlisted tide model {m}")
         # verify paths
         for mtype in ('z', 'u', 'v'):
+            # skip if model type is unavailable
+            if not hasattr(self, mtype):
+                continue
             # validate paths: grid file for OTIS, ATLAS models
             if hasattr(self[mtype], 'grid_file'):
                 self[mtype].grid_file = self.pathfinder(self[mtype].grid_file)
@@ -291,21 +254,13 @@ class model:
         definition_file: str, pathlib.Path or io.IOBase
             model definition file for creating model object
         """
-        # set default keyword arguments
-        kwargs.setdefault('format', 'json')
-        # Opening definition file and assigning file ID number
+        # load and parse definition file
         if isinstance(definition_file, io.IOBase):
-            fid = copy.copy(definition_file)
-        else:
+            self._parse_file(definition_file)
+        elif isinstance(definition_file, (str, pathlib.Path)):
             definition_file = pathlib.Path(definition_file).expanduser()
-            fid = definition_file.open(mode='r', encoding='utf8')
-        # load and parse definition file type
-        if (kwargs['format'].lower() == 'ascii'):
-            raise ValueError('ascii definition format no longer supported')
-        else:
-            self._parse_file(fid)
-        # close the definition file
-        fid.close()
+            with definition_file.open(mode='r', encoding='utf8') as fid:
+                self._parse_file(fid)
         # return the model object
         return self
 
@@ -319,7 +274,7 @@ class model:
             Python dictionary for creating model object
         """
         for key, val in d.items():
-            if isinstance(val, dict):
+            if isinstance(val, dict) and key not in ('projection',):
                 setattr(self, key, DataBase(val))
             else:
                 setattr(self, key, copy.copy(val))
@@ -380,7 +335,6 @@ class model:
             d = self.serialize(d)
         # return the model dictionary
         return d
-
 
     @property
     def gzip(self) -> str:
@@ -592,7 +546,11 @@ class model:
                 ''.join([model_file, self.gzip]))
             valid = output_file.exists()
         # check that (all) output files exist
-        if self.verify and not valid:
+        if self.verify and not valid and not self.compressed:
+            # try seeing if there are compressed files
+            self.compressed = True
+            output_file = self.pathfinder(model_file)
+        elif self.verify and not valid:
             raise FileNotFoundError(output_file)
         # return the complete output path
         return output_file
