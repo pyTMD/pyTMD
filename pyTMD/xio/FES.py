@@ -320,6 +320,7 @@ def open_fes_netcdf(
     # return xarray dataset
     return ds
 
+# PURPOSE: FES utilities for xarray Datasets
 @xr.register_dataset_accessor('fes')
 class FESDataset:
     """Accessor for extending an ``xarray.Dataset`` for FES tidal models

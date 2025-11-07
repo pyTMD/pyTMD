@@ -256,7 +256,8 @@ def open_atlas_dataset(
     # return xarray dataset scaled to output units
     return ds*scale
 
-@xr.register_dataset_accessor('atlasnc')
+# PURPOSE: ATLAS-netcdf utilities for xarray Datasets
+@xr.register_dataset_accessor('atlas')
 class ATLASDataset:
     """
     Accessor for extending an ``xarray.Dataset`` for ATLAS-netcdf
@@ -412,6 +413,7 @@ class ATLASDataset:
             FILE = path.joinpath(f"{v}.nc")
             ds.to_netcdf(FILE, mode=mode, **kwargs)
 
+# PURPOSE: ATLAS-netcdf utilities for xarray DataTrees
 @xr.register_datatree_accessor('atlas')
 class ATLASDataTree:
     """

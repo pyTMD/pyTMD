@@ -1,8 +1,14 @@
+#!/usr/bin/env python
+u"""
+Model.py
+Written by Tyler Sutterley (11/2025)
+"""
 import pyproj
 import pyTMD.io
 import numpy as np
 import xarray as xr
 
+# PURPOSE: experimental extension of pyTMD.io.model for xarray I/O
 class Model(pyTMD.io.model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
