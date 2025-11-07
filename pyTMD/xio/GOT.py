@@ -66,6 +66,7 @@ import pathlib
 import datetime
 import numpy as np
 import xarray as xr
+import pyTMD.version
 import pyTMD.io.constituents
 
 __all__ = [
@@ -233,7 +234,7 @@ def open_got_ascii(
     # return xarray dataset
     return ds
 
-# PURPOSE: read FES netCDF4 files
+# PURPOSE: read GOT netCDF4 files
 def open_got_netcdf(
         input_file: str | pathlib.Path,
         **kwargs
@@ -322,20 +323,13 @@ class GOTDataset:
         kwargs.setdefault('encoding', dict(amplitude=encoding, phase=encoding))
         # coordinate remapping
         mapping_coords = dict(x='longitude', y='latitude')
-        att = dict(longitude={}, latitude={})
-        att['longitude'] = dict(units='degrees_east', long_name='longitude')
-        att['latitude'] = dict(units='degrees_north', long_name='latitude')
+        attrs = dict(longitude={}, latitude={})
+        attrs['longitude'] = dict(units='degrees_east', long_name='longitude')
+        attrs['latitude'] = dict(units='degrees_north', long_name='latitude')
         # get longitude and latitude arrays
         # for each variable
         for v in self._ds.data_vars.keys():
             ds = xr.Dataset()
-            # add global attributes
-            ds.attrs['title'] = 'GOT tidal constituent data'
-            ds.attrs['authors'] = 'Richard Ray'
-            ds.attrs['institution'] = 'NASA Goddard Space Flight Center'
-            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
-            ds.attrs['software_reference'] = pyTMD.version.project_name
-            ds.attrs['software_version'] = pyTMD.version.full_version
             # calculate amplitude and phase
             ds['amplitude'] = self._ds[v].tmd.amplitude
             ds['phase'] = self._ds[v].tmd.phase
@@ -343,14 +337,22 @@ class GOTDataset:
             ds['phase'].attrs['units'] = 'degrees'
             ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
             ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'
-            # remap coordinates to FES convention
-            ds = ds.rename(mapping_coords)
-            for key, value in att.items():
-                ds[key].attrs.update(value)
             # define and fill constituent ID
             ds['Constituent'] = v.upper().ljust(4).encode('utf8')
             ds['Constituent'].attrs['_Encoding'] = 'utf8'
-            ds['Constituent'].attrs['long_name'] = "tidal constituent"
-            # write FES netCDF4 file
+            ds['Constituent'].attrs['long_name'] = 'tidal constituent'
+            # remap coordinates to GOT convention
+            ds = ds.rename(mapping_coords)
+            # update variable attributes
+            for att_name, att_val in attrs.items():
+                ds[att_name].attrs.update(att_val)
+            # add global attributes
+            ds.attrs['title'] = 'GOT tidal constituent data'
+            ds.attrs['authors'] = 'Richard Ray'
+            ds.attrs['institution'] = 'NASA Goddard Space Flight Center'
+            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
+            ds.attrs['software_reference'] = pyTMD.version.project_name
+            ds.attrs['software_version'] = pyTMD.version.full_version
+            # write GOT netCDF4 file
             FILE = path.joinpath(f"{v}.nc")
             ds.to_netcdf(FILE, mode=mode, **kwargs)

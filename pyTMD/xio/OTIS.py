@@ -94,7 +94,6 @@ UPDATE HISTORY:
 from __future__ import division, annotations
 
 import pyproj
-import struct
 import pathlib
 import warnings
 import numpy as np

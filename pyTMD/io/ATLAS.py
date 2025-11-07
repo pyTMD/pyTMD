@@ -1071,7 +1071,7 @@ def output_netcdf_elevation(
     complexpart = dict(Re='Real part', Im='Imag part')
     # set variable attributes for coordinates
     nc['lon_z'].setncattr('units', 'degrees_east')
-    nc['lon_z'].setncattr('long_name', 'longitude of Z nofloatdes')
+    nc['lon_z'].setncattr('long_name', 'longitude of Z nodes')
     nc['lat_z'].setncattr('units', 'degrees_north')
     nc['lat_z'].setncattr('long_name', 'latitude of Z nodes')
     # set variable attributes for tidal constituents
