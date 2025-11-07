@@ -315,22 +315,22 @@ def open_atlas_dataset(
     crs = kwargs.get('crs', 4326)
     # open grid file
     dsg, dtg = open_atlas_grid(grid_file, use_mmap=use_mmap)
-    ds1 = dsg.atlas.combine_local(dtg)
+    ds1 = dsg.compact.combine_local(dtg)
     # add attributes
     ds1.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
     # open model file(s)
     if (type == 'z'):
         # elevations are returned as (z, localz)
         dsh, dth = open_atlas_elevation(model_file, use_mmap=use_mmap)
-        ds2 = dsh.atlas.combine_local(dth)
+        ds2 = dsh.compact.combine_local(dth)
     elif type in ('u', 'U'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsu.atlas.combine_local(dtu)
+        ds2 = dsu.compact.combine_local(dtu)
     elif type in ('v', 'V'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsv.atlas.combine_local(dtv)
+        ds2 = dsv.compact.combine_local(dtv)
     # merge datasets
     ds = xr.merge([ds1, ds2])
     # add attributes
@@ -1941,8 +1941,8 @@ class OTISDataTree:
             path = directory.joinpath(c)
             self.to_transport(path, u=dsu[[c]], v=dsv[[c]])
 
-# PURPOSE: ATLAS utilities for xarray Datasets
-@xr.register_dataset_accessor('atlas')
+# PURPOSE: ATLAS-compact utilities for xarray Datasets
+@xr.register_dataset_accessor('compact')
 class ATLASDataset:
     """
     Accessor for extending an ``xarray.Dataset`` for ATLAS-compact

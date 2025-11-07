@@ -1,5 +1,5 @@
 """
-Experimental xarray input/output functions
+Experimental xarray-powered input/output functions
 """
 from .ATLAS import *
 from .FES import *

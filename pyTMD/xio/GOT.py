@@ -286,6 +286,7 @@ def open_got_netcdf(
     # return xarray dataset
     return ds
 
+# PURPOSE: GOT utilities for xarray Datasets
 @xr.register_dataset_accessor('got')
 class GOTDataset:
     """Accessor for extending an ``xarray.Dataset`` for GOT tidal models
