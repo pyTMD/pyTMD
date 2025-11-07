@@ -1,7 +1,17 @@
 {
-    "elevation": {
-        "GOT4.10": {
-            "format": "GOT-ascii",
+    "GOT4.10": {
+        "format": "GOT-ascii",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
+        },
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_oceantide/q1.d",
                 "GOT4.10c/grids_oceantide/o1.d",
@@ -14,22 +24,50 @@
                 "GOT4.10c/grids_oceantide/s1.d",
                 "GOT4.10c/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.10",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.10_SAL": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
+            "model_file": [
+                "GOT4.10c/grids_SAL/p1sal.nc",
+                "GOT4.10c/grids_SAL/n2sal.nc",
+                "GOT4.10c/grids_SAL/k2sal.nc",
+                "GOT4.10c/grids_SAL/s2sal.nc",
+                "GOT4.10c/grids_SAL/o1sal.nc",
+                "GOT4.10c/grids_SAL/k1sal.nc",
+                "GOT4.10c/grids_SAL/m2sal.nc",
+                "GOT4.10c/grids_SAL/q1sal.nc"
+            ],
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.10_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.10_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
+        },
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_loadtide/q1load.d",
                 "GOT4.10c/grids_loadtide/o1load.d",
@@ -42,22 +80,23 @@
                 "GOT4.10c/grids_loadtide/s1load.d",
                 "GOT4.10c/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.10_load",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.10",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.10_nc": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_nc": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_oceantide_netcdf/q1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/o1.nc",
@@ -70,48 +109,23 @@
                 "GOT4.10c/grids_oceantide_netcdf/s1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/m4.nc"
             ],
-            "name": "GOT4.10",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.7": {
+        "format": "GOT-ascii",
+        "name": "GOT4.7",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_SAL": {
-            "format": "GOT-netcdf",
-            "model_file": [
-                "GOT4.10c/grids_SAL/p1sal.nc",
-                "GOT4.10c/grids_SAL/n2sal.nc",
-                "GOT4.10c/grids_SAL/k2sal.nc",
-                "GOT4.10c/grids_SAL/s2sal.nc",
-                "GOT4.10c/grids_SAL/o1sal.nc",
-                "GOT4.10c/grids_SAL/k1sal.nc",
-                "GOT4.10c/grids_SAL/m2sal.nc",
-                "GOT4.10c/grids_SAL/q1sal.nc"
-            ],
-            "name": "GOT4.10",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
-        },
-        "GOT4.7": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.7",
+        "z": {
             "model_file": [
                 "GOT4.7/grids_oceantide/q1.d",
                 "GOT4.7/grids_oceantide/o1.d",
@@ -124,22 +138,23 @@
                 "GOT4.7/grids_oceantide/s1.d",
                 "GOT4.7/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.7",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.7",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.7_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.7_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.7_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.7",
+        "z": {
             "model_file": [
                 "GOT4.7/grids_loadtide/q1load.d",
                 "GOT4.7/grids_loadtide/o1load.d",
@@ -152,22 +167,23 @@
                 "GOT4.7/grids_loadtide/s1load.d",
                 "GOT4.7/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.7_load",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.7",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.8": {
+        "format": "GOT-ascii",
+        "name": "GOT4.8",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "got4.8/grids_oceantide/q1.d",
                 "got4.8/grids_oceantide/o1.d",
@@ -180,22 +196,23 @@
                 "got4.8/grids_oceantide/s1.d",
                 "got4.8/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.8",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.8",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.8_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.8_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "got4.8/grids_loadtide/q1load.d",
                 "got4.8/grids_loadtide/o1load.d",
@@ -208,22 +225,23 @@
                 "got4.8/grids_loadtide/s1load.d",
                 "got4.8/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.8_load",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.8",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.8_nc": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.8",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8_nc": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "GOT4.8/grids_oceantide_netcdf/q1.nc",
                 "GOT4.8/grids_oceantide_netcdf/o1.nc",
@@ -236,22 +254,23 @@
                 "GOT4.8/grids_oceantide_netcdf/s1.nc",
                 "GOT4.8/grids_oceantide_netcdf/m4.nc"
             ],
-            "name": "GOT4.8",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.8",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -270,91 +289,23 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "name": "GOT5.5",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5D": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5D",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5_load": {
-            "format": "GOT-netcdf",
-            "model_file": [
-                "GOT5.5/load_tides/2n2load.nc",
-                "GOT5.5/load_tides/k1load.nc",
-                "GOT5.5/load_tides/m2load.nc",
-                "GOT5.5/load_tides/ms4load.nc",
-                "GOT5.5/load_tides/n2load.nc",
-                "GOT5.5/load_tides/oo1load.nc",
-                "GOT5.5/load_tides/q1load.nc",
-                "GOT5.5/load_tides/s2load.nc",
-                "GOT5.5/load_tides/j1load.nc",
-                "GOT5.5/load_tides/k2load.nc",
-                "GOT5.5/load_tides/m4load.nc",
-                "GOT5.5/load_tides/mu2load.nc",
-                "GOT5.5/load_tides/o1load.nc",
-                "GOT5.5/load_tides/p1load.nc",
-                "GOT5.5/load_tides/s1load.nc",
-                "GOT5.5/load_tides/sig1load.nc"
-            ],
-            "name": "GOT5.5_load",
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "5.5",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
-        },
-        "GOT5.5_extrapolated": {
-            "format": "GOT-netcdf",
-            "name": "GOT5.5",
-            "model_file": [
-                "GOT5.5/extrapolated/2n2x.nc",
-                "GOT5.5/extrapolated/j1x.nc",
-                "GOT5.5/extrapolated/k1x.nc",
-                "GOT5.5/extrapolated/k2x.nc",
-                "GOT5.5/extrapolated/m2x.nc",
-                "GOT5.5/extrapolated/m4x.nc",
-                "GOT5.5/extrapolated/ms4x.nc",
-                "GOT5.5/extrapolated/mu2x.nc",
-                "GOT5.5/extrapolated/n2x.nc",
-                "GOT5.5/extrapolated/o1x.nc",
-                "GOT5.5/extrapolated/oo1x.nc",
-                "GOT5.5/extrapolated/p1x.nc",
-                "GOT5.5/extrapolated/q1x.nc",
-                "GOT5.5/extrapolated/s1x.nc",
-                "GOT5.5/extrapolated/s2x.nc",
-                "GOT5.5/extrapolated/sig1x.nc"
-            ],
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5",
-            "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
-        },
-        "GOT5.5D": {
-            "format": "GOT-netcdf",
-            "name": "GOT5.5D",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -373,22 +324,23 @@
                 "GOT5.5D/ocean_tides/s2_5.5D.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5",
-            "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5D_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5D",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5D_extrapolated": {
-            "format": "GOT-netcdf",
-            "name": "GOT5.5D",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/extrapolated/2n2x.nc",
                 "GOT5.5/extrapolated/j1x.nc",
@@ -407,22 +359,93 @@
                 "GOT5.5D/extrapolated/s2_5.5Dx.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5",
-            "scale": 0.01,
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.6": {
-            "format": "GOT-netcdf",
-            "name": "GOT5.6",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
+            "model_file": [
+                "GOT5.5/extrapolated/2n2x.nc",
+                "GOT5.5/extrapolated/j1x.nc",
+                "GOT5.5/extrapolated/k1x.nc",
+                "GOT5.5/extrapolated/k2x.nc",
+                "GOT5.5/extrapolated/m2x.nc",
+                "GOT5.5/extrapolated/m4x.nc",
+                "GOT5.5/extrapolated/ms4x.nc",
+                "GOT5.5/extrapolated/mu2x.nc",
+                "GOT5.5/extrapolated/n2x.nc",
+                "GOT5.5/extrapolated/o1x.nc",
+                "GOT5.5/extrapolated/oo1x.nc",
+                "GOT5.5/extrapolated/p1x.nc",
+                "GOT5.5/extrapolated/q1x.nc",
+                "GOT5.5/extrapolated/s1x.nc",
+                "GOT5.5/extrapolated/s2x.nc",
+                "GOT5.5/extrapolated/sig1x.nc"
+            ],
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5_load": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
+        },
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
+            "model_file": [
+                "GOT5.5/load_tides/2n2load.nc",
+                "GOT5.5/load_tides/k1load.nc",
+                "GOT5.5/load_tides/m2load.nc",
+                "GOT5.5/load_tides/ms4load.nc",
+                "GOT5.5/load_tides/n2load.nc",
+                "GOT5.5/load_tides/oo1load.nc",
+                "GOT5.5/load_tides/q1load.nc",
+                "GOT5.5/load_tides/s2load.nc",
+                "GOT5.5/load_tides/j1load.nc",
+                "GOT5.5/load_tides/k2load.nc",
+                "GOT5.5/load_tides/m4load.nc",
+                "GOT5.5/load_tides/mu2load.nc",
+                "GOT5.5/load_tides/o1load.nc",
+                "GOT5.5/load_tides/p1load.nc",
+                "GOT5.5/load_tides/s1load.nc",
+                "GOT5.5/load_tides/sig1load.nc"
+            ],
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT5.6": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.6",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
+        },
+        "reference": "https://doi.org/10.1126/sciadv.abd4744",
+        "version": "5.6",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -445,22 +468,23 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.6",
-            "scale": 0.01,
-            "reference": "https://doi.org/10.1126/sciadv.abd4744",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.6_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.6",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.6_extrapolated": {
-            "format": "GOT-netcdf",
-            "name": "GOT5.6",
+        "reference": "https://doi.org/10.1126/sciadv.abd4744",
+        "version": "5.6",
+        "z": {
             "model_file": [
                 "GOT5.5/extrapolated/2n2x.nc",
                 "GOT5.5/extrapolated/j1x.nc",
@@ -483,22 +507,23 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.6",
-            "scale": 0.01,
-            "reference": "https://doi.org/10.1126/sciadv.abd4744",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "RE14": {
+        "format": "GOT-netcdf",
+        "name": "RE14",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "RE14": {
-            "format": "GOT-netcdf",
-            "name": "RE14",
+        "reference": "https://doi.org/10.1002/2013JB010830",
+        "version": "2014",
+        "z": {
             "model_file": [
                 "RE14_LongPeriodTides_rel/oceantides/Mf_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Mm_RE14_oceantide.nc",
@@ -507,18 +532,8 @@
                 "RE14_LongPeriodTides_rel/oceantides/Sa_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Ssa_RE14_oceantide.nc"
             ],
-            "type": "z",
-            "variable": "tide_lpe",
-            "version": "2014",
-            "scale": 0.01,
-            "reference": "https://doi.org/10.1002/2013JB010830",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_lpe"
         }
     }
 }
