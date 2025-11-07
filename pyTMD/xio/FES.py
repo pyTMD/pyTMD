@@ -66,6 +66,7 @@ import pathlib
 import datetime
 import numpy as np
 import xarray as xr
+import pyTMD.version
 import pyTMD.io.constituents
 
 # versions of FES models
@@ -369,18 +370,17 @@ class FESDataset:
         kwargs.setdefault('encoding', {amp_key: encoding, phase_key: encoding})
         # coordinate remapping
         mapping_coords = dict(x='lon', y='lat')
-        att = dict(lon={}, lat={})
-        att['lon'] = dict(axis='X', units='degrees_east', long_name='longitude')
-        att['lat'] = dict(axis='Y', units='degrees_north', long_name='latitude')
-        # get longitude and latitude arrays
+        attrs = dict(lon={}, lat={})
+        attrs['lon']['axis'] = 'X'
+        attrs['lon']['units'] = 'degrees_east'
+        attrs['lon']['long_name'] = 'longitude'
+        attrs['lat']['axis'] = 'Y'
+        attrs['lat']['units'] = 'degrees_north'
+        attrs['lat']['long_name'] = 'latitude'
         # for each variable
         for v in self._ds.data_vars.keys():
+            # create xarray dataset
             ds = xr.Dataset()
-            # add global attributes
-            ds.attrs['title'] = 'FES tidal constituent data'
-            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
-            ds.attrs['software_reference'] = pyTMD.version.project_name
-            ds.attrs['software_version'] = pyTMD.version.full_version
             # calculate amplitude and phase
             ds[amp_key] = self._ds[v].tmd.amplitude
             ds[phase_key] = self._ds[v].tmd.phase
@@ -388,14 +388,20 @@ class FESDataset:
             ds[phase_key].attrs['units'] = 'degrees'
             ds[amp_key].attrs['long_name'] = f'Tide amplitude at {v} frequency'
             ds[phase_key].attrs['long_name'] = f'Tide phase at {v} frequency'
-            # remap coordinates to FES convention
-            ds = ds.rename(mapping_coords)
-            for key, value in att.items():
-                ds[key].attrs.update(value)
             # define and fill constituent ID
             ds['con'] = v.ljust(4).encode('utf8')
             ds['con'].attrs['_Encoding'] = 'utf8'
-            ds['con'].attrs['long_name'] = "tidal constituent"
+            ds['con'].attrs['long_name'] = 'tidal constituent'
+            # remap coordinates to FES convention
+            ds = ds.rename(mapping_coords)
+            # update variable attributes
+            for att_name, att_val in attrs.items():
+                ds[att_name].attrs.update(att_val)
+            # add global attributes
+            ds.attrs['title'] = 'FES tidal constituent data'
+            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
+            ds.attrs['software_reference'] = pyTMD.version.project_name
+            ds.attrs['software_version'] = pyTMD.version.full_version
             # write FES netCDF4 file
             FILE = path.joinpath(f"{v}.nc")
             ds.to_netcdf(FILE, mode=mode, **kwargs)
