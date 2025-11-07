@@ -499,7 +499,7 @@ def open_otis_grid(
     offset += 4*nx*ny
     # skip 8 bytes
     offset += 8
-    # read mz matrix
+    # read mz matrix (1: wet point, 0: dry point)
     mz = read_raw_binary(input_file,
         dtype='>i4',
         shape=(ny, nx),
@@ -508,6 +508,8 @@ def open_otis_grid(
         order='C'
     )
     offset += 4*nx*ny
+    # update mask for cases where bathymetry is zero or negative
+    mz = np.minimum(mz, (hz > 0))
     # data dictionary
     grid = dict(dims=('y', 'x'), coords={}, data_vars={})
     grid["coords"]["y"] = dict(data=y.copy(), dims='y')
@@ -844,7 +846,7 @@ def open_atlas_grid(
     offset += 4*nx*ny
     # skip 8 bytes
     offset += 8
-    # read mz matrix
+    # read mz matrix (1: wet point, 0: dry point)
     mz = read_raw_binary(input_file,
         dtype='>i4',
         shape=(ny, nx),
@@ -853,6 +855,8 @@ def open_atlas_grid(
         order='C'
     )
     offset += 4*nx*ny
+    # update mask for cases where bathymetry is zero or negative
+    mz = np.minimum(mz, (hz > 0))
     # skip 8 bytes
     offset += 8
     # read pmask matrix
@@ -1624,7 +1628,7 @@ class OTISDataset:
             # calculate Dataset on u grids
             # pad and roll the mask and bathymetry
             tmp = self._ds.pad(x=(1, 0), mode=mode).rolling(x=2)
-            mask = tmp.min()['mask'].isel(x=slice(1,None))
+            mask = tmp.min()['mask'].isel(x=slice(1, None))
             bathymetry = tmp.mean()['bathymetry'].isel(x=slice(1, None))
             # assign to dataset
             ds['mask'] = (ds.dims, mask.values)
@@ -1633,7 +1637,7 @@ class OTISDataset:
             # calculate Dataset on v grids
             # pad and roll the mask and bathymetry
             tmp = self._ds.pad(y=(1, 0), mode='edge').rolling(y=2)
-            mask = tmp.min()['mask'].isel(y=slice(1,None))
+            mask = tmp.min()['mask'].isel(y=slice(1, None))
             bathymetry = tmp.mean()['bathymetry'].isel(y=slice(1, None))
             # assign to dataset
             ds['mask'] = (ds.dims, mask.values)
