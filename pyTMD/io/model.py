@@ -240,6 +240,8 @@ class model:
             self[mtype].model_file = self.pathfinder(self[mtype].model_file)
         # return the model parameters
         self.validate_format()
+        # set dictionary of parameters
+        self.__parameters__ = self.to_dict(serialize=True)
         return self
 
     def from_file(self,
@@ -673,6 +675,8 @@ class model:
                 d[key] = [str(v) for v in val]
             elif isinstance(val, dict):
                 d[key] = self.serialize(val)
+            elif isinstance(val, DataBase):
+                d[key] = self.serialize(val.__dict__)
         # return the model dictionary
         return d
 
