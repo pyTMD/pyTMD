@@ -104,7 +104,7 @@ _default_directory = get_cache_path()
 
 @dataclass
 class DataBase:
-    """Class for pyTMD model database"""
+    """pyTMD model database and parameters"""
     __dict__: dict
 
     def update(self, d: dict):
