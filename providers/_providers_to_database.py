@@ -2,8 +2,6 @@
 _providers_to_database.py (08/2024)
 Compress providers to a single JSON database
 """
-import re
-import copy
 import json
 import inspect
 import pathlib
@@ -36,15 +34,14 @@ def main():
     args,_ = parser.parse_known_args()
 
     # output dictionary
-    d = dict(elevation={}, current={})
+    d = dict()
     # find providers
     providers = [f for f in filepath.iterdir() if (f.suffix == '.json')]
     # for each provider
     for provider in providers:
         with provider.open('r', encoding='utf-8') as fid:
             p = json.load(fid)
-            for key, val in p.items():
-                d[key].update(val)
+            d.update(p)
 
     # writing model parameters to JSON database file
     json_file = pyTMD.utilities.get_data_path(['data','database.json'])

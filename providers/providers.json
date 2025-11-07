@@ -1,95 +1,48 @@
 {
-    "current": {
-        "CATS2008-v2023": {
-            "format": "TMD3",
-            "grid_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "model_file": {
-                "u": "CATS2008_v2023/CATS2008_v2023.nc"
-            },
-            "name": "CATS2008-v2023",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601772",
-            "type": [
-                "u",
-                "v"
-            ]
+    "CATS2008-v2023": {
+        "format": "TMD3",
+        "name": "CATS2008-v2023",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": -90,
+            "lat_ts": -71,
+            "lon_0": -70,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "HAMTIDE11": {
-            "format": "FES-netcdf",
-            "model_file": {
-                "u": [
-                    "hamtide/HAMcurrent11a_2n.nc",
-                    "hamtide/HAMcurrent11a_k1.nc",
-                    "hamtide/HAMcurrent11a_k2.nc",
-                    "hamtide/HAMcurrent11a_m2.nc",
-                    "hamtide/HAMcurrent11a_n2.nc",
-                    "hamtide/HAMcurrent11a_o1.nc",
-                    "hamtide/HAMcurrent11a_p1.nc",
-                    "hamtide/HAMcurrent11a_q1.nc",
-                    "hamtide/HAMcurrent11a_s2.nc"
-                ],
-                "v": [
-                    "hamtide/HAMcurrent11a_2n.nc",
-                    "hamtide/HAMcurrent11a_k1.nc",
-                    "hamtide/HAMcurrent11a_k2.nc",
-                    "hamtide/HAMcurrent11a_m2.nc",
-                    "hamtide/HAMcurrent11a_n2.nc",
-                    "hamtide/HAMcurrent11a_o1.nc",
-                    "hamtide/HAMcurrent11a_p1.nc",
-                    "hamtide/HAMcurrent11a_q1.nc",
-                    "hamtide/HAMcurrent11a_s2.nc"
-                ]
-            },
-            "name": "HAMTIDE11",
-            "reference": "https://doi.org/10.1002/2013JC009766",
-            "scale": 1.0,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "HAMTIDE11",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+        "reference": "https://doi.org/10.15784/601772",
+        "u": {
+            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "z": {
+            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
+            "units": "m",
+            "variable": "tide_ocean"
         }
     },
-    "elevation": {
-        "CATS2008-v2023": {
-            "format": "TMD3",
-            "grid_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "name": "CATS2008-v2023",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601772",
-            "type": "z",
-            "variable": "tide_ocean"
+    "DTU23": {
+        "format": "GOT-ascii",
+        "name": "DTU23",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "DTU23": {
-            "format": "GOT-ascii",
+        "reference": "https://doi.org/10.3390/rs15184479",
+        "version": "2023",
+        "z": {
             "model_file": [
                 "DTU23_OceanTide/DTU23/K1_DTU23.d",
                 "DTU23_OceanTide/DTU23/K2_DTU23.d",
@@ -102,22 +55,23 @@
                 "DTU23_OceanTide/DTU23/S1_DTU23.d",
                 "DTU23_OceanTide/DTU23/S2_DTU23.d"
             ],
-            "name": "DTU23",
-            "reference": "https://doi.org/10.3390/rs15184479",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "2023",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "EOT20": {
+        "format": "FES-netcdf",
+        "name": "EOT20",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "EOT20": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.17882/79489",
+        "version": "EOT20",
+        "z": {
             "model_file": [
                 "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                 "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -137,22 +91,23 @@
                 "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                 "EOT20/ocean_tides/T2_ocean_eot20.nc"
             ],
-            "name": "EOT20",
-            "reference": "https://doi.org/10.17882/79489",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "EOT20",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "EOT20_load": {
+        "format": "FES-netcdf",
+        "name": "EOT20_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "EOT20_load": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.17882/79489",
+        "version": "EOT20",
+        "z": {
             "model_file": [
                 "EOT20/load_tides/2N2_load_eot20.nc",
                 "EOT20/load_tides/J1_load_eot20.nc",
@@ -172,22 +127,53 @@
                 "EOT20/load_tides/SSA_load_eot20.nc",
                 "EOT20/load_tides/T2_load_eot20.nc"
             ],
-            "name": "EOT20_load",
-            "reference": "https://doi.org/10.17882/79489",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "EOT20",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_load"
+        }
+    },
+    "HAMTIDE11": {
+        "format": "FES-netcdf",
+        "name": "HAMTIDE11",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "HAMTIDE11": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.1002/2013JC009766",
+        "u": {
+            "model_file": [
+                "hamtide/HAMcurrent11a_2n.nc",
+                "hamtide/HAMcurrent11a_k1.nc",
+                "hamtide/HAMcurrent11a_k2.nc",
+                "hamtide/HAMcurrent11a_m2.nc",
+                "hamtide/HAMcurrent11a_n2.nc",
+                "hamtide/HAMcurrent11a_o1.nc",
+                "hamtide/HAMcurrent11a_p1.nc",
+                "hamtide/HAMcurrent11a_q1.nc",
+                "hamtide/HAMcurrent11a_s2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "model_file": [
+                "hamtide/HAMcurrent11a_2n.nc",
+                "hamtide/HAMcurrent11a_k1.nc",
+                "hamtide/HAMcurrent11a_k2.nc",
+                "hamtide/HAMcurrent11a_m2.nc",
+                "hamtide/HAMcurrent11a_n2.nc",
+                "hamtide/HAMcurrent11a_o1.nc",
+                "hamtide/HAMcurrent11a_p1.nc",
+                "hamtide/HAMcurrent11a_q1.nc",
+                "hamtide/HAMcurrent11a_s2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "HAMTIDE11",
+        "z": {
             "model_file": [
                 "hamtide/2n.hamtide11a.nc",
                 "hamtide/k1.hamtide11a.nc",
@@ -199,19 +185,8 @@
                 "hamtide/q1.hamtide11a.nc",
                 "hamtide/s2.hamtide11a.nc"
             ],
-            "name": "HAMTIDE11",
-            "reference": "https://doi.org/10.1002/2013JC009766",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "HAMTIDE11",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
         }
     }
 }

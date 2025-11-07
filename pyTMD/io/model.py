@@ -18,6 +18,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 11/2025: use default cache directory if directory is None
         added crs property for model coordinate reference system
+        refactor to use new simpler (flattened) database format
     Updated 08/2025: use numpy degree to radian conversions
         update node equilibrium tide estimation
         add functions for converting a model to an xarray DataTree object
@@ -104,8 +105,11 @@ _default_directory = get_cache_path()
 @dataclass
 class DataBase:
     """Class for pyTMD model database"""
-    current: dict
-    elevation: dict
+    __dict__: dict
+
+    def update(self, d: dict):
+        """Update the keys of the model database"""
+        self.__dict__.update(d)
 
     def keys(self):
         """Returns the keys of the model database"""
@@ -119,9 +123,13 @@ class DataBase:
         """Returns the items of the model database"""
         return self.__dict__.items()
 
+    def __str__(self):
+        """String representation of the ``DataBase`` object
+        """
+        return str(self.__dict__)
+
     def __getitem__(self, key):
         return getattr(self, key)
-
 
 # PURPOSE: load the JSON database of model files
 def load_database(extra_databases: list = []):
@@ -161,11 +169,9 @@ def load_database(extra_databases: list = []):
             # extract JSON data
             with db.open(mode='r', encoding='utf-8') as fid:
                 extra_database = json.load(fid)
-        # Add additional models to database, accounting
-        # for top level elevation and current dict keys
-        for key, val in extra_database.items():
-            parameters[key].update(val)
-    return DataBase(**parameters)
+        # Add additional models to database
+        parameters.update(extra_database)
+    return DataBase(parameters)
 
 class model:
     """Retrieves tide model parameters for named models or
@@ -174,22 +180,9 @@ class model:
 
     Attributes
     ----------
-    atl03: str
-        HDF5 dataset string for output ATL03 tide heights
-    atl06: str
-        HDF5 dataset string for output ATL06 tide heights
-    atl07: str
-        HDF5 dataset string for output ATL07 tide heights
-    atl10: str
-        HDF5 dataset string for output ATL10 tide heights
-    atl11: str
-        HDF5 dataset string for output ATL11 tide heights
-    atl12: str
-        HDF5 dataset string for output ATL12 tide heights
+
     compressed: bool
         Model files are gzip compressed
-    constituents: list or None
-        Model constituents for ``FES`` models
     description: str
         HDF5 ``description`` attribute string for output tide heights
     directory: str, pathlib.Path or None, default None
@@ -203,38 +196,28 @@ class model:
     format: str
         Model format
 
-            - ``OTIS``
             - ``ATLAS-compact``
-            - ``TMD3``
             - ``ATLAS-netcdf``
             - ``GOT-ascii``
             - ``GOT-netcdf``
             - ``FES-ascii``
             - ``FES-netcdf``
-    gla12: str
-        HDF5 dataset string for output GLA12 tide heights
+            - ``OTIS``
+            - ``TMD3``
     grid_file: pathlib.Path
-        Model grid file for ``OTIS``, ``ATLAS-compact``, ``ATLAS-netcdf``, and ``TMD3`` models
+        Model grid file for ``OTIS``, ``ATLAS-compact``, and ``ATLAS-netcdf`` models
     gzip: bool
         Suffix if model is compressed
-    long_name: str
-        HDF5 ``long_name`` attribute string for output tide heights
     minor: list or None
         Minor constituents for inference
     model_file: pathlib.Path or list
         Model constituent file or list of files
     name: str
         Model name
-    projection: str
-        Model projection for ``OTIS``, ``ATLAS-compact`` and ``TMD3`` models
-    scale: float
-        Model scaling factor for converting to output units
-    type: str
-        Model type
-
-            - ``z``
-            - ``u``
-            - ``v``
+    projection: str or dict
+        Model projection string or dictionary
+    crs: dict
+        Coordinate reference system of the model
     verify: bool
         Verify that all model files exist
     version: str
@@ -257,20 +240,18 @@ class model:
         self.extra_databases = copy.copy(kwargs['extra_databases'])
         self.flexure = False
         self.format = None
-        self.grid_file = None
-        self.model_file = None
+        self.z = {}
+        self.u = {}
+        self.v = {}
         self.name = None
         self.projection = None
         self.reference = None
-        self.scale = None
-        self.type = None
-        self.variable = None
         self.verify = copy.copy(kwargs['verify'])
         self.version = None
 
-    def elevation(self, m: str):
+    def from_database(self, m: str):
         """
-        Create a model object from known tidal elevation models
+        Create a model object from known tidal models
 
         Parameters
         ----------
@@ -284,52 +265,122 @@ class model:
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
         try:
-            self.from_dict(parameters['elevation'][m])
+            self.from_dict(parameters[m])
         except (ValueError, KeyError) as exc:
             raise ValueError(f"Unlisted tide model {m}")
-        # validate paths: grid file for OTIS, ATLAS models
-        if hasattr(self, 'grid_file') and getattr(self, 'grid_file'):
-            self.grid_file = self.pathfinder(self.grid_file)
-        # validate paths: model constituent files
-        self.model_file = self.pathfinder(self.model_file)
-        # get model constituents from constituent files
-        if self.format in ('FES-ascii','FES-netcdf',):
-            self.parse_constituents()
+        # verify paths
+        for mtype in ('z', 'u', 'v'):
+            # validate paths: grid file for OTIS, ATLAS models
+            if hasattr(self[mtype], 'grid_file'):
+                self[mtype].grid_file = self.pathfinder(self[mtype].grid_file)
+            # validate paths: model constituent files
+            self[mtype].model_file = self.pathfinder(self[mtype].model_file)
         # return the model parameters
         self.validate_format()
         return self
 
-    def current(self, m: str):
+    def from_file(self,
+            definition_file: str | pathlib.Path | io.IOBase,
+            **kwargs,
+        ):
         """
-        Create a model object from known tidal current models
+        Create a model object from an input definition file
+
+        Parameters
+        ----------
+        definition_file: str, pathlib.Path or io.IOBase
+            model definition file for creating model object
+        """
+        # set default keyword arguments
+        kwargs.setdefault('format', 'json')
+        # Opening definition file and assigning file ID number
+        if isinstance(definition_file, io.IOBase):
+            fid = copy.copy(definition_file)
+        else:
+            definition_file = pathlib.Path(definition_file).expanduser()
+            fid = definition_file.open(mode='r', encoding='utf8')
+        # load and parse definition file type
+        if (kwargs['format'].lower() == 'ascii'):
+            raise ValueError('ascii definition format no longer supported')
+        else:
+            self._parse_file(fid)
+        # close the definition file
+        fid.close()
+        # return the model object
+        return self
+
+    def from_dict(self, d: dict):
+        """
+        Create a model object from a python dictionary
+
+        Parameters
+        ----------
+        d: dict
+            Python dictionary for creating model object
+        """
+        for key, val in d.items():
+            if isinstance(val, dict):
+                setattr(self, key, DataBase(val))
+            else:
+                setattr(self, key, copy.copy(val))
+        # return the model parameters
+        return self
+
+    def to_datatree(self, m, **kwargs):
+        """
+        Create an xarray DataTree from a model object
 
         Parameters
         ----------
         m: str
             model name
         """
-        # set working data directory if unset
-        if self.directory is None:
-            self.directory = pathlib.Path(_default_directory)
-        # select between tide models
-        parameters = load_database(extra_databases=self.extra_databases)
-        # try to extract parameters for model
-        try:
-            self.from_dict(parameters['current'][m])
-        except (ValueError, KeyError) as exc:
-            raise ValueError(f"Unlisted tide model {m}")
-        # validate paths: grid file for OTIS, ATLAS models
-        if hasattr(self, 'grid_file') and getattr(self, 'grid_file'):
-            self.grid_file = self.pathfinder(self.grid_file)
-        # validate paths: model constituent files
-        for key, val in self.model_file.items():
-            self.model_file[key] = self.pathfinder(val)
-        # get model constituents from constituent files
-        if self.format in ('FES-ascii','FES-netcdf',):
-            self.parse_constituents()
-        # return the model parameters
-        self.validate_format()
-        return self
+        # output dictionary of xarray Datasets
+        ds = {}
+        # get model parameters
+        model = self.from_database(m)
+        # try to read model files
+        for mtype in ('z', 'u', 'v'):
+            # read model constituents
+            model.read_constants(type=mtype, **kwargs)
+            # scale factor to convert to output units
+            scale = model.scale or 1.0
+            # convert to xarray Dataset and scale
+            ds[mtype] = scale*model._constituents.to_dataset()
+        # create xarray DataTree from dictionary
+        dtree = xr.DataTree.from_dict(ds)
+        # return the model xarray DataTree
+        return dtree
+
+    def to_dict(self, **kwargs):
+        """
+        Create a python dictionary from a model object
+
+        Parameters
+        ----------
+        fields: list, default all
+            List of model attributes to output
+        serialize: bool, default False
+            Serialize dictionary for JSON output
+        """
+        # default fields
+        keys = ['name', 'format', 'projection', 'scale', 'z', 'u', 'v',
+            'version', 'reference']
+        # set default keyword arguments
+        kwargs.setdefault('fields', keys)
+        kwargs.setdefault('serialize', False)
+        # output dictionary
+        d = {}
+        # for each field
+        for key in kwargs['fields']:
+            if hasattr(self, key) and getattr(self, key) is not None:
+                d[key] = getattr(self, key)
+        # serialize dictionary for JSON output
+        if kwargs['serialize']:
+            d = self.serialize(d)
+        # return the model dictionary
+        return d
+
 
     @property
     def gzip(self) -> str:
@@ -369,135 +420,8 @@ class model:
         CRS = self.get('projection', 4326)
         return pyproj.CRS.from_user_input(CRS)
 
-    @property
-    def atl03(self) -> str:
-        """Returns ICESat-2 ATL03 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'tide_ocean'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'tide_load'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'tide_equilibrium'
-        else:
-            return None
-
-    @property
-    def atl06(self) -> str:
-        """Returns ICESat-2 ATL06 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'tide_ocean'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'tide_load'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'tide_equilibrium'
-        else:
-            return None
-
-    @property
-    def atl07(self) -> str:
-        """Returns ICESat-2 ATL07 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'height_segment_ocean'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'height_segment_load'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'height_segment_lpe'
-        else:
-            return None
-
-    @property
-    def atl10(self) -> str:
-        """Returns ICESat-2 ATL07 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'height_segment_ocean'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'height_segment_load'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'height_segment_lpe'
-        else:
-            return None
-
-    @property
-    def atl11(self) -> str:
-        """Returns ICESat-2 ATL11 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'tide_ocean'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'tide_load'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'tide_equilibrium'
-        else:
-            return None
-
-    @property
-    def atl12(self) -> str:
-        """Returns ICESat-2 ATL12 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'tide_ocean_seg'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'tide_load_seg'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'tide_equilibrium_seg'
-        else:
-            return None
-
-    @property
-    def gla12(self) -> str:
-        """Returns ICESat GLA12 attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'd_ocElv'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'd_ldElv'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'd_eqElv'
-        else:
-            return None
-
-    @property
-    def long_name(self) -> str:
-        """Returns ``long_name`` attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return 'ocean_tide_elevation'
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return 'load_tide_elevation'
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'equilibrium_tide_elevation'
-        elif (self.type == ['u','v']):
-            return dict(u='zonal_tidal_current', v='meridional_tidal_current')
-        else:
-            return None
-
-    @property
-    def description(self) -> str:
-        """Returns ``description`` attribute string for a given variable
-        """
-        if (self.type == 'z') and (self.variable == 'tide_ocean'):
-            return "Ocean tidal elevations derived from harmonic constants"
-        elif (self.type == 'z') and (self.variable == 'tide_load'):
-            return ("Local displacement due to ocean tidal loading "
-                "derived from harmonic constants")
-        elif (self.type == 'z') and (self.variable == 'tide_lpe'):
-            return 'Long-period equilibrium tide elevations'
-        elif (self.type == ['u','v']):
-            attr = {}
-            attr['u'] = ('Depth-averaged tidal zonal current '
-                'derived from harmonic constants')
-            attr['v'] = ('Depth-averaged tidal meridional current '
-                'derived from harmonic constants')
-            return attr
-        else:
-            return None
-
     @staticmethod
-    def formats(**kwargs) -> list:
+    def known_formats(**kwargs) -> list:
         """
         Returns list of known model formats
         """
@@ -505,9 +429,8 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known formats
         format_list = []
-        for variable, models in parameters.items():
-            for model, val in models.items():
-                format_list.append(val['format'])
+        for model, val in parameters.items():
+            format_list.append(val['format'])
         # return unique list of formats
         return sorted(set(format_list))
 
@@ -520,10 +443,10 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known ocean tide elevation models
         model_list = []
-        for model, val in parameters['elevation'].items():
-            if (val['type'] == 'z') and (val['variable'] == 'tide_ocean'):
+        for model, val in parameters.items():
+            if ('z' in val) and (val['z']['variable'] == 'tide_ocean'):
                 model_list.append(model)
-            elif (val['type'] == 'z') and (val['variable'] == 'tide_lpe'):
+            if ('z' in val) and (val['z']['variable'] == 'tide_lpe'):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -537,8 +460,8 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known load tide elevation models
         model_list = []
-        for model, val in parameters['elevation'].items():
-            if (val['type'] == 'z') and (val['variable'] == 'tide_load'):
+        for model, val in parameters.items():
+            if ('z' in val) and (val['z']['variable'] == 'tide_load'):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -552,8 +475,9 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known ocean tide current models
         model_list = []
-        for model, val in parameters['current'].items():
-            model_list.append(model)
+        for model, val in parameters.items():
+            if ('u' in val) or ('v' in val):
+                model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
 
@@ -566,7 +490,7 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known OTIS models
         model_list = []
-        for model, val in parameters['elevation'].items():
+        for model, val in parameters.items():
             if (val['format'] == 'OTIS'):
                 model_list.append(model)
         # return unique list of models
@@ -581,7 +505,7 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known ATLAS-compact models
         model_list = []
-        for model, val in parameters['elevation'].items():
+        for model, val in parameters.items():
             if (val['format'] == 'ATLAS-compact'):
                 model_list.append(model)
         # return unique list of models
@@ -596,7 +520,7 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known TMD3 models
         model_list = []
-        for model, val in parameters['elevation'].items():
+        for model, val in parameters.items():
             if (val['format'] == 'TMD3'):
                 model_list.append(model)
         # return unique list of models
@@ -611,7 +535,7 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known TMD3 models
         model_list = []
-        for model, val in parameters['elevation'].items():
+        for model, val in parameters.items():
             if (val['format'] == 'ATLAS-netcdf'):
                 model_list.append(model)
         # return unique list of models
@@ -626,8 +550,8 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known GOT-ascii or GOT-netcdf models
         model_list = []
-        for model, val in parameters['elevation'].items():
-            if (val['format'] == 'GOT-ascii') or (val['format'] == 'GOT-netcdf'):
+        for model, val in parameters.items():
+            if val['format'] in ('GOT-ascii', 'GOT-netcdf'):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -641,8 +565,8 @@ class model:
         parameters = load_database(**kwargs)
         # extract all known FES-ascii or FES-netcdf models
         model_list = []
-        for model, val in parameters['elevation'].items():
-            if (val['format'] == 'FES-ascii') or (val['format'] == 'FES-netcdf'):
+        for model, val in parameters.items():
+            if val['format'] in ('FES-ascii', 'FES-netcdf'):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -673,35 +597,6 @@ class model:
         # return the complete output path
         return output_file
 
-    def from_file(self,
-            definition_file: str | pathlib.Path | io.IOBase,
-            **kwargs,
-        ):
-        """
-        Create a model object from an input definition file
-
-        Parameters
-        ----------
-        definition_file: str, pathlib.Path or io.IOBase
-            model definition file for creating model object
-        """
-        # set default keyword arguments
-        kwargs.setdefault('format', 'json')
-        # Opening definition file and assigning file ID number
-        if isinstance(definition_file, io.IOBase):
-            fid = copy.copy(definition_file)
-        else:
-            definition_file = pathlib.Path(definition_file).expanduser()
-            fid = definition_file.open(mode='r', encoding='utf8')
-        # load and parse definition file type
-        if (kwargs['format'].lower() == 'ascii'):
-            raise ValueError('ascii definition format no longer supported')
-        else:
-            self._parse_file(fid)
-        # close the definition file
-        fid.close()
-        # return the model object
-        return self
 
     def _parse_file(self, fid: io.IOBase):
         """
@@ -735,148 +630,56 @@ class model:
         parameters = json.load(fid)
         # convert from dictionary to model variable
         temp = self.from_dict(parameters)
-        # verify model name, format and type
+        # verify model name and format
         assert temp.name
         temp.validate_format()
-        assert temp.type
-        assert temp.model_file
-        # split model file into list if an ATLAS, GOT or FES file
-        # model files can be comma, tab or space delimited
-        # extract full path to tide model files
-        # extract full path to tide grid file
-        if temp.format in ('OTIS','ATLAS-compact','TMD3'):
-            assert temp.grid_file
-            # check if grid file is relative
-            if (temp.directory is not None):
-                temp.grid_file = temp.directory.joinpath(temp.grid_file).resolve()
-            else:
-                temp.grid_file = pathlib.Path(temp.grid_file).expanduser()
+        # verify parameters for each model format
+        if temp.format in ('OTIS','ATLAS-compact','ATLAS-netcdf',):
             # extract model files
-            if (temp.type == ['u','v']) and (temp.directory is not None):
+            for mtype in ('z', 'u', 'v'):
+                # check that model type is available
+                if not hasattr(temp, mtype):
+                    continue
+                assert temp[mtype].grid_file
+                # check if grid file is relative or absolute
+                if (temp.directory is not None):
+                    temp[mtype].grid_file = \
+                        temp.directory.joinpath(temp[mtype].grid_file).resolve()
+                else:
+                    temp[mtype].grid_file = \
+                        pathlib.Path(temp[mtype].grid_file).expanduser()
+        # extract model files
+        for mtype in ('z', 'u', 'v'):
+            # check that model type is available
+            if not hasattr(temp, mtype):
+                continue
+            # get model files for model type
+            if (temp.directory is not None):
                 # use glob strings to find files in directory
-                for key, glob_string in temp.model_file.items():
-                    # search singular glob string or iterable glob strings
-                    if isinstance(glob_string, str):
-                        # singular glob string
-                        temp.model_file[key] = list(temp.directory.glob(glob_string))
-                    elif isinstance(glob_string, Iterable):
-                        # iterable glob strings
-                        temp.model_file[key] = []
-                        for p in glob_string:
-                            temp.model_file[key].extend(temp.directory.glob(p))
-            elif (temp.type == 'z') and (temp.directory is not None):
-                # use glob strings to find files in directory
-                glob_string = copy.copy(temp.model_file)
+                glob_string = copy.copy(temp[mtype].model_file)
                 # search singular glob string or iterable glob strings
                 if isinstance(glob_string, str):
                     # singular glob string
-                    temp.model_file = list(temp.directory.glob(glob_string))
+                    temp[mtype].model_file = list(temp.directory.glob(glob_string))
                 elif isinstance(glob_string, Iterable):
                     # iterable glob strings
-                    temp.model_file = []
+                    temp[mtype].model_file = []
                     for p in glob_string:
-                        temp.model_file.extend(temp.directory.glob(p))
-            elif (temp.type == ['u','v']) and isinstance(temp.model_file, dict):
-                # resolve paths to model files for each direction
-                for key, model_file in temp.model_file.items():
-                    temp.model_file[key] = [pathlib.Path(f).expanduser() for f in
-                        model_file]
-            elif (temp.type == 'z') and isinstance(temp.model_file, list):
+                        temp[mtype].model_file.extend(temp.directory.glob(p))
+            elif isinstance(temp[mtype].model_file, list):
                 # resolve paths to model files
-                temp.model_file = [pathlib.Path(f).expanduser() for f in
-                    temp.model_file]
+                temp[mtype].model_file = [pathlib.Path(f).expanduser() for f in
+                    temp[mtype].model_file]
             else:
                 # fully defined single file case
-                temp.model_file = pathlib.Path(temp.model_file).expanduser()
-        elif temp.format in ('ATLAS-netcdf',):
-            assert temp.grid_file
-            # check if grid file is relative
-            if (temp.directory is not None):
-                temp.grid_file = temp.directory.joinpath(temp.grid_file).resolve()
-            else:
-                temp.grid_file = pathlib.Path(temp.grid_file).expanduser()
-            # extract model files
-            if (temp.type == ['u','v']) and (temp.directory is not None):
-                # use glob strings to find files in directory
-                for key, glob_string in temp.model_file.items():
-                    # search singular glob string or iterable glob strings
-                    if isinstance(glob_string, str):
-                        # singular glob string
-                        temp.model_file[key] = list(temp.directory.glob(glob_string))
-                    elif isinstance(glob_string, Iterable):
-                        # iterable glob strings
-                        temp.model_file[key] = []
-                        for p in glob_string:
-                            temp.model_file[key].extend(temp.directory.glob(p))
-            elif (temp.type == 'z') and (temp.directory is not None):
-                # use glob strings to find files in directory
-                glob_string = copy.copy(temp.model_file)
-                # search singular glob string or iterable glob strings
-                if isinstance(glob_string, str):
-                    # singular glob string
-                    temp.model_file = list(temp.directory.glob(glob_string))
-                elif isinstance(glob_string, Iterable):
-                    # iterable glob strings
-                    temp.model_file = []
-                    for p in glob_string:
-                        temp.model_file.extend(temp.directory.glob(p))
-                #     raise FileNotFoundError(message) from exc
-            elif (temp.type == ['u','v']):
-                # resolve paths to model files for each direction
-                for key, model_file in temp.model_file.items():
-                    temp.model_file[key] = [pathlib.Path(f).expanduser() for f in
-                        model_file]
-            elif (temp.type == 'z'):
-                # resolve paths to model files
-                temp.model_file = [pathlib.Path(f).expanduser() for f in
-                    temp.model_file]
-        elif temp.format in ('FES-ascii','FES-netcdf','GOT-ascii','GOT-netcdf'):
-            # extract model files
-            if (temp.type == ['u','v']) and (temp.directory is not None):
-                # use glob strings to find files in directory
-                for key, glob_string in temp.model_file.items():
-                    # search singular glob string or iterable glob strings
-                    if isinstance(glob_string, str):
-                        # singular glob string
-                        temp.model_file[key] = list(temp.directory.glob(glob_string))
-                    elif isinstance(glob_string, Iterable):
-                        # iterable glob strings
-                        temp.model_file[key] = []
-                        for p in glob_string:
-                            temp.model_file[key].extend(temp.directory.glob(p))
-            elif (temp.type == 'z') and (temp.directory is not None):
-                # use glob strings to find files in directory
-                glob_string = copy.copy(temp.model_file)
-                # search singular glob string or iterable glob strings
-                if isinstance(glob_string, str):
-                    # singular glob string
-                    temp.model_file = list(temp.directory.glob(glob_string))
-                elif isinstance(glob_string, Iterable):
-                    # iterable glob strings
-                    temp.model_file = []
-                    for p in glob_string:
-                        temp.model_file.extend(temp.directory.glob(p))
-            elif (temp.type == ['u','v']):
-                # resolve paths to model files for each direction
-                for key, model_file in temp.model_file.items():
-                    temp.model_file[key] = [pathlib.Path(f).expanduser() for f in
-                        model_file]
-            elif (temp.type == 'z'):
-                # resolve paths to model files
-                temp.model_file = [pathlib.Path(f).expanduser() for f in
-                    temp.model_file]
+                temp[mtype].model_file = pathlib.Path(temp[mtype].model_file).expanduser()
         # verify that projection attribute exists for projected models
         if temp.format in ('OTIS','ATLAS-compact','TMD3'):
             assert temp.projection
-        # convert scale from string to float
-        if temp.format in ('ATLAS-netcdf','GOT-ascii','GOT-netcdf','FES-ascii','FES-netcdf'):
-            assert temp.scale
         # assert that FES model has a version
         # get model constituents from constituent files
         if temp.format in ('FES-ascii','FES-netcdf',):
             assert temp.version
-            if (temp.constituents is None):
-                temp.parse_constituents()
         # return the model parameters
         return temp
 
@@ -891,91 +694,8 @@ class model:
             if (self.format == m[0]):
                 self.format = m[1]
         # assert that tide model is a known format
-        assert self.format in self.formats()
+        assert self.format in self.known_formats()
 
-    def to_datatree(self, m, **kwargs):
-        """
-        Create an xarray DataTree from a model object
-
-        Parameters
-        ----------
-        m: str
-            model name
-        """
-        # output dictionary of xarray Datasets
-        ds = {}
-        # try to read model elevations
-        try:
-            model = self.elevation(m)
-        except (ValueError, KeyError):
-            pass
-        else:
-            # read model constituents
-            model.read_constants(**kwargs)
-            # scale factor to convert to output units
-            scale = model.scale or 1.0
-            # convert to xarray Dataset and scale
-            ds[model.type] = scale*model._constituents.to_dataset()
-        # try to read model currents
-        try:
-            model = self.current(m)
-        except (ValueError, KeyError):
-            pass
-        else:
-            for TYPE in model.type:
-                # read model constituents
-                model.read_constants(type=TYPE, **kwargs)
-                # scale factor to convert to output units
-                scale = model.scale or 1.0
-                # convert to xarray Dataset and scale
-                ds[TYPE] = scale*model._constituents.to_dataset()
-        # create xarray DataTree from dictionary
-        dtree = xr.DataTree.from_dict(ds)
-        # return the model xarray DataTree
-        return dtree
-
-    def from_dict(self, d: dict):
-        """
-        Create a model object from a python dictionary
-
-        Parameters
-        ----------
-        d: dict
-            Python dictionary for creating model object
-        """
-        for key, val in d.items():
-            setattr(self, key, copy.copy(val))
-        # return the model parameters
-        return self
-
-    def to_dict(self, **kwargs):
-        """
-        Create a python dictionary from a model object
-
-        Parameters
-        ----------
-        fields: list, default all
-            List of model attributes to output
-        serialize: bool, default False
-            Serialize dictionary for JSON output
-        """
-        # default fields
-        keys = ['name', 'format', 'type', 'grid_file', 'model_file', 'projection',
-            'variable', 'scale', 'constituents', 'version', 'reference']
-        # set default keyword arguments
-        kwargs.setdefault('fields', keys)
-        kwargs.setdefault('serialize', False)
-        # output dictionary
-        d = {}
-        # for each field
-        for key in kwargs['fields']:
-            if hasattr(self, key) and getattr(self, key) is not None:
-                d[key] = getattr(self, key)
-        # serialize dictionary for JSON output
-        if kwargs['serialize']:
-            d = self.serialize(d)
-        # return the model dictionary
-        return d
 
     def serialize(self, d: dict):
         """
@@ -998,31 +718,27 @@ class model:
         # return the model dictionary
         return d
 
-    def parse_constituents(self, **kwargs) -> list:
+    def parse_constituents(self,
+            type: str = 'z',
+            **kwargs
+        ) -> list:
         """
         Parses tide model files for a list of model constituents
+
+        Parameters
+        ----------
+        type: str, default 'z'
+            Model type
         """
-        if isinstance(self.model_file, (str, pathlib.Path)):
+        if isinstance(self[type].model_file, (str, pathlib.Path)):
             # single file elevation case
             self.constituents = [
-                self.parse_file(self.model_file, **kwargs)
+                self.parse_file(self[type].model_file, **kwargs)
             ]
-        elif isinstance(self.model_file, list):
+        elif isinstance(self[type].model_file, list):
             # multiple file elevation case
             self.constituents = [
                 self.parse_file(f, **kwargs) for f in self.model_file
-            ]
-        elif isinstance(self.model_file, dict) and \
-            isinstance(self.model_file['u'], (str, pathlib.Path)):
-            # single file currents case
-            self.constituents = [
-                self.parse_file(self.model_file['u'], **kwargs)
-            ]
-        elif isinstance(self.model_file, dict) and \
-            isinstance(self.model_file['u'], list):
-            # multiple file currents case
-            self.constituents = [
-                self.parse_file(f, **kwargs) for f in self.model_file['u']
             ]
         # return the model parameters
         return self
@@ -1062,7 +778,10 @@ class model:
         else:
             return None
 
-    def reduce_constituents(self, constituents: str | list):
+    def reduce_constituents(self,
+            constituents: str | list,
+            type: str = 'z'
+        ):
         """
         Reduce model files to a subset of constituents
 
@@ -1070,6 +789,8 @@ class model:
         ----------
         constituents: str or list
             List of constituents names
+        type: str, default 'z'
+            Model type
         """
         # if no constituents are specified, return self
         if constituents is None:
@@ -1079,27 +800,27 @@ class model:
             constituents = [constituents]
         # parse constituents from model files
         try:
-            self.parse_constituents(raise_error=True)
+            self.parse_constituents(type=type, raise_error=True)
         except ValueError as exc:
             return None   
         # only run for multiple files
-        if isinstance(self.model_file, list):
+        if isinstance(self[type].model_file, list):
             # multiple file elevation case
             # filter model files to constituents
-            self.model_file = [self.model_file[self.constituents.index(c)]
+            self[type].model_file = [self[type].model_file[self.constituents.index(c)]
                 for c in constituents if (c in self.constituents)
             ]
-        elif isinstance(self.model_file, dict) and \
-            isinstance(self.model_file['u'], list):
+        elif isinstance(self[type].model_file, dict) and \
+            isinstance(self[type].model_file['u'], list):
             # multiple file currents case
-            for key, val in self.model_file.items():
+            for key, val in self[type].model_file.items():
                 # reduce list of model files to constituents
                 # filter model files to constituents
-                self.model_file[key] = [val[self.constituents.index(c)]
+                self[type].model_file[key] = [val[self.constituents.index(c)]
                     for c in constituents if (c in self.constituents)
                 ]
         # update list of constituents
-        self.parse_constituents()
+        self.parse_constituents(type=type)
         # return self
         return self
 
