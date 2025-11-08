@@ -72,7 +72,9 @@ class Model(pyTMD.io.model):
             x: np.ndarray,
             y: np.ndarray, 
             crs: str | int | dict = 4326, 
-            method='linear',              
+            method='linear',           
+            extrapolate: bool = False,
+            cutoff: int | float = np.inf,   
             **kwargs
         ):
         """
@@ -88,6 +90,10 @@ class Model(pyTMD.io.model):
             Coordinate reference system of input coordinates
         method: str, default 'linear'
             Interpolation method
+        extrapolate: bool, default False
+            Flag to extrapolate values using nearest-neighbors
+        cutoff: int or float, default np.inf
+            Maximum distance for extrapolation
         **kwargs: dict
             Additional keyword arguments for reading the dataset
             
@@ -118,7 +124,8 @@ class Model(pyTMD.io.model):
             mx = xr.DataArray(mx.astype('f8'), dims=('y', 'x'))
             my = xr.DataArray(my.astype('f8'), dims=('y', 'x'))
         # interpolate tidal constants
-        ds = self._ds.tmd.interp(x=mx, y=my, method=method)
+        ds = self._ds.tmd.interp(x=mx, y=my, method=method,
+            extrapolate=extrapolate, cutoff=cutoff)
         # return xarray dataset
         return ds
 
