@@ -55,6 +55,7 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import gzip
+import pint
 import pathlib
 import datetime
 import xarray as xr
@@ -90,11 +91,8 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
     ds: xarray.Dataset
         ATLAS tide model data
     """
-    # set default keyword arguments
-    kwargs.setdefault('scale', 1.0)
     # read ATLAS grid and model files
     ds1 = open_atlas_grid(grid_file, **kwargs)
-    # scale constituent data to output units
     ds2 = open_mfdataset(model_files, **kwargs)
     # merge datasets
     ds = xr.merge([ds1, ds2])
@@ -196,7 +194,6 @@ def open_atlas_grid(
 def open_atlas_dataset(
         input_file: str | pathlib.Path,
         type: str = 'z',
-        scale: float = 1.0,
         compressed: bool = False,
         **kwargs
     ):
@@ -215,8 +212,6 @@ def open_atlas_dataset(
             - ``'U'``: horizontal depth-averaged transport
             - ``'v'``: vertical transport velocities
             - ``'V'``: vertical depth-averaged transport
-    scale: float, default 1.0
-        Scaling factor for converting to output units
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -240,21 +235,24 @@ def open_atlas_dataset(
         ds = (tmp['hRe'].T + -1j*tmp['hIm'].T).to_dataset(name=constituent)
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
+        ds.attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
         ds = (tmp['URe'].T + -1j*tmp['UIm'].T).to_dataset(name=constituent)
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
+        ds.attrs['units'] = tmp['URe'].attrs.get('units')
     elif type in ('V','v'):
         ds = (tmp['VRe'].T + -1j*tmp['VIm'].T).to_dataset(name=constituent)
         ds.coords['x'] = tmp['lon_v']
         ds.coords['y'] = tmp['lat_v']
+        ds.attrs['units'] = tmp['VRe'].attrs.get('units')
     # add attributes
     ds.attrs['type'] = type
     ds.attrs['format'] = 'ATLAS'
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
-    # return xarray dataset scaled to output units
-    return ds*scale
+    # return xarray dataset
+    return ds
 
 # PURPOSE: ATLAS-netcdf utilities for xarray Datasets
 @xr.register_dataset_accessor('atlas')
@@ -282,8 +280,6 @@ class ATLASDataset:
             output ATLAS-netcdf grid file name
         mode: str, default 'w'
             netCDF4 file mode
-        units: str, default 'cm'
-            units of output amplitude
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
@@ -369,13 +365,10 @@ class ATLASDataset:
         for key, val in dict(Re='Real part', Im='Imag part').items():
             # variable units and long_name attributes
             if (type == 'z'):
-                units = 'millimeters'
                 long_name = f'Tidal elevation complex amplitude, {val}'
             elif (type == 'u'):
-                units = 'centimeters^2/sec'
                 long_name = f'Tidal WE transport complex amplitude, {val}'
             elif (type == 'v'):
-                units = 'centimeters^2/sec'
                 long_name = f'Tidal SN transport complex amplitude, {val}'
             # variable field description
             fields = []
@@ -384,7 +377,7 @@ class ATLASDataset:
             fields.append(f'GMT phase=atan2(-{type_key}Im,{type_key}Re)/pi*180')
             # set variable attributes
             attrs[f'{type_key}{key}'] = {}
-            attrs[f'{type_key}{key}']['units'] = units
+            attrs[f'{type_key}{key}']['units'] = self._ds.attrs['units']
             attrs[f'{type_key}{key}']['long_name'] = long_name
             attrs[f'{type_key}{key}']['field'] = '; '.join(fields)
         # create output xarray dataset for each constituent

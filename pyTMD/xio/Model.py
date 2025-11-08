@@ -3,10 +3,14 @@ u"""
 Model.py
 Written by Tyler Sutterley (11/2025)
 """
+import pint
 import pyproj
 import pyTMD.io
 import numpy as np
 import xarray as xr
+
+# unit registry for converting to base units
+__ureg__ = pint.UnitRegistry()
 
 # PURPOSE: experimental extension of pyTMD.io.model for xarray I/O
 class Model(pyTMD.io.model):
@@ -16,49 +20,51 @@ class Model(pyTMD.io.model):
     def open_dataset(self, **kwargs):
         # import tide model functions
         # set default keyword arguments
-        kwargs.setdefault('type', self.type)
+        kwargs.setdefault('type', 'z')
+        kwargs.setdefault('to_base_units', True)
         kwargs.setdefault('append_node', False)
-        kwargs.setdefault('scale', self.scale)
         kwargs.setdefault('compressed', self.compressed)
         kwargs.setdefault('constituents', None)
+        # model type
+        mtype = kwargs['type'].lower()
+        # extract model file
+        model_file = self[mtype].get('model_file')
         # reduce constituents if specified
         self.reduce_constituents(kwargs['constituents'])
         if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                model_file = self.model_file['u']
-            else:
-                model_file = self.model_file
             # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
-            ds = pyTMD.xio.OTIS.open_dataset(model_file, self.grid_file,
-                format=self.file_format, crs=self.crs, 
-                **kwargs)
+            ds = pyTMD.xio.OTIS.open_dataset(model_file, 
+                grid_file=self[mtype].get('grid_file'),
+                format=self.file_format,
+                crs=self.crs, **kwargs)
         elif self.format in ('ATLAS-netcdf',):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
             # open ATLAS netCDF4 files as xarray Dataset
-            ds = pyTMD.xio.ATLAS.open_dataset(model_file, self.grid_file,
+            ds = pyTMD.xio.ATLAS.open_dataset(model_file, 
+                grid_file=self[mtype].get('grid_file'),
                 format=self.file_format, **kwargs)
         elif self.format in ('GOT-ascii', 'GOT-netcdf'):
             # open GOT ASCII/netCDF4 files as xarray Dataset
-            ds = pyTMD.xio.GOT.open_mfdataset(self.model_file,
+            ds = pyTMD.xio.GOT.open_mfdataset(model_file,
                 format=self.file_format, **kwargs)
         elif self.format in ('FES-ascii', 'FES-netcdf'):
-            # extract model file in case of currents
-            if isinstance(self.model_file, dict):
-                TYPE = kwargs['type'].lower()
-                model_file = self.model_file[TYPE]
-            else:
-                model_file = self.model_file
             # open FES ASCII/netCDF4 files as xarray Dataset
             ds = pyTMD.xio.FES.open_mfdataset(model_file,
                 version=self.version, **kwargs)
         # add coordinate reference system to Dataset
         ds.attrs['crs'] = self.crs.to_dict()
+        # set units attribute if not already set
+        ds.attrs['units'] = ds.attrs.get('units', self[mtype].units)
+        # get units from attributes
+        quantity = 1.0*__ureg__.parse_units(ds.attrs['units'])
+        # conversion for base units
+        base_units = quantity.to_base_units()
+        scale_factor = base_units.magnitude
+        # convert to output units
+        if kwargs['to_base_units'] and (scale_factor != 1.0):
+            # scale constituents to base units
+            ds[ds.tmd.constituents] = ds[ds.tmd.constituents]*scale_factor
+            # update units attribute
+            ds.attrs['units'] = str(base_units.units)
         # return xarray dataset
         return ds
     

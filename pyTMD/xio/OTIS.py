@@ -379,10 +379,13 @@ def open_tmd3_dataset(
     # convert imaginary component to negative to match convention
     if (type == 'z'):
         ds = (tmp['hRe'] + -1j*tmp['hIm']).to_dataset(dim='constituents')
+        ds.attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
         ds = (tmp['URe'] + -1j*tmp['UIm']).to_dataset(dim='constituents')
+        ds.attrs['units'] = tmp['URe'].attrs.get('units')
     elif type in ('V','v'):
         ds = (tmp['VRe'] + -1j*tmp['VIm']).to_dataset(dim='constituents')
+        ds.attrs['units'] = tmp['VRe'].attrs.get('units')
     # read water column thickness, mask and flexure
     ds['mask'] = tmp['mask']
     # convert bathymetry to float and rename to match

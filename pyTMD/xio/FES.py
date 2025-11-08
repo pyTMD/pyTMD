@@ -129,7 +129,6 @@ def open_fes_dataset(
         FES tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('scale', 1.0)
     if kwargs['version'] in _ascii_versions:
         # FES ascii constituent files
         ds = open_fes_ascii(input_file, **kwargs)
@@ -153,8 +152,6 @@ def open_fes_ascii(
     ----------
     input_file: str or pathlib.Path
         input ascii file
-    scale: float, default 1.0
-        Scaling factor for converting to output units
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -164,7 +161,6 @@ def open_fes_ascii(
         FES tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('scale', 1.0)
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -226,8 +222,7 @@ def open_fes_ascii(
     var["data_vars"][cons]["dims"] = ('y', 'x')
     var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
     # convert to xarray Dataset from the data dictionary
-    # and scale to output units
-    ds = xr.Dataset.from_dict(var)*kwargs['scale']
+    ds = xr.Dataset.from_dict(var)
     # add attributes
     ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
@@ -260,8 +255,6 @@ def open_fes_netcdf(
             - ``'FES2022'``
             - ``'EOT20'``
             - ``'HAMTIDE11'``
-    scale: float, default 1.0
-        Scaling factor for converting to output units
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -273,7 +266,6 @@ def open_fes_netcdf(
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('version', 'FES2022')
-    kwargs.setdefault('scale', 1.0)
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -310,11 +302,12 @@ def open_fes_netcdf(
     ds = xr.Dataset()
     # calculate complex form of constituent oscillation
     ds[cons] = amplitude*np.exp(-1j*phase*np.pi/180.0)
-    # rename coordinates and scale to output units
-    ds = ds.rename(mapping_coords)*kwargs['scale']
+    # rename coordinates
+    ds = ds.rename(mapping_coords)
     # add attributes
     ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
+    ds.attrs['units'] = tmp[amp_key].attrs.get('units')
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
     # return xarray dataset
@@ -345,8 +338,6 @@ class FESDataset:
             output directory for netCDF4 files
         mode: str, default 'w'
             netCDF4 file mode
-        units: str, default 'cm'
-            units of output amplitude
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
@@ -358,15 +349,12 @@ class FESDataset:
         if (self._ds.attrs['type'] == 'z'):
             amp_key = 'amplitude'
             phase_key = 'phase'
-            amp_units = units
         elif (self._ds.attrs['type'] == 'u'):
             amp_key = 'Ua'
             phase_key = 'Ug'
-            amp_units = f'{units}/s'
         elif (self._ds.attrs['type'] == 'v'):
             amp_key = 'Va'
             phase_key = 'Vg'
-            amp_units = f'{units}/s'
         # set default encoding
         kwargs.setdefault('encoding', {amp_key: encoding, phase_key: encoding})
         # coordinate remapping
@@ -385,7 +373,7 @@ class FESDataset:
             # calculate amplitude and phase
             ds[amp_key] = self._ds[v].tmd.amplitude
             ds[phase_key] = self._ds[v].tmd.phase
-            ds[amp_key].attrs['units'] = amp_units
+            ds[amp_key].attrs['units'] = self._ds.attrs['units']
             ds[phase_key].attrs['units'] = 'degrees'
             ds[amp_key].attrs['long_name'] = f'Tide amplitude at {v} frequency'
             ds[phase_key].attrs['long_name'] = f'Tide phase at {v} frequency'

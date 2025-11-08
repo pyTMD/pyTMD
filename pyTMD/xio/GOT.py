@@ -152,8 +152,6 @@ def open_got_ascii(
     ----------
     input_file: str or pathlib.Path
         Model file
-    scale: float, default 1.0
-        Scaling factor for converting to output units
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -163,7 +161,6 @@ def open_got_ascii(
         GOT tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('scale', 1.0)
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -227,8 +224,7 @@ def open_got_ascii(
     var["data_vars"][cons]["dims"] = ('y', 'x')
     var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
     # convert to xarray Dataset from the data dictionary
-    # and convert to output units
-    ds = xr.Dataset.from_dict(var)*kwargs['scale']
+    ds = xr.Dataset.from_dict(var)
     # add attributes
     ds.attrs['type'] = 'z'
     # return xarray dataset
@@ -246,8 +242,6 @@ def open_got_netcdf(
     ----------
     input_file: str or pathlib.Path
         model file
-    scale: float, default 1.0
-        Scaling factor for converting to output units
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -257,7 +251,6 @@ def open_got_netcdf(
         GOT tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('scale', 1.0)
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -277,10 +270,12 @@ def open_got_netcdf(
     ds.coords['y'] = tmp.latitude
     # calculate complex form of constituent oscillation
     ds[cons] = tmp.amplitude*np.exp(-1j*tmp.phase*np.pi/180.0)
-    # rename coordinates and convert to output units
-    ds = ds.rename(dict(lon='x', lat='y'))*kwargs['scale']
+    # rename coordinates
+    mapping_coords = dict(lon='x', lat='y')
+    ds = ds.rename(mapping_coords)
     # add attributes
     ds.attrs['type'] = 'z'
+    ds.attrs['units'] = tmp['amplitude'].attrs.get('units')
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
     # return xarray dataset
@@ -298,7 +293,6 @@ class GOTDataset:
     def to_netcdf(self,
             path: str | pathlib.Path,
             mode: str = 'w',
-            units: str = 'cm',
             encoding: dict = {"zlib": True, "complevel": 9},
             **kwargs
         ):
@@ -311,8 +305,6 @@ class GOTDataset:
             output directory for netCDF4 files
         mode: str, default 'w'
             netCDF4 file mode
-        units: str, default 'cm'
-            units of output amplitude
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
@@ -334,7 +326,7 @@ class GOTDataset:
             # calculate amplitude and phase
             ds['amplitude'] = self._ds[v].tmd.amplitude
             ds['phase'] = self._ds[v].tmd.phase
-            ds['amplitude'].attrs['units'] = units
+            ds['amplitude'].attrs['units'] = self._ds.attrs['units']
             ds['phase'].attrs['units'] = 'degrees'
             ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
             ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'
