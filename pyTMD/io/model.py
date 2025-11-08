@@ -696,12 +696,12 @@ class model:
             Model type
         """
         if isinstance(self[type].model_file, (str, pathlib.Path)):
-            # single file elevation case
+            # single file case
             self.constituents = [
                 self.parse_file(self[type].model_file, **kwargs)
             ]
         elif isinstance(self[type].model_file, list):
-            # multiple file elevation case
+            # multiple file case
             self.constituents = [
                 self.parse_file(f, **kwargs) for f in self.model_file
             ]
@@ -770,7 +770,7 @@ class model:
             return None   
         # only run for multiple files
         if isinstance(self[type].model_file, list):
-            # multiple file elevation case
+            # multiple file case
             # filter model files to constituents
             self[type].model_file = [
                 self[type].model_file[self.constituents.index(c)]
