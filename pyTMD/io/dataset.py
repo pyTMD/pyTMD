@@ -85,7 +85,7 @@ class Dataset:
     def interp(self, 
             x: np.ndarray,
             y: np.ndarray, 
-            method='linear',              
+            method='linear',
             **kwargs
         ):
         """
@@ -99,6 +99,10 @@ class Dataset:
             input y-coordinates
         method: str, default 'linear'
             Interpolation method
+        extrapolate: bool, default False
+            Flag to extrapolate values using nearest-neighbors
+        cutoff: int or float, default np.inf
+            Maximum distance for extrapolation
         **kwargs: dict
             Additional keyword arguments for reading the dataset
             
@@ -107,6 +111,11 @@ class Dataset:
         ds: xarray.Dataset
             interpolated tidal constants
         """
+        # import extrapolate function
+        from pyTMD.interpolate import extrapolate
+        # set default keyword arguments
+        kwargs.setdefault('extrapolate', False)
+        kwargs.setdefault('cutoff', np.inf)
         # pad global grids along x-dimension (if necessary)
         if self.is_global:
             self._ds = self.pad(n=1)
@@ -126,6 +135,20 @@ class Dataset:
         # interpolate dataset
         ds = self._ds.interp(x=x, y=y, method=method,
             kwargs={"fill_value": None})
+        # extrapolate missing values using nearest-neighbors
+        if kwargs['extrapolate']:
+            for v in ds.data_vars.keys():
+                # check for missing values
+                invalid = ds[v].isnull()
+                if not invalid.any():
+                    continue
+                # only extrapolate invalid points
+                ds[v].values[invalid] = extrapolate(
+                    self._ds.x.values, self._ds.y.values,
+                    self._ds[v].values, x[invalid], y[invalid],
+                    is_geographic=self.crs.is_geographic,
+                    **kwargs
+                )
         # return xarray dataset
         return ds
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 interpolate.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (11/2025)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 11/2025: calculate lambda function after nearest-neighbors
+        set default data type for interpolation functions as input data type
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
@@ -178,7 +179,6 @@ def bilinear(
         Y: np.ndarray,
         fill_value: float = np.nan,
         extrapolate: bool = False,
-        dtype: str | np.dtype = np.float64,
         **kwargs
     ):
     """
@@ -208,6 +208,8 @@ def bilinear(
     data: np.ndarray
         interpolated data
     """
+    # set default data type
+    dtype = kwargs.get('dtype', zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
         zs = np.ma.array(zs)
@@ -270,7 +272,6 @@ def spline(
         X: np.ndarray,
         Y: np.ndarray,
         fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
         reducer=np.ceil,
         **kwargs
     ):
@@ -313,6 +314,8 @@ def spline(
     # set default keyword arguments
     kwargs.setdefault('kx', 1)
     kwargs.setdefault('ky', 1)
+    # set default data type
+    dtype = kwargs.get('dtype', zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
         zs = np.ma.array(zs)
@@ -352,7 +355,6 @@ def regulargrid(
         X: np.ndarray,
         Y: np.ndarray,
         fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
         reducer=np.ceil,
         **kwargs
     ):
@@ -401,6 +403,8 @@ def regulargrid(
     # set default keyword arguments
     kwargs.setdefault('bounds_error', False)
     kwargs.setdefault('method', 'linear')
+    # set default data type
+    dtype = kwargs.get('dtype', zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
         zs = np.ma.array(zs)
@@ -429,7 +433,6 @@ def extrapolate(
         X: np.ndarray,
         Y: np.ndarray,
         fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
         cutoff: int | float = np.inf,
         is_geographic: bool = True,
         **kwargs
@@ -467,6 +470,13 @@ def extrapolate(
     DATA: np.ndarray
         interpolated data
     """
+    # set default data type
+    dtype = kwargs.get('dtype', zs.dtype)
+    # verify that input data is masked array
+    if not isinstance(zs, np.ma.MaskedArray):
+        zs = np.ma.array(zs, dtype=zs.dtype,
+            fill_value=np.ma.default_fill_value(zs.dtype))
+        zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, 'EPSG') and (kwargs['EPSG'] == '4326'):
         is_geographic = True
