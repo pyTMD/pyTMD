@@ -8,10 +8,12 @@ on:
       - pyTMD/**
       - providers/**
       - .github/workflows/update-provider-database.yml
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
 
+    if: github.event.pull_request.draft == false
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
