@@ -9,7 +9,7 @@ import pyTMD.io
 import numpy as np
 import xarray as xr
 
-# unit registry for converting to base units
+# pint unit registry
 __ureg__ = pint.UnitRegistry()
 # default units for pyTMD outputs
 _default_units = {

@@ -286,7 +286,7 @@ def open_mfdataset(
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[1] for f in model_files]
     # merge datasets
-    ds = xr.merge(d)
+    ds = xr.merge(d, compat='override')
     # add attributes
     ds.attrs['type'] = type
     # return xarray dataset
@@ -407,7 +407,7 @@ def open_atlas_dataset(
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
         ds2 = dsv.compact.combine_local(dtv)
     # merge datasets
-    ds = xr.merge([ds1, ds2])
+    ds = xr.merge([ds1, ds2], compat='override')
     # add attributes
     ds.attrs['type'] = type
     # return xarray dataset
@@ -1754,7 +1754,7 @@ class OTISDataset:
                 ds[field].attrs.update(_attributes['v'][field])
         else:
             # merge without interpolation
-            ds = xr.merge([self._ds, ds])
+            ds = xr.merge([self._ds, ds], compat='override')
         # set coordinate reference system
         ds.attrs['crs'] = self.crs.to_dict()
         # return the updated datasets
