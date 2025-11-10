@@ -98,9 +98,10 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
     # convert transports to currents if necessary
     if kwargs['type'] in ('u','v'):
         # convert transports to currents and update attributes
-        ds2[ds2.data_vars] /= ds1['bathymetry']
-        units = str(ds2[ds2.data_vars].tmd.units / ds1['bathymetry'].tmd.units)
-        ds2[ds2.data_vars].attrs['units'] = units
+        for c in ds2.tmd.constituents:
+            ds2[c] /= ds1['bathymetry']
+            units = str(ds2[c].tmd.units / ds1['bathymetry'].tmd.units)
+            ds2[c].attrs['units'] = units
     # merge datasets
     ds = xr.merge([ds1, ds2], compat='override')
     # return xarray dataset
