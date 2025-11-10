@@ -307,7 +307,7 @@ def open_fes_netcdf(
     # add attributes
     ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
-    ds.attrs['units'] = tmp[amp_key].attrs.get('units')
+    ds[cons].attrs['units'] = tmp[amp_key].attrs.get('units')
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
     # return xarray dataset
@@ -373,7 +373,7 @@ class FESDataset:
             # calculate amplitude and phase
             ds[amp_key] = self._ds[v].tmd.amplitude
             ds[phase_key] = self._ds[v].tmd.phase
-            ds[amp_key].attrs['units'] = self._ds.attrs['units']
+            ds[amp_key].attrs['units'] = self._ds[v].attrs['units']
             ds[phase_key].attrs['units'] = 'degrees'
             ds[amp_key].attrs['long_name'] = f'Tide amplitude at {v} frequency'
             ds[phase_key].attrs['long_name'] = f'Tide phase at {v} frequency'

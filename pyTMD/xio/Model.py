@@ -3,22 +3,10 @@ u"""
 Model.py
 Written by Tyler Sutterley (11/2025)
 """
-import pint
 import pyproj
 import pyTMD.io
 import numpy as np
 import xarray as xr
-
-# pint unit registry
-__ureg__ = pint.UnitRegistry()
-# default units for pyTMD outputs
-_default_units = {
-    'z': 'm',
-    'u': 'cm/s',
-    'v': 'cm/s',
-    'U': 'm^2/s',
-    'V': 'm^2/s',
-}
 
 # PURPOSE: experimental extension of pyTMD.io.model for xarray I/O
 class Model(pyTMD.io.model):
@@ -29,7 +17,7 @@ class Model(pyTMD.io.model):
         # import tide model functions
         # set default keyword arguments
         kwargs.setdefault('type', 'z')
-        kwargs.setdefault('to_base_units', True)
+        kwargs.setdefault('convert_units', True)
         kwargs.setdefault('append_node', False)
         kwargs.setdefault('compressed', self.compressed)
         kwargs.setdefault('constituents', None)
@@ -60,19 +48,14 @@ class Model(pyTMD.io.model):
                 version=self.version, **kwargs)
         # add coordinate reference system to Dataset
         ds.attrs['crs'] = self.crs.to_dict()
+        # list of constituents
+        c = ds.tmd.constituents
         # set units attribute if not already set
-        ds.attrs['units'] = ds.attrs.get('units', self[mtype].units)
-        # get units from attributes
-        quantity = 1.0*__ureg__.parse_units(ds.attrs['units'])
-        # conversion for base units
-        base_units = quantity.to(_default_units[kwargs['type']])
-        scale_factor = base_units.magnitude
-        # convert to output units
-        if kwargs['to_base_units'] and (scale_factor != 1.0):
-            # scale constituents to base units
-            ds[ds.tmd.constituents] = ds[ds.tmd.constituents]*scale_factor
-            # update units attribute
-            ds.attrs['units'] = str(base_units.units)
+        # (uses value defined in the model database)
+        ds[c].attrs['units'] = ds[c].attrs.get('units', self[mtype].units)
+        # convert to default units
+        if kwargs['convert_units']:
+            ds = ds.tmd.to_default_units()
         # return xarray dataset
         return ds
     

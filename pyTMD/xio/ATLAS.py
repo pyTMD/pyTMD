@@ -55,7 +55,6 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import gzip
-import pint
 import pathlib
 import datetime
 import xarray as xr
@@ -69,14 +68,6 @@ __all__ = [
     'ATLASDataset',
     'ATLASDataTree',
 ]
-
-# pint unit registry
-__ureg__ = pint.UnitRegistry()
-# default units for currents
-_default_units = {
-    'u': 'cm/s',
-    'v': 'cm/s',
-}
 
 def open_dataset(model_files: list[str] | list[pathlib.Path],
         grid_file: str | pathlib.Path,
@@ -104,21 +95,14 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
     # read ATLAS grid and model files
     ds1 = open_atlas_grid(grid_file, **kwargs)
     ds2 = open_mfdataset(model_files, **kwargs)
-    # merge datasets
-    ds = xr.merge([ds1, ds2], compat='override')
-    ds2.attrs['units'] = ds2.attrs['units']
     # convert transports to currents if necessary
     if kwargs['type'] in ('u','v'):
-        # get units for constituents and bathymetry
-        quantity = 1.0*(__ureg__.parse_units(ds2.attrs['units']) /
-            __ureg__.parse_units(ds1.bathymetry.attrs['units']))
-        # conversion factor for outputs units
-        base_units = quantity.to(_default_units[kwargs['type']])
-        scale_factor = base_units.magnitude
-        # convert transports to currents in output units
-        ds[ds.tmd.constituents] *= scale_factor/ds['bathymetry']
-        # update units attributes
-        ds.attrs['units'] = base_units.units
+        # convert transports to currents and update attributes
+        ds2[ds2.data_vars] /= ds1['bathymetry']
+        units = str(ds2[ds2.data_vars].tmd.units / ds1['bathymetry'].tmd.units)
+        ds2[ds2.data_vars].attrs['units'] = units
+    # merge datasets
+    ds = xr.merge([ds1, ds2], compat='override')
     # return xarray dataset
     return ds
 
@@ -260,20 +244,20 @@ def open_atlas_dataset(
         ds = (tmp['hRe'].T + -1j*tmp['hIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
-        ds.attrs['units'] = tmp['hRe'].attrs.get('units')
+        ds[con].attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
         ds = (tmp['uRe'].T + -1j*tmp['uIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
-        ds.attrs['units'] = tmp['uRe'].attrs.get('units')
+        ds[con].attrs['units'] = tmp['uRe'].attrs.get('units')
     elif type in ('V','v'):
         ds = (tmp['vRe'].T + -1j*tmp['vIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_v']
         ds.coords['y'] = tmp['lat_v']
-        ds.attrs['units'] = tmp['vRe'].attrs.get('units')
+        ds[con].attrs['units'] = tmp['vRe'].attrs.get('units')
     # add attributes
-    ds.attrs['type'] = type
     ds.attrs['format'] = 'ATLAS'
+    ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
     # return xarray dataset
@@ -327,7 +311,8 @@ class ATLASDataset:
         attrs[lon_key]['long_name'] = f'longitude of {type.upper()} nodes'
         attrs[lat_key]['units'] = 'degrees_north'
         attrs[lat_key]['long_name'] = f'latitude of {type.upper()} nodes'
-        attrs[depth_key]['units'] = 'meters'
+        units = self._ds['bathymetry'].attrs.get('units', 'meters')
+        attrs[depth_key]['units'] = units
         attrs[depth_key]['long_name'] = f'Bathymetry at {type.upper()} nodes'
         attrs[depth_key]['field'] = 'bath, scalar'
         # create output xarray dataset
@@ -402,7 +387,6 @@ class ATLASDataset:
             fields.append(f'GMT phase=atan2(-{type_key}Im,{type_key}Re)/pi*180')
             # set variable attributes
             attrs[f'{type_key}{key}'] = {}
-            attrs[f'{type_key}{key}']['units'] = self._ds.attrs['units']
             attrs[f'{type_key}{key}']['long_name'] = long_name
             attrs[f'{type_key}{key}']['field'] = '; '.join(fields)
         # create output xarray dataset for each constituent
@@ -417,6 +401,7 @@ class ATLASDataset:
             # update variable attributes
             for att_name, att_val in attrs.items():
                 ds[att_name].attrs.update(att_val)
+            ds[att_name].attrs['units'] = self._ds[v].attrs['units']
             # add global attributes
             if type == 'z':
                 ds.attrs['title'] = 'ATLAS tidal elevation file'

@@ -31,17 +31,28 @@ from pyTMD.utilities import import_dependency
 # attempt imports
 xr = import_dependency('xarray')
 pyproj = import_dependency('pyproj')
+pint = import_dependency('pint')
 
 __all__ = [
     'Dataset',
+    'DataArray'
 ]
+
+# pint unit registry
+__ureg__ = pint.UnitRegistry()
+# default units for pyTMD outputs
+_default_units = {
+    'elevation': 'm',
+    'current': 'cm/s',
+    'transport': 'm^2/s',
+}
 
 @xr.register_dataset_accessor('tmd')
 class Dataset:
     """Accessor for extending an ``xarray.Dataset`` for tidal model data
     """
     def __init__(self, ds):
-        # initialize dataset
+        # initialize Dataset
         self._ds = ds
 
     def to_dataarray(self, **kwargs):
@@ -171,6 +182,28 @@ class Dataset:
         # return the dataset
         return ds
 
+    def to_base_units(self):
+        """Convert ``Dataset`` to base units
+        """
+        # create copy of dataset
+        ds = self._ds.copy()
+        # convert each constituent in the dataset
+        for c in self.constituents:
+            ds[c] = ds[c].tmd.to_base_units()
+        # return the dataset
+        return ds
+
+    def to_default_units(self):
+        """Convert ``Dataset`` to default tide units
+        """
+        # create copy of dataset
+        ds = self._ds.copy()
+        # convert each constituent in the dataset
+        for c in self.constituents:
+            ds[c] = ds[c].tmd.to_default_units()
+        # return the dataset
+        return ds
+
     @property
     def constituents(self):
         """List of tidal constituent names in the ``Dataset``
@@ -219,7 +252,7 @@ class DataArray:
     """Accessor for extending an ``xarray.DataArray`` for tidal model data
     """
     def __init__(self, da):
-        # initialize dataset
+        # initialize DataArray
         self._da = da
 
     @property
@@ -250,3 +283,71 @@ class DataArray:
         ph = np.degrees(np.arctan2(-self._da.imag, self._da.real))
         ph = ph.where(ph >= 0, ph + 360.0, drop=False)
         return ph
+
+    def to_units(self, units: str, value: float = 1.0):
+        """Convert ``DataArray`` to specified tide units
+
+        Parameters
+        ----------
+        units: str
+            output units
+        value: float, default 1.0
+            scaling factor to apply
+        """
+        # convert to specified units
+        conversion = value*self.quantity.to(units)
+        da = self._da*conversion.magnitude
+        da.attrs['units'] = str(conversion.units)
+        return da
+
+    def to_base_units(self, value=1.0):
+        """Convert ``DataArray`` to base units
+
+        Parameters
+        ----------
+        value: float, default 1.0
+            scaling factor to apply
+        """
+        # convert to base units
+        conversion = value*self.quantity.to_base_units()
+        da = self._da*conversion.magnitude
+        da.attrs['units'] = str(conversion.units)
+        return da
+
+    def to_default_units(self, value=1.0):
+        """Convert ``DataArray`` to default tide units
+
+        Parameters
+        ----------
+        value: float, default 1.0
+            scaling factor to apply
+        """
+        # convert to default units
+        default_units = _default_units.get(self.type, self.units)
+        da = self.to_units(default_units, value=value)
+        return da
+
+    @property
+    def units(self):
+        """Units of the ``DataArray``
+        """
+        return __ureg__.parse_units(self._da.attrs.get('units', ''))
+    
+    @property
+    def quantity(self):
+        """``Pint`` Quantity of the ``DataArray``
+        """
+        return 1.0*self.units
+
+    @property
+    def type(self):
+        """Variable type of the ``DataArray``
+        """
+        if self.units.is_compatible_with('m'):
+            return 'elevation'
+        elif self.units.is_compatible_with('m/s'):
+            return 'current'
+        elif self.units.is_compatible_with('m^2/s'):
+            return 'transport'
+        else:
+            raise ValueError(f'Unknown unit type: {self.units}')
