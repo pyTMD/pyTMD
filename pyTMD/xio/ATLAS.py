@@ -143,10 +143,10 @@ def open_atlas_grid(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -208,10 +208,10 @@ def open_atlas_dataset(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     compressed: bool, default False
         Input file is gzip compressed
 

@@ -11,6 +11,14 @@ import xarray as xr
 
 # unit registry for converting to base units
 __ureg__ = pint.UnitRegistry()
+# default units for pyTMD outputs
+_default_units = {
+    'z': 'm',
+    'u': 'cm/s',
+    'v': 'cm/s',
+    'U': 'm^2/s',
+    'V': 'm^2/s',
+}
 
 # PURPOSE: experimental extension of pyTMD.io.model for xarray I/O
 class Model(pyTMD.io.model):
@@ -57,7 +65,7 @@ class Model(pyTMD.io.model):
         # get units from attributes
         quantity = 1.0*__ureg__.parse_units(ds.attrs['units'])
         # conversion for base units
-        base_units = quantity.to_base_units()
+        base_units = quantity.to(_default_units[kwargs['type']])
         scale_factor = base_units.magnitude
         # convert to output units
         if kwargs['to_base_units'] and (scale_factor != 1.0):

@@ -245,8 +245,8 @@ def open_fes_netcdf(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'v'``: vertical transport velocities
+            - ``'u'``: zonal currents
+            - ``'v'``: meridional currents
     version: str or NoneType, default None
         FES model version
 

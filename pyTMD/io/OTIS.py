@@ -22,9 +22,9 @@ OPTIONS:
     type: tidal variable to run
         z: heights
         u: horizontal transport velocities
-        U: horizontal depth-averaged transport
+        U: zonal depth-averaged transport
         v: vertical transport velocities
-        V: vertical depth-averaged transport
+        V: meridional depth-averaged transport
     method: interpolation method
         bilinear: quick bilinear interpolation
         spline: scipy bivariate spline interpolation
@@ -208,9 +208,9 @@ def extract_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     grid: str, default 'OTIS'
         Tide model file type to read
 
@@ -588,9 +588,9 @@ def read_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     grid: str, default 'OTIS'
         Tide model file type to read
 
@@ -844,9 +844,9 @@ def interpolate_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     method: str, default 'spline'
         Interpolation method
 
@@ -2313,9 +2313,9 @@ def read_netcdf_file(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
 
     Returns
     -------
