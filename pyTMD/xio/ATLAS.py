@@ -70,6 +70,14 @@ __all__ = [
     'ATLASDataTree',
 ]
 
+# pint unit registry
+__ureg__ = pint.UnitRegistry()
+# default units for currents
+_default_units = {
+    'u': 'cm/s',
+    'v': 'cm/s',
+}
+
 def open_dataset(model_files: list[str] | list[pathlib.Path],
         grid_file: str | pathlib.Path,
         **kwargs
@@ -91,11 +99,26 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
     ds: xarray.Dataset
         ATLAS tide model data
     """
+    # set default keyword arguments
+    kwargs.setdefault('type', 'z')
     # read ATLAS grid and model files
     ds1 = open_atlas_grid(grid_file, **kwargs)
     ds2 = open_mfdataset(model_files, **kwargs)
     # merge datasets
-    ds = xr.merge([ds1, ds2])
+    ds = xr.merge([ds1, ds2], compat='override')
+    ds2.attrs['units'] = ds2.attrs['units']
+    # convert transports to currents if necessary
+    if kwargs['type'] in ('u','v'):
+        # get units for constituents and bathymetry
+        quantity = 1.0*(__ureg__.parse_units(ds2.attrs['units']) /
+            __ureg__.parse_units(ds1.bathymetry.attrs['units']))
+        # conversion factor for outputs units
+        base_units = quantity.to(_default_units[kwargs['type']])
+        scale_factor = base_units.magnitude
+        # convert transports to currents in output units
+        ds[ds.tmd.constituents] *= scale_factor/ds['bathymetry']
+        # update units attributes
+        ds.attrs['units'] = base_units.units
     # return xarray dataset
     return ds
 
@@ -122,14 +145,13 @@ def open_mfdataset(
     # read each file and store constituents in list
     d = [open_atlas_dataset(f, **kwargs) for f in model_files]
     # merge datasets
-    ds = xr.merge(d)
+    ds = xr.merge(d, compat='override')
     # return xarray dataset
     return ds
 
 def open_atlas_grid(
         grid_file: str | pathlib.Path,
         type: str = 'z',
-        compressed: bool = False,
         **kwargs
     ):
     """
@@ -155,10 +177,12 @@ def open_atlas_grid(
     ds: xarray.Dataset
         ATLAS tide model data
     """
+    # set default keyword arguments
+    kwargs.setdefault('compressed', False)
     # tilde-expand input file
     grid_file = pathlib.Path(grid_file).expanduser()
     # read the netCDF4-format tide elevation file
-    if compressed:
+    if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(grid_file, 'rb')
         tmp = xr.open_dataset(f, mask_and_scale=True)
@@ -194,7 +218,6 @@ def open_atlas_grid(
 def open_atlas_dataset(
         input_file: str | pathlib.Path,
         type: str = 'z',
-        compressed: bool = False,
         **kwargs
     ):
     """
@@ -220,32 +243,34 @@ def open_atlas_dataset(
     ds: xarray.Dataset
         ATLAS tide model data
     """
+    # set default keyword arguments
+    kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
     # read the netCDF4-format tide elevation file
-    if compressed:
+    if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, 'rb')
         tmp = xr.open_dataset(f, mask_and_scale=True)
     else:
         tmp = xr.open_dataset(input_file, mask_and_scale=True)
     # constituent name
-    constituent = tmp['con'].values.tobytes().decode('utf-8').strip()
+    con = tmp['con'].values.astype('|S').tobytes().decode('utf-8').strip()
     if (type == 'z'):
-        ds = (tmp['hRe'].T + -1j*tmp['hIm'].T).to_dataset(name=constituent)
+        ds = (tmp['hRe'].T + -1j*tmp['hIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
         ds.attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
-        ds = (tmp['URe'].T + -1j*tmp['UIm'].T).to_dataset(name=constituent)
+        ds = (tmp['uRe'].T + -1j*tmp['uIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
-        ds.attrs['units'] = tmp['URe'].attrs.get('units')
+        ds.attrs['units'] = tmp['uRe'].attrs.get('units')
     elif type in ('V','v'):
-        ds = (tmp['VRe'].T + -1j*tmp['VIm'].T).to_dataset(name=constituent)
+        ds = (tmp['vRe'].T + -1j*tmp['vIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_v']
         ds.coords['y'] = tmp['lat_v']
-        ds.attrs['units'] = tmp['VRe'].attrs.get('units')
+        ds.attrs['units'] = tmp['vRe'].attrs.get('units')
     # add attributes
     ds.attrs['type'] = type
     ds.attrs['format'] = 'ATLAS'

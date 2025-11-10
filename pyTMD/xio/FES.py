@@ -104,7 +104,7 @@ def open_mfdataset(
     # read each file and store constituents in list
     d = [open_fes_dataset(f, **kwargs) for f in model_files]     
     # merge datasets
-    ds = xr.merge(d)
+    ds = xr.merge(d, compat='override')
     # return xarray dataset
     return ds
 
