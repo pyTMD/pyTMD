@@ -23,9 +23,9 @@ OPTIONS:
     type: tidal variable to run
         z: heights
         u: horizontal transport velocities
-        U: horizontal depth-averaged transport
+        U: zonal depth-averaged transport
         v: vertical transport velocities
-        V: vertical depth-averaged transport
+        V: meridional depth-averaged transport
     method: interpolation method
         bilinear: quick bilinear interpolation
         spline: scipy bivariate spline interpolation
@@ -160,9 +160,9 @@ def extract_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list or NoneType, default None
@@ -411,9 +411,9 @@ def read_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     compressed: bool, default False
         Input files are gzip compressed
     gap_fill: bool, default False
@@ -529,9 +529,9 @@ def interpolate_constants(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
     method: str, default 'spline'
         Interpolation method
 
@@ -711,9 +711,9 @@ def read_netcdf_grid(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
 
     compressed: bool, default False
         Input file is gzip compressed
@@ -788,9 +788,9 @@ def read_netcdf_file(
 
             - ``'z'``: heights
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
 
     compressed: bool, default False
         Input file is gzip compressed
@@ -877,9 +877,9 @@ def read_netcdf_transport(
         Tidal variable to read
 
             - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
+            - ``'U'``: zonal depth-averaged transport
             - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'V'``: meridional depth-averaged transport
 
     compressed: bool, default False
         Input file is gzip compressed

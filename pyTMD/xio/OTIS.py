@@ -120,6 +120,71 @@ __all__ = [
     'ATLASDataset',
 ]
 
+# variable attributes
+_attributes = dict(
+    z = dict(
+        bathymetry = dict(
+            standard_name="ocean_depth",
+            long_name="ocean depth",
+            units="m",
+        ),
+        mask = dict(
+            standard_name="sea_binary_mask",
+            long_name="land-sea mask",
+            units="1",
+        ),
+        elevation = dict(
+            standard_name="tide_height",
+            long_name="tidal_elevation",
+            units="m",
+        )
+    ),
+    u = dict(
+        bathymetry=dict(
+            standard_name="ocean_depth",
+            long_name="ocean depth at u-locations",
+            units="m",
+        ),
+        mask = dict(
+            standard_name="sea_binary_mask",
+            long_name="land-sea mask at u-locations",
+            units="1",
+        ),
+        current = dict(
+            standard_name="eastward_tidal_current",
+            long_name="zonal tidal currents on u-grid",
+            units="m/s",
+        ),
+        transport = dict(
+            standard_name="eastward_tidal_transport",
+            long_name="zonal tidal transports on u-grid",
+            units="m**2/s",
+        )
+    ),
+    v = dict(
+        bathymetry = dict(
+            standard_name="ocean_depth",
+            long_name="ocean depth at v-locations",
+            units="m",
+        ),
+        mask = dict(
+            standard_name="sea_binary_mask",
+            long_name="land-sea mask at v-locations",
+            units="1",
+        ),
+        current = dict(
+            standard_name="northward_tidal_current",
+            long_name="meridional tidal currents on v-grid",
+            units="m/s",
+        ),
+        transport = dict(
+            standard_name="northward_tidal_transport",
+            long_name="meridional tidal transports on v-grid",
+            units="m**2/s",
+        )
+    )
+)
+
 # PURPOSE: read tide model files
 def open_dataset(
         model_file: str | list | pathlib.Path,
@@ -150,6 +215,9 @@ def open_dataset(
     ds: xarray.Dataset
         tide model data
     """
+    # set default keyword arguments
+    kwargs.setdefault('type', 'z')
+    mtype = kwargs.get('type').lower()
     # open file(s) as xarray dataset
     if (format == 'OTIS'):
         # OTIS (single or multi-file)
@@ -168,6 +236,13 @@ def open_dataset(
         ds = open_tmd3_dataset(model_file, **kwargs)
     # add attributes
     ds.attrs['format'] = format
+    # convert transports to currents if necessary
+    if kwargs['type'] in ('u','v'):
+        # convert transports to currents
+        ds[ds.tmd.constituents] /= ds['bathymetry']
+        # update attributes
+        ds[ds.tmd.constituents].attrs.update(_attributes[mtype]['current'])
+        ds.attrs['units'] = _attributes[mtype]['current']['units']
     # return xarray dataset
     return ds
 
@@ -188,10 +263,10 @@ def open_mfdataset(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     **kwargs: dict
         additional keyword arguments for opening OTIS files
 
@@ -237,10 +312,10 @@ def open_otis_dataset(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     crs: int, str or dict, default 4326
         coordinate reference system for the model data
     use_mmap: bool, default False
@@ -297,10 +372,10 @@ def open_atlas_dataset(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     crs: int, str or dict, default 4326
         coordinate reference system for the model data
     use_mmap: bool, default False
@@ -355,10 +430,10 @@ def open_tmd3_dataset(
         Tidal variable to read
 
             - ``'z'``: heights
-            - ``'u'``: horizontal transport velocities
-            - ``'U'``: horizontal depth-averaged transport
-            - ``'v'``: vertical transport velocities
-            - ``'V'``: vertical depth-averaged transport
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
 
     Returns
     -------
@@ -524,9 +599,12 @@ def open_otis_grid(
     grid["data_vars"]["mask"]["data"] = mz
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(grid)
+    # add attributes
     ds.attrs['dt'] = dt.copy()
     ds.attrs['iob'] = iob.copy()
     ds.attrs['bounds'] = bounds.copy()
+    for field in ['mask', 'bathymetry']:
+        ds[field].attrs.update(_attributes['z'][field])
     # return xarray dataset
     return ds
 
@@ -627,7 +705,11 @@ def open_otis_elevation(
         offset += 4*2*nx*ny
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(h)
+    # add attributes
     ds.attrs['bounds'] = bounds.copy()
+    ds.attrs['units'] = _attributes['z']['elevation']['units']
+    for field in ds.data_vars:
+        ds[field].attrs.update(_attributes['z']['elevation'])
     # return xarray dataset
     return ds
 
@@ -739,8 +821,15 @@ def open_otis_transport(
     # convert to xarray Datasets from the data dictionaries
     dsu = xr.Dataset.from_dict(u)
     dsv = xr.Dataset.from_dict(v)
+    # add attributes
     dsu.attrs['bounds'] = bounds.copy()
     dsv.attrs['bounds'] = bounds.copy()
+    dsu.attrs['units'] = _attributes['u']['transport']['units']
+    dsv.attrs['units'] = _attributes['v']['transport']['units']
+    for field in dsu.data_vars:
+        dsu[field].attrs.update(_attributes['u']['transport'])
+    for field in dsv.data_vars:
+        dsv[field].attrs.update(_attributes['v']['transport'])
     # return xarray datasets
     return dsu, dsv
 
@@ -886,9 +975,12 @@ def open_atlas_grid(
     grid["data_vars"]["local"]["data"] = pmask
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(grid)
+    # add attributes
     ds.attrs['dt'] = dt.copy()
     ds.attrs['iob'] = iob.copy()
     ds.attrs['bounds'] = bounds.copy()
+    for field in ['mask', 'bathymetry']:
+        ds[field].attrs.update(_attributes['z'][field])
 
     # read local models
     nmod = 0
@@ -1088,7 +1180,11 @@ def open_atlas_elevation(
         offset += 4*2*nx*ny
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(h)
+    # add attributes
     ds.attrs['bounds'] = bounds.copy()
+    ds.attrs['units'] = _attributes['z']['elevation']['units']
+    for field in ds.data_vars:
+        ds[field].attrs.update(_attributes['z']['elevation'])
     offset += 4
 
     # read local models
@@ -1322,8 +1418,15 @@ def open_atlas_transport(
     # convert to xarray Datasets from the data dictionaries
     dsu = xr.Dataset.from_dict(u)
     dsv = xr.Dataset.from_dict(v)
+    # add attributes
     dsu.attrs['bounds'] = bounds.copy()
     dsv.attrs['bounds'] = bounds.copy()
+    dsu.attrs['units'] = _attributes['u']['transport']['units']
+    dsv.attrs['units'] = _attributes['v']['transport']['units']
+    for field in dsu.data_vars:
+        dsu[field].attrs.update(_attributes['u']['transport'])
+    for field in dsv.data_vars:
+        dsv[field].attrs.update(_attributes['v']['transport'])
     offset += 4
 
     # read local models
@@ -1620,10 +1723,10 @@ class OTISDataset:
             Tidal variable of input dataset
 
                 - ``'z'``: heights
-                - ``'u'``: horizontal transport velocities
-                - ``'U'``: horizontal depth-averaged transport
-                - ``'v'``: vertical transport velocities
-                - ``'V'``: vertical depth-averaged transport
+                - ``'u'``: zonal currents
+                - ``'U'``: zonal depth-averaged transport
+                - ``'v'``: meridional currents
+                - ``'V'``: meridional depth-averaged transport
         """
         # wrap mask if global
         mode = 'wrap' if self.is_global else 'edge'
@@ -1636,6 +1739,8 @@ class OTISDataset:
             # assign to dataset
             ds['mask'] = (ds.dims, mask.values)
             ds['bathymetry'] = ds['mask']*bathymetry.values
+            for field in ['mask', 'bathymetry']:
+                ds[field].attrs.update(_attributes['u'][field])
         elif type in ('v', 'V'):
             # calculate Dataset on v grids
             # pad and roll the mask and bathymetry
@@ -1645,6 +1750,8 @@ class OTISDataset:
             # assign to dataset
             ds['mask'] = (ds.dims, mask.values)
             ds['bathymetry'] = ds['mask']*bathymetry.values
+            for field in ['mask', 'bathymetry']:
+                ds[field].attrs.update(_attributes['v'][field])
         else:
             # merge without interpolation
             ds = xr.merge([self._ds, ds])

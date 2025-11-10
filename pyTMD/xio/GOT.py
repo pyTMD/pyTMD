@@ -61,6 +61,7 @@ UPDATE HISTORY:
 """
 from __future__ import division, annotations
 
+import re
 import gzip
 import pathlib
 import datetime
@@ -175,6 +176,8 @@ def open_got_ascii(
     # parse header text
     # constituent identifier
     cons = pyTMD.io.constituents.parse(file_contents[0])
+    # get units
+    units = re.findall(r'\((\w+m)\)', file_contents[0], re.IGNORECASE)
     # grid dimensions
     nlat, nlon = np.array(file_contents[2].split(), dtype=int)
     # longitude range
@@ -227,6 +230,8 @@ def open_got_ascii(
     ds = xr.Dataset.from_dict(var)
     # add attributes
     ds.attrs['type'] = 'z'
+    if units:
+        ds.attrs['units'] = units[0].lower()
     # return xarray dataset
     return ds
 
