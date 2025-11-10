@@ -144,6 +144,7 @@ def open_got_dataset(
 # PURPOSE: read GOT ASCII files
 def open_got_ascii(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -153,6 +154,8 @@ def open_got_ascii(
     ----------
     input_file: str or pathlib.Path
         Model file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -228,6 +231,9 @@ def open_got_ascii(
     var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
     # add attributes
     ds.attrs['type'] = 'z'
     if units:
@@ -238,6 +244,7 @@ def open_got_ascii(
 # PURPOSE: read GOT netCDF4 files
 def open_got_netcdf(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -247,6 +254,8 @@ def open_got_netcdf(
     ----------
     input_file: str or pathlib.Path
         model file
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -263,9 +272,9 @@ def open_got_netcdf(
     if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, 'rb')
-        tmp = xr.open_dataset(f, mask_and_scale=True)
+        tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
-        tmp = xr.open_dataset(input_file, mask_and_scale=True)
+        tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # extract constituent from attribute
     cons = pyTMD.io.constituents.parse(tmp.attrs['Constituent'])
     # create output xarray dataset for file
@@ -281,8 +290,6 @@ def open_got_netcdf(
     # add attributes
     ds.attrs['type'] = 'z'
     ds[cons].attrs['units'] = tmp['amplitude'].attrs.get('units')
-    # close open gzip file if compressed
-    f.close() if kwargs['compressed'] else None
     # return xarray dataset
     return ds
 

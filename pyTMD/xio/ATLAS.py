@@ -203,6 +203,7 @@ def open_atlas_grid(
 def open_atlas_dataset(
         input_file: str | pathlib.Path,
         type: str = 'z',
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -220,6 +221,8 @@ def open_atlas_dataset(
             - ``'U'``: zonal depth-averaged transport
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -236,9 +239,9 @@ def open_atlas_dataset(
     if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, 'rb')
-        tmp = xr.open_dataset(f, mask_and_scale=True)
+        tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
-        tmp = xr.open_dataset(input_file, mask_and_scale=True)
+        tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # constituent name
     con = tmp['con'].values.astype('|S').tobytes().decode('utf-8').strip()
     if (type == 'z'):
@@ -259,8 +262,6 @@ def open_atlas_dataset(
     # add attributes
     ds.attrs['format'] = 'ATLAS'
     ds.attrs['type'] = type.upper() if type in ('u','v') else type
-    # close open gzip file if compressed
-    f.close() if kwargs['compressed'] else None
     # return xarray dataset
     return ds
 
