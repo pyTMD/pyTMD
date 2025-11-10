@@ -143,6 +143,7 @@ def open_fes_dataset(
 # PURPOSE: read FES ASCII files
 def open_fes_ascii(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -152,6 +153,8 @@ def open_fes_ascii(
     ----------
     input_file: str or pathlib.Path
         input ascii file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -223,6 +226,9 @@ def open_fes_ascii(
     var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
     # add attributes
     ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
@@ -232,6 +238,7 @@ def open_fes_ascii(
 # PURPOSE: read FES netCDF4 files
 def open_fes_netcdf(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -255,6 +262,8 @@ def open_fes_netcdf(
             - ``'FES2022'``
             - ``'EOT20'``
             - ``'HAMTIDE11'``
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -273,9 +282,9 @@ def open_fes_netcdf(
     if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, 'rb')
-        tmp = xr.open_dataset(f, mask_and_scale=True)
+        tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
-        tmp = xr.open_dataset(input_file, mask_and_scale=True)
+        tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # parse model file for constituent identifier
     cons = pyTMD.io.constituents.parse(input_file.stem)
     # amplitude and phase components for each type
@@ -308,8 +317,6 @@ def open_fes_netcdf(
     ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
     ds[cons].attrs['units'] = tmp[amp_key].attrs.get('units')
-    # close open gzip file if compressed
-    f.close() if kwargs['compressed'] else None
     # return xarray dataset
     return ds
 

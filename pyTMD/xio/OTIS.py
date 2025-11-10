@@ -295,7 +295,6 @@ def open_otis_dataset(
         model_file: str | list | pathlib.Path,
         grid_file: str | pathlib.Path,
         type: str | None = 'z',
-        use_mmap : bool = False,
         **kwargs
     ):
     """
@@ -328,22 +327,22 @@ def open_otis_dataset(
     # default coordinate reference system
     crs = kwargs.get('crs', 4326)
     # open grid file
-    ds1 = open_otis_grid(grid_file, use_mmap=use_mmap)
+    ds1 = open_otis_grid(grid_file, **kwargs)
     # add attributes
     ds1.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
     # open model file(s)
     if isinstance(model_file, list):
         # multi-file datasets
-        ds2 = open_mfdataset(model_file, type=type, use_mmap=use_mmap)
+        ds2 = open_mfdataset(model_file, type=type, **kwargs)
     elif (type == 'z'):
         # elevations
-        ds2 = open_otis_elevation(model_file, use_mmap=use_mmap)
+        ds2 = open_otis_elevation(model_file, **kwargs)
     elif type in ('u', 'U'):
         # transports are returned as (u,v)
-        ds2 = open_otis_transport(model_file, use_mmap=use_mmap)[0]
+        ds2 = open_otis_transport(model_file, **kwargs)[0]
     elif type in ('v', 'V'):
         # transports are returned as (u,v)
-        ds2 = open_otis_transport(model_file, use_mmap=use_mmap)[1]
+        ds2 = open_otis_transport(model_file, **kwargs)[1]
     # merge datasets
     ds = ds1.otis.merge(ds2, type=type)
     # add attributes
@@ -355,6 +354,7 @@ def open_atlas_dataset(
         model_file: str | pathlib.Path,
         grid_file: str | pathlib.Path,
         type: str | None = 'z',
+        chunks: int | dict | str | None = None,
         use_mmap : bool = False,
         **kwargs
     ):
@@ -377,6 +377,8 @@ def open_atlas_dataset(
             - ``'V'``: meridional depth-averaged transport
     crs: int, str or dict, default 4326
         coordinate reference system for the model data
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     use_mmap: bool, default False
         use memory mapping to read data
 
@@ -389,22 +391,22 @@ def open_atlas_dataset(
     crs = kwargs.get('crs', 4326)
     # open grid file
     dsg, dtg = open_atlas_grid(grid_file, use_mmap=use_mmap)
-    ds1 = dsg.compact.combine_local(dtg)
+    ds1 = dsg.compact.combine_local(dtg, chunks=chunks)
     # add attributes
     ds1.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
     # open model file(s)
     if (type == 'z'):
         # elevations are returned as (z, localz)
         dsh, dth = open_atlas_elevation(model_file, use_mmap=use_mmap)
-        ds2 = dsh.compact.combine_local(dth)
+        ds2 = dsh.compact.combine_local(dth, chunks=chunks)
     elif type in ('u', 'U'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsu.compact.combine_local(dtu)
+        ds2 = dsu.compact.combine_local(dtu, chunks=chunks)
     elif type in ('v', 'V'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsv.compact.combine_local(dtv)
+        ds2 = dsv.compact.combine_local(dtv, chunks=chunks)
     # merge datasets
     ds = xr.merge([ds1, ds2], compat='override')
     # add attributes
@@ -416,6 +418,7 @@ def open_atlas_dataset(
 def open_tmd3_dataset(
         input_file: str | pathlib.Path,
         type: str | None = 'z',
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
@@ -433,6 +436,8 @@ def open_tmd3_dataset(
             - ``'U'``: zonal depth-averaged transport
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
 
     Returns
     -------
@@ -442,7 +447,7 @@ def open_tmd3_dataset(
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser().absolute()
     # read the netCDF4-format tide grid file
-    tmp = xr.open_dataset(input_file, mask_and_scale=True)
+    tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # replace constituents array with names
     constituents = tmp.constituents.attrs['constituent_order'].split()
     tmp['constituents'] = constituents
@@ -476,6 +481,7 @@ def open_tmd3_dataset(
 # PURPOSE: read OTIS grid files
 def open_otis_grid(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         use_mmap: bool = False,
         **kwargs
     ):
@@ -486,6 +492,8 @@ def open_otis_grid(
     ----------
     input_file: str or pathlib.Path
         input OTIS grid file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     use_mmap: bool, default False
         use memory mapping to read data
 
@@ -599,6 +607,9 @@ def open_otis_grid(
     grid["data_vars"]["mask"]["data"] = mz
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(grid)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
     # add attributes
     ds.attrs['dt'] = dt.copy()
     ds.attrs['iob'] = iob.copy()
@@ -611,6 +622,7 @@ def open_otis_grid(
 # PURPOSE: read OTIS elevation files
 def open_otis_elevation(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         use_mmap: bool = False,
         **kwargs
     ):
@@ -621,6 +633,8 @@ def open_otis_elevation(
     ----------
     input_file: str or pathlib.Path
         input OTIS elevation file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     use_mmap: bool, default False
         use memory mapping to read data
 
@@ -705,6 +719,9 @@ def open_otis_elevation(
         offset += 4*2*nx*ny
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(h)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
     # add attributes
     ds.attrs['bounds'] = bounds.copy()
     for field in ds.data_vars:
@@ -715,6 +732,7 @@ def open_otis_elevation(
 # PURPOSE: read OTIS transport files
 def open_otis_transport(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         use_mmap: bool = False,
         **kwargs
     ):
@@ -725,6 +743,8 @@ def open_otis_transport(
     ----------
     input_file: str or pathlib.Path
         input OTIS transport file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     use_mmap: bool, default False
         use memory mapping to read data
 
@@ -820,6 +840,10 @@ def open_otis_transport(
     # convert to xarray Datasets from the data dictionaries
     dsu = xr.Dataset.from_dict(u)
     dsv = xr.Dataset.from_dict(v)
+    # coerce to specified chunks
+    if chunks is not None:
+        dsu = dsu.chunk(chunks)
+        dsv = dsv.chunk(chunks)
     # add attributes
     dsu.attrs['bounds'] = bounds.copy()
     dsv.attrs['bounds'] = bounds.copy()
@@ -2072,13 +2096,18 @@ class ATLASDataset:
         ds.attrs['bounds'] = np.array(self.__bounds__)
         return ds
 
-    def combine_local(self, dtree: xr.DataTree):
+    def combine_local(self,
+            dtree: xr.DataTree,
+            chunks: int | dict | str | None = None
+        ):
         """Combine ATLAS model solutions into a single xarray Dataset
 
         Parameters
         ----------
         dtree: xarray.DataTree
             Local ATLAS model solutions
+        chunks: int, dict, str, or None, default None
+            coerce output to specified chunks
 
         Returns
         -------
@@ -2103,6 +2132,9 @@ class ATLASDataset:
                 elif (key == 'mask'):
                     # replace global mask with local mask at valid indices
                     ds[key][indy, indx] = True
+        # coerce to specified chunks
+        if chunks is not None:
+            ds = ds.chunk(chunks)
         # return combined xarray Dataset
         return ds   
 
