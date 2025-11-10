@@ -23,6 +23,7 @@ class Model(pyTMD.io.model):
         kwargs.setdefault('constituents', None)
         # model type
         mtype = kwargs['type'].lower()
+        assert mtype in ('z', 'u', 'v'), "Invalid model type"
         # extract model file
         model_file = self[mtype].get('model_file')
         # reduce constituents if specified

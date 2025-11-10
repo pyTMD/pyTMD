@@ -238,10 +238,10 @@ def open_dataset(
     ds.attrs['format'] = format
     # convert transports to currents if necessary
     if kwargs['type'] in ('u','v'):
-        # convert transports to currents (m^2/s to m/s)
-        ds[ds.tmd.constituents] /= ds['bathymetry']
-        # update attributes
-        ds[ds.tmd.constituents].attrs.update(_attributes[mtype]['current'])
+        # convert transports to currents and update attributes
+        for c in ds.tmd.constituents:
+            ds[c] /= ds['bathymetry']
+            ds[c].attrs.update(_attributes[mtype]['current'])
     # return xarray dataset
     return ds
 

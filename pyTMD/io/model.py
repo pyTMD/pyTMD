@@ -301,6 +301,9 @@ class model:
         model = self.from_database(m)
         # try to read model files
         for mtype in ('z', 'u', 'v'):
+            # skip if model type is unavailable
+            if not hasattr(self, mtype):
+                continue
             # read model constituents
             model.read_constants(type=mtype, **kwargs)
             # scale factor to convert to output units
@@ -560,7 +563,6 @@ class model:
         # return the complete output path
         return output_file
 
-
     def _parse_file(self, fid: io.IOBase):
         """
         Load and parse a model definition file
@@ -658,7 +660,6 @@ class model:
                 self.format = m[1]
         # assert that tide model is a known format
         assert self.format in self.known_formats()
-
 
     def serialize(self, d: dict):
         """
