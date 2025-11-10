@@ -231,7 +231,7 @@ def open_got_ascii(
     # add attributes
     ds.attrs['type'] = 'z'
     if units:
-        ds.attrs['units'] = units[0].lower()
+        ds[cons].attrs['units'] = units[0].lower()
     # return xarray dataset
     return ds
 
@@ -280,7 +280,7 @@ def open_got_netcdf(
     ds = ds.rename(mapping_coords)
     # add attributes
     ds.attrs['type'] = 'z'
-    ds.attrs['units'] = tmp['amplitude'].attrs.get('units')
+    ds[cons].attrs['units'] = tmp['amplitude'].attrs.get('units')
     # close open gzip file if compressed
     f.close() if kwargs['compressed'] else None
     # return xarray dataset
@@ -331,7 +331,7 @@ class GOTDataset:
             # calculate amplitude and phase
             ds['amplitude'] = self._ds[v].tmd.amplitude
             ds['phase'] = self._ds[v].tmd.phase
-            ds['amplitude'].attrs['units'] = self._ds.attrs['units']
+            ds['amplitude'].attrs['units'] = self._ds[v].attrs['units']
             ds['phase'].attrs['units'] = 'degrees'
             ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
             ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'

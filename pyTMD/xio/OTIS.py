@@ -238,11 +238,10 @@ def open_dataset(
     ds.attrs['format'] = format
     # convert transports to currents if necessary
     if kwargs['type'] in ('u','v'):
-        # convert transports to currents
+        # convert transports to currents (m^2/s to m/s)
         ds[ds.tmd.constituents] /= ds['bathymetry']
         # update attributes
         ds[ds.tmd.constituents].attrs.update(_attributes[mtype]['current'])
-        ds.attrs['units'] = _attributes[mtype]['current']['units']
     # return xarray dataset
     return ds
 
@@ -288,7 +287,7 @@ def open_mfdataset(
     # merge datasets
     ds = xr.merge(d, compat='override')
     # add attributes
-    ds.attrs['type'] = type
+    ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # return xarray dataset
     return ds
 
@@ -348,7 +347,7 @@ def open_otis_dataset(
     # merge datasets
     ds = ds1.otis.merge(ds2, type=type)
     # add attributes
-    ds.attrs['type'] = type
+    ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # return xarray dataset
     return ds
 
@@ -409,7 +408,7 @@ def open_atlas_dataset(
     # merge datasets
     ds = xr.merge([ds1, ds2], compat='override')
     # add attributes
-    ds.attrs['type'] = type
+    ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # return xarray dataset
     return ds
 
@@ -454,13 +453,13 @@ def open_tmd3_dataset(
     # convert imaginary component to negative to match convention
     if (type == 'z'):
         ds = (tmp['hRe'] + -1j*tmp['hIm']).to_dataset(dim='constituents')
-        ds.attrs['units'] = tmp['hRe'].attrs.get('units')
+        ds[ds.data_vars].attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
         ds = (tmp['URe'] + -1j*tmp['UIm']).to_dataset(dim='constituents')
-        ds.attrs['units'] = tmp['URe'].attrs.get('units')
+        ds[ds.data_vars].attrs['units'] = tmp['URe'].attrs.get('units')
     elif type in ('V','v'):
         ds = (tmp['VRe'] + -1j*tmp['VIm']).to_dataset(dim='constituents')
-        ds.attrs['units'] = tmp['VRe'].attrs.get('units')
+        ds[ds.data_vars].attrs['units'] = tmp['VRe'].attrs.get('units')
     # read water column thickness, mask and flexure
     ds['mask'] = tmp['mask']
     # convert bathymetry to float and rename to match
@@ -469,7 +468,8 @@ def open_tmd3_dataset(
     ds['flexure'] = tmp.flexure.astype('f') / 100.0
     # add attributes
     ds.attrs['crs'] = pyproj.CRS.from_user_input(spatial_proj4).to_dict()
-    ds.attrs['type'] = type
+    # add attributes
+    ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # return xarray dataset
     return ds
 
@@ -707,7 +707,6 @@ def open_otis_elevation(
     ds = xr.Dataset.from_dict(h)
     # add attributes
     ds.attrs['bounds'] = bounds.copy()
-    ds.attrs['units'] = _attributes['z']['elevation']['units']
     for field in ds.data_vars:
         ds[field].attrs.update(_attributes['z']['elevation'])
     # return xarray dataset
@@ -824,8 +823,6 @@ def open_otis_transport(
     # add attributes
     dsu.attrs['bounds'] = bounds.copy()
     dsv.attrs['bounds'] = bounds.copy()
-    dsu.attrs['units'] = _attributes['u']['transport']['units']
-    dsv.attrs['units'] = _attributes['v']['transport']['units']
     for field in dsu.data_vars:
         dsu[field].attrs.update(_attributes['u']['transport'])
     for field in dsv.data_vars:
@@ -1182,7 +1179,6 @@ def open_atlas_elevation(
     ds = xr.Dataset.from_dict(h)
     # add attributes
     ds.attrs['bounds'] = bounds.copy()
-    ds.attrs['units'] = _attributes['z']['elevation']['units']
     for field in ds.data_vars:
         ds[field].attrs.update(_attributes['z']['elevation'])
     offset += 4
@@ -1421,8 +1417,6 @@ def open_atlas_transport(
     # add attributes
     dsu.attrs['bounds'] = bounds.copy()
     dsv.attrs['bounds'] = bounds.copy()
-    dsu.attrs['units'] = _attributes['u']['transport']['units']
-    dsv.attrs['units'] = _attributes['v']['transport']['units']
     for field in dsu.data_vars:
         dsu[field].attrs.update(_attributes['u']['transport'])
     for field in dsv.data_vars:
