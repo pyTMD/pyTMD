@@ -11,6 +11,9 @@ PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
+    pyproj: Python interface to PROJ library
+        https://pypi.org/project/pyproj/
+        https://pyproj4.github.io/pyproj/
     xarray: N-D labeled arrays and datasets in Python
         https://docs.xarray.dev/en/stable/
 
@@ -47,7 +50,9 @@ import gzip
 import pathlib
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import get_data_path
+from pyTMD.utilities import get_data_path, import_dependency
+# attempt imports
+pyproj = import_dependency('pyproj')
 
 __all__ = [
     "open_dataset",
@@ -72,6 +77,8 @@ def open_dataset(
         Ocean pole tide file
     chunks: int | dict | str | None, default None
         coerce output to specified chunks
+    crs: str | int | dict, default 4326
+        Coordinate reference system
     compressed: bool, default False
         Input file is gzip compressed
 
@@ -82,6 +89,8 @@ def open_dataset(
     """
     # set default keyword arguments
     kwargs.setdefault('compressed', True)
+    # default coordinate reference system is EPSG:4326 (WGS84)
+    crs = kwargs.get('crs', 4326)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
     # read compressed ocean pole tide file
@@ -132,6 +141,7 @@ def open_dataset(
 
     # read lines of file and add to output variables
     for i,line in enumerate(file_contents[count:]):
+        # read line of ocean pole tide file
         ln,lt,urr,uri,unr,uni,uer,uei = np.array(line.split(), dtype='f8')
         # calculate indices of output grid
         # coerce to -180:180 longitude convention
@@ -146,5 +156,7 @@ def open_dataset(
     # coerce to specified chunks
     if chunks is not None:
         ds = ds.chunk(chunks)
+    # add attributes
+    ds.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
     # return xarray dataset
     return ds
