@@ -782,6 +782,57 @@ class model:
         # return self
         return self
 
+    def open_dataset(self, **kwargs):
+        # import tide model functions
+        from pyTMD.xio import OTIS, ATLAS, GOT, FES
+        # import tide model functions
+        # set default keyword arguments
+        kwargs.setdefault('type', 'z')
+        kwargs.setdefault('use_default_units', True)
+        kwargs.setdefault('append_node', False)
+        kwargs.setdefault('compressed', self.compressed)
+        kwargs.setdefault('constituents', None)
+        # model type
+        mtype = kwargs['type'].lower()
+        assert mtype in ('z', 'u', 'v'), "Invalid model type"
+        # extract model file
+        model_file = self[mtype].get('model_file')
+        # reduce constituents if specified
+        self.reduce_constituents(kwargs['constituents'])
+        if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
+            # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
+            ds = OTIS.open_dataset(model_file, 
+                grid_file=self[mtype].get('grid_file'),
+                format=self.file_format,
+                crs=self.crs, **kwargs)
+        elif self.format in ('ATLAS-netcdf',):
+            # open ATLAS netCDF4 files as xarray Dataset
+            ds = ATLAS.open_dataset(model_file, 
+                grid_file=self[mtype].get('grid_file'),
+                format=self.file_format, **kwargs)
+        elif self.format in ('GOT-ascii', 'GOT-netcdf'):
+            # open GOT ASCII/netCDF4 files as xarray Dataset
+            ds = GOT.open_mfdataset(model_file,
+                format=self.file_format, **kwargs)
+        elif self.format in ('FES-ascii', 'FES-netcdf'):
+            # open FES ASCII/netCDF4 files as xarray Dataset
+            ds = FES.open_mfdataset(model_file,
+                version=self.version, **kwargs)
+        # add attributes
+        ds.attrs['source'] = self.name
+        # add coordinate reference system to Dataset
+        ds.attrs['crs'] = self.crs.to_dict()
+        # list of constituents
+        c = ds.tmd.constituents
+        # set units attribute if not already set
+        # (uses value defined in the model database)
+        ds[c].attrs['units'] = ds[c].attrs.get('units', self[mtype].units)
+        # convert to default units
+        if kwargs['use_default_units']:
+            ds = ds.tmd.to_default_units()
+        # return xarray dataset
+        return ds
+
     def extract_constants(self,
             lon: np.ndarray,
             lat: np.ndarray,
