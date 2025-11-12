@@ -182,6 +182,67 @@ class Dataset:
         # return the dataset
         return ds
 
+    def subset(self, c: str | list):
+        """
+        Reduce to a subset of constituents
+
+        Parameters
+        ----------
+        c: str or list
+            List of constituents names
+        """
+        # create copy of dataset
+        ds = self._ds.copy()
+        # if no constituents are specified, return self
+        # else return reduced dataset
+        if c is None:
+            return ds
+        elif isinstance(c, str):
+            return ds[[c]]
+        else:
+            return ds[c]
+
+    def transform(self,
+            i1: np.ndarray,
+            i2: np.ndarray,
+            crs: str | int | dict = 4326,
+            **kwargs
+        ):
+        """
+        Transform coordinates to/from the dataset coordinate reference system
+
+        Parameters
+        ----------
+        i1: np.ndarray
+            Input x-coordinates
+        i2: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+        direction: str, default 'FORWARD'
+            Direction of transformation
+
+            - ``'FORWARD'``: from input crs to model crs
+            - ``'BACKWARD'``: from model crs to input crs
+
+        Returns
+        -------
+        o1: np.ndarray
+            Transformed x-coordinates
+        o2: np.ndarray
+            Transformed y-coordinates
+        """
+        # set the direction of the transformation
+        kwargs.setdefault('direction', 'FORWARD')
+        # get the coordinate reference system and transform
+        source_crs = pyproj.CRS.from_user_input(crs)
+        transformer = pyproj.Transformer.from_crs(
+            source_crs, self.crs, always_xy=True)
+        # convert coordinate reference system
+        o1, o2 = transformer.transform(i1, i2, **kwargs)
+        # return the transformed coordinates
+        return (o1, o2)
+
     def to_base_units(self):
         """Convert ``Dataset`` to base units
         """
