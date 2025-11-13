@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 11/2025: add predictor for xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
         can choose different tide potential catalogs for body tides
         generalize the calculation of body tides for degrees 3+
@@ -93,9 +94,13 @@ import pyTMD.astro
 import pyTMD.math
 import pyTMD.interpolate
 import pyTMD.spatial
+from pyTMD.utilities import import_dependency
 import timescale.eop
+# attempt imports
+xr = import_dependency('xarray')
 
 __all__ = [
+    "dataset",
     "map",
     "drift",
     "time_series",
@@ -123,6 +128,62 @@ _jd_mjd = 2400000.5
 _mjd_tide = 48622.0
 # number of days between the Julian day epoch and the tide epoch
 _jd_tide = _jd_mjd + _mjd_tide
+
+def dataset(ds, t: float | np.ndarray, **kwargs):
+    """
+    Predict tides from ``Dataset`` at times
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Dataset containing tidal harmonic constants
+    t: float or np.ndarray
+        days relative to 1992-01-01T00:00:00 UTC
+    kwargs: keyword arguments
+        additional keyword arguments
+
+    Returns
+    -------
+    darr: xarray.DataArray
+        predicted tides
+    """
+    # set default keyword arguments
+    kwargs.setdefault('corrections', 'OTIS')
+    # convert time to Modified Julian Days (MJD)
+    MJD = t + _mjd_tide
+    # list of constituents
+    constituents = ds.tmd.constituents
+    # load the nodal corrections
+    pu, pf, G = pyTMD.arguments.arguments(MJD,
+        constituents, **kwargs)
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(['time','constituent'], pu),
+            f=(['time','constituent'], pf),
+            G=(['time','constituent'], G)),
+        coords=dict(time=MJD, constituent=constituents),
+    )
+    # sum over all tides
+    for i, c in enumerate(constituents):
+        # select argument for constituent
+        arg = arguments.sel(constituent=c)
+        if kwargs['corrections'] in ('OTIS', 'ATLAS', 'TMD3'):
+            # load parameters for constituent
+            amp, ph, omega, alpha, species = \
+                pyTMD.arguments._constituent_parameters(c)
+            th = omega*t*86400.0 + ph + arg.u
+        else:
+            th = np.radians(arg.G) + arg.u
+        # initialize or sum tidal elevations
+        if i == 0:
+            darr = arg.f*ds[c].real*np.cos(th) - \
+                arg.f*ds[c].imag*np.sin(th)
+            darr.attrs['units'] = str(ds[c].units)
+        else:
+            darr += arg.f*ds[c].real*np.cos(th) - \
+                arg.f*ds[c].imag*np.sin(th)
+    # return the predicted tidal elevations
+    return darr.drop_vars('constituent')
 
 # PURPOSE: Predict tides at single times
 def map(t: float | np.ndarray,

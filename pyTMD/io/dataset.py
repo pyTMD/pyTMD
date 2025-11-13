@@ -27,6 +27,7 @@ UPDATE HISTORY:
     Written 08/2025
 """
 import numpy as np
+import pyTMD.arguments
 from pyTMD.utilities import import_dependency
 # attempt imports
 xr = import_dependency('xarray')
@@ -34,6 +35,7 @@ pyproj = import_dependency('pyproj')
 pint = import_dependency('pint')
 
 __all__ = [
+    'DataTree',
     'Dataset',
     'DataArray'
 ]
@@ -46,6 +48,95 @@ _default_units = {
     'current': 'cm/s',
     'transport': 'm^2/s',
 }
+
+# number of days between MJD and the tide epoch (1992-01-01T00:00:00)
+_mjd_tide = 48622.0
+
+@xr.register_datatree_accessor('tmd')
+class DataTree:
+    """Accessor for extending an ``xarray.DataTree`` for tidal model data
+    """
+    def __init__(self, dtree):
+        # initialize DataTree
+        self._dtree = dtree
+
+    def inpaint(self, **kwargs):
+        """
+        Inpaint over missing data in ``DataTree``
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # inpaint each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.tmd.inpaint(**kwargs)
+        # return the datatree
+        return dtree
+
+    def interp(self, x, y, **kwargs):
+        """
+        Interpolate ``DataTree`` to input coordinates
+        
+        Parameters
+        ----------
+        x: np.ndarray
+            input x-coordinates
+        y: np.ndarray
+            input y-coordinates
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # inpaint each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.tmd.interp(x, y, **kwargs)
+        # return the datatree
+        return dtree
+    
+    def transform(self, i1, i2, crs=4326, **kwargs):
+        """
+        Transform coordinates to/from the datatree coordinate reference system
+
+        Parameters
+        ----------
+        i1: np.ndarray
+            Input x-coordinates
+        i2: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+        direction: str, default 'FORWARD'
+            Direction of transformation
+
+            - ``'FORWARD'``: from input crs to model crs
+            - ``'BACKWARD'``: from model crs to input crs
+        
+        Returns
+        -------
+        o1: np.ndarray
+            Transformed x-coordinates
+        o2: np.ndarray
+            Transformed y-coordinates
+        """
+        # set the direction of the transformation
+        kwargs.setdefault('direction', 'FORWARD')
+        # get the coordinate reference system and transform
+        source_crs = pyproj.CRS.from_user_input(crs)
+        transformer = pyproj.Transformer.from_crs(
+            source_crs, self.crs, always_xy=True)
+        # convert coordinate reference system
+        o1, o2 = transformer.transform(i1, i2, **kwargs)
+        # return the transformed coordinates
+        return (o1, o2)
+    
+    @property
+    def crs(self):
+        """Coordinate reference system of the ``DataTree``
+        """
+        # inherit CRS from one of the datasets
+        for key, ds in self._dtree.items():
+            ds = ds.to_dataset()
+            return ds.tmd.crs
 
 @xr.register_dataset_accessor('tmd')
 class Dataset:
@@ -152,14 +243,24 @@ class Dataset:
                 # check for missing values
                 invalid = ds[v].isnull()
                 if not invalid.any():
+                    # no missing values
                     continue
-                # only extrapolate invalid points
-                ds[v].values[invalid] = extrapolate(
-                    self._ds.x.values, self._ds.y.values,
-                    self._ds[v].values, x[invalid], y[invalid],
-                    is_geographic=self.crs.is_geographic,
-                    **kwargs
-                )
+                elif (ds[v].ndim == 0):
+                    # single point extrapolation
+                    ds[v].values, = extrapolate(
+                        self._ds.x.values, self._ds.y.values,
+                        self._ds[v].values, x, y,
+                        is_geographic=self.crs.is_geographic,
+                        **kwargs
+                    )
+                else:
+                    # only extrapolate invalid points
+                    ds[v].values[invalid] = extrapolate(
+                        self._ds.x.values, self._ds.y.values,
+                        self._ds[v].values, x[invalid], y[invalid],
+                        is_geographic=self.crs.is_geographic,
+                        **kwargs
+                    )
         # return xarray dataset
         return ds
 
@@ -181,6 +282,27 @@ class Dataset:
         ds = self._ds.pad(x=n, mode="wrap").assign_coords(x=x)
         # return the dataset
         return ds
+    
+    def predict(self, t: float | np.ndarray, **kwargs):
+        """
+        Predict tides from ``Dataset`` at times
+
+        Parameters
+        ----------
+        t: float or np.ndarray
+            days relative to 1992-01-01T00:00:00 UTC
+        kwargs: keyword arguments
+            additional keyword arguments
+
+        Returns
+        -------
+        darr: xarray.DataArray
+            predicted tides
+        """
+        # predict tides at times
+        darr = pyTMD.predict.dataset(self._ds, t, **kwargs)
+        # return the predicted tidal elevations
+        return darr
 
     def subset(self, c: str | list):
         """
@@ -242,6 +364,24 @@ class Dataset:
         o1, o2 = transformer.transform(i1, i2, **kwargs)
         # return the transformed coordinates
         return (o1, o2)
+
+    def to_units(self, units: str, value: float = 1.0):
+        """Convert ``Dataset`` to specified tide units
+
+        Parameters
+        ----------
+        units: str
+            output units
+        value: float, default 1.0
+            scaling factor to apply
+        """
+        # create copy of dataset
+        ds = self._ds.copy()
+        # convert each constituent in the dataset
+        for c in self.constituents:
+            ds[c] = ds[c].tmd.to_units(units, value=value)
+        # return the dataset
+        return ds
 
     def to_base_units(self):
         """Convert ``Dataset`` to base units
