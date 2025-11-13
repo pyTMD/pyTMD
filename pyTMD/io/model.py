@@ -212,7 +212,10 @@ class model:
         self.name = None
         self.verify = copy.copy(kwargs['verify'])
 
-    def from_database(self, m: str):
+    def from_database(self,
+            m: str,
+            type: tuple = ('z', 'u', 'v')
+        ):
         """
         Create a model object from known tidal models
 
@@ -220,6 +223,8 @@ class model:
         ----------
         m: str
             model name
+        type: tuple, default ('z', 'u', 'v')
+            List of model types to extract
         """
         # set working data directory if unset
         if self.directory is None:
@@ -231,8 +236,11 @@ class model:
             self.from_dict(parameters[m])
         except (ValueError, KeyError) as exc:
             raise ValueError(f"Unlisted tide model {m}")
+        # verify model types to extract
+        if isinstance(type, str):
+            type = (type,)
         # verify paths
-        for mtype in ('z', 'u', 'v'):
+        for mtype in type:
             # skip if model type is unavailable
             if not hasattr(self, mtype):
                 continue
@@ -343,6 +351,24 @@ class model:
             d = self.serialize(d)
         # return the model dictionary
         return d
+
+    def elevation(self, m):
+        """Backwards compatibility accessor for elevation models
+        """
+        temp = self.from_database(m, type='z')
+        for attr in temp.z.__dict__.keys():
+            setattr(self, attr, getattr(temp.z, attr))
+        temp.model_file = temp.z.model_file
+        return temp
+
+    def currents(self, m):
+        """Backwards compatibility accessor for current models
+        """
+        temp = self.from_database(m, type=('u','v'))
+        for attr in temp.u.__dict__.keys():
+            setattr(self, attr, getattr(temp.u, attr))
+        temp.model_file = dict(u=temp.u.model_file, v=temp.v.model_file)
+        return temp
 
     @property
     def gzip(self) -> str:
@@ -832,6 +858,32 @@ class model:
             ds = ds.tmd.to_default_units()
         # return xarray dataset
         return ds
+
+    def open_datatree(self,
+            type: tuple = ('z', 'u', 'v'),
+            **kwargs
+        ):
+        """
+        Create a model object from known tidal models
+
+        Parameters
+        ----------
+        type: tuple, default ('z', 'u', 'v')
+            List of model types to extract
+        """
+        # output dictionary of xarray Datasets
+        ds = {}
+        # try to read model files
+        for mtype in type:
+            # skip if model type is unavailable
+            if not hasattr(self, mtype):
+                continue
+            # open xarray Dataset
+            ds[mtype] = self.open_dataset(type=mtype, **kwargs)
+        # create xarray DataTree from dictionary
+        dtree = xr.DataTree.from_dict(ds)
+        # return the model xarray DataTree
+        return dtree
 
     def extract_constants(self,
             lon: np.ndarray,
