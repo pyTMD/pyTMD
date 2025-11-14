@@ -15,7 +15,6 @@ Examples
 
    ../notebooks/Check-Tide-Map
    ../notebooks/Compare-NOAA-Tides
-   ../notebooks/Compare-Tide-Gauges
    ../notebooks/Gap-Fill-Tide-Map
    ../notebooks/Plot-Antarctic-Cotidal-Charts
    ../notebooks/Plot-Antarctic-Tidal-Currents
@@ -45,25 +44,19 @@ Examples
       :link: ../notebooks/Compare-NOAA-Tides.html
       :link-alt: Compares measurements from NOAA tide gauges with predicted values
 
-    .. grid-item-card::  Compare Tide Gauges
-      :text-align: center
-      :img-top: ../_assets/tide_gauges.png
-      :link: ../notebooks/Compare-Tide-Gauges.html
-      :link-alt: Compares predicted tide values with measurements from tide gauges
-
     .. grid-item-card::  Gap Fill Tide Map
       :text-align: center
       :img-top: ../_assets/gap_fill_tide_map.png
       :link: ../notebooks/Gap-Fill-Tide-Map.html
       :link-alt: Demonstrates gap filling in tide model data
 
-.. grid:: 1 2 4 4
-
     .. grid-item-card::  Plot Antarctic Cotidal Charts
       :text-align: center
       :img-top: ../_assets/antarctic_cotidal_chart.png
       :link: ../notebooks/Plot-Antarctic-Cotidal-Charts.html
       :link-alt: Plots cotidal charts for selected constituents around Antarctica
+
+.. grid:: 1 2 4 4
 
     .. grid-item-card::  Plot Antarctic Tidal Currents
       :text-align: center
@@ -83,13 +76,13 @@ Examples
       :link: ../notebooks/Plot-Arctic-Ocean-Map.html
       :link-alt: Creates an animation of hourly tidal elevations for the Arctic Ocean
 
-.. grid:: 1 2 4 4
-
     .. grid-item-card::  Plot ATLAS Compact
       :text-align: center
       :img-top: ../_assets/atlas_compact.png
       :link: ../notebooks/Plot-ATLAS-Compact.html
       :link-alt: Plots the global and local solutions from an ATLAS compact model
+
+.. grid:: 1 2 4 4
 
     .. grid-item-card::  Plot Earth Orientation
       :text-align: center
@@ -109,13 +102,13 @@ Examples
       :link: ../notebooks/Plot-Ross-Ice-Shelf-Map.html
       :link-alt: Creates an animation of hourly tidal elevations for the Ross Ice Shelf
 
-.. grid:: 1 2 4 4
-
     .. grid-item-card::  Plot Solid Earth Tides
       :text-align: center
       :img-top: ../_assets/solid_earth_tides.png
       :link: ../notebooks/Plot-Solid-Earth-Tides.html
       :link-alt: Creates a global animation of hourly solid Earth tides
+
+.. grid:: 1 2 4 4
 
     .. grid-item-card::  Plot Tidal Spectra
       :text-align: center
@@ -134,8 +127,6 @@ Examples
       :img-top: ../_assets/tide_form_factor.png
       :link: ../notebooks/Plot-Tide-Form-Factor.html
       :link-alt: Plots maps of the dominant tidal species
-
-.. grid:: 1 2 4 4
 
     .. grid-item-card::  Solve Synthetic Tides
       :text-align: center

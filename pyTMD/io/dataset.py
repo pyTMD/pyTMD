@@ -156,6 +156,27 @@ class Dataset:
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
 
+    def infer(self, t: float | np.ndarray, **kwargs):
+        """
+        Infer minor tides from ``Dataset`` at times
+
+        Parameters
+        ----------
+        t: float or np.ndarray
+            days relative to 1992-01-01T00:00:00 UTC
+        kwargs: keyword arguments
+            additional keyword arguments
+
+        Returns
+        -------
+        darr: xarray.DataArray
+            predicted tides
+        """
+        # infer minor tides at times
+        darr = pyTMD.predict.infer_minor(self._ds, t, **kwargs)
+        # return the inferred tides
+        return darr
+
     def inpaint(self, **kwargs):
         """
         Inpaint over missing data in ``Dataset``
@@ -301,7 +322,7 @@ class Dataset:
         """
         # predict tides at times
         darr = pyTMD.predict.dataset(self._ds, t, **kwargs)
-        # return the predicted tidal elevations
+        # return the predicted tides
         return darr
 
     def subset(self, c: str | list):

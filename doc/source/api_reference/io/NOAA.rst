@@ -25,3 +25,6 @@ Calling Sequence
 .. autofunction:: pyTMD.io.NOAA.harmonic_constituents
 
 .. autofunction:: pyTMD.io.NOAA.water_level
+
+.. autoclass:: pyTMD.io.NOAA.DataFrame
+   :members:

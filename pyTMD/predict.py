@@ -129,7 +129,11 @@ _mjd_tide = 48622.0
 # number of days between the Julian day epoch and the tide epoch
 _jd_tide = _jd_mjd + _mjd_tide
 
-def dataset(ds, t: float | np.ndarray, **kwargs):
+def dataset(
+        ds: xr.Dataset,
+        t: float | np.ndarray,
+        **kwargs
+    ):
     """
     Predict tides from ``Dataset`` at times
 
@@ -156,6 +160,7 @@ def dataset(ds, t: float | np.ndarray, **kwargs):
     # load the nodal corrections
     pu, pf, G = pyTMD.arguments.arguments(MJD,
         constituents, **kwargs)
+    # dataset of arguments
     arguments = xr.Dataset(
         data_vars=dict(
             u=(['time','constituent'], pu),
@@ -178,7 +183,7 @@ def dataset(ds, t: float | np.ndarray, **kwargs):
         if i == 0:
             darr = arg.f*ds[c].real*np.cos(th) - \
                 arg.f*ds[c].imag*np.sin(th)
-            darr.attrs['units'] = str(ds[c].units)
+            darr.attrs['units'] = ds[c].attrs.get('units', None)
         else:
             darr += arg.f*ds[c].real*np.cos(th) - \
                 arg.f*ds[c].imag*np.sin(th)
@@ -379,9 +384,8 @@ def time_series(t: float | np.ndarray,
 
 # PURPOSE: infer the minor corrections from the major constituents
 def infer_minor(
+        ds: xr.Dataset,
         t: float | np.ndarray,
-        zmajor: np.ndarray,
-        constituents: list | np.ndarray,
         **kwargs
     ):
     """
@@ -391,12 +395,10 @@ def infer_minor(
 
     Parameters
     ----------
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
-    zmajor: np.ndarray
-        Complex HC for given constituents/points
-    constituents: list
-        tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
@@ -424,21 +426,20 @@ def infer_minor(
     dh = 0.0
     # infer short-period tides for minor constituents
     if kwargs['corrections'] in ('GOT',):
-        dh += _infer_semi_diurnal(t, zmajor, constituents, **kwargs)
-        dh += _infer_diurnal(t, zmajor, constituents, **kwargs)
+        dh += _infer_semi_diurnal(ds, t, **kwargs)
+        dh += _infer_diurnal(ds, t, **kwargs)
     else:
-        dh += _infer_short_period(t, zmajor, constituents, **kwargs)
+        dh += _infer_short_period(ds, t, **kwargs)
     # infer long-period tides for minor constituents
     if kwargs['infer_long_period']:
-        dh += _infer_long_period(t, zmajor, constituents, **kwargs)
+        dh += _infer_long_period(ds, t, **kwargs)
     # return the inferred values
     return dh
 
 # PURPOSE: infer short-period minor constituents
 def _infer_short_period(
+        ds: xr.Dataset,
         t: float | np.ndarray,
-        zmajor: np.ndarray,
-        constituents: list | np.ndarray,
         **kwargs
     ):
     """
@@ -448,12 +449,10 @@ def _infer_short_period(
 
     Parameters
     ----------
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
-    zmajor: np.ndarray
-        Complex HC for given constituents/points
-    constituents: list
-        tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
@@ -474,33 +473,17 @@ def _infer_short_period(
     kwargs.setdefault('raise_exception', False)
     # list of minor constituents
     kwargs.setdefault('minor', None)
-    # number of constituents
-    zmajor = np.ma.atleast_2d(zmajor)
-    npts, nc = np.shape(zmajor)
-    nt = len(np.atleast_1d(t))
-    # number of data points to calculate if running time series/drift/map
-    n = nt if ((npts == 1) & (nt > 1)) else npts
-    # allocate for output elevation correction
-    dh = np.ma.zeros((n))
     # major constituents used for inferring minor tides
     cindex = ['q1', 'o1', 'p1', 'k1', 'n2', 'm2', 's2', 'k2', '2n2']
-    # re-order major tides to correspond to order of cindex
-    z = np.ma.zeros((n,len(cindex)), dtype=np.complex64)
-    nz = 0
-    for i,c in enumerate(cindex):
-        j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
-        if j:
-            j1, = j
-            z[:,i] = zmajor[:,j1]
-            nz += 1
-
+    # check that major constituents are in the dataset for inference
+    nz = sum([(c in ds.tmd.constituents) for c in cindex])
     # raise exception or log error
     msg = 'Not enough constituents to infer short-period tides'
     if (nz < 6) and kwargs['raise_exception']:
         raise Exception(msg)
     elif (nz < 6):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # complete list of minor constituents
     minor_constituents = ['2q1', 'sigma1', 'rho1', 'm1b', 'm1',
@@ -510,34 +493,36 @@ def _infer_short_period(
     minor = kwargs['minor'] or minor_constituents
     # only add minor constituents that are not on the list of major values
     minor_indices = [i for i,m in enumerate(minor_constituents)
-        if (m not in constituents) and (m in minor)]
+        if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No short-period tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # relationship between major and minor constituent amplitude and phase
-    zmin = np.zeros((n, 20), dtype=np.complex64)
-    zmin[:,0] = 0.263*z[:,0] - 0.0252*z[:,1]# 2Q1
-    zmin[:,1] = 0.297*z[:,0] - 0.0264*z[:,1]# sigma1
-    zmin[:,2] = 0.164*z[:,0] + 0.0048*z[:,1]# rho1
-    zmin[:,3] = 0.0140*z[:,1] + 0.0101*z[:,3]# M12
-    zmin[:,4] = 0.0389*z[:,1] + 0.0282*z[:,3]# M11
-    zmin[:,5] = 0.0064*z[:,1] + 0.0060*z[:,3]# chi1
-    zmin[:,6] = 0.0030*z[:,1] + 0.0171*z[:,3]# pi1
-    zmin[:,7] = -0.0015*z[:,1] + 0.0152*z[:,3]# phi1
-    zmin[:,8] = -0.0065*z[:,1] + 0.0155*z[:,3]# theta1
-    zmin[:,9] = -0.0389*z[:,1] + 0.0836*z[:,3]# J1
-    zmin[:,10] = -0.0431*z[:,1] + 0.0613*z[:,3]# OO1
-    zmin[:,11] = 0.264*z[:,4] - 0.0253*z[:,5]# 2N2
-    zmin[:,12] = 0.298*z[:,4] - 0.0264*z[:,5]# mu2
-    zmin[:,13] = 0.165*z[:,4] + 0.00487*z[:,5]# nu2
-    zmin[:,14] = 0.0040*z[:,5] + 0.0074*z[:,6]# lambda2
-    zmin[:,15] = 0.0131*z[:,5] + 0.0326*z[:,6]# L2
-    zmin[:,16] = 0.0033*z[:,5] + 0.0082*z[:,6]# L2
-    zmin[:,17] = 0.0585*z[:,6]# t2
-    # additional coefficients for FES and GOT models
+    dmin = xr.Dataset()
+    dmin['2q1'] = 0.263*ds['q1'] - 0.0252*ds['o1']
+    dmin['sigma1'] = 0.297*ds['q1'] - 0.0264*ds['o1']
+    dmin['rho1'] = 0.164*ds['q1'] + 0.0048*ds['o1']
+    dmin['m1b'] = 0.0140*ds['o1'] + 0.0101*ds['k1']
+    dmin['m1'] = 0.0389*ds['o1'] + 0.0282*ds['k1']
+    dmin['chi1'] = 0.0064*ds['o1'] + 0.0060*ds['k1']
+    dmin['pi1'] = 0.0030*ds['o1'] + 0.0171*ds['k1']
+    dmin['phi1'] = -0.0015*ds['o1'] + 0.0152*ds['k1']
+    dmin['theta1'] = -0.0065*ds['o1'] + 0.0155*ds['k1']
+    dmin['j1'] = -0.0389*ds['o1'] + 0.0836*ds['k1']
+    dmin['oo1'] = -0.0431*ds['o1'] + 0.0613*ds['k1']
+    dmin['2n2'] = 0.264*ds['n2'] - 0.0253*ds['m2']
+    dmin['mu2'] = 0.298*ds['n2'] - 0.0264*ds['m2']
+    dmin['nu2'] = 0.165*ds['n2'] + 0.00487*ds['m2']
+    dmin['lambda2'] = 0.0040*ds['m2'] + 0.0074*ds['s2']
+    dmin['l2'] = 0.0131*ds['m2'] + 0.0326*ds['s2']
+    dmin['l2b'] = 0.0033*ds['m2'] + 0.0082*ds['s2']
+    dmin['t2'] = 0.0585*ds['s2']
+    dmin['eps2'] = xr.zeros_like(ds['m2'])
+    dmin['eta2'] = xr.zeros_like(ds['m2'])
+    # additional coefficients for FES models
     if kwargs['corrections'] in ('FES',):
         # spline coefficients for admittances
         mu2 = [0.069439968323, 0.351535557706, -0.046278307672]
@@ -545,34 +530,51 @@ def _infer_short_period(
         l2 = [0.077137765667, -0.051653455134, 0.027869916824]
         t2 = [0.180480173707, -0.020101177502, 0.008331518844]
         lda2 = [0.016503557465, -0.013307812292, 0.007753383202]
-        zmin[:,12] = mu2[0]*z[:,7] + mu2[1]*z[:,4] + mu2[2]*z[:,5]# mu2
-        zmin[:,13] = nu2[0]*z[:,7] + nu2[1]*z[:,4] + nu2[2]*z[:,5]# nu2
-        zmin[:,14] = lda2[0]*z[:,7] + lda2[1]*z[:,4] + lda2[2]*z[:,5]# lambda2
-        zmin[:,16] = l2[0]*z[:,7] + l2[1]*z[:,4] + l2[2]*z[:,5]# L2
-        zmin[:,17] = t2[0]*z[:,7] + t2[1]*z[:,4] + t2[2]*z[:,5]# t2
-        zmin[:,18] = 0.53285*z[:,8] - 0.03304*z[:,4]# eps2
-        zmin[:,19] = -0.0034925*z[:,5] + 0.0831707*z[:,7]# eta2
+        dmin['mu2'] = mu2[0]*ds['k2'] + mu2[1]*ds['n2'] + mu2[2]*ds['m2']
+        dmin['nu2'] = nu2[0]*ds['k2'] + nu2[1]*ds['n2'] + nu2[2]*ds['m2']
+        dmin['lambda2'] = lda2[0]*ds['k2'] + lda2[1]*ds['n2'] + lda2[2]*ds['m2']
+        dmin['l2b'] = l2[0]*ds['k2'] + l2[1]*ds['n2'] + l2[2]*ds['m2']
+        dmin['t2'] = t2[0]*ds['k2'] + t2[1]*ds['n2'] + t2[2]*ds['m2']
+        dmin['eps2'] = 0.53285*ds['2n2'] - 0.03304*ds['n2']
+        dmin['eta2'] = -0.0034925*ds['m2'] + 0.0831707*ds['k2']
 
-    # load the nodal corrections for minor constituents
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.minor_arguments(t + _mjd_tide,
+    MJD = t + _mjd_tide
+    # load the nodal corrections for minor constituents
+    pu, pf, G = pyTMD.arguments.minor_arguments(MJD,
         deltat=kwargs['deltat'],
         corrections=kwargs['corrections']
     )
+    # dataset of minor arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(['time','constituent'], pu),
+            f=(['time','constituent'], pf),
+            G=(['time','constituent'], G)),
+        coords=dict(time=MJD, constituent=minor_constituents),
+    )
 
     # sum over the minor tidal constituents of interest
-    for k in minor_indices:
-        th = np.radians(G[:,k]) + pu[:,k]
-        dh += zmin.real[:,k]*pf[:,k]*np.cos(th) - \
-            zmin.imag[:,k]*pf[:,k]*np.sin(th)
-    # return the inferred values
-    return dh
+    for i, k in enumerate(minor_indices):
+        c = minor_constituents[k]
+        # select argument for constituent
+        arg = arguments.sel(constituent=c)
+        th = np.radians(arg.G) + arg.u
+        # initialize or sum tidal elevations
+        if i == 0:
+            darr = arg.f*dmin[c].real*np.cos(th) - \
+                arg.f*dmin[c].imag*np.sin(th)
+            darr.attrs['units'] = ds['q1'].attrs.get('units', None)
+        else:
+            darr += arg.f*dmin[c].real*np.cos(th) - \
+                arg.f*dmin[c].imag*np.sin(th)
+    # return the predicted tidal elevations
+    return darr.drop_vars('constituent')
 
 # PURPOSE: infer semi-diurnal minor constituents
 def _infer_semi_diurnal(
+        ds: xr.Dataset,
         t: float | np.ndarray,
-        zmajor: np.ndarray,
-        constituents: list | np.ndarray,
         **kwargs
     ):
     """
@@ -582,12 +584,10 @@ def _infer_semi_diurnal(
 
     Parameters
     ----------
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
-    zmajor: np.ndarray
-        Complex HC for given constituents/points
-    constituents: list
-        tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -614,17 +614,19 @@ def _infer_semi_diurnal(
     kwargs.setdefault('minor', None)
     # validate interpolation method
     assert kwargs['method'].lower() in ('linear', 'admittance')
-    # number of constituents
-    zmajor = np.ma.atleast_2d(zmajor)
-    npts, nc = np.shape(zmajor)
-    nt = len(np.atleast_1d(t))
-    # number of data points to calculate if running time series/drift/map
-    n = nt if ((npts == 1) & (nt > 1)) else npts
-    # allocate for output elevation correction
-    dh = np.ma.zeros((n))
     # major constituents used for inferring semi-diurnal minor tides
     # pivot waves listed in Table 6.7 of the 2010 IERS Conventions
     cindex = ['n2', 'm2', 's2']
+    # check that major constituents are in the dataset for inference
+    nz = sum([(c in ds.tmd.constituents) for c in cindex])
+    # raise exception or log error
+    msg = 'Not enough constituents to infer semi-diurnal tides'
+    if (nz < 3) and kwargs['raise_exception']:
+        raise Exception(msg)
+    elif (nz < 3):
+        logging.debug(msg)
+        return 0.0
+    
     # angular frequencies for major constituents
     omajor = pyTMD.arguments.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
@@ -632,25 +634,13 @@ def _infer_semi_diurnal(
     amajor[0] = 0.121006# n2
     amajor[1] = 0.631931# m2
     amajor[2] = 0.294019# s2
-    # re-order major tides to correspond to order of cindex
-    z = np.ma.zeros((n,len(cindex)), dtype=np.complex64)
-    nz = 0
+    # "normalize" tide values 
+    dnorm = xr.Dataset()
     for i,c in enumerate(cindex):
-        j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
-        if j:
-            j1, = j
-            # "normalize" tide values
-            z[:,i] = zmajor[:,j1]/amajor[i]
-            nz += 1
-
-    # raise exception or log error
-    msg = 'Not enough constituents to infer semi-diurnal tides'
-    if (nz < 3) and kwargs['raise_exception']:
-        raise Exception(msg)
-    elif (nz < 3):
-        logging.debug(msg)
-        return dh
-
+        dnorm[c] = ds[c]/amajor[i]
+    # major constituents as a dataarray
+    z = dnorm.tmd.to_dataarray()
+    
     # complete list of minor constituents
     minor_constituents = ['eps2', '2n2', 'mu2', 'nu2', 'gamma2',
         'alpha2', 'beta2', 'delta2', 'lambda2', 'l2', 't2',
@@ -659,19 +649,21 @@ def _infer_semi_diurnal(
     minor = kwargs['minor'] or minor_constituents
     # only add minor constituents that are not on the list of major values
     minor_indices = [i for i,m in enumerate(minor_constituents)
-        if (m not in constituents) and (m in minor)]
+        if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No semi-diurnal tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # coefficients for Munk-Cartwright admittance interpolation
     if (kwargs['method'].lower() == 'admittance'):
-        Ainv = np.array([[3.3133, -4.2538, 1.9405],
+        Ainv = xr.DataArray([[3.3133, -4.2538, 1.9405],
             [-3.3133, 4.2538, -0.9405],
-            [1.5018, -3.2579, 1.7561]])
-        coef = np.dot(Ainv, z.T)
+            [1.5018, -3.2579, 1.7561]],
+            coords=[cindex, cindex],
+            dims=['constituent', 'dim2'])
+        coef = Ainv.dot(z)
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
@@ -692,16 +684,29 @@ def _infer_semi_diurnal(
     amin[12] = 0.079924# k2
     amin[13] = 0.004467# eta
 
-    # load the nodal corrections for minor constituents
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
+    MJD = t + _mjd_tide
+    # load the nodal corrections for minor constituents
+    pu, pf, G = pyTMD.arguments.arguments(MJD,
         minor_constituents,
         deltat=kwargs['deltat'],
         corrections=kwargs['corrections']
     )
+    # dataset of minor arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(['time','constituent'], pu),
+            f=(['time','constituent'], pf),
+            G=(['time','constituent'], G)),
+        coords=dict(time=MJD, constituent=minor_constituents),
+    )
 
     # sum over the minor tidal constituents of interest
-    for k in minor_indices:
+    for i, k in enumerate(minor_indices):
+        c = minor_constituents[k]
+        # select argument for constituent
+        arg = arguments.sel(constituent=c)
+        th = np.radians(arg.G) + arg.u
         # interpolate from major constituents
         if (kwargs['method'].lower() == 'linear'):
             # linearly interpolate between major constituents
@@ -714,19 +719,22 @@ def _infer_semi_diurnal(
             # calculate interpolated values for constituent
             interp = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
         # rescale tide values
-        zmin = amin[k]*interp
-        # sum over all tides
-        th = np.radians(G[:,k]) + pu[:,k]
-        dh += zmin.real*pf[:,k]*np.cos(th) - \
-            zmin.imag*pf[:,k]*np.sin(th)
+        dmin = amin[k]*interp
+        # initialize or sum tidal elevations
+        if i == 0:
+            darr = arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
+            darr.attrs['units'] = ds['n2'].attrs.get('units', None)
+        else:
+            darr += arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
     # return the inferred values
-    return dh
+    return darr
 
 # PURPOSE: infer diurnal minor constituents
 def _infer_diurnal(
+        ds: xr.Dataset,
         t: float | np.ndarray,
-        zmajor: np.ndarray,
-        constituents: list | np.ndarray,
         **kwargs
     ):
     """
@@ -737,12 +745,10 @@ def _infer_diurnal(
 
     Parameters
     ----------
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
-    zmajor: np.ndarray
-        Complex HC for given constituents/points
-    constituents: list
-        tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -769,17 +775,19 @@ def _infer_diurnal(
     kwargs.setdefault('minor', None)
     # validate interpolation method
     assert kwargs['method'].lower() in ('linear', 'admittance')
-    # number of constituents
-    zmajor = np.ma.atleast_2d(zmajor)
-    npts, nc = np.shape(zmajor)
-    nt = len(np.atleast_1d(t))
-    # number of data points to calculate if running time series/drift/map
-    n = nt if ((npts == 1) & (nt > 1)) else npts
-    # allocate for output elevation correction
-    dh = np.ma.zeros((n))
     # major constituents used for inferring diurnal minor tides
     # pivot waves listed in Table 6.7 of the 2010 IERS Conventions
     cindex = ['q1', 'o1', 'k1']
+    # check that major constituents are in the dataset for inference
+    nz = sum([(c in ds.tmd.constituents) for c in cindex])
+    # raise exception or log error
+    msg = 'Not enough constituents to infer diurnal tides'
+    if (nz < 3) and kwargs['raise_exception']:
+        raise Exception(msg)
+    elif (nz < 3):
+        logging.debug(msg)
+        return 0.0
+
     # angular frequencies for major constituents
     omajor = pyTMD.arguments.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
@@ -787,20 +795,16 @@ def _infer_diurnal(
     amajor[0] = 0.050184# q1
     amajor[1] = 0.262163# o1
     amajor[2] = 0.368731# k1
-    # re-order major tides to correspond to order of cindex
-    z = np.ma.zeros((n,len(cindex)), dtype=np.complex64)
-    nz = 0
+    # "normalize" tide values 
+    dnorm = xr.Dataset()
     for i,c in enumerate(cindex):
-        j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
-        if j:
-            j1, = j
-            # Love numbers of degree 2 for constituent
-            h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i])
-            # tilt factor: response with respect to the solid earth
-            gamma_2 = (1.0 + k2 - h2)
-            # "normalize" tide values
-            z[:,i] = zmajor[:,j1]/(amajor[i]*gamma_2)
-            nz += 1
+        # Love numbers of degree 2 for constituent
+        h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i])
+        # tilt factor: response with respect to the solid earth
+        gamma_2 = (1.0 + k2 - h2)
+        dnorm[c] = ds[c]/(amajor[i]*gamma_2)
+    # major constituents as a dataarray
+    z = dnorm.tmd.to_dataarray()
 
     # raise exception or log error
     msg = 'Not enough constituents to infer diurnal tides'
@@ -808,7 +812,7 @@ def _infer_diurnal(
         raise Exception(msg)
     elif (nz < 3):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # complete list of minor constituents
     minor_constituents = ['2q1', 'sigma1', 'rho1', 'tau1', 'beta1',
@@ -818,19 +822,21 @@ def _infer_diurnal(
     minor = kwargs['minor'] or minor_constituents
     # only add minor constituents that are not on the list of major values
     minor_indices = [i for i,m in enumerate(minor_constituents)
-        if (m not in constituents) and (m in minor)]
+        if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No diurnal tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # coefficients for Munk-Cartwright admittance interpolation
     if (kwargs['method'].lower() == 'admittance'):
-        Ainv = np.array([[3.1214, -3.8494, 1.728],
+        Ainv = xr.DataArray([[3.1214, -3.8494, 1.728],
             [-3.1727, 3.9559, -0.7832],
-            [1.438, -3.0297, 1.5917]])
-        coef = np.dot(Ainv, z.T)
+            [1.438, -3.0297, 1.5917]],
+            coords=[cindex, cindex],
+            dims=['constituent', 'dim2'])
+        coef = Ainv.dot(z)
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
@@ -854,16 +860,29 @@ def _infer_diurnal(
     amin[15] = 0.011293# oo1
     amin[16] = 0.002157# ups1
 
-    # load the nodal corrections for minor constituents
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
+    MJD = t + _mjd_tide
+    # load the nodal corrections for minor constituents
+    pu, pf, G = pyTMD.arguments.arguments(MJD,
         minor_constituents,
         deltat=kwargs['deltat'],
         corrections=kwargs['corrections']
     )
+    # dataset of minor arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(['time','constituent'], pu),
+            f=(['time','constituent'], pf),
+            G=(['time','constituent'], G)),
+        coords=dict(time=MJD, constituent=minor_constituents),
+    )
 
     # sum over the minor tidal constituents of interest
-    for k in minor_indices:
+    for i, k in enumerate(minor_indices):
+        c = minor_constituents[k]
+        # select argument for constituent
+        arg = arguments.sel(constituent=c)
+        th = np.radians(arg.G) + arg.u
         # Love numbers of degree 2 for constituent
         h2, k2, l2 = pyTMD.arguments._love_numbers(omega[k])
         # tilt factor: response with respect to the solid earth
@@ -873,25 +892,29 @@ def _infer_diurnal(
             # linearly interpolate between major constituents
             interp = pyTMD.interpolate.interp1d(omega[k], omajor, z)
         elif (kwargs['method'].lower() == 'admittance'):
+            # admittance interpolation using Munk-Cartwright approach
             # convert frequency to radians per 48 hours
             # following Munk and Cartwright (1966)
             f = 2.0*omega[k]*86400.0
             # calculate interpolated values for constituent
             interp = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
         # rescale tide values
-        zmin = amin[k]*gamma_2*interp
-        # sum over all tides
-        th = np.radians(G[:,k]) + pu[:,k]
-        dh += zmin.real*pf[:,k]*np.cos(th) - \
-            zmin.imag*pf[:,k]*np.sin(th)
+        dmin = amin[k]*gamma_2*interp
+        # initialize or sum tidal elevations
+        if i == 0:
+            darr = arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
+            darr.attrs['units'] = ds['q1'].attrs.get('units', None)
+        else:
+            darr += arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
     # return the inferred values
-    return dh
+    return darr
 
 # PURPOSE: infer long-period minor constituents
 def _infer_long_period(
+        ds: xr.Dataset,
         t: float | np.ndarray,
-        zmajor: np.ndarray,
-        constituents: list | np.ndarray,
         **kwargs
     ):
     """
@@ -902,12 +925,10 @@ def _infer_long_period(
 
     Parameters
     ----------
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
-    zmajor: np.ndarray
-        Complex HC for given constituents/points
-    constituents: list
-        tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -929,17 +950,19 @@ def _infer_long_period(
     kwargs.setdefault('raise_exception', False)
     # list of minor constituents
     kwargs.setdefault('minor', None)
-    # number of constituents
-    zmajor = np.ma.atleast_2d(zmajor)
-    npts, nc = np.shape(zmajor)
-    nt = len(np.atleast_1d(t))
-    # number of data points to calculate if running time series/drift/map
-    n = nt if ((npts == 1) & (nt > 1)) else npts
-    # allocate for output elevation correction
-    dh = np.ma.zeros((n))
     # major constituents used for inferring long period minor tides
     # pivot waves listed in Table 6.7 of the 2010 IERS Conventions
     cindex = ['node', 'mm', 'mf']
+    # check that major constituents are in the dataset for inference
+    nz = sum([(c in ds.tmd.constituents) for c in cindex])
+    # raise exception or log error
+    msg = 'Not enough constituents to infer long-period tides'
+    if (nz < 3) and kwargs['raise_exception']:
+        raise Exception(msg)
+    elif (nz < 3):
+        logging.debug(msg)
+        return 0.0
+    
     # angular frequencies for major constituents
     omajor = pyTMD.arguments.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
@@ -947,35 +970,23 @@ def _infer_long_period(
     amajor[0] = 0.027929# node
     amajor[1] = 0.035184# mm
     amajor[2] = 0.066607# mf
-    # re-order major tides to correspond to order of cindex
-    z = np.ma.zeros((n,len(cindex)), dtype=np.complex64)
-    nz = 0
+    # "normalize" tide values 
+    dnorm = xr.Dataset()
     for i,c in enumerate(cindex):
-        j = [j for j,val in enumerate(constituents) if (val.lower() == c)]
-        if j:
-            j1, = j
-            # complex Love numbers of degree 2 for long-period band
-            if kwargs['include_anelasticity']:
-                # include variations largely due to mantle anelasticity
-                h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
-            else:
-                # Love numbers for long-period tides (Wahr, 1981)
-                h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i],
-                    astype=np.complex128)
-            # tilt factor: response with respect to the solid earth
-            # use real components from Mathews et al. (2002)
-            gamma_2 = (1.0 + k2.real - h2.real)
-            # "normalize" tide values
-            z[:,i] = zmajor[:,j1]/(amajor[i]*gamma_2)
-            nz += 1
-
-    # raise exception or log error
-    msg = 'Not enough constituents to infer long-period tides'
-    if (nz < 3) and kwargs['raise_exception']:
-        raise Exception(msg)
-    elif (nz < 3):
-        logging.debug(msg)
-        return dh
+        # complex Love numbers of degree 2 for long-period band
+        if kwargs['include_anelasticity']:
+            # include variations largely due to mantle anelasticity
+            h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omajor[i])
+        else:
+            # Love numbers for long-period tides (Wahr, 1981)
+            h2, k2, l2 = pyTMD.arguments._love_numbers(omajor[i],
+                astype=np.complex128)
+        # tilt factor: response with respect to the solid earth
+        # use real components from Mathews et al. (2002)
+        gamma_2 = (1.0 + k2.real - h2.real)
+        dnorm[c] = ds[c]/(amajor[i]*gamma_2)
+    # major constituents as a dataarray
+    z = dnorm.tmd.to_dataarray()
 
     # complete list of minor constituents
     minor_constituents = ['sa', 'ssa', 'sta', 'msm', 'msf',
@@ -984,12 +995,12 @@ def _infer_long_period(
     minor = kwargs['minor'] or minor_constituents
     # only add minor constituents that are not on the list of major values
     minor_indices = [i for i,m in enumerate(minor_constituents)
-        if (m not in constituents) and (m in minor)]
+        if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No long-period tidal constituents to infer'
     if not np.any(minor_indices):
         logging.debug(msg)
-        return dh
+        return 0.0
 
     # angular frequencies for inferred constituents
     omega = pyTMD.arguments.frequency(minor_constituents, **kwargs)
@@ -1005,16 +1016,29 @@ def _infer_long_period(
     amin[7] = 0.002037# msqm
     amin[8] = 0.001687# mq
 
-    # load the nodal corrections for minor constituents
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
+    MJD = t + _mjd_tide
+    # load the nodal corrections for minor constituents
+    pu, pf, G = pyTMD.arguments.arguments(MJD,
         minor_constituents,
         deltat=kwargs['deltat'],
         corrections=kwargs['corrections']
     )
+    # dataset of minor arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(['time','constituent'], pu),
+            f=(['time','constituent'], pf),
+            G=(['time','constituent'], G)),
+        coords=dict(time=MJD, constituent=minor_constituents),
+    )
 
     # sum over the minor tidal constituents of interest
-    for k in minor_indices:
+    for i, k in enumerate(minor_indices):
+        c = minor_constituents[k]
+        # select argument for constituent
+        arg = arguments.sel(constituent=c)
+        th = np.radians(arg.G) + arg.u
         # complex Love numbers of degree 2 for long-period band
         if kwargs['include_anelasticity']:
             # include variations largely due to mantle anelasticity
@@ -1029,13 +1053,17 @@ def _infer_long_period(
         # linearly interpolate between major constituents
         interp = pyTMD.interpolate.interp1d(omega[k], omajor, z)
         # rescale tide values
-        zmin = amin[k]*gamma_2*interp
-        # sum over all tides
-        th = np.radians(G[:,k]) + pu[:,k]
-        dh += zmin.real*pf[:,k]*np.cos(th) - \
-            zmin.imag*pf[:,k]*np.sin(th)
+        dmin = amin[k]*gamma_2*interp
+        # initialize or sum tidal elevations
+        if i == 0:
+            darr = arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
+            darr.attrs['units'] = ds['node'].attrs.get('units', None)
+        else:
+            darr += arg.f*dmin.real*np.cos(th) - \
+                arg.f*dmin.imag*np.sin(th)
     # return the inferred values
-    return dh
+    return darr
 
 # PURPOSE: estimate long-period equilibrium tides
 def equilibrium_tide(
@@ -1089,7 +1117,7 @@ def equilibrium_tide(
         method = 'Cartwright'
     else:
         method = 'ASTRO5'
-    # convert from Modified Julian Dates into Ephemeris Time
+    # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # compute principal mean longitudes
     s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + kwargs['deltat'],
