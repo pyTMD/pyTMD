@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
+        generalize vectorized 1D linear interpolation for more cases of fp
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
@@ -81,7 +82,7 @@ def interp1d(
     # fractional distance between points
     d = np.divide(x - xp[j], xp[j+1] - xp[j])
     # calculate interpolated values
-    f = (1.0 - d)*fp[:,j] + d*fp[:,j+1]
+    f = (1.0 - d)*fp[...,j] + d*fp[...,j+1]
     return f
 
 def inpaint(

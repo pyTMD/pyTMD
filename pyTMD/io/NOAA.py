@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 NOAA.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (11/2025)
 Query and parsing functions for NOAA webservices API
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,7 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 11/2025: add accessor for pandas dataframe objects
     Updated 08/2025: replace invalid water level values with NaN
         convert all station names to title case (some are upper)
     Written 07/2025: extracted from Compare NOAA Tides notebook
@@ -29,7 +30,8 @@ __all__ = [
     "from_xml",
     "prediction_stations",
     "harmonic_constituents",
-    "water_level"
+    "water_level",
+    "DataFrame"
 ]
 
 _apis = [
@@ -213,3 +215,33 @@ def water_level(
     df = df.replace(to_replace=[-999], value=np.nan)
     # return the dataframe
     return df
+
+@pd.api.extensions.register_dataframe_accessor("tmd")
+class DataFrame:
+    """Accessor for extending an ``pandas.DataFrame`` for tide models
+    """
+
+    def __init__(self, df):
+        self._df = df
+
+    def to_xarray(self):
+        """Convert NOAA constituent ``Dataframe`` to an ``xarray.Dataset``
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            Tide constituent dataset
+        """
+        # complex constituent oscillation(s)
+        hc = self._df.amplitude*np.exp(-1j*np.radians(self._df.phase))
+        # convert data series to xarray DataArray
+        darr = hc.to_xarray().rename({'constNum': 'constituent'})
+        # assign constituent names as coordinates
+        darr = darr.assign_coords({'constituent': self.constituents})
+        # convert DataArray to Dataset with constituents as variables
+        ds = darr.to_dataset(dim='constituent')
+        return ds
+
+    @property
+    def constituents(self):
+        return self._df.constituent.values
