@@ -48,9 +48,12 @@ from __future__ import annotations
 import re
 import gzip
 import pathlib
+import warnings
 import numpy as np
 import xarray as xr
 from pyTMD.utilities import get_data_path, import_dependency
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 # attempt imports
 pyproj = import_dependency('pyproj')
 
