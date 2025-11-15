@@ -8,6 +8,8 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 11/2025: added test for pandas dataframe accessor
+        added test for xarray dataset conversion
     Written 07/2025
 """
 import pyTMD.io.NOAA
@@ -46,6 +48,8 @@ def test_noaa_harmonic_constituents():
     assert 'M2' in hcons['name'].values
     # get dataframe using wrapper function
     df = pyTMD.io.NOAA.harmonic_constituents(stationId=station_id)
+    # convert to dataset
+    ds = df.tmd.to_dataset()
     # check if the values match expected
     assert 'm2' in df['constituent'].values
     # check if the values match between queries
@@ -53,6 +57,11 @@ def test_noaa_harmonic_constituents():
         assert row['amplitude'] == hcons.loc[i, 'amplitude']
         assert row['phase'] == hcons.loc[i, 'phase']
         assert row['speed'] == hcons.loc[i, 'speed']
+        # get constituent
+        c = row['constituent']
+        # compare dataset values
+        assert np.isclose(ds[c].tmd.amplitude, row['amplitude'])
+        assert np.isclose(ds[c].tmd.phase, row['phase'])
 
 def test_noaa_water_level():
     """Test NOAA water level data retrieval

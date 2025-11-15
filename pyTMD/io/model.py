@@ -84,10 +84,13 @@ import io
 import copy
 import json
 import pathlib
+import warnings
 import numpy as np
 from pyTMD.utilities import import_dependency, get_data_path, get_cache_path
 from collections.abc import Iterable
 from dataclasses import dataclass
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # attempt imports
 xr = import_dependency('xarray')
@@ -234,13 +237,15 @@ class model:
         # try to extract parameters for model
         try:
             self.from_dict(parameters[m])
-        except (ValueError, KeyError) as exc:
+        except (ValueError, KeyError, AttributeError) as exc:
             raise ValueError(f"Unlisted tide model {m}")
         # verify model types to extract
         if isinstance(type, str):
             type = (type,)
         # verify paths
         for mtype in type:
+            # verify model type is valid
+            mtype = mtype.lower()
             # skip if model type is unavailable
             if not hasattr(self, mtype):
                 continue
@@ -310,7 +315,7 @@ class model:
         # try to read model files
         for mtype in ('z', 'u', 'v'):
             # skip if model type is unavailable
-            if not hasattr(self, mtype):
+            if not hasattr(self, mtype.lower()):
                 continue
             # read model constituents
             model.read_constants(type=mtype, **kwargs)
@@ -399,6 +404,19 @@ class model:
             return part2
         else:
             return self.format
+        
+    @property
+    def multifile(self) -> bool:
+        """Returns if the model uses individual files for constituents
+        """
+        # try to find a valid mode type
+        for mtype in ('z', 'u', 'v'):
+            # verify case of model type
+            mtype = mtype.lower()
+            # skip if model type is unavailable
+            if not hasattr(self, mtype):
+                continue
+            return isinstance(self[mtype].model_file, list)
 
     @property
     def crs(self):
@@ -730,7 +748,7 @@ class model:
         elif isinstance(self[type].model_file, list):
             # multiple file case
             self.constituents = [
-                self.parse_file(f, **kwargs) for f in self.model_file
+                self.parse_file(f, **kwargs) for f in self[type].model_file
             ]
         # return the model parameters
         return self
@@ -876,7 +894,7 @@ class model:
         # try to read model files
         for mtype in type:
             # skip if model type is unavailable
-            if not hasattr(self, mtype):
+            if not hasattr(self, mtype.lower()):
                 continue
             # open xarray Dataset
             ds[mtype] = self.open_dataset(type=mtype, **kwargs)

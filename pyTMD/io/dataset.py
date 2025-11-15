@@ -49,9 +49,6 @@ _default_units = {
     'transport': 'm^2/s',
 }
 
-# number of days between MJD and the tide epoch (1992-01-01T00:00:00)
-_mjd_tide = 48622.0
-
 @xr.register_datatree_accessor('tmd')
 class DataTree:
     """Accessor for extending an ``xarray.DataTree`` for tidal model data
@@ -59,6 +56,82 @@ class DataTree:
     def __init__(self, dtree):
         # initialize DataTree
         self._dtree = dtree
+
+    def ellipse(self, **kwargs):
+        """
+        Expresses currents in terms of four ellipse parameters
+
+        - ``major``: amplitude of the semi-major axis
+        - ``minor``: amplitude of the semi-minor axis
+        - ``incl``: angle of inclination of the northern semi-major axis
+        - ``phase``: phase lag of the maximum current behind the maximum tidal potential  
+        """
+        # set the direction of the transformation
+        kwargs.setdefault('direction', 'FORWARD')
+        # allocate for output datatree
+        dtree = xr.DataTree()
+        # perform transformation (forward or backward)
+        if (kwargs['direction'].lower() == 'forward'):
+            # get u and v components from datatree
+            dsu = (self._dtree.get('u',None) or self._dtree.get('U',None)).to_dataset()
+            dsv = (self._dtree.get('v',None) or self._dtree.get('V',None)).to_dataset()
+            # calculate ellipse parameters for each constituent
+            dmajor = xr.Dataset()
+            dminor = xr.Dataset()
+            dincl = xr.Dataset()
+            dphase = xr.Dataset()
+            # for each constituent in the u-component
+            for c in dsu.tmd.constituents:
+                # assert units between datasets are the same
+                if (dsu[c].attrs.get('units','') != dsv[c].attrs.get('units','')):
+                    raise ValueError(f'Incompatible units for {c} in u and v datasets')
+                # calculate ellipse parameters
+                major, minor, incl, phase = pyTMD.ellipse.ellipse(
+                    dsu[c].values, dsv[c].values)
+                # create xarray DataArray for ellipse parameters
+                dmajor[c] = xr.DataArray(major, dims=dsu[c].dims, coords=dsu.coords)
+                dminor[c] = xr.DataArray(minor, dims=dsu[c].dims, coords=dsu.coords)
+                dincl[c] = xr.DataArray(incl, dims=dsu[c].dims, coords=dsu.coords)
+                dphase[c] = xr.DataArray(phase, dims=dsu[c].dims, coords=dsu.coords)
+                # add attributes to each variable
+                dmajor[c].attrs['units'] = dsu[c].attrs.get('units', '')
+                dminor[c].attrs['units'] = dsu[c].attrs.get('units', '')
+                dincl[c].attrs['units'] = 'degrees'
+                dphase[c].attrs['units'] = 'degrees'
+            # add datasets to output datatree
+            dtree['major'] = dmajor
+            dtree['minor'] = dminor
+            dtree['incl'] = dincl
+            dtree['phase'] = dphase
+        if (kwargs['direction'].lower() == 'backward'):
+            # get ellipse parameters from datatree
+            dmajor = self._dtree['major'].to_dataset()
+            dminor = self._dtree['minor'].to_dataset()
+            dincl = self._dtree['incl'].to_dataset()
+            dphase = self._dtree['phase'].to_dataset()
+            # calculate currents for each constituent
+            dsu = xr.Dataset()
+            dsv = xr.Dataset()
+            # for each constituent in the major parameter
+            for c in dmajor.tmd.constituents:
+                # calculate ellipse parameters
+                u, v = pyTMD.ellipse.inverse(dmajor[c].values, dminor[c].values,
+                    dincl[c].values, dphase[c].values)
+                # create xarray DataArray for ellipse parameters
+                dsu[c] = xr.DataArray(u, dims=dmajor[c].dims, coords=dmajor.coords)
+                dsv[c] = xr.DataArray(v, dims=dmajor[c].dims, coords=dmajor.coords)
+                # add attributes to each variable
+                dsu[c].attrs['units'] = dmajor[c].attrs.get('units', '')
+                dsv[c].attrs['units'] = dmajor[c].attrs.get('units', '')
+                if (dmajor[c].tmd.type == 'current'):
+                    ukey, vkey = 'u', 'v'
+                elif (dmajor[c].tmd.type == 'transport'):
+                    ukey, vkey = 'U', 'V'
+            # add datasets to output datatree
+            dtree[ukey] = dsu
+            dtree[vkey] = dsv
+        # return the datatree
+        return dtree
 
     def inpaint(self, **kwargs):
         """
@@ -86,13 +159,31 @@ class DataTree:
         """
         # create copy of datatree
         dtree = self._dtree.copy()
-        # inpaint each dataset in the datatree
+        # interpolate each dataset in the datatree
         for key, ds in dtree.items():
             ds = ds.to_dataset()
             dtree[key] = ds.tmd.interp(x, y, **kwargs)
         # return the datatree
         return dtree
-    
+
+    def subset(self, c: str | list):
+        """
+        Reduce to a subset of constituents
+
+        Parameters
+        ----------
+        c: str or list
+            List of constituents names
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # subset each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.tmd.subset(c)
+        # return the datatree
+        return dtree
+
     def transform(self, i1, i2, crs=4326, **kwargs):
         """
         Transform coordinates to/from the datatree coordinate reference system
@@ -256,8 +347,7 @@ class Dataset:
                 # tide model convention (-180:180)
                 x = xr.where(x > 180, x - 360, x)
         # interpolate dataset
-        ds = self._ds.interp(x=x, y=y, method=method,
-            kwargs={"fill_value": None})
+        ds = self._ds.interp(x=x, y=y, method=method)
         # extrapolate missing values using nearest-neighbors
         if kwargs['extrapolate']:
             for v in ds.data_vars.keys():
@@ -278,7 +368,8 @@ class Dataset:
                     # only extrapolate invalid points
                     ds[v].values[invalid] = extrapolate(
                         self._ds.x.values, self._ds.y.values,
-                        self._ds[v].values, x[invalid], y[invalid],
+                        self._ds[v].values,
+                        x.values[invalid], y.values[invalid],
                         is_geographic=self.crs.is_geographic,
                         **kwargs
                     )

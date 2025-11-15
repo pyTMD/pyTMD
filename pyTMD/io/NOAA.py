@@ -224,7 +224,7 @@ class DataFrame:
     def __init__(self, df):
         self._df = df
 
-    def to_xarray(self):
+    def to_dataset(self):
         """Convert NOAA constituent ``Dataframe`` to an ``xarray.Dataset``
 
         Returns

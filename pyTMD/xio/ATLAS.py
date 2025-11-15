@@ -191,6 +191,8 @@ def open_atlas_grid(
         ds.coords['y'] = tmp['lat_v']
     # mask invalid bathymetries
     ds = ds.where(ds.bathymetry != 0, None, drop=False)
+    # swap dimension names
+    ds = ds.swap_dims(dict(nx='x', ny='y'))
     # add attributes
     ds.attrs['type'] = type
     ds.attrs['format'] = 'ATLAS'
@@ -245,20 +247,22 @@ def open_atlas_dataset(
     # constituent name
     con = tmp['con'].values.astype('|S').tobytes().decode('utf-8').strip()
     if (type == 'z'):
-        ds = (tmp['hRe'].T + -1j*tmp['hIm'].T).to_dataset(name=con)
+        ds = (tmp['hRe'].T + 1j*tmp['hIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
         ds[con].attrs['units'] = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
-        ds = (tmp['uRe'].T + -1j*tmp['uIm'].T).to_dataset(name=con)
+        ds = (tmp['uRe'].T + 1j*tmp['uIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
         ds[con].attrs['units'] = tmp['uRe'].attrs.get('units')
     elif type in ('V','v'):
-        ds = (tmp['vRe'].T + -1j*tmp['vIm'].T).to_dataset(name=con)
+        ds = (tmp['vRe'].T + 1j*tmp['vIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_v']
         ds.coords['y'] = tmp['lat_v']
         ds[con].attrs['units'] = tmp['vRe'].attrs.get('units')
+    # swap dimension names
+    ds = ds.swap_dims(dict(nx='x', ny='y'))
     # add attributes
     ds.attrs['format'] = 'ATLAS'
     ds.attrs['type'] = type.upper() if type in ('u','v') else type
