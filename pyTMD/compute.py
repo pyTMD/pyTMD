@@ -232,6 +232,9 @@ def tide_elevations(
         DIRECTORY: str | pathlib.Path | None = _default_directory,
         MODEL: str | None = None,
         DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
+        CROP: bool = False,
+        BOUNDS: list | np.ndarray | None = None,
+        BUFFER: int | float = 0,
         EPSG: str | int = 4326,
         EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
         TYPE: str | None = 'drift',
@@ -265,6 +268,12 @@ def tide_elevations(
         Tide model to use in correction
     DEFINITION_FILE: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
+    CROP: bool, default False
+        Crop tide model data to (buffered) bounds
+    BOUNDS: list, np.ndarray or NoneType, default None
+        Boundaries for cropping tide model data
+    BUFFER: int or float, default 0
+        Buffer distance for cropping tide model data
     EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     EPOCH: tuple, default (2000,1,1,0,0,0)
@@ -362,6 +371,14 @@ def tide_elevations(
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
 
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = BOUNDS or [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=BUFFER)
 
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
@@ -404,6 +421,9 @@ def tide_currents(
         DIRECTORY: str | pathlib.Path | None = _default_directory,
         MODEL: str | None = None,
         DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
+        CROP: bool = False,
+        BOUNDS: list | np.ndarray | None = None,
+        BUFFER: int | float = 0,
         EPSG: str | int = 4326,
         EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
         TYPE: str | None = 'drift',
@@ -435,6 +455,12 @@ def tide_currents(
         Tide model to use in correction
     DEFINITION_FILE: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
+    CROP: bool, default False
+        Crop tide model data to (buffered) bounds
+    BOUNDS: list, np.ndarray or NoneType, default None
+        Boundaries for cropping tide model data
+    BUFFER: int or float, default 0
+        Buffer distance for cropping tide model data
     EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     EPOCH: tuple, default (2000,1,1,0,0,0)
@@ -529,6 +555,15 @@ def tide_currents(
         mx, my = dtree.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
+
+    # crop tide model datasets to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = BOUNDS or [xmin, xmax, ymin, ymax]
+        # crop datatree to buffered bounds
+        dtree = dtree.tmd.crop(bounds, buffer=BUFFER)
 
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):

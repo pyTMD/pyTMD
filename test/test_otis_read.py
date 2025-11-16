@@ -527,7 +527,7 @@ class Test_CATS2008:
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
         # compute tidal ellipse parameters for python program
-        test = local.tmd.ellipse()
+        test = local.tmd.to_ellipse()
         dmajor = test['major'].to_dataset()
         dminor = test['minor'].to_dataset()
         dincl = test['incl'].to_dataset()
@@ -553,7 +553,7 @@ class Test_CATS2008:
             assert np.all(np.abs(difference) < eps)
 
         # calculate currents using tidal ellipse inverse
-        inverse = test.tmd.ellipse(direction='BACKWARD')
+        inverse = test.tmd.from_ellipse()
         # calculate differences between forward and inverse functions
         for key in ['U', 'V']:
             ds = (local[key] - inverse[key]).to_dataset()

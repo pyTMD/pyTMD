@@ -57,79 +57,16 @@ class DataTree:
         # initialize DataTree
         self._dtree = dtree
 
-    def ellipse(self, **kwargs):
+    def crop(self, *args, **kwargs):
         """
-        Expresses currents in terms of four ellipse parameters
-
-        - ``major``: amplitude of the semi-major axis
-        - ``minor``: amplitude of the semi-minor axis
-        - ``incl``: angle of inclination of the northern semi-major axis
-        - ``phase``: phase lag of the maximum current behind the maximum tidal potential  
+        Crop ``DataTree`` to input bounding box
         """
-        # set the direction of the transformation
-        kwargs.setdefault('direction', 'FORWARD')
-        # allocate for output datatree
-        dtree = xr.DataTree()
-        # perform transformation (forward or backward)
-        if (kwargs['direction'].lower() == 'forward'):
-            # get u and v components from datatree
-            dsu = (self._dtree.get('u',None) or self._dtree.get('U',None)).to_dataset()
-            dsv = (self._dtree.get('v',None) or self._dtree.get('V',None)).to_dataset()
-            # calculate ellipse parameters for each constituent
-            dmajor = xr.Dataset()
-            dminor = xr.Dataset()
-            dincl = xr.Dataset()
-            dphase = xr.Dataset()
-            # for each constituent in the u-component
-            for c in dsu.tmd.constituents:
-                # assert units between datasets are the same
-                if (dsu[c].attrs.get('units','') != dsv[c].attrs.get('units','')):
-                    raise ValueError(f'Incompatible units for {c} in u and v datasets')
-                # calculate ellipse parameters
-                major, minor, incl, phase = pyTMD.ellipse.ellipse(
-                    dsu[c].values, dsv[c].values)
-                # create xarray DataArray for ellipse parameters
-                dmajor[c] = xr.DataArray(major, dims=dsu[c].dims, coords=dsu.coords)
-                dminor[c] = xr.DataArray(minor, dims=dsu[c].dims, coords=dsu.coords)
-                dincl[c] = xr.DataArray(incl, dims=dsu[c].dims, coords=dsu.coords)
-                dphase[c] = xr.DataArray(phase, dims=dsu[c].dims, coords=dsu.coords)
-                # add attributes to each variable
-                dmajor[c].attrs['units'] = dsu[c].attrs.get('units', '')
-                dminor[c].attrs['units'] = dsu[c].attrs.get('units', '')
-                dincl[c].attrs['units'] = 'degrees'
-                dphase[c].attrs['units'] = 'degrees'
-            # add datasets to output datatree
-            dtree['major'] = dmajor
-            dtree['minor'] = dminor
-            dtree['incl'] = dincl
-            dtree['phase'] = dphase
-        if (kwargs['direction'].lower() == 'backward'):
-            # get ellipse parameters from datatree
-            dmajor = self._dtree['major'].to_dataset()
-            dminor = self._dtree['minor'].to_dataset()
-            dincl = self._dtree['incl'].to_dataset()
-            dphase = self._dtree['phase'].to_dataset()
-            # calculate currents for each constituent
-            dsu = xr.Dataset()
-            dsv = xr.Dataset()
-            # for each constituent in the major parameter
-            for c in dmajor.tmd.constituents:
-                # calculate ellipse parameters
-                u, v = pyTMD.ellipse.inverse(dmajor[c].values, dminor[c].values,
-                    dincl[c].values, dphase[c].values)
-                # create xarray DataArray for ellipse parameters
-                dsu[c] = xr.DataArray(u, dims=dmajor[c].dims, coords=dmajor.coords)
-                dsv[c] = xr.DataArray(v, dims=dmajor[c].dims, coords=dmajor.coords)
-                # add attributes to each variable
-                dsu[c].attrs['units'] = dmajor[c].attrs.get('units', '')
-                dsv[c].attrs['units'] = dmajor[c].attrs.get('units', '')
-                if (dmajor[c].tmd.type == 'current'):
-                    ukey, vkey = 'u', 'v'
-                elif (dmajor[c].tmd.type == 'transport'):
-                    ukey, vkey = 'U', 'V'
-            # add datasets to output datatree
-            dtree[ukey] = dsu
-            dtree[vkey] = dsv
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # crop each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.tmd.crop(*args, **kwargs)
         # return the datatree
         return dtree
 
@@ -220,6 +157,92 @@ class DataTree:
         # return the transformed coordinates
         return (o1, o2)
     
+    def to_ellipse(self, **kwargs):
+        """
+        Expresses currents in terms of four ellipse parameters
+
+        - ``major``: amplitude of the semi-major axis
+        - ``minor``: amplitude of the semi-minor axis
+        - ``incl``: angle of inclination of the northern semi-major axis
+        - ``phase``: phase lag of the current behind the tidal potential  
+        """
+        # get u and v components from datatree
+        dsu = (self._dtree.get('u',None) or self._dtree.get('U',None)).to_dataset()
+        dsv = (self._dtree.get('v',None) or self._dtree.get('V',None)).to_dataset()
+        # calculate ellipse parameters for each constituent
+        dmajor = xr.Dataset()
+        dminor = xr.Dataset()
+        dincl = xr.Dataset()
+        dphase = xr.Dataset()
+        # for each constituent in the u-component
+        for c in dsu.tmd.constituents:
+            # assert units between datasets are the same
+            if (dsu[c].attrs.get('units','') != dsv[c].attrs.get('units','')):
+                raise ValueError(f'Incompatible units for {c} in u and v datasets')
+            # calculate ellipse parameters
+            major, minor, incl, phase = pyTMD.ellipse.ellipse(
+                dsu[c].values, dsv[c].values)
+            # create xarray DataArray for ellipse parameters
+            dmajor[c] = xr.DataArray(major, dims=dsu[c].dims, coords=dsu.coords)
+            dminor[c] = xr.DataArray(minor, dims=dsu[c].dims, coords=dsu.coords)
+            dincl[c] = xr.DataArray(incl, dims=dsu[c].dims, coords=dsu.coords)
+            dphase[c] = xr.DataArray(phase, dims=dsu[c].dims, coords=dsu.coords)
+            # add attributes to each variable
+            dmajor[c].attrs['units'] = dsu[c].attrs.get('units', '')
+            dminor[c].attrs['units'] = dsu[c].attrs.get('units', '')
+            dincl[c].attrs['units'] = 'degrees'
+            dphase[c].attrs['units'] = 'degrees'
+        # create output datatree
+        dtree = xr.DataTree()
+        # add datasets to output datatree
+        dtree['major'] = dmajor
+        dtree['minor'] = dminor
+        dtree['incl'] = dincl
+        dtree['phase'] = dphase
+        # return datatree
+        return dtree
+    
+    def from_ellipse(self, **kwargs):
+        """
+        Calculates currents from the four ellipse parameters
+
+        - ``major``: amplitude of the semi-major axis
+        - ``minor``: amplitude of the semi-minor axis
+        - ``incl``: angle of inclination of the northern semi-major axis
+        - ``phase``: phase lag of the current behind the tidal potential  
+        """
+        
+        # get ellipse parameters from datatree
+        dmajor = self._dtree['major'].to_dataset()
+        dminor = self._dtree['minor'].to_dataset()
+        dincl = self._dtree['incl'].to_dataset()
+        dphase = self._dtree['phase'].to_dataset()
+        # calculate currents for each constituent
+        dsu = xr.Dataset()
+        dsv = xr.Dataset()
+        # for each constituent in the major parameter
+        for c in dmajor.tmd.constituents:
+            # calculate ellipse parameters
+            u, v = pyTMD.ellipse.inverse(dmajor[c].values, dminor[c].values,
+                dincl[c].values, dphase[c].values)
+            # create xarray DataArray for ellipse parameters
+            dsu[c] = xr.DataArray(u, dims=dmajor[c].dims, coords=dmajor.coords)
+            dsv[c] = xr.DataArray(v, dims=dmajor[c].dims, coords=dmajor.coords)
+            # add attributes to each variable
+            dsu[c].attrs['units'] = dmajor[c].attrs.get('units', '')
+            dsv[c].attrs['units'] = dmajor[c].attrs.get('units', '')
+            if (dmajor[c].tmd.type == 'current'):
+                ukey, vkey = 'u', 'v'
+            elif (dmajor[c].tmd.type == 'transport'):
+                ukey, vkey = 'U', 'V'
+        # create output datatree
+        dtree = xr.DataTree()
+        # add datasets to output datatree
+        dtree[ukey] = dsu
+        dtree[vkey] = dsv
+        # return the datatree
+        return dtree
+
     @property
     def crs(self):
         """Coordinate reference system of the ``DataTree``
@@ -246,6 +269,41 @@ class Dataset:
         da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent').T
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
+    
+    def crop(self,
+            bounds: list | tuple,
+            buffer: int | float = 0
+        ):
+        """
+        Crop ``Dataset`` to input bounding box
+
+        Parameters
+        ----------
+        bounds: list, tuple
+            bounding box [min_x, max_x, min_y, max_y]
+        buffer: int or float, default 0
+            buffer to add to bounds for cropping
+        """
+        # number of points to pad for global grids
+        n = int(180//(self._ds.x[1] - self._ds.x[0]))
+        # pad global grids along x-dimension (if necessary)
+        lon_wrap = self.crs.to_dict().get('lon_wrap', 0)
+        if self.is_global and (lon_wrap == 180) and (np.min(bounds[:2]) < 0):
+            ds = self.pad(n=(n,0))
+        elif self.is_global and (lon_wrap == 0) and (np.max(bounds[:2]) > 180):
+            ds = self.pad(n=(0,n))
+        else:
+            ds = self._ds.copy()
+        # unpack bounds and buffer
+        xmin = bounds[0] - buffer
+        xmax = bounds[1] + buffer
+        ymin = bounds[2] - buffer
+        ymax = bounds[3] + buffer
+        # crop dataset to bounding box
+        ds = ds.where((ds.x >= xmin) & (ds.x <= xmax) &
+            (ds.y >= ymin) & (ds.y <= ymax), drop=True)
+        # return the cropped dataset
+        return ds
 
     def infer(self, t: float | np.ndarray, **kwargs):
         """
@@ -376,7 +434,7 @@ class Dataset:
         # return xarray dataset
         return ds
 
-    def pad(self, n: int = 1):
+    def pad(self, n: int = 1, chunks=None):
         """
         Pad ``Dataset`` by repeating edge values in the x-direction
 
@@ -390,8 +448,13 @@ class Dataset:
         ds: xarray.Dataset
             padded xarray Dataset
         """
-        x = self._ds.x.pad(x=n, mode="reflect", reflect_type="odd")
+        # (possibly) unchunk x-coordinates and pad to wrap at meridian
+        x = self._ds.x.chunk(x=-1).pad(x=n, mode="reflect", reflect_type="odd")
+        # pad dataset and re-assign x-coordinates
         ds = self._ds.pad(x=n, mode="wrap").assign_coords(x=x)
+        # rechunk dataset (if specified)
+        if chunks is not None:
+            ds = ds.chunk(chunks)
         # return the dataset
         return ds
     
