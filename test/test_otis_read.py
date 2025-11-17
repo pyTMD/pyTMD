@@ -171,8 +171,8 @@ class Test_CATS2008:
     @pytest.fixture(scope="class", autouse=False)
     def update_tidal_ellipse(self, directory):
         # model parameters for CATS2008
-        model = pyTMD.io.model(directory).current('CATS2008')
-        modelpath = model.grid_file.parent
+        model = pyTMD.io.model(directory).from_database('CATS2008')
+        modelpath = model['u'].grid_file.parent
         TYPES = ['U','V']
 
         # compute validation data from Matlab TMD program using octave
