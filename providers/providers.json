@@ -16,19 +16,16 @@
         "reference": "https://doi.org/10.15784/601772",
         "u": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -58,7 +55,6 @@
                 "DTU23_OceanTide/DTU23/S1_DTU23.d",
                 "DTU23_OceanTide/DTU23/S2_DTU23.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -95,7 +91,6 @@
                 "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                 "EOT20/ocean_tides/T2_ocean_eot20.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -132,7 +127,6 @@
                 "EOT20/load_tides/SSA_load_eot20.nc",
                 "EOT20/load_tides/T2_load_eot20.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_load"
         }
@@ -160,7 +154,6 @@
                 "hamtide/HAMcurrent11a_q1.nc",
                 "hamtide/HAMcurrent11a_s2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "zonal_tidal_current"
         },
@@ -176,7 +169,6 @@
                 "hamtide/HAMcurrent11a_q1.nc",
                 "hamtide/HAMcurrent11a_s2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "meridional_tidal_current"
         },
@@ -193,7 +185,6 @@
                 "hamtide/q1.hamtide11a.nc",
                 "hamtide/s2.hamtide11a.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }

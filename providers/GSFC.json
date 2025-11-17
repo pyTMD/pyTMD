@@ -24,7 +24,6 @@
                 "GOT4.10c/grids_oceantide/s1.d",
                 "GOT4.10c/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -52,7 +51,6 @@
                 "GOT4.10c/grids_SAL/m2sal.nc",
                 "GOT4.10c/grids_SAL/q1sal.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -82,7 +80,6 @@
                 "GOT4.10c/grids_loadtide/s1load.d",
                 "GOT4.10c/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -112,7 +109,6 @@
                 "GOT4.10c/grids_oceantide_netcdf/s1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/m4.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -142,7 +138,6 @@
                 "GOT4.7/grids_oceantide/s1.d",
                 "GOT4.7/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -172,7 +167,6 @@
                 "GOT4.7/grids_loadtide/s1load.d",
                 "GOT4.7/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -202,7 +196,6 @@
                 "got4.8/grids_oceantide/s1.d",
                 "got4.8/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -232,7 +225,6 @@
                 "got4.8/grids_loadtide/s1load.d",
                 "got4.8/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -262,7 +254,6 @@
                 "GOT4.8/grids_oceantide_netcdf/s1.nc",
                 "GOT4.8/grids_oceantide_netcdf/m4.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -298,7 +289,6 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -334,7 +324,6 @@
                 "GOT5.5D/ocean_tides/s2_5.5D.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -370,7 +359,6 @@
                 "GOT5.5D/extrapolated/s2_5.5Dx.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -406,7 +394,6 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -442,7 +429,6 @@
                 "GOT5.5/load_tides/s1load.nc",
                 "GOT5.5/load_tides/sig1load.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -482,7 +468,6 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -522,7 +507,6 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -548,7 +532,6 @@
                 "RE14_LongPeriodTides_rel/oceantides/Sa_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Ssa_RE14_oceantide.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_lpe"
         }

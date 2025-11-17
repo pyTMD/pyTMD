@@ -16,21 +16,18 @@
         "u": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/h0_Arc5km.oce",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -52,21 +49,18 @@
         "u": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/h_Arc5km.oce",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -88,14 +82,12 @@
         "u": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -103,7 +95,6 @@
         "z": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/h_Arc5km2018",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -126,14 +117,12 @@
         "u": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -141,7 +130,6 @@
         "z": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/h_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -154,21 +142,18 @@
         "u": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/h0_CATS02_01",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -191,21 +176,18 @@
         "u": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/hf.CATS2008.out",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -227,19 +209,16 @@
         "reference": "https://doi.org/10.15784/601772",
         "u": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -262,7 +241,6 @@
         "z": {
             "grid_file": "CATS2008a_SPOTL_Load/grid_CATS2008a_opt",
             "model_file": "CATS2008a_SPOTL_Load/h_CATS2008a_SPOTL_load",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_load"
         }
@@ -292,7 +270,6 @@
                 "DTU23_OceanTide/DTU23/S1_DTU23.d",
                 "DTU23_OceanTide/DTU23/S2_DTU23.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -329,7 +306,6 @@
                 "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                 "EOT20/ocean_tides/T2_ocean_eot20.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -366,7 +342,6 @@
                 "EOT20/load_tides/SSA_load_eot20.nc",
                 "EOT20/load_tides/T2_load_eot20.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_load"
         }
@@ -418,7 +393,6 @@
                 "fes2012/data/M8_FES2012_SLEV.nc",
                 "fes2012/data/Nu2_FES2012_SLEV.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -471,7 +445,6 @@
                 "fes2014/eastward_velocity/ssa.nc",
                 "fes2014/eastward_velocity/t2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "zonal_tidal_current"
         },
@@ -512,7 +485,6 @@
                 "fes2014/northward_velocity/ssa.nc",
                 "fes2014/northward_velocity/t2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "meridional_tidal_current"
         },
@@ -554,7 +526,6 @@
                 "fes2014/ocean_tide/ssa.nc",
                 "fes2014/ocean_tide/t2.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -608,7 +579,6 @@
                 "fes2014/ocean_tide_extrapolated/ssa.nc",
                 "fes2014/ocean_tide_extrapolated/t2.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -662,7 +632,6 @@
                 "fes2014/load_tide/ssa.nc",
                 "fes2014/load_tide/t2.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_load"
         }
@@ -716,7 +685,6 @@
                 "fes2022b/ocean_tide_20241025/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_20241025/t2_fes2022.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -770,7 +738,6 @@
                 "fes2022b/ocean_tide_extrapolated/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_extrapolated/t2_fes2022.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -824,7 +791,6 @@
                 "fes2022b/load_tide/ssa_fes2022.nc",
                 "fes2022b/load_tide/t2_fes2022.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_load"
         }
@@ -854,7 +820,6 @@
                 "GOT4.10c/grids_oceantide/s1.d",
                 "GOT4.10c/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -882,7 +847,6 @@
                 "GOT4.10c/grids_SAL/m2sal.nc",
                 "GOT4.10c/grids_SAL/q1sal.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -912,7 +876,6 @@
                 "GOT4.10c/grids_loadtide/s1load.d",
                 "GOT4.10c/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -942,7 +905,6 @@
                 "GOT4.10c/grids_oceantide_netcdf/s1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/m4.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -972,7 +934,6 @@
                 "GOT4.7/grids_oceantide/s1.d",
                 "GOT4.7/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1002,7 +963,6 @@
                 "GOT4.7/grids_loadtide/s1load.d",
                 "GOT4.7/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -1032,7 +992,6 @@
                 "got4.8/grids_oceantide/s1.d",
                 "got4.8/grids_oceantide/m4.d"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1062,7 +1021,6 @@
                 "got4.8/grids_loadtide/s1load.d",
                 "got4.8/grids_loadtide/m4load.d"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -1092,7 +1050,6 @@
                 "GOT4.8/grids_oceantide_netcdf/s1.nc",
                 "GOT4.8/grids_oceantide_netcdf/m4.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1128,7 +1085,6 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1164,7 +1120,6 @@
                 "GOT5.5D/ocean_tides/s2_5.5D.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1200,7 +1155,6 @@
                 "GOT5.5D/extrapolated/s2_5.5Dx.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1236,7 +1190,6 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1272,7 +1225,6 @@
                 "GOT5.5/load_tides/s1load.nc",
                 "GOT5.5/load_tides/sig1load.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_load"
         }
@@ -1312,7 +1264,6 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1352,7 +1303,6 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1375,14 +1325,12 @@
         "u": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1390,7 +1338,6 @@
         "z": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/h_Greenland8.v2",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -1413,14 +1360,12 @@
         "u": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1428,7 +1373,6 @@
         "z": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/h_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -1456,7 +1400,6 @@
                 "hamtide/HAMcurrent11a_q1.nc",
                 "hamtide/HAMcurrent11a_s2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "zonal_tidal_current"
         },
@@ -1472,7 +1415,6 @@
                 "hamtide/HAMcurrent11a_q1.nc",
                 "hamtide/HAMcurrent11a_s2.nc"
             ],
-            "scale": 1.0,
             "units": "cm/s",
             "variable": "meridional_tidal_current"
         },
@@ -1489,7 +1431,6 @@
                 "hamtide/q1.hamtide11a.nc",
                 "hamtide/s2.hamtide11a.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_ocean"
         }
@@ -1515,7 +1456,6 @@
                 "RE14_LongPeriodTides_rel/oceantides/Sa_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Ssa_RE14_oceantide.nc"
             ],
-            "scale": 0.01,
             "units": "cm",
             "variable": "tide_lpe"
         }
@@ -1550,7 +1490,6 @@
                 "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2",
                 "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -1573,7 +1512,6 @@
                 "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2",
                 "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1597,7 +1535,6 @@
                 "TPXO10_atlas_v2/h_s1_tpxo10_atlas_30_v2",
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -1632,7 +1569,6 @@
                 "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
                 "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -1655,7 +1591,6 @@
                 "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
                 "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1679,7 +1614,6 @@
                 "TPXO10_atlas_v2/h_s1_tpxo10_atlas_30_v2.nc",
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -1698,14 +1632,12 @@
         "u": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/u_tpxo7.2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/u_tpxo7.2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1713,7 +1645,6 @@
         "z": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/h_tpxo7.2",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -1733,7 +1664,6 @@
         "z": {
             "grid_file": "TPXO7.2_load/grid_tpxo6.2",
             "model_file": "TPXO7.2_load/h_tpxo7.2_load",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_load"
         }
@@ -1752,14 +1682,12 @@
         "u": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1767,7 +1695,6 @@
         "z": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/hf.tpxo8_atlas_30_v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -1797,7 +1724,6 @@
                 "TPXO8_atlas_v1/hf.m4_tpxo8_atlas_30c_v1.nc",
                 "TPXO8_atlas_v1/hf.m2_tpxo8_atlas_30c_v1.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -1829,7 +1755,6 @@
                 "TPXO9_atlas/u_mn4_tpxo9_atlas_30",
                 "TPXO9_atlas/u_2n2_tpxo9_atlas_30"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -1849,7 +1774,6 @@
                 "TPXO9_atlas/u_mn4_tpxo9_atlas_30",
                 "TPXO9_atlas/u_2n2_tpxo9_atlas_30"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1870,7 +1794,6 @@
                 "TPXO9_atlas/h_mn4_tpxo9_atlas_30",
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -1902,7 +1825,6 @@
                 "TPXO9_atlas/u_mn4_tpxo9_atlas_30.nc",
                 "TPXO9_atlas/u_2n2_tpxo9_atlas_30.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -1922,7 +1844,6 @@
                 "TPXO9_atlas/v_mn4_tpxo9_atlas_30.nc",
                 "TPXO9_atlas/v_2n2_tpxo9_atlas_30.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -1943,7 +1864,6 @@
                 "TPXO9_atlas/h_mn4_tpxo9_atlas_30.nc",
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -1969,7 +1889,6 @@
                 "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2",
                 "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -1989,7 +1908,6 @@
                 "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2",
                 "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2010,7 +1928,6 @@
                 "TPXO9_atlas_v2/h_mn4_tpxo9_atlas_30_v2",
                 "TPXO9_atlas_v2/h_2n2_tpxo9_atlas_30_v2"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2042,7 +1959,6 @@
                 "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2.nc",
                 "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2062,7 +1978,6 @@
                 "TPXO9_atlas_v2/v_mn4_tpxo9_atlas_30_v2.nc",
                 "TPXO9_atlas_v2/v_2n2_tpxo9_atlas_30_v2.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2083,7 +1998,6 @@
                 "TPXO9_atlas_v2/h_mn4_tpxo9_atlas_30_v2.nc",
                 "TPXO9_atlas_v2/h_2n2_tpxo9_atlas_30_v2.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2111,7 +2025,6 @@
                 "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3",
                 "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2133,7 +2046,6 @@
                 "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3",
                 "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2156,7 +2068,6 @@
                 "TPXO9_atlas_v3/h_mf_tpxo9_atlas_30_v3",
                 "TPXO9_atlas_v3/h_mm_tpxo9_atlas_30_v3"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2190,7 +2101,6 @@
                 "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3.nc",
                 "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2212,7 +2122,6 @@
                 "TPXO9_atlas_v3/v_mf_tpxo9_atlas_30_v3.nc",
                 "TPXO9_atlas_v3/v_mm_tpxo9_atlas_30_v3.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2235,7 +2144,6 @@
                 "TPXO9_atlas_v3/h_mf_tpxo9_atlas_30_v3.nc",
                 "TPXO9_atlas_v3/h_mm_tpxo9_atlas_30_v3.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2269,7 +2177,6 @@
                 "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4",
                 "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2291,7 +2198,6 @@
                 "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4",
                 "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2314,7 +2220,6 @@
                 "TPXO9_atlas_v4/h_mf_tpxo9_atlas_30_v4",
                 "TPXO9_atlas_v4/h_mm_tpxo9_atlas_30_v4"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2342,7 +2247,6 @@
                 "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4.nc",
                 "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2364,7 +2268,6 @@
                 "TPXO9_atlas_v4/v_mf_tpxo9_atlas_30_v4.nc",
                 "TPXO9_atlas_v4/v_mm_tpxo9_atlas_30_v4.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2387,7 +2290,6 @@
                 "TPXO9_atlas_v4/h_mf_tpxo9_atlas_30_v4.nc",
                 "TPXO9_atlas_v4/h_mm_tpxo9_atlas_30_v4.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2416,7 +2318,6 @@
                 "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5",
                 "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2439,7 +2340,6 @@
                 "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5",
                 "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2463,7 +2363,6 @@
                 "TPXO9_atlas_v5/h_mf_tpxo9_atlas_30_v5",
                 "TPXO9_atlas_v5/h_mm_tpxo9_atlas_30_v5"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2492,7 +2391,6 @@
                 "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
                 "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
@@ -2515,7 +2413,6 @@
                 "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
                 "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
             ],
-            "scale": 0.0001,
             "units": "cm^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2539,7 +2436,6 @@
                 "TPXO9_atlas_v5/h_mf_tpxo9_atlas_30_v5.nc",
                 "TPXO9_atlas_v5/h_mm_tpxo9_atlas_30_v5.nc"
             ],
-            "scale": 0.001,
             "units": "mm",
             "variable": "tide_ocean"
         }
@@ -2558,14 +2454,12 @@
         "u": {
             "grid_file": "TPXO9.1/grid_tpxo9",
             "model_file": "TPXO9.1/u_tpxo9.v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "TPXO9.1/grid_tpxo9",
             "model_file": "TPXO9.1/u_tpxo9.v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -2573,7 +2467,6 @@
         "z": {
             "grid_file": "TPXO9.1/DATA/grid_tpxo9",
             "model_file": "TPXO9.1/DATA/h_tpxo9.v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }

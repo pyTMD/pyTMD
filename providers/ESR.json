@@ -16,21 +16,18 @@
         "u": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/h0_Arc5km.oce",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -52,21 +49,18 @@
         "u": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/h_Arc5km.oce",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -88,14 +82,12 @@
         "u": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -103,7 +95,6 @@
         "z": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/h_Arc5km2018",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -126,14 +117,12 @@
         "u": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -141,7 +130,6 @@
         "z": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/h_Arc2kmTM_v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -154,21 +142,18 @@
         "u": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/h0_CATS02_01",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -191,21 +176,18 @@
         "u": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
         "z": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/hf.CATS2008.out",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -228,7 +210,6 @@
         "z": {
             "grid_file": "CATS2008a_SPOTL_Load/grid_CATS2008a_opt",
             "model_file": "CATS2008a_SPOTL_Load/h_CATS2008a_SPOTL_load",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_load"
         }
@@ -251,14 +232,12 @@
         "u": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -266,7 +245,6 @@
         "z": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/h_Greenland8.v2",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }
@@ -289,14 +267,12 @@
         "u": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
         "v": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m^2/s",
             "variable": "meridional_tidal_current"
         },
@@ -304,7 +280,6 @@
         "z": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/h_Gr1kmTM_v1",
-            "scale": 1.0,
             "units": "m",
             "variable": "tide_ocean"
         }

@@ -64,8 +64,8 @@ def main():
                     # add grid file for OTIS and ATLAS formats
                     if grid_file is not None and (model_format != 'TMD3'):
                         tree[model]['z']['grid_file'] = grid_file
-                    # assign units based on scale
-                    tree[model]['z']['scale'] = scale or 1.0
+                    # # assign units based on scale
+                    # tree[model]['z']['scale'] = scale or 1.0
                     if scale is not None and scale == 0.01:
                         tree[model]['z']['units'] = 'cm'
                     elif scale is not None and scale == 0.001:
@@ -87,8 +87,8 @@ def main():
                     # assign long names to variables
                     tree[model]['u']['variable'] = long_name['u']
                     tree[model]['v']['variable'] = long_name['v']
-                    tree[model]['u']['scale'] = scale or 1.0
-                    tree[model]['v']['scale'] = scale or 1.0
+                    # tree[model]['u']['scale'] = scale or 1.0
+                    # tree[model]['v']['scale'] = scale or 1.0
                     # assign units based on scale
                     if scale is not None and scale == 0.0001:
                         tree[model]['u']['units'] = 'cm^2/s'
