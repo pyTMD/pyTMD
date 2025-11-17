@@ -1132,7 +1132,7 @@ def OPT_displacements(
     phi = np.radians(lon.flatten())
 
     # read and interpolate ocean pole tide map from Desai (2002)
-    ds = pyTMD.xio.IERS.open_dataset().interp(lon.flatten(), 
+    ds = pyTMD.io.IERS.open_dataset().interp(lon.flatten(), 
         latitude_geocentric, method=METHOD)
     # rotation matrix for converting to/from cartesian coordinates
     R = np.zeros((npts, 3, 3))

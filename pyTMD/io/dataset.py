@@ -433,6 +433,40 @@ class Dataset:
                     )
         # return xarray dataset
         return ds
+    
+    def node_equilibrium(self):
+        """
+        Compute the equilibrium amplitude and phase of the 18.6 year
+        node tide :cite:p:`Cartwright:1971iz,Cartwright:1973em`
+        """
+        # copy dataset
+        ds = self._ds.copy()
+        # Cartwright and Edden potential amplitude
+        amajor = 0.027929# node
+        # Love numbers for long-period tides (Wahr, 1981)
+        k2 = 0.299
+        h2 = 0.606
+        # tilt factor: response with respect to the solid earth
+        gamma_2 = (1.0 + k2 - h2)
+        # check dimensions
+        if ds.x.ndim == 1 and (ds.y.ndim == 1):
+            # 2D grid of coordinates
+            x, y = np.meshgrid(ds.x.values, ds.y.values)
+        else:
+            x, y = ds.x.values, ds.y.values
+        # transform model coordinates to lat/lon coordinates
+        lon, lat = self.transform(x, y, crs=4326, direction='INVERSE')
+        # colatitude in radians
+        th = np.radians(90.0 - lat)
+        # 2nd degree Legendre polynomials
+        P20 = 0.5*(3.0*np.cos(th)**2 - 1.0)
+        # normalization for spherical harmonics
+        dfactor = np.sqrt((4.0 + 1.0)/(4.0*np.pi))
+        # calculate equilibrium node constants
+        hc = dfactor*P20*gamma_2*amajor*np.exp(-1j*np.pi)
+        ds['node'] = xr.DataArray(hc, dims=ds.dims, coords=ds.coords)
+        # return xarray dataset
+        return ds
 
     def pad(self, n: int = 1, chunks=None):
         """
@@ -520,7 +554,7 @@ class Dataset:
             Direction of transformation
 
             - ``'FORWARD'``: from input crs to model crs
-            - ``'BACKWARD'``: from model crs to input crs
+            - ``'INVERSE'``: from model crs to input crs
 
         Returns
         -------
@@ -531,6 +565,7 @@ class Dataset:
         """
         # set the direction of the transformation
         kwargs.setdefault('direction', 'FORWARD')
+        assert kwargs['direction'] in ('FORWARD','INVERSE','IDENT')
         # get the coordinate reference system and transform
         source_crs = pyproj.CRS.from_user_input(crs)
         transformer = pyproj.Transformer.from_crs(

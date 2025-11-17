@@ -7,18 +7,6 @@ from .GOT import *
 from .OTIS import *
 from .IERS import *
 from .NOAA import *
+from .dataset import *
 from .constituents import constituents
-from .model import (
-    model,
-    load_database,
-    extract_constants,
-    read_constants,
-    interpolate_constants
-)
-
-# Attempt to import the dataset module for xarray support
-try:
-    from .dataset import Dataset, DataArray
-except (ImportError, AttributeError):
-    Dataset = None
-    DataArray = None
+from .model import model, load_database
