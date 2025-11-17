@@ -51,14 +51,16 @@ import timescale
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 filepath = pathlib.Path(filename).absolute().parent
 
+# parametrize over cropping the model fields
+@pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_read_TPXO9_v2(directory):
+def test_read_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
     m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2','s2','k1','o1'])
     # open dataset
-    ds = m.open_dataset(type='z')
+    ds = m.open_dataset(type='z', chunks='auto')
 
     # read validation dataset (m2, s2, k1, o1)
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
@@ -70,6 +72,14 @@ def test_read_TPXO9_v2(directory):
     # convert to xarray DataArrays
     X = xr.DataArray(val['Lon'], dims=('time'))
     Y = xr.DataArray(val['Lat'], dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
     local = ds.tmd.interp(X, Y)
 
@@ -90,14 +100,16 @@ def test_read_TPXO9_v2(directory):
         assert np.all(np.abs(amp_diff) <= amp_eps)
         assert np.all(np.abs(ph_diff) <= ph_eps)
 
+# parametrize over cropping the model fields
+@pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_verify_TPXO9_v2(directory):
+def test_verify_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
     m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2','s2','k1','o1'])
     # open dataset
-    ds = m.open_dataset(type='z')
+    ds = m.open_dataset(type='z', chunks='auto')
 
     # compile numerical expression operator
     rx = re.compile(r'[-+]?(?:(?:\d+\.\d+\.\d+)|(?:\d+\:\d+\:\d+)'
@@ -127,6 +139,14 @@ def test_verify_TPXO9_v2(directory):
     # convert to xarray DataArrays
     X = xr.DataArray(val['longitude'], dims=('time'))
     Y = xr.DataArray(val['latitude'], dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
     local = ds.tmd.interp(X, Y)
     # delta time
@@ -158,3 +178,20 @@ def test_definition_file(MODEL):
     m = pyTMD.io.model().from_file(fid)
     for attr in ['name','format','z','u','v']:
         assert getattr(model,attr) == getattr(m,attr)
+
+# parametrize over reading with dask
+@pytest.mark.parametrize("CHUNKS", [None, "auto"])
+# PURPOSE: test extend function
+def test_extend_array(directory, CHUNKS):
+    # model parameters for TPXO9-atlas-v2
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    # pad in longitudinal direction
+    ds = ds.tmd.pad()
+    # check that longitude values are as expected
+    dlon = 1.0/30.0
+    lon = np.arange(0, 360 + 2.0*dlon, dlon)
+    assert np.all(np.isclose(lon, ds.x.values))

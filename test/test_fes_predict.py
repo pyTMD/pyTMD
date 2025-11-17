@@ -58,8 +58,10 @@ def test_check_FES2014(directory):
         True, True, True, False, False])
     assert np.all(obs == exp)
 
+# parametrize over cropping the model fields
+@pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to FES program
-def test_verify_FES2014(directory):
+def test_verify_FES2014(directory, CROP):
     # model parameters for FES2014
     m = pyTMD.io.model(directory).from_database('FES2014')
     # constituent files included in test
@@ -68,7 +70,7 @@ def test_verify_FES2014(directory):
     # reduce to constituents for test
     m.reduce_constituents(c)
     # open dataset
-    ds = m.open_dataset(type='z', use_default_units=False)
+    ds = m.open_dataset(type='z', chunks='auto', use_default_units=False)
 
     # read validation dataset
     # extract time (Modified Julian Days), latitude, longitude, and tide data
@@ -90,6 +92,14 @@ def test_verify_FES2014(directory):
     # convert to xarray DataArrays
     X = xr.DataArray(longitude, dims=('time'))
     Y = xr.DataArray(latitude, dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
     local = ds.tmd.interp(X, Y)
 
@@ -122,3 +132,20 @@ def test_definition_file(MODEL):
     m = pyTMD.io.model().from_file(fid)
     for attr in ['name','format','z','u','v']:
         assert getattr(model,attr) == getattr(m,attr)
+
+# parametrize over reading with dask
+@pytest.mark.parametrize("CHUNKS", [None, "auto"])
+# PURPOSE: test extend function
+def test_extend_array(directory, CHUNKS):
+    # model parameters for FES2014
+    m = pyTMD.io.model(directory).from_database('FES2014')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    # pad in longitudinal direction
+    ds = ds.tmd.pad()
+    # check that longitude values are as expected
+    dlon = 1.0/16.0
+    lon = np.arange(-dlon, 360 + dlon, dlon)
+    assert np.all(np.isclose(lon, ds.x.values))

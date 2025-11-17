@@ -205,7 +205,8 @@ def test_extrapolate(N=324):
     FI.data[:] = franke_3d(X,Y,Z)
     FI.mask = np.zeros((ny,nx),dtype=bool)
     # use nearest neighbors extrapolation to points
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,lon,lat,EPSG='4326')
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
+        is_geographic=True)
     # verify that coordinates are within tolerance
     assert np.all(np.isclose(val,test,atol=0.1))
 
@@ -227,9 +228,10 @@ def test_extrapolation_checks(N=324):
     FI.mask = np.ones((ny,nx),dtype=bool)
     # use nearest neighbors extrapolation to points
     # in case where there are no valid grid points
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,lon,lat,EPSG='4326')
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
+        is_geographic=True)
     assert(np.all(test.mask))
     # use nearest neighbors extrapolation
     # in case where there are no points to be extrapolated
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,[],[])
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, [], [])
     assert np.logical_not(test)

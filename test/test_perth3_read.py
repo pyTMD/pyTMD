@@ -53,16 +53,18 @@ import timescale
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 filepath = pathlib.Path(filename).absolute().parent
 
+# parametrize over cropping the model fields
+@pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to PERTH3 program
-def test_verify_GOT47(directory):
+def test_verify_GOT47(directory, CROP):
     # model parameters for GOT4.7
-    model = pyTMD.io.model(directory).from_database('GOT4.7')
+    m = pyTMD.io.model(directory).from_database('GOT4.7')
     # perth3 test program infers m4 tidal constituent
     # constituent files included in test
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
-    model.reduce_constituents(constituents)
+    m.reduce_constituents(constituents)
     # open dataset
-    ds = model.open_dataset(type='z', use_default_units=False)
+    ds = m.open_dataset(type='z', chunks='auto', use_default_units=False)
 
     # read validation dataset
     with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
@@ -91,6 +93,14 @@ def test_verify_GOT47(directory):
     # convert to xarray DataArrays
     X = xr.DataArray(lon, dims=('time'))
     Y = xr.DataArray(lat, dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
     local = ds.tmd.interp(X, Y, extrapolate=True)
 
@@ -98,7 +108,7 @@ def test_verify_GOT47(directory):
     tide = local.tmd.predict(ts.tide, deltat=deltat,
         corrections='perth3')
     tide += local.tmd.infer(ts.tide, deltat=deltat,
-        corrections='perth3', minor=model.minor)
+        corrections='perth3', minor=m.minor)
 
     # will verify differences between model outputs are within tolerance
     eps = 0.01
@@ -152,6 +162,23 @@ def test_definition_file(MODEL):
     m = pyTMD.io.model().from_file(fid)
     for attr in ['name','format','z']:
         assert getattr(model,attr) == getattr(m,attr)
+
+# parametrize over reading with dask
+@pytest.mark.parametrize("CHUNKS", [None, "auto"])
+# PURPOSE: test extend function
+def test_extend_array(directory, CHUNKS):
+    # model parameters for GOT4.7
+    m = pyTMD.io.model(directory).from_database('GOT4.7')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    # pad in longitudinal direction
+    ds = ds.tmd.pad()
+    # check that longitude values are as expected
+    dlon = 1.0/2.0
+    lon = np.arange(-dlon, 360 + dlon, dlon)
+    assert np.all(np.isclose(lon, ds.x.values))
 
 # PURPOSE: test the catch in the correction wrapper function
 def test_unlisted_model(directory):
