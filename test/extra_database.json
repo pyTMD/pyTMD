@@ -1,7 +1,10 @@
 {
-    "elevation": {
-        "EOT20_custom": {
-            "format": "FES-netcdf",
+    "EOT20_custom": {
+        "format": "FES-netcdf",
+        "name": "EOT20_custom",
+        "reference": "https://doi.org/10.17882/79489",
+        "version": "EOT20",
+        "z": {
             "model_file": [
                 "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                 "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -21,12 +24,8 @@
                 "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                 "EOT20/ocean_tides/T2_ocean_eot20.nc"
             ],
-            "name": "EOT20_custom",
-            "reference": "https://doi.org/10.17882/79489",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "EOT20"
+            "units": "cm",
+            "variable": "tide_ocean"
         }
     }
 }
