@@ -16,6 +16,13 @@ They can be either a single file containing all the constituents (compact) or mu
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
 GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
+``pyTMD`` uses ``pint`` to handle the units of the model constituent data and convert them into standard sets of units.
+
+    - ``z``: tidal elevations in meters (:math:`m`)
+    - ``u``: zonal tidal currents in centimeters per second (:math:`cm/s`)
+    - ``U``: zonal tidal transports in square meters per second (:math:`m^2/s`)
+    - ``v``: meridional tidal currents in centimeters per second (:math:`cm/s`)
+    - ``V``: meridional tidal transports in square meters per second (:math:`m^2/s`)
 
 Data Access
 ###########
@@ -84,7 +91,6 @@ Definition Files
 For models not currently within the ``pyTMD`` `database <./Getting-Started.html#model-database>`_, the model parameters can be set in :py:class:`pyTMD.io.model` with a definition file in JSON format.
 The JSON definition files follow a similar structure as the main ``pyTMD`` database, but for individual entries.
 The JSON format directly maps the parameter names with their values stored in the appropriate data type (strings, lists, numbers, booleans, etc).
-For FES-type models of currents, the two lists of model files (``u`` and ``v``) are stored in a name-value pair objects (similar to a python dictionary).
 While still human readable, the JSON format is both interoperable and more easily machine readable.
 
 Each definition file should have ``name``, ``format`` and ``type`` parameters.
@@ -94,40 +100,77 @@ For models with multiple constituent files, the files can be found using a ``glo
 - ``OTIS``, ``ATLAS-compact`` and ``TMD3``
 
     * ``format``: ``OTIS``, ``ATLAS-compact`` or ``TMD3``
-    * ``grid_file``: path to model grid file
-    * ``model_file``: path to model constituent file(s) or a ``glob`` string
     * ``name``: tide model name
     * ``projection``: `model spatial projection <./Getting-Started.html#spatial-coordinates>`_.
-    * ``type``: ``z`` or ``u,v``
+    * ``z``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent file(s) or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``u``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent file(s) or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``v``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent file(s) or a ``glob`` string
+        - ``units``: units of the model constituent data
 
 - ``ATLAS-netcdf``
 
-    * ``compressed``: model files are ``gzip`` compressed
     * ``format``: ``ATLAS-netcdf``
-    * ``grid_file``: path to model grid file
-    * ``model_file``: path to model constituent files or a ``glob`` string
     * ``name``: tide model name
-    * ``scale``: scaling factor for converting to output units
-    * ``type``: ``z`` or ``u,v``
+    * ``compressed``: model files are ``gzip`` compressed
+    * ``z``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``u``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``v``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
 
 - ``GOT-ascii`` and ``GOT-netcdf``
 
-    * ``compressed``: model files are ``gzip`` compressed
     * ``format``: ``GOT-ascii`` or ``GOT-netcdf``
-    * ``model_file``: path to model constituent files or a ``glob`` string
     * ``name``: tide model name
-    * ``scale``: scaling factor for converting to output units
-    * ``type``: ``z``
+    * ``compressed``: model files are ``gzip`` compressed
+    * ``z``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
 
 - ``FES-ascii`` and ``FES-netcdf``
 
     * ``compressed``: model files are ``gzip`` compressed
     * ``format``: ``FES-ascii`` or ``FES-netcdf``
-    * ``model_file``: path to model constituent files or a ``glob`` string
     * ``name``: tide model name
-    * ``scale``: scaling factor for converting to output units
-    * ``type``: ``z`` or ``u,v``
     * ``version``: tide model version
+    * ``z``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``u``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
+    * ``v``:
+
+        - ``grid_file``: path to model grid file
+        - ``model_file``: path to model constituent files or a ``glob`` string
+        - ``units``: units of the model constituent data
 
 Programs
 ########
@@ -159,15 +202,11 @@ The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in lati
 Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
-For all cases with projected models, :py:class:`pyTMD.crs` will convert from latitude and longitude to the model coordinate system to calculate the local tidal constants.
 
 Interpolation
 #############
 
-For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from ``scipy``
-along with a built-in bilinear interpolation routine :func:`pyTMD.interpolate.bilinear`.
-The default interpolator :func:`pyTMD.interpolate.spline` uses a biharmonic spline function to interpolate from the model coordinate system to the output coordinates.
-There are options to use nearest and linear interpolators with the :func:`pyTMD.interpolate.regulargrid` function.
+For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from ``xarray``.
 For coastal or near-grounded points, the model can be extrapolated with :func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
