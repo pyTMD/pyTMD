@@ -207,6 +207,14 @@ def open_dataset(
             - ``'ATLAS'``
             - ``'OTIS'``
             - ``'TMD3'``
+    type: str, default 'z'
+        Tidal variable to read
+
+            - ``'z'``: heights
+            - ``'u'``: zonal currents
+            - ``'U'``: zonal depth-averaged transport
+            - ``'v'``: meridional currents
+            - ``'V'``: meridional depth-averaged transport
     **kwargs: dict
         additional keyword arguments for opening files
 

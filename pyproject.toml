@@ -28,11 +28,13 @@ dependencies = [
     "lxml",
     "netCDF4",
     "numpy",
+    "pint",
     "platformdirs",
     "pyproj>=2.5.0",
     "python-dateutil",
     "scipy>=1.10.1",
     "timescale>=0.0.8",
+    "xarray"
 ]
 
 classifiers=[
@@ -60,8 +62,8 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
-all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas", "xarray"]
-aws = ["dask", "geopandas", "h5netcdf", "obstore", "pint", "pyarrow", "s3fs", "zarr>=3"]
+all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas"]
+aws = ["dask", "geopandas", "obstore", "pyarrow", "s3fs", "zarr>=3"]
 dev = ["flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
@@ -180,11 +182,13 @@ description = "Run flake8 to check for compilation errors"
 numpy = "*"
 netcdf4 = "*"
 lxml = "*"
+pint = "*"
 platformdirs = "*"
 pyproj = ">=2.5.0"
 python-dateutil = "*"
 scipy = ">=1.16.0"
 timescale = ">=0.0.8"
+xarray = "*"
 
 [tool.pixi.feature.all.dependencies]
 cartopy = "*"
@@ -195,14 +199,11 @@ jplephem = "*"
 jupyterlab = "*"
 pandas = "*"
 notebook = "*"
-xarray = "*"
 
 [tool.pixi.feature.aws.dependencies]
 dask = "*"
 geopandas = "*"
-h5netcdf = "*"
 obstore = "*"
-pint = "*"
 pyarrow = "*"
 s3fs = "*"
 zarr = ">=3"

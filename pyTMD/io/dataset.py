@@ -159,7 +159,7 @@ class DataTree:
     
     def to_ellipse(self, **kwargs):
         """
-        Expresses currents in terms of four ellipse parameters
+        Expresses tidal currents in terms of four ellipse parameters
 
         - ``major``: amplitude of the semi-major axis
         - ``minor``: amplitude of the semi-minor axis
@@ -204,7 +204,7 @@ class DataTree:
     
     def from_ellipse(self, **kwargs):
         """
-        Calculates currents from the four ellipse parameters
+        Calculates tidal currents from the four ellipse parameters
 
         - ``major``: amplitude of the semi-major axis
         - ``minor``: amplitude of the semi-minor axis
