@@ -18,7 +18,6 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     arguments.py: loads nodal corrections for tidal constituents
     astro.py: computes the basic astronomical mean longitudes
-    crs.py: Coordinate Reference System (CRS) routines
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
@@ -100,9 +99,6 @@ import timescale.eop
 xr = import_dependency('xarray')
 
 __all__ = [
-    "dataset",
-    "map",
-    "drift",
     "time_series",
     "infer_minor",
     "_infer_short_period",
@@ -129,7 +125,7 @@ _mjd_tide = 48622.0
 # number of days between the Julian day epoch and the tide epoch
 _jd_tide = _jd_mjd + _mjd_tide
 
-def dataset(
+def time_series(
         ds: xr.Dataset,
         t: float | np.ndarray,
         **kwargs
@@ -189,198 +185,6 @@ def dataset(
                 arg.f*ds[c].imag*np.sin(th)
     # return the predicted tidal elevations
     return darr.drop_vars('constituent')
-
-# PURPOSE: Predict tides at single times
-def map(t: float | np.ndarray,
-        hc: np.ndarray,
-        constituents: list | np.ndarray,
-        deltat: float | np.ndarray = 0.0,
-        corrections: str = 'OTIS',
-        **kwargs
-    ):
-    """
-    Predict tides at a single time using harmonic
-    constants :cite:p:`Egbert:2002ge`
-
-    Parameters
-    ----------
-    t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
-    hc: np.ndarray
-        harmonic constant vector
-    constituents: list or np.ndarray
-        tidal constituent IDs
-    deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
-    corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
-    **kwargs: dict
-        keyword arguments for nodal corrections functions
-
-    Returns
-    -------
-    ht: np.ndarray
-        tide values reconstructed using the nodal corrections
-    """
-    # number of points and number of constituents
-    npts, nc = np.shape(hc)
-    # verify dimensions of harmonic constants
-    hc = np.ma.atleast_2d(hc)
-    # load the nodal corrections
-    # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
-        constituents,
-        deltat=deltat,
-        corrections=corrections,
-        **kwargs
-    )
-    # allocate for output tidal elevation
-    ht = np.ma.zeros((npts))
-    ht.mask = np.zeros((npts), dtype=bool)
-    # for each constituent
-    for k,c in enumerate(constituents):
-        if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
-            # load parameters for each constituent
-            amp, ph, omega, alpha, species = \
-                pyTMD.arguments._constituent_parameters(c)
-            # add component for constituent to output tidal elevation
-            th = omega*t*86400.0 + ph + pu[0,k]
-        else:
-            th = np.radians(G[0,k]) + pu[0,k]
-        # sum over all tides
-        ht.data[:] += pf[0,k]*hc.real[:,k]*np.cos(th) - \
-            pf[0,k]*hc.imag[:,k]*np.sin(th)
-        ht.mask[:] |= (hc.real.mask[:,k] | hc.imag.mask[:,k])
-    # return the tidal elevation after removing singleton dimensions
-    return np.squeeze(ht)
-
-# PURPOSE: Predict tides at drift buoys or altimetry points
-def drift(t: float | np.ndarray,
-        hc: np.ndarray,
-        constituents: list | np.ndarray,
-        deltat: float | np.ndarray = 0.0,
-        corrections: str = 'OTIS',
-        **kwargs
-    ):
-    """
-    Predict tides at multiple times and locations using harmonic
-    constants :cite:p:`Egbert:2002ge`
-
-    Parameters
-    ----------
-    t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
-    hc: np.ndarray
-        harmonic constant vector
-    constituents: list or np.ndarray
-        tidal constituent IDs
-    deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
-    corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
-    **kwargs: dict
-        keyword arguments for nodal corrections functions
-
-    Returns
-    -------
-    ht: np.ndarray
-        tidal time series reconstructed using the nodal corrections
-    """
-    # number of points
-    nt = len(t)
-    # verify dimensions of harmonic constants
-    hc = np.ma.atleast_2d(hc)
-    # load the nodal corrections
-    # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
-        constituents,
-        deltat=deltat,
-        corrections=corrections,
-        **kwargs
-    )
-    # allocate for output time series
-    ht = np.ma.zeros((nt))
-    ht.mask = np.zeros((nt), dtype=bool)
-    # for each constituent
-    for k,c in enumerate(constituents):
-        if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
-            # load parameters for each constituent
-            amp, ph, omega, alpha, species = \
-                pyTMD.arguments._constituent_parameters(c)
-            # add component for constituent to output tidal elevation
-            th = omega*t*86400.0 + ph + pu[:,k]
-        else:
-            th = np.radians(G[:,k]) + pu[:,k]
-        # sum over all tides
-        ht.data[:] += pf[:,k]*hc.real[:,k]*np.cos(th) - \
-            pf[:,k]*hc.imag[:,k]*np.sin(th)
-        ht.mask[:] |= (hc.real.mask[:,k] | hc.imag.mask[:,k])
-    # return tides
-    return ht
-
-# PURPOSE: Predict a tidal time series at a location
-def time_series(t: float | np.ndarray,
-        hc: np.ndarray,
-        constituents: list | np.ndarray,
-        deltat: float | np.ndarray = 0.0,
-        corrections: str = 'OTIS',
-        **kwargs
-    ):
-    """
-    Predict tidal time series at a single location using harmonic
-    constants :cite:p:`Egbert:2002ge`
-
-    Parameters
-    ----------
-    t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
-    hc: np.ndarray
-        harmonic constant vector
-    constituents: list or np.ndarray
-        tidal constituent IDs
-    deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
-    corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
-    **kwargs: dict
-        keyword arguments for nodal corrections functions
-
-    Returns
-    -------
-    ht: np.ndarray
-        tidal time series reconstructed using the nodal corrections
-    """
-    # number of time points
-    nt = len(t)
-    # verify dimensions of harmonic constants
-    hc = np.ma.atleast_2d(hc)
-    # load the nodal corrections
-    # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide,
-        constituents,
-        deltat=deltat,
-        corrections=corrections,
-        **kwargs
-    )
-    # allocate for output time series
-    ht = np.ma.zeros((nt))
-    ht.mask = np.zeros((nt), dtype=bool)
-    # for each constituent
-    for k,c in enumerate(constituents):
-        if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
-            # load parameters for each constituent
-            amp, ph, omega, alpha, species = \
-                pyTMD.arguments._constituent_parameters(c)
-            # add component for constituent to output tidal time series
-            th = omega*t*86400.0 + ph + pu[:,k]
-        else:
-            th = np.radians(G[:,k]) + pu[:,k]
-        # sum over all tides at location
-        ht.data[:] += pf[:,k]*hc.real[0,k]*np.cos(th) - \
-            pf[:,k]*hc.imag[0,k]*np.sin(th)
-        ht.mask[:] |= np.any(hc.real.mask[0,k] | hc.imag.mask[0,k])
-    # return the tidal time series
-    return ht
 
 # PURPOSE: infer the minor corrections from the major constituents
 def infer_minor(

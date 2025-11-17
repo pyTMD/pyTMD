@@ -27,7 +27,6 @@ PROGRAM DEPENDENCIES:
     io/model.py: retrieves tide model parameters for named tide models
     io/OTIS.py: extract tidal harmonic constants from OTIS tide models
     utilities.py: download and management utilities for syncing files
-    crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
     Updated 11/2025: use new xarray file access protocols for OTIS files

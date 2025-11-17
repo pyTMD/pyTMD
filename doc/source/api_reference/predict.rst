@@ -3,13 +3,9 @@ predict
 =======
 
 - Predict tidal values using harmonic constants
-
-  * At a single time (``map``) such as for imagery
-  * Multiple times and locations (``drift``) such as for airborne and satellite altimetry
-  * Time series at a location (``time_series``) such as to compare with tide gauges
-
-- Predicts tidal values from minor constituents inferred using major constituents
+- Infer tidal values for minor constituents using major constituents
 - Predicts long-period equilibrium ocean tides
+- Predicts ocean and load pole tides
 - Predicts solid earth tides
 
 Calling Sequence
@@ -18,15 +14,11 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.predict
-    ht = pyTMD.predict.time_series(time, hc, con)
+    ht = pyTMD.predict.time_series(ds, time)
 
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/predict.py
-
-.. autofunction:: pyTMD.predict.map
-
-.. autofunction:: pyTMD.predict.drift
 
 .. autofunction:: pyTMD.predict.time_series
 

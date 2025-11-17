@@ -509,7 +509,7 @@ class Dataset:
             predicted tides
         """
         # predict tides at times
-        darr = pyTMD.predict.dataset(self._ds, t, **kwargs)
+        darr = pyTMD.predict.time_series(self._ds, t, **kwargs)
         # return the predicted tides
         return darr
 
