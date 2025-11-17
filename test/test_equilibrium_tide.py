@@ -1,5 +1,5 @@
 """
-test_equilibrium_tide.py (08/2025)
+test_equilibrium_tide.py (11/2025)
 Tests the calculation of long-period equilibrium tides with respect
 to the LPEQMT subroutine
 
@@ -11,12 +11,14 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 11/2025: use xarray interface for node tide test
     Updated 08/2025: added option to include mantle anelasticity
     Updated 11/2024: moved normalize_angle to math.py
     Written 10/2024
 """
 import pytest
 import numpy as np
+import xarray as xr
 import pyTMD.predict
 import pyTMD.math
 import timescale.time
@@ -99,29 +101,29 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     assert np.all(np.abs(lpet - exp) < eps)
 
 # PURPOSE: test the estimation of long-period equilibrium tides
-def test_node_tide():
+def test_node_tide(directory):
     """
     Test the computation of the equilibrium node tides
     """
+    # model parameters for GOT4.7
+    m = pyTMD.io.model(directory).from_database('GOT4.7')
+    # open dataset
+    ds = m.open_dataset(type='z', chunks='auto')
+    # append node equilibrium tide to dataset
+    ds = ds.tmd.node_equilibrium()
+    ds = ds.tmd.subset('node')
     # create a test dataset for data type
     # number of data points
     n_time = 3000
-    lat = np.random.randint(-90,90,size=n_time)
     delta_time = np.random.randint(0,31557600,size=n_time)
     # convert from seconds since 2018 to tide time
     EPOCH = (2018, 1, 1, 0, 0, 0)
     t = timescale.from_deltatime(delta_time,
         epoch=EPOCH, standard='GPS')
     # calculate long-period equilibrium tides
-    lpet = pyTMD.predict.equilibrium_tide(t.tide, lat,
+    lpet = pyTMD.predict.equilibrium_tide(t.tide, ds.y.values,
         constituents='node', corrections='GOT')
-    # calculate node tide amplitude
-    amp, ph = pyTMD.io.model.node_equilibrium(lat)
-    # calculate complex phase in radians for Euler's
-    cph = -1j*ph*np.pi/180.0
-    hc = amp*np.exp(cph)
-    tide = pyTMD.predict.drift(t.tide, hc[:,None],
-        constituents=['node'], corrections='GOT')
+    tide = ds.tmd.predict(t.tide, corrections='GOT')
     # compare with functional values
-    eps = np.finfo(np.float16).eps
-    assert np.all(np.abs(lpet - tide) < eps)
+    eps = np.finfo(np.float32).eps
+    assert np.all(np.abs(lpet.T - tide.sel(x=0)) < eps)
