@@ -299,35 +299,6 @@ class model:
         # return the model parameters
         return self
 
-    def to_datatree(self, m, **kwargs):
-        """
-        Create an xarray DataTree from a model object
-
-        Parameters
-        ----------
-        m: str
-            model name
-        """
-        # output dictionary of xarray Datasets
-        ds = {}
-        # get model parameters
-        model = self.from_database(m)
-        # try to read model files
-        for mtype in ('z', 'u', 'v'):
-            # skip if model type is unavailable
-            if not hasattr(self, mtype.lower()):
-                continue
-            # read model constituents
-            model.read_constants(type=mtype, **kwargs)
-            # scale factor to convert to output units
-            scale = model.scale or 1.0
-            # convert to xarray Dataset and scale
-            ds[mtype] = scale*model._constituents.to_dataset()
-        # create xarray DataTree from dictionary
-        dtree = xr.DataTree.from_dict(ds)
-        # return the model xarray DataTree
-        return dtree
-
     def to_dict(self, **kwargs):
         """
         Create a python dictionary from a model object

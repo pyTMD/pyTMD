@@ -9,7 +9,7 @@ import geopandas as gpd
 s3_bucket = 'pytmd-scratch'
 tide_model = 'FES2022'
 # setup tide model
-m = pyTMD.io.model(verify=False).elevation(tide_model)
+m = pyTMD.io.model(verify=False).from_database(tide_model)
 
 # setup s3 store
 presigned_s3_url = f's3://{s3_bucket}/{m.name}.zarr'
@@ -33,13 +33,12 @@ x = xr.DataArray(geometry.x, dims='i')
 y = xr.DataArray(geometry.y, dims='i')
 
 # interpolate to points and convert to DataArray
-hc = ds.tmd.interp(x=x, y=y, method='linear')
-hc = hc.tmd.to_dataarray()
+local = ds.tmd.interp(x, y, method='linear')
 
 # predict tides and infer minor constituents
-df[m.variable] = pyTMD.predict.drift(ts.tide, hc, constituents,
+df[m.variable] = local.tmd.predict(ts.tide,
     deltat=ts.tt_ut1, corrections=m.corrections)
-df[m.variable] += pyTMD.predict.infer_minor(ts.tide, hc, constituents,
+df[m.variable] += local.tmd.infer(ts.tide,
     deltat=ts.tt_ut1, corrections=m.corrections)
 
 # save model outputs to parquet

@@ -99,15 +99,12 @@ class Test_CATS2008:
         octave.addpath(str(directory))
         # turn off octave warnings
         octave.warning('off', 'all')
+        # model parameters for CATS2008
+        model = pyTMD.io.model(directory).from_database('CATS2008')
         # iterate over type: heights versus currents
         for TYPE in ['z', 'U', 'V']:
-            # model parameters for CATS2008
-            if (TYPE == 'z'):
-                model = pyTMD.io.model(directory).elevation('CATS2008')
-            else:
-                model = pyTMD.io.model(directory).current('CATS2008')
             # path to tide model files
-            modelpath = model.grid_file.parent
+            modelpath = model[TYPE].grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
             CFname = directory.joinpath('Model_CATS2008')
@@ -672,15 +669,12 @@ class Test_AOTIM5_2018:
         octave.addpath(str(directory))
         # turn off octave warnings
         octave.warning('off', 'all')
+        # model parameters for AOTIM-5-2018
+        model = pyTMD.io.model(directory).from_database('AOTIM-5-2018')
         # iterate over type: heights versus currents
         for TYPE in ['z', 'U', 'V']:
-            # model parameters for AOTIM-5-2018
-            if (TYPE == 'z'):
-                model = pyTMD.io.model(directory).elevation('AOTIM-5-2018')
-            else:
-                model = pyTMD.io.model(directory).current('AOTIM-5-2018')
             # path to tide model files
-            modelpath = model.grid_file.parent
+            modelpath = model[TYPE].grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
             CFname = directory.joinpath('Model_Arc5km2018')

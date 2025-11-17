@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 reduce_otis.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 Read OTIS-format tidal files and reduce to a regional subset
 
 COMMAND LINE OPTIONS:
@@ -30,6 +30,7 @@ PROGRAM DEPENDENCIES:
     crs.py: Coordinate Reference System (CRS) routines
 
 UPDATE HISTORY:
+    Updated 11/2025: use new xarray file access protocols for OTIS files
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to reduce_otis
         made a callable function and added function docstrings
@@ -66,14 +67,11 @@ import logging
 import pathlib
 import argparse
 import traceback
+import xarray as xr
 import numpy as np
-import pyTMD.crs
 import pyTMD.io
 import pyTMD.utilities
 import timescale.time
-
-# attempt imports
-pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 # default data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
@@ -111,10 +109,7 @@ def reduce_otis(MODEL: str,
         Permission mode of the output files
     """
     # get parameters for tide model grid
-    try:
-        model = pyTMD.io.model(directory=directory).elevation(MODEL)
-    except Exception as exc:
-        model = pyTMD.io.model(directory=directory).current(MODEL)
+    m = pyTMD.io.model(directory=directory).from_database(MODEL)
     # directionaries with input and output files
     model_file = {}
     new_model_file = {}
@@ -122,110 +117,42 @@ def reduce_otis(MODEL: str,
     # read the OTIS-format tide grid file
     if (model.format == 'ATLAS-compact'):
         # if reading a global solution with localized solutions
-        x0,y0,hz0,mz0,iob,dt,pmask,local = pyTMD.io.OTIS.read_atlas_grid(
-            model.grid_file)
-        xi,yi,hz = pyTMD.io.OTIS.combine_atlas_model(x0, y0, hz0, pmask,
-            local, variable='depth')
-        mz = pyTMD.io.OTIS.create_atlas_mask(x0, y0, mz0,
-            local, variable='depth')
+        dsg, dtg = pyTMD.io.OTIS.open_atlas_grid(m['z'].grid_file)
+        dsz, dtz = pyTMD.io.OTIS.open_atlas_elevation(m['z'].model_file)
+        dsu, dsv, dtu, dtv = pyTMD.io.OTIS.open_atlas_transport(m['u'].model_file)
+        # combine local solutions with global solution
+        dsg = dsg.compact.combine_local(dtg)
+        dsz = dsz.compact.combine_local(dtz)
+        dsu = dsu.compact.combine_local(dtu)
+        dsv = dsv.compact.combine_local(dtv)
     else:
         # if reading a pure global solution
-        xi,yi,hz,mz,iob,dt = pyTMD.io.OTIS.read_otis_grid(model.grid_file)
+        dsg = pyTMD.io.OTIS.open_otis_grid(m['z'].grid_file)
+        dsz = pyTMD.io.OTIS.open_otis_grid(m['z'].model_file)
+        dsu, dsv = pyTMD.io.OTIS.open_otis_transport(m['u'].model_file)
 
-    # converting bounds x,y from projection to latitude/longitude
-    crs1 = pyTMD.crs().from_input(projection)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    xbox = np.array([bounds[0], bounds[1], bounds[1], bounds[0], bounds[0]])
-    ybox = np.array([bounds[2], bounds[2], bounds[3], bounds[3], bounds[2]])
-    lon, lat = transformer.transform(xbox, ybox)
+    # convert bounds to model coordinates
+    x, y = dsg.tmd.transform(xbox, ybox)
+    # merge bathymetry and elevation datasets
+    ds = xr.merge([dsg, dsz], compat='override')
+    # crop datasets and create new datatree
+    dtree = xr.DataTree()
+    dtree['z'] = ds.tmd.crop([x.min(), x.max(), y.min(), y.max()])
+    dtree['U'] = dsu.tmd.crop([x.min(), x.max(), y.min(), y.max()])
+    dtree['V'] = dsv.tmd.crop([x.min(), x.max(), y.min(), y.max()])
 
-    # convert bounds from latitude/longitude to model coordinates
-    x, y = pyTMD.crs().convert(lon, lat, model.projection, 'F')
-
-    # find indices to reduce to xmin,xmax,ymin,ymax
-    gridx, gridy = np.meshgrid(xi, yi)
-    indy, indx = np.nonzero((gridx >= x.min()) & (gridx <= x.max()) &
-        (gridy >= y.min()) & (gridy <= y.max()))
-    nx = np.count_nonzero((xi >= x.min()) & (xi <= x.max()))
-    ny = np.count_nonzero((yi >= y.min()) & (yi <= y.max()))
-    # calculate new grid limits and convert back to grid-cell edges
-    dx = np.abs(xi[1] - xi[0])
-    dy = np.abs(yi[1] - yi[0])
-    xlim = np.array([xi[indx[0]] - dx/2.0, xi[indx[-1]] + dx/2.0], dtype='>f4')
-    ylim = np.array([yi[indy[0]] - dy/2.0, yi[indy[-1]] + dy/2.0], dtype='>f4')
-    # reduce grid and mask to new bounds
-    hz1 = np.zeros((ny,nx), dtype='>f4')
-    mz1 = np.zeros((ny,nx), dtype='>i4')
-    hz1[:,:] = hz[indy,indx].reshape(ny,nx)
-    mz1[:,:] = mz[indy,indx].reshape(ny,nx)
-    # output reduced grid to file
+    # create unique filenames for reduced datasets
     new_grid_file = create_unique_filename(model.grid_file)
-    pyTMD.io.OTIS.output_otis_grid(new_grid_file, xlim, ylim, hz1, mz1, iob, dt)
+    new_elevation_file = create_unique_filename(model_file['z'])
+    new_transport_file = create_unique_filename(model_file['u'])
+    # output reduced datasets to file
+    dtree.otis.to_grid(new_grid_file)
+    dtree.otis.to_elevation(new_elevation_file)
+    dtree.otis.to_transport(new_transport_file)
     # change the permissions level to mode
     new_grid_file.chmod(mode=mode)
-
-    # combine ATLAS sub-grids into single output grid
-    # reduce elevation files to bounds
-    try:
-        # get parameters for tide model
-        model = model.elevation(MODEL)
-    except Exception as exc:
-        pass
-    else:
-        # read each constituent
-        constituents,nc = pyTMD.io.OTIS.read_constituents(model_file['z'])
-        z1 = np.zeros((ny,nx,nc),dtype=np.complex64)
-        for i,c in enumerate(constituents):
-            # read constituent from elevation file
-            if (model.format == 'ATLAS-compact'):
-                z0, zlocal = pyTMD.io.OTIS.read_atlas_elevation(
-                    model_file['z'], i, c)
-                xi, yi, z = pyTMD.io.OTIS.combine_atlas_model(x0, y0, z0,
-                    pmask, zlocal, variable='z')
-            else:
-                z = pyTMD.io.OTIS.read_otis_elevation(model_file['z'], i)
-            # reduce elevation to new bounds
-            z1[:,:,i] = z[indy,indx].reshape(ny,nx)
-        # output reduced elevation components
-        new_model_file['z'] = create_unique_filename(model_file['z'])
-        pyTMD.io.OTIS.output_otis_elevation(new_model_file['z'], z1,
-            xlim, ylim, constituents)
-        # change the permissions level to mode
-        new_model_file['z'].chmod(mode=mode)
-
-    # combine ATLAS sub-grids into single output grid
-    # reduce transport files to bounds
-    try:
-        # get parameters for tide model
-        model = model.current(MODEL)
-    except Exception as exc:
-        pass
-    else:
-        # read each constituent
-        constituents,nc = pyTMD.io.OTIS.read_constituents(model_file['u'])
-        u1 = np.zeros((ny,nx,nc),dtype=np.complex64)
-        v1 = np.zeros((ny,nx,nc),dtype=np.complex64)
-        for i,c in enumerate(constituents):
-            # read constituent from transport file
-            if (model.format == 'ATLAS-compact'):
-                u0,v0,uvlocal = pyTMD.io.OTIS.read_atlas_transport(
-                    model_file['u'], i, c)
-                xi, yi, u = pyTMD.io.OTIS.combine_atlas_model(x0, y0, u0,
-                    pmask, uvlocal, variable='u')
-                xi, yi, v = pyTMD.io.OTIS.combine_atlas_model(x0, y0, v0,
-                    pmask, uvlocal, variable='v')
-            else:
-                u, v = pyTMD.io.OTIS.read_otis_transport(model_file['u'], i)
-            # reduce transport components to new bounds
-            u1[:,:,i] = u[indy,indx].reshape(ny, nx)
-            v1[:,:,i] = v[indy,indx].reshape(ny, nx)
-        # output reduced transport components
-        new_model_file['uv'] = create_unique_filename(model_file['u'])
-        pyTMD.io.OTIS.output_otis_transport(new_model_file['u'], u1, v1,
-            xlim, ylim, constituents)
-        # change the permissions level to mode
-        new_model_file['u'].chmod(mode=mode)
+    new_elevation_file.chmod(mode=mode)
+    new_transport_file.chmod(mode=mode)
 
 # PURPOSE: create a unique filename adding a numerical instance if existing
 def create_unique_filename(filename):

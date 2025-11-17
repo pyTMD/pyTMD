@@ -39,11 +39,8 @@ All presently available models are stored within a `JSON database <https://githu
 .. code-block:: python
 
    >>> import pyTMD
-   >>> pyTMD.models.current.get('CATS2008')
-   {'format': 'OTIS', 'grid_file': 'CATS2008/grid_CATS2008','model_file': {'u': 'CATS2008/uv.CATS2008.out'}, 'name': 'CATS2008','projection': 'CATS2008', 'reference': 'https://doi.org/10.15784/601235','type': ['u', 'v']}
-   >>> pyTMD.models.elevation.get('CATS2008')
-   {'format': 'OTIS', 'grid_file': 'CATS2008/grid_CATS2008','model_file': 'CATS2008/hf.CATS2008.out', 'name': 'CATS2008','projection': 'CATS2008', 'reference': 'https://doi.org/10.15784/601235','type': 'z', 'variable': 'tide_ocean'}
-
+   >>> pyTMD.models.get('CATS2008')
+   {'format': 'OTIS', 'name': 'CATS2008', 'projection': {'datum': 'WGS84', 'lat_0': -90, 'lat_ts': -71, 'lon_0': -70, 'proj': 'stere', 'type': 'crs', 'units': 'km', 'x_0': 0, 'y_0': 0}, 'reference': 'https://doi.org/10.15784/601235', 'u': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/uv.CATS2008.out', 'units': 'm^2/s', 'variable': 'zonal_tidal_current'}, 'v': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/uv.CATS2008.out', 'units': 'm^2/s', 'variable': 'meridional_tidal_current'}, 'z': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/hf.CATS2008.out', 'units': 'm', 'variable': 'tide_ocean'}}
 
 ``pyTMD`` currently supports several solutions from the following tide models:
 
