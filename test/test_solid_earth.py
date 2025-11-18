@@ -18,6 +18,7 @@ UPDATE HISTORY:
 """
 import pytest
 import numpy as np
+import xarray as xr
 import pyTMD.astro
 import pyTMD.compute
 import pyTMD.predict
@@ -27,9 +28,15 @@ def test_out_of_phase_diurnal():
     """Test out-of-phase diurnal corrections with IERS outputs
     """
     # station locations and planetary ephemerides
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
-    SXYZ = np.array([[137859926952.015, 54228127881.4350, 23509422341.6960]])
-    LXYZ = np.array([[-179996231.920342, -312468450.131567, -169288918.592160]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
+    SXYZ = xr.Dataset(data_vars=dict(
+        X=137859926952.015, Y=54228127881.4350, Z=23509422341.6960
+    ))
+    LXYZ = xr.Dataset(data_vars=dict(
+        X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
+    ))
     # factors for sun and moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
@@ -41,15 +48,23 @@ def test_out_of_phase_diurnal():
     dXYZ = pyTMD.predict._out_of_phase_diurnal(XYZ, SXYZ, LXYZ,
         F2_solar, F2_lunar)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
 
 def test_out_of_phase_semidiurnal():
     """Test out-of-phase semidiurnal corrections with IERS outputs
     """
     # station locations and planetary ephemerides
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
-    SXYZ = np.array([[137859926952.015, 54228127881.4350, 23509422341.6960]])
-    LXYZ = np.array([[-179996231.920342, -312468450.131567, -169288918.592160]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
+    SXYZ = xr.Dataset(data_vars=dict(
+        X=137859926952.015, Y=54228127881.4350, Z=23509422341.6960
+    ))
+    LXYZ = xr.Dataset(data_vars=dict(
+        X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
+    ))
     # factors for sun and moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
@@ -61,15 +76,23 @@ def test_out_of_phase_semidiurnal():
     dXYZ = pyTMD.predict._out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ,
         F2_solar, F2_lunar)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
 
 def test_latitude_dependence():
     """Test latitude dependence corrections with IERS outputs
     """
     # station locations and planetary ephemerides
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
-    SXYZ = np.array([[137859926952.015, 54228127881.4350, 23509422341.6960]])
-    LXYZ = np.array([[-179996231.920342, -312468450.131567, -169288918.592160]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
+    SXYZ = xr.Dataset(data_vars=dict(
+        X=137859926952.015, Y=54228127881.4350, Z=23509422341.6960
+    ))
+    LXYZ = xr.Dataset(data_vars=dict(
+        X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
+    ))
     # factors for sun and moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
@@ -81,14 +104,18 @@ def test_latitude_dependence():
     dXYZ = pyTMD.predict._latitude_dependence(XYZ, SXYZ, LXYZ,
         F2_solar, F2_lunar)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
 
 def test_frequency_dependence_diurnal():
     """Test diurnal band frequency dependence corrections
     with IERS outputs
     """
     # station locations
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
     MJD = 55414.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - 51544.5)/36525.0
@@ -103,14 +130,18 @@ def test_frequency_dependence_diurnal():
     # calculate displacements
     dXYZ = pyTMD.predict._frequency_dependence_diurnal(XYZ, MJD)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
 
 def test_frequency_dependence_long_period():
     """Test long period band frequency dependence corrections
     with IERS outputs
     """
     # station locations
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
     MJD = 55414.0
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - 51544.5)/36525.0
@@ -125,15 +156,23 @@ def test_frequency_dependence_long_period():
     # calculate displacements
     dXYZ = pyTMD.predict._frequency_dependence_long_period(XYZ, MJD)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected], dXYZ).all()
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
 
 def test_solid_earth_tide():
     """Test solid earth tides with IERS outputs
     """
     # case 1 from IERS
-    XYZ = np.array([[4075578.385, 931852.890, 4801570.154]])
-    SXYZ = np.array([[137859926952.015, 54228127881.4350, 23509422341.6960]])
-    LXYZ = np.array([[-179996231.920342, -312468450.131567, -169288918.592160]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=4075578.385, Y=931852.890, Z=4801570.154
+    ))
+    SXYZ = xr.Dataset(data_vars=dict(
+        X=137859926952.015, Y=54228127881.4350, Z=23509422341.6960
+    ))
+    LXYZ = xr.Dataset(data_vars=dict(
+        X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
+    ))
     tide_time = timescale.time.convert_calendar_dates(2009, 4, 13,
         hour=0, minute=0, second=0,
         epoch=timescale.time._tide_epoch)
@@ -144,11 +183,19 @@ def test_solid_earth_tide():
     # calculate solid earth tides
     dxt = pyTMD.predict.solid_earth_tide(tide_time, XYZ, SXYZ, LXYZ)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected],dxt).all()
+    assert np.isclose(dx_expected, dxt['X'])
+    assert np.isclose(dy_expected, dxt['Y'])
+    assert np.isclose(dz_expected, dxt['Z'])
     # case 2 from IERS
-    XYZ = np.array([[1112200.5696, -4842957.8511, 3985345.9122]])
-    SXYZ = np.array([[100210282451.6279, 103055630398.316, 56855096480.4475]])
-    LXYZ = np.array([[369817604.4348, 1897917.5258, 120804980.8284]])
+    XYZ = xr.Dataset(data_vars=dict(
+        X=1112200.5696, Y=-4842957.8511, Z=3985345.9122
+    ))
+    SXYZ = xr.Dataset(data_vars=dict(
+        X=100210282451.6279, Y=103055630398.316, Z=56855096480.4475
+    ))
+    LXYZ = xr.Dataset(data_vars=dict(
+        X=369817604.4348, Y=1897917.5258, Z=120804980.8284
+    ))
     tide_time = timescale.time.convert_calendar_dates(2015, 7, 15,
         hour=0, minute=0, second=0,
         epoch=timescale.time._tide_epoch)
@@ -159,7 +206,9 @@ def test_solid_earth_tide():
     # calculate solid earth tides
     dxt = pyTMD.predict.solid_earth_tide(tide_time, XYZ, SXYZ, LXYZ)
     # assert matching
-    assert np.isclose(np.c_[dx_expected, dy_expected, dz_expected],dxt).all()
+    assert np.isclose(dx_expected, dxt['X'])
+    assert np.isclose(dy_expected, dxt['Y'])
+    assert np.isclose(dz_expected, dxt['Z'])
 
 # parameterize ephemerides
 @pytest.mark.parametrize("EPHEMERIDES", ['approximate','JPL'])
@@ -212,12 +261,14 @@ def test_body_tides(CATALOG, METHOD):
         '2018-10-14 00:21:48','2018-10-14 00:21:48',
         '2022-07-23 13:53:08','2022-07-23 13:53:08',
         '2022-07-23 13:53:08','2022-07-23 13:53:08'], dtype=np.datetime64)
-    longitudes = np.array([-136.79534534,-136.79545175,
+    longitudes = xr.DataArray([-136.79534534,-136.79545175,
         -136.79548250,-136.79549453,-71.77356870,-71.77374742,
-        -71.77392700,-71.77410705])
-    latitudes = np.array([68.95910366,68.95941755,
+        -71.77392700,-71.77410705], dims=('time'))
+    latitudes = xr.DataArray([68.95910366,68.95941755,
         68.95950895,68.95954490,-79.00591611,-79.00609103,
-        -79.00626593,-79.00644081])
+        -79.00626593,-79.00644081], dims=('time'))
+    # dataset with spatial coordinates
+    ds = xr.Dataset(coords={'x':longitudes,'y':latitudes})
     # expected results (tide-free)
     tide_earth = np.array([-0.14320290,-0.14320324,
         -0.14320339,-0.14320345,-0.11887791,-0.11887763,
@@ -232,15 +283,15 @@ def test_body_tides(CATALOG, METHOD):
     # predict tides using simplified body tides
     # using tide potentials from Cartwright and Tayler (1971)
     ts = timescale.from_datetime(times)
-    tide_free = pyTMD.predict.body_tide(ts.tide, longitudes, latitudes,
+    tide_free = pyTMD.predict.body_tide(ts.tide, ds,
         deltat=ts.tt_ut1, tide_system='tide_free', method=METHOD,
         catalog=CATALOG)
-    tide_mean = pyTMD.predict.body_tide(ts.tide, longitudes, latitudes,
+    tide_mean = pyTMD.predict.body_tide(ts.tide, ds,
         deltat=ts.tt_ut1, tide_system='mean_tide', method=METHOD,
         catalog=CATALOG)
     # since we are using simplified body tides: assert within 2 mm
-    assert np.isclose(tide_earth, tide_free[:,2], atol=2e-3).all()
-    assert np.isclose(tide_expected, tide_mean[:,2], atol=2e-3).all()
+    assert np.isclose(tide_earth, tide_free['R'], atol=2e-3).all()
+    assert np.isclose(tide_expected, tide_mean['R'], atol=2e-3).all()
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         EPSG=4326, TYPE='drift', TIME='datetime', TIDE_SYSTEM='tide_free',

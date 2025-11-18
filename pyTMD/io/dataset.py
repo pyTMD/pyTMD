@@ -322,7 +322,7 @@ class Dataset:
             predicted tides
         """
         # infer minor tides at times
-        darr = pyTMD.predict.infer_minor(self._ds, t, **kwargs)
+        darr = pyTMD.predict.infer_minor(t, self._ds, **kwargs)
         # return the inferred tides
         return darr
 
@@ -509,7 +509,7 @@ class Dataset:
             predicted tides
         """
         # predict tides at times
-        darr = pyTMD.predict.time_series(self._ds, t, **kwargs)
+        darr = pyTMD.predict.time_series(t, self._ds, **kwargs)
         # return the predicted tides
         return darr
 

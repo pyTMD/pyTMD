@@ -28,8 +28,9 @@ for tau in range(0, l+1):
     # setup subplots
     ax1 = fig.add_subplot(nrows, ncols, tau+1, projection=proj1)
     ax2 = fig.add_subplot(nrows, ncols, ncols+tau+1, projection=proj2)
-    # compute spherical harmonics
-    Y_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau).reshape(theta.shape)
+    # calculate spherical harmonics (and derivatives w.r.t. colatitude)
+    Y_lm, dY_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau)
+    Y_lm = Y_lm.reshape(theta.shape)
     # set the title
     ax1.set_title(f'{species[tau]}\n$l={l}, m={tau}$')
     # add projection text

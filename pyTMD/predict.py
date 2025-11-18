@@ -126,8 +126,8 @@ _mjd_tide = 48622.0
 _jd_tide = _jd_mjd + _mjd_tide
 
 def time_series(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -135,10 +135,10 @@ def time_series(
 
     Parameters
     ----------
+    t: float or np.ndarray
+        days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing tidal harmonic constants
-    t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00 UTC
     kwargs: keyword arguments
         additional keyword arguments
 
@@ -162,7 +162,7 @@ def time_series(
             u=(['time','constituent'], pu),
             f=(['time','constituent'], pf),
             G=(['time','constituent'], G)),
-        coords=dict(time=MJD, constituent=constituents),
+        coords=dict(time=np.atleast_1d(MJD), constituent=constituents),
     )
     # sum over all tides
     for i, c in enumerate(constituents):
@@ -188,8 +188,8 @@ def time_series(
 
 # PURPOSE: infer the minor corrections from the major constituents
 def infer_minor(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -199,10 +199,10 @@ def infer_minor(
 
     Parameters
     ----------
-    ds: xarray.Dataset
-        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
@@ -230,20 +230,20 @@ def infer_minor(
     dh = 0.0
     # infer short-period tides for minor constituents
     if kwargs['corrections'] in ('GOT',):
-        dh += _infer_semi_diurnal(ds, t, **kwargs)
-        dh += _infer_diurnal(ds, t, **kwargs)
+        dh += _infer_semi_diurnal(t, ds, **kwargs)
+        dh += _infer_diurnal(t, ds, **kwargs)
     else:
-        dh += _infer_short_period(ds, t, **kwargs)
+        dh += _infer_short_period(t, ds, **kwargs)
     # infer long-period tides for minor constituents
     if kwargs['infer_long_period']:
-        dh += _infer_long_period(ds, t, **kwargs)
+        dh += _infer_long_period(t, ds, **kwargs)
     # return the inferred values
     return dh
 
 # PURPOSE: infer short-period minor constituents
 def _infer_short_period(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -253,10 +253,10 @@ def _infer_short_period(
 
     Parameters
     ----------
-    ds: xarray.Dataset
-        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
@@ -355,7 +355,7 @@ def _infer_short_period(
             u=(['time','constituent'], pu),
             f=(['time','constituent'], pf),
             G=(['time','constituent'], G)),
-        coords=dict(time=MJD, constituent=minor_constituents),
+        coords=dict(time=np.atleast_1d(MJD), constituent=minor_constituents),
     )
 
     # sum over the minor tidal constituents of interest
@@ -377,8 +377,8 @@ def _infer_short_period(
 
 # PURPOSE: infer semi-diurnal minor constituents
 def _infer_semi_diurnal(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -388,10 +388,10 @@ def _infer_semi_diurnal(
 
     Parameters
     ----------
-    ds: xarray.Dataset
-        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -502,7 +502,7 @@ def _infer_semi_diurnal(
             u=(['time','constituent'], pu),
             f=(['time','constituent'], pf),
             G=(['time','constituent'], G)),
-        coords=dict(time=MJD, constituent=minor_constituents),
+        coords=dict(time=np.atleast_1d(MJD), constituent=minor_constituents),
     )
 
     # sum over the minor tidal constituents of interest
@@ -537,8 +537,8 @@ def _infer_semi_diurnal(
 
 # PURPOSE: infer diurnal minor constituents
 def _infer_diurnal(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -549,10 +549,10 @@ def _infer_diurnal(
 
     Parameters
     ----------
-    ds: xarray.Dataset
-        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -678,7 +678,7 @@ def _infer_diurnal(
             u=(['time','constituent'], pu),
             f=(['time','constituent'], pf),
             G=(['time','constituent'], G)),
-        coords=dict(time=MJD, constituent=minor_constituents),
+        coords=dict(time=np.atleast_1d(MJD), constituent=minor_constituents),
     )
 
     # sum over the minor tidal constituents of interest
@@ -717,8 +717,8 @@ def _infer_diurnal(
 
 # PURPOSE: infer long-period minor constituents
 def _infer_long_period(
-        ds: xr.Dataset,
         t: float | np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -729,10 +729,10 @@ def _infer_long_period(
 
     Parameters
     ----------
-    ds: xarray.Dataset
-        Dataset containing major tidal harmonic constants
     t: float or np.ndarray
         days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
@@ -834,7 +834,7 @@ def _infer_long_period(
             u=(['time','constituent'], pu),
             f=(['time','constituent'], pf),
             G=(['time','constituent'], G)),
-        coords=dict(time=MJD, constituent=minor_constituents),
+        coords=dict(time=np.atleast_1d(MJD), constituent=minor_constituents),
     )
 
     # sum over the minor tidal constituents of interest
@@ -872,7 +872,7 @@ def _infer_long_period(
 # PURPOSE: estimate long-period equilibrium tides
 def equilibrium_tide(
         t: np.ndarray,
-        lat: np.ndarray,
+        ds: xr.Dataset,
         **kwargs
     ):
     """
@@ -883,7 +883,9 @@ def equilibrium_tide(
     Parameters
     ----------
     t: np.ndarray
-        time (days relative to January 1, 1992)
+        days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset with spatial coordinates
     lat: np.ndarray
         latitude (degrees north)
     deltat: float or np.ndarray, default 0.0
@@ -909,12 +911,8 @@ def equilibrium_tide(
     kwargs.setdefault('include_anelasticity', False)
     kwargs.setdefault('corrections', 'OTIS')
 
-    # number of input points
-    nt = len(np.atleast_1d(t))
-    nlat = len(np.atleast_1d(lat))
     # number of constituents
     nc = 15
-
     # set function for astronomical longitudes
     # use ASTRO5 routines if not using an OTIS type model
     if kwargs['corrections'] in ('OTIS','ATLAS','TMD3','netcdf'):
@@ -933,7 +931,7 @@ def equilibrium_tide(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
-    k = 90.0 + np.zeros((nt))
+    k = 90.0 + np.zeros_like(MJD)
     # convert to negative mean longitude of the ascending node (N')
     Np = pyTMD.math.normalize_angle(360.0 - n)
     # determine equilibrium arguments
@@ -941,39 +939,33 @@ def equilibrium_tide(
 
     # Cartwright and Edden potential amplitudes (centimeters)
     # assemble long-period tide potential from 15 CTE terms greater than 1 mm
-    amajor = np.zeros((nc))
+    amajor = xr.Dataset()
     # group 0,0
     # nodal term is included but not the constant term.
-    amajor[0] = 2.7929# node
-    amajor[1] = -0.4922# sa
-    amajor[2] = -3.0988# ssa
+    amajor['node'] = 2.7929# node
+    amajor['sa'] = -0.4922# sa
+    amajor['ssa'] = -3.0988# ssa
     # group 0,1
-    amajor[3] = -0.6728# msm
-    amajor[4] = 0.231
-    amajor[5] = -3.5184# mm
-    amajor[6] = 0.228
+    amajor['msm'] = -0.6728# msm
+    amajor['065.445'] = 0.231
+    amajor['mm'] = -3.5184# mm
+    amajor['065.465'] = 0.228
     # group 0,2
-    amajor[7] = -0.5837# msf
-    amajor[8] = -0.288
-    amajor[9] = -6.6607# mf
-    amajor[10] = -2.763# mf+
-    amajor[11] = -0.258
+    amajor['msf'] = -0.5837# msf
+    amajor['075.355'] = -0.288
+    amajor['mf'] = -6.6607# mf
+    amajor['mf+'] = -2.763# mf+
+    amajor['075.575'] = -0.258
     # group 0,3
-    amajor[12] = -0.2422# mst
-    amajor[13] = -1.2753# mt
-    amajor[14] = -0.528
+    amajor['mst'] = -0.2422# mst
+    amajor['mt'] = -1.2753# mt
+    amajor['085.465'] = -0.528
 
     # set constituents to be iterable and lower case
     if isinstance(kwargs['constituents'], str):
         constituents = [kwargs['constituents'].lower()]
     else:
         constituents = [c.lower() for c in kwargs['constituents']]
-
-    # reduce potential amplitudes to constituents
-    CTE = np.zeros((nc))
-    for i,c in enumerate(cindex):
-        if c in constituents:
-            CTE[i] = amajor[i]
 
     # Doodson coefficients for 15 long-period terms
     coef = np.zeros((7, nc))
@@ -1001,19 +993,23 @@ def equilibrium_tide(
     l = 2
     m = 0
     # colatitude in radians
-    theta = np.radians(90.0 - lat)
+    theta = np.radians(90.0 - ds.y)
     # degree dependent normalization (4-pi)
     dfactor = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
-    # 2nd degree Legendre polynomials (normalized)
-    P20 = dfactor*pyTMD.math.legendre(l, np.cos(theta), m=m)
+    # 2nd degree Legendre polynomials
+    Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m)
+    P20 = dfactor*Plm
 
     # determine equilibrium arguments
-    G = np.dot(fargs, coef)
+    G = xr.DataArray(np.dot(fargs, coef),
+        coords=dict(time=np.atleast_1d(MJD), constituent=cindex),
+    )
 
-    # temporal component of long-period equilibrium tides (meters)
-    Z = np.zeros((nt))
     # for each constituent
-    for i in range(nc):
+    for j,c in enumerate(constituents):
+        # phase of the equilibrium argument (radians)
+        phase = np.radians(G.sel(constituent=c))
+        i = cindex.index(c)
         # calculate angular frequencies of constituents
         omega = pyTMD.arguments._frequency(coef[:, i])
         # complex Love numbers of degree 2 for long-period band
@@ -1027,23 +1023,19 @@ def equilibrium_tide(
         # tilt factor: response with respect to the solid earth
         # use real components from Mathews et al. (2002)
         gamma_2 = (1.0 + k2.real - h2.real)
-        # phase of the equilibrium argument (radians)
-        phase = np.radians(G[:, i])
-        # add constituent to temporal component and convert to meters
-        Z += gamma_2*np.cos(phase)*(CTE[i]/100.0)
-
-    # calculate long-period equilibrium tide
-    if (nlat != nt):
-        lpet = np.outer(P20, Z)
-    else:
-        lpet = P20*Z
+        # initialize or sum equilibrium tide elevations
+        if i == 0:
+            darr = P20*gamma_2*np.cos(phase)*amajor[c]/100.0
+            darr.attrs['units'] = 'meters'
+        else:
+            darr += P20*gamma_2*np.cos(phase)*amajor[c]/100.0
     # return the long-period equilibrium tides
-    return lpet
+    return darr.drop_vars('constituent')
 
 # PURPOSE: estimate load pole tides in Cartesian coordinates
 def load_pole_tide(
         t: np.ndarray,
-        XYZ: np.ndarray,
+        XYZ: xr.Dataset,
         deltat: float = 0.0,
         gamma_0: float = 9.80665,
         omega: float = 7.2921151467e-5,
@@ -1058,9 +1050,9 @@ def load_pole_tide(
     Parameters
     ----------
     t: np.ndarray
-        Time (days relative to January 1, 1992)
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
+        days relative to 1992-01-01T00:00:00
+    XYZ: xarray.Dataset
+        Dataset with cartesian coordinates
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     gamma_0: float, default 9.80665
@@ -1090,13 +1082,13 @@ def load_pole_tide(
     MJD = t + deltat + _mjd_tide
 
     # radius of the Earth
-    radius = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2 + XYZ[:,2]**2)
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
     # geocentric latitude (radians)
-    latitude = np.arctan(XYZ[:,2] / np.sqrt(XYZ[:,0]**2.0 + XYZ[:,1]**2.0))
+    latitude = np.arctan(XYZ['Z'] / np.sqrt(XYZ['X']**2.0 + XYZ['Y']**2.0))
     # geocentric colatitude (radians)
     theta = (np.pi/2.0 - latitude)
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ[:,1], XYZ[:,0])
+    phi = np.arctan2(XYZ['Y'], XYZ['X'])
 
     # calculate angular coordinates of mean/secular pole at time
     mpx, mpy, fl = timescale.eop.iers_mean_pole(time_decimal,
@@ -1108,37 +1100,43 @@ def load_pole_tide(
     # convert angles from arcseconds to radians
     mx = pyTMD.math.asec2rad(px - mpx)
     my = -pyTMD.math.asec2rad(py - mpy)
+    # dataset of polar motion differentials
+    pm = xr.Dataset(
+        data_vars=dict(
+            X=(['time'], mx),
+            Y=(['time'], my),
+        ),
+        coords=dict(time=np.atleast_1d(MJD)),
+    )
 
-    # number of points
-    n = np.maximum(len(time_decimal), len(theta))
     # conversion factors in latitude, longitude, and radial directions
-    dfactor = np.zeros((n, 3))
-    dfactor[:,0] = -l2*(omega**2 * radius**2)/(gamma_0)
-    dfactor[:,1] = l2*(omega**2 * radius**2)/(gamma_0)
-    dfactor[:,2] = -h2*(omega**2 * radius**2)/(2.0*gamma_0)
+    dfactor = xr.Dataset()
+    dfactor['N'] = -l2*(omega**2 * radius**2)/(gamma_0)
+    dfactor['E'] = l2*(omega**2 * radius**2)/(gamma_0)
+    dfactor['R'] = -h2*(omega**2 * radius**2)/(2.0*gamma_0)
 
     # calculate pole tide displacements (meters)
-    S = np.zeros((n, 3))
+    S = xr.Dataset()
     # pole tide displacements in latitude, longitude, and radial directions
-    S[:,0] = dfactor[:,0]*np.cos(2.0*theta)*(mx*np.cos(phi) - my*np.sin(phi))
-    S[:,1] = dfactor[:,1]*np.cos(theta)*(mx*np.sin(phi) + my*np.cos(phi))
-    S[:,2] = dfactor[:,2]*np.sin(2.0*theta)*(mx*np.cos(phi) - my*np.sin(phi))
+    S['N'] = dfactor['N']*np.cos(2.0*theta)*(pm.X*np.cos(phi) - pm.Y*np.sin(phi))
+    S['E'] = dfactor['E']*np.cos(theta)*(pm.X*np.sin(phi) + pm.Y*np.cos(phi))
+    S['R'] = dfactor['R']*np.sin(2.0*theta)*(pm.X*np.cos(phi) - pm.Y*np.sin(phi))
 
     # rotation matrix
-    R = np.zeros((3, 3, n))
-    R[0,0,:] = np.cos(phi)*np.cos(theta)
-    R[0,1,:] = -np.sin(phi)
-    R[0,2,:] = np.cos(phi)*np.sin(theta)
-    R[1,0,:] = np.sin(phi)*np.cos(theta)
-    R[1,1,:] = np.cos(phi)
-    R[1,2,:] = np.sin(phi)*np.sin(theta)
-    R[2,0,:] = -np.sin(theta)
-    R[2,2,:] = np.cos(theta)
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,2] = np.cos(theta)
     # rotate displacements to ECEF coordinates
-    dxt = np.ma.zeros((n, 3))
-    dxt[:,:] = np.einsum('ti...,jit...->tj...', S, R)
-    # use mask from mean pole estimates
-    dxt.mask = np.broadcast_to(np.logical_not(fl[:,None]), (n,3))
+    dxt = xr.Dataset()
+    dxt['X'] = R[0,0]*S['N'] + R[0,1]*S['E'] + R[0,2]*S['R']
+    dxt['Y'] = R[1,0]*S['N'] + R[1,1]*S['E'] + R[1,2]*S['R']
+    dxt['Z'] = R[2,0]*S['N'] + R[2,2]*S['R']
 
     # return the pole tide displacements
     # in Cartesian coordinates
@@ -1165,9 +1163,9 @@ def ocean_pole_tide(
     Parameters
     ----------
     t: np.ndarray
-        Time (days relative to January 1, 1992)
+        days relative to 1992-01-01T00:00:00
     XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
+        Dataset with cartesian coordinates
     UXYZ: np.ndarray
         Ocean pole tide values from Desai (2002)
     deltat: float or np.ndarray, default 0.0
@@ -1203,7 +1201,7 @@ def ocean_pole_tide(
     MJD = t + deltat + _mjd_tide
 
     # geocentric latitude (radians)
-    latitude = np.arctan(XYZ[:,2] / np.sqrt(XYZ[:,0]**2.0 + XYZ[:,1]**2.0))
+    latitude = np.arctan(XYZ['Z'] / np.sqrt(XYZ['X']**2.0 + XYZ['Y']**2.0))
     # geocentric colatitude (radians)
     theta = (np.pi/2.0 - latitude)
     # universal gravitational constant [N*m^2/kg^2]
@@ -1219,22 +1217,22 @@ def ocean_pole_tide(
     # convert angles from arcseconds to radians
     mx = pyTMD.math.asec2rad(px - mpx)
     my = -pyTMD.math.asec2rad(py - mpy)
-
+    # dataset of polar motion differentials
+    pm = xr.Dataset(
+        data_vars=dict(
+            X=(['time'], mx),
+            Y=(['time'], my),
+        ),
+        coords=dict(time=np.atleast_1d(MJD)),
+    )
     # pole tide displacement factors
     Hp = np.sqrt(8.0*np.pi/15.0)*(omega**2 * a_axis**4)/GM
     K = 4.0*np.pi*G*rho_w*Hp*a_axis/(3.0*gamma_0)
-
-    # number of points
-    n = np.maximum(len(time_decimal), len(theta))
     # calculate ocean pole tide displacements (meters)
-    dxt = np.ma.zeros((n, 3))
-    # use mask from mean pole estimates
-    dxt.mask = np.broadcast_to(np.logical_not(fl[:,None]), (n,3))
-    for i in range(3):
-        dxt[:,i] = K*np.real(
-            (mx*g2.real + my*g2.imag)*UXYZ.real[:,i] +
-            (my*g2.real - mx*g2.imag)*UXYZ.imag[:,i])
-
+    dxt = K*np.real(
+        (pm.X*g2.real + pm.Y*g2.imag)*UXYZ.real +
+        (pm.Y*g2.real - pm.X*g2.imag)*UXYZ.imag
+    )
     # return the ocean pole tide displacements
     # in Cartesian coordinates
     return dxt
@@ -1245,9 +1243,10 @@ _iers = pyTMD.spatial.datum(ellipsoid='IERS', units='MKS')
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
 def solid_earth_tide(
         t: np.ndarray,
-        XYZ: np.ndarray,
-        SXYZ: np.ndarray,
-        LXYZ: np.ndarray,
+        XYZ: xr.Dataset,
+        SXYZ: xr.Dataset,
+        LXYZ: xr.Dataset,
+        deltat: float = 0.0,
         a_axis: float = _iers.a_axis,
         tide_system: str = 'tide_free',
         **kwargs
@@ -1260,13 +1259,15 @@ def solid_earth_tide(
     Parameters
     ----------
     t: np.ndarray
-        Time (days relative to January 1, 1992)
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
-    SXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the sun (meters)
-    LXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the moon (meters)
+        days relative to 1992-01-01T00:00:00
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
         Semi-major axis of the Earth (meters)
     tide_system: str, default 'tide_free'
@@ -1303,20 +1304,18 @@ def solid_earth_tide(
     kwargs.setdefault('mass_ratio_lunar', 0.0123000371)
     # validate output tide system
     assert tide_system.lower() in ('tide_free', 'mean_tide')
-    # number of input coordinates
-    nt = len(np.atleast_1d(t))
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # scalar product of input coordinates with sun/moon vectors
-    radius = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2 + XYZ[:,2]**2)
-    solar_radius = np.sqrt(SXYZ[:,0]**2 + SXYZ[:,1]**2 + SXYZ[:,2]**2)
-    lunar_radius = np.sqrt(LXYZ[:,0]**2 + LXYZ[:,1]**2 + LXYZ[:,2]**2)
-    solar_scalar = (XYZ[:,0]*SXYZ[:,0] + XYZ[:,1]*SXYZ[:,1] +
-        XYZ[:,2]*SXYZ[:,2])/(radius*solar_radius)
-    lunar_scalar = (XYZ[:,0]*LXYZ[:,0] + XYZ[:,1]*LXYZ[:,1] +
-        XYZ[:,2]*LXYZ[:,2])/(radius*lunar_radius)
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    solar_radius = np.sqrt(SXYZ['X']**2 + SXYZ['Y']**2 + SXYZ['Z']**2)
+    lunar_radius = np.sqrt(LXYZ['X']**2 + LXYZ['Y']**2 + LXYZ['Z']**2)
+    solar_scalar = (XYZ['X']*SXYZ['X'] + XYZ['Y']*SXYZ['Y'] +
+        XYZ['Z']*SXYZ['Z'])/(radius*solar_radius)
+    lunar_scalar = (XYZ['X']*LXYZ['X'] + XYZ['Y']*LXYZ['Y'] +
+        XYZ['Z']*LXYZ['Z'])/(radius*lunar_radius)
     # compute new h2 and l2 (Mathews et al., 1997)
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
     h2 = kwargs['h2'] - 0.0006*(1.0 - 3.0/2.0*cosphi**2)
     l2 = kwargs['l2'] + 0.0002*(1.0 - 3.0/2.0*cosphi**2)
     # compute P2 terms
@@ -1338,13 +1337,13 @@ def solid_earth_tide(
     F3_solar = kwargs['mass_ratio_solar']*a_axis*(a_axis/solar_radius)**4
     F3_lunar = kwargs['mass_ratio_lunar']*a_axis*(a_axis/lunar_radius)**4
     # compute total displacement (Mathews et al. 1997)
-    dxt = np.zeros((nt, 3))
-    for i in range(3):
-        S2 = F2_solar*(X2_solar*SXYZ[:,i]/solar_radius+P2_solar*XYZ[:,i]/radius)
-        L2 = F2_lunar*(X2_lunar*LXYZ[:,i]/lunar_radius+P2_lunar*XYZ[:,i]/radius)
-        S3 = F3_solar*(X3_solar*SXYZ[:,i]/solar_radius+P3_solar*XYZ[:,i]/radius)
-        L3 = F3_lunar*(X3_lunar*LXYZ[:,i]/lunar_radius+P3_lunar*XYZ[:,i]/radius)
-        dxt[:,i] = S2 + L2 + S3 + L3
+    dxt = xr.Dataset()
+    for d in ('X','Y','Z'):
+        S2 = F2_solar*(X2_solar*SXYZ[d]/solar_radius+P2_solar*XYZ[d]/radius)
+        L2 = F2_lunar*(X2_lunar*LXYZ[d]/lunar_radius+P2_lunar*XYZ[d]/radius)
+        S3 = F3_solar*(X3_solar*SXYZ[d]/solar_radius+P3_solar*XYZ[d]/radius)
+        L3 = F3_lunar*(X3_lunar*LXYZ[d]/lunar_radius+P3_lunar*XYZ[d]/radius)
+        dxt[d] = S2 + L2 + S3 + L3
     # corrections for out-of-phase portions of the Love and Shida numbers
     dxt += _out_of_phase_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
     dxt += _out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
@@ -1360,9 +1359,9 @@ def solid_earth_tide(
     return dxt
 
 def _out_of_phase_diurnal(
-        XYZ: np.ndarray,
-        SXYZ: np.ndarray,
-        LXYZ: np.ndarray,
+        XYZ: xr.Dataset,
+        SXYZ: xr.Dataset,
+        LXYZ: xr.Dataset,
         F2_solar: np.ndarray,
         F2_lunar: np.ndarray
     ):
@@ -1372,12 +1371,12 @@ def _out_of_phase_diurnal(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
-    SXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the sun (meters)
-    LXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the moon (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
     F2_solar: np.ndarray
         Factors for the sun
     F2_lunar: np.ndarray
@@ -1387,43 +1386,45 @@ def _out_of_phase_diurnal(
     dhi = -0.0025
     dli = -0.0007
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
     cos2phi = cosphi**2 - sinphi**2
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(np.sum(SXYZ**2, axis=1))
-    lunar_radius = np.sqrt(np.sum(LXYZ**2, axis=1))
+    solar_radius = np.sqrt(SXYZ['X']**2 + SXYZ['Y']**2 + SXYZ['Z']**2)
+    lunar_radius = np.sqrt(LXYZ['X']**2 + LXYZ['Y']**2 + LXYZ['Z']**2)
     # calculate offsets
-    dr_solar = -3.0*dhi*sinphi*cosphi*F2_solar*SXYZ[:,2]* \
-        (SXYZ[:,0]*sinla-SXYZ[:,1]*cosla)/solar_radius**2
-    dr_lunar = -3.0*dhi*sinphi*cosphi*F2_lunar*LXYZ[:,2]* \
-        (LXYZ[:,0]*sinla-LXYZ[:,1]*cosla)/lunar_radius**2
-    dn_solar = -3.0*dli*cos2phi*F2_solar*SXYZ[:,2]* \
-        (SXYZ[:,0]*sinla-SXYZ[:,1]*cosla)/solar_radius**2
-    dn_lunar = -3.0*dli*cos2phi*F2_lunar*LXYZ[:,2]* \
-        (LXYZ[:,0]*sinla-LXYZ[:,1]*cosla)/lunar_radius**2
-    de_solar = -3.0*dli*sinphi*F2_solar*SXYZ[:,2]* \
-        (SXYZ[:,0]*cosla+SXYZ[:,1]*sinla)/solar_radius**2
-    de_lunar = -3.0*dli*sinphi*F2_lunar*LXYZ[:,2]* \
-        (LXYZ[:,0]*cosla+LXYZ[:,1]*sinla)/lunar_radius**2
+    dr_solar = -3.0*dhi*sinphi*cosphi*F2_solar*SXYZ['Z']* \
+        (SXYZ['X']*sinla-SXYZ['Y']*cosla)/solar_radius**2
+    dr_lunar = -3.0*dhi*sinphi*cosphi*F2_lunar*LXYZ['Z']* \
+        (LXYZ['X']*sinla-LXYZ['Y']*cosla)/lunar_radius**2
+    dn_solar = -3.0*dli*cos2phi*F2_solar*SXYZ['Z']* \
+        (SXYZ['X']*sinla-SXYZ['Y']*cosla)/solar_radius**2
+    dn_lunar = -3.0*dli*cos2phi*F2_lunar*LXYZ['Z']* \
+        (LXYZ['X']*sinla-LXYZ['Y']*cosla)/lunar_radius**2
+    de_solar = -3.0*dli*sinphi*F2_solar*SXYZ['Z']* \
+        (SXYZ['X']*cosla+SXYZ['Y']*sinla)/solar_radius**2
+    de_lunar = -3.0*dli*sinphi*F2_lunar*LXYZ['Z']* \
+        (LXYZ['X']*cosla+LXYZ['Y']*sinla)/lunar_radius**2
     # add solar and lunar offsets
     DR = dr_solar + dr_lunar
     DN = dn_solar + dn_lunar
     DE = de_solar + de_lunar
-    # compute corrections
-    DX = DR*cosla*cosphi - DE*sinla - DN*cosla*sinphi
-    DY = DR*sinla*cosphi + DE*cosla - DN*sinla*sinphi
-    DZ = DR*sinphi + DN*cosphi
+    # output corrections
+    D = xr.Dataset()
+    # compute corrections in cartesian coordinates
+    D['X'] = DR*cosla*cosphi - DE*sinla - DN*cosla*sinphi
+    D['Y'] = DR*sinla*cosphi + DE*cosla - DN*sinla*sinphi
+    D['Z'] = DR*sinphi + DN*cosphi
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 def _out_of_phase_semidiurnal(
-        XYZ: np.ndarray,
-        SXYZ: np.ndarray,
-        LXYZ: np.ndarray,
+        XYZ: xr.Dataset,
+        SXYZ: xr.Dataset,
+        LXYZ: xr.Dataset,
         F2_solar: np.ndarray,
         F2_lunar: np.ndarray
     ):
@@ -1433,12 +1434,12 @@ def _out_of_phase_semidiurnal(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
-    SXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the sun (meters)
-    LXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the moon (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
     F2_solar: np.ndarray
         Factors for the sun
     F2_lunar: np.ndarray
@@ -1448,50 +1449,53 @@ def _out_of_phase_semidiurnal(
     dhi = -0.0022
     dli = -0.0007
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
+    cos2phi = cosphi**2 - sinphi**2
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0*cosla*sinla
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(np.sum(SXYZ**2, axis=1))
-    lunar_radius = np.sqrt(np.sum(LXYZ**2, axis=1))
+    solar_radius = np.sqrt(SXYZ['X']**2 + SXYZ['Y']**2 + SXYZ['Z']**2)
+    lunar_radius = np.sqrt(LXYZ['X']**2 + LXYZ['Y']**2 + LXYZ['Z']**2)
     # calculate offsets
     dr_solar = -3.0/4.0*dhi*cosphi**2*F2_solar * \
-        ((SXYZ[:,0]**2-SXYZ[:,1]**2)*sin2la-2.0*SXYZ[:,0]*SXYZ[:,1]*cos2la) / \
+        ((SXYZ['X']**2-SXYZ['Y']**2)*sin2la-2.0*SXYZ['X']*SXYZ['Y']*cos2la) / \
         solar_radius**2
     dr_lunar = -3.0/4.0*dhi*cosphi**2*F2_lunar * \
-        ((LXYZ[:,0]**2-LXYZ[:,1]**2)*sin2la-2.0*LXYZ[:,0]*LXYZ[:,1]*cos2la) / \
+        ((LXYZ['X']**2-LXYZ['Y']**2)*sin2la-2.0*LXYZ['X']*LXYZ['Y']*cos2la) / \
         lunar_radius**2
     dn_solar = 3.0/2.0*dli*sinphi*cosphi*F2_solar * \
-        ((SXYZ[:,0]**2-SXYZ[:,1]**2)*sin2la-2.0*SXYZ[:,0]*SXYZ[:,1]*cos2la) / \
+        ((SXYZ['X']**2-SXYZ['Y']**2)*sin2la-2.0*SXYZ['X']*SXYZ['Y']*cos2la) / \
         solar_radius**2
     dn_lunar = 3.0/2.0*dli*sinphi*cosphi*F2_lunar * \
-        ((LXYZ[:,0]**2-LXYZ[:,1]**2)*sin2la-2.0*LXYZ[:,0]*LXYZ[:,1]*cos2la) / \
+        ((LXYZ['X']**2-LXYZ['Y']**2)*sin2la-2.0*LXYZ['X']*LXYZ['Y']*cos2la) / \
         lunar_radius**2
     de_solar = -3.0/2.0*dli*cosphi*F2_solar * \
-        ((SXYZ[:,0]**2-SXYZ[:,1]**2)*cos2la+2.0*SXYZ[:,0]*SXYZ[:,1]*sin2la) / \
+        ((SXYZ['X']**2-SXYZ['Y']**2)*cos2la+2.0*SXYZ['X']*SXYZ['Y']*sin2la) / \
         solar_radius**2
     de_lunar = -3.0/2.0*dli*cosphi*F2_lunar * \
-        ((LXYZ[:,0]**2-LXYZ[:,1]**2)*cos2la+2.0*LXYZ[:,0]*LXYZ[:,1]*sin2la) / \
+        ((LXYZ['X']**2-LXYZ['Y']**2)*cos2la+2.0*LXYZ['X']*LXYZ['Y']*sin2la) / \
         lunar_radius**2
     # add solar and lunar offsets
     DR = dr_solar + dr_lunar
     DN = dn_solar + dn_lunar
     DE = de_solar + de_lunar
-    # compute corrections
-    DX = DR*cosla*cosphi - DE*sinla - DN*cosla*sinphi
-    DY = DR*sinla*cosphi + DE*cosla - DN*sinla*sinphi
-    DZ = DR*sinphi + DN*cosphi
+    # output corrections
+    D = xr.Dataset()
+    # compute corrections in cartesian coordinates
+    D['X'] = DR*cosla*cosphi - DE*sinla - DN*cosla*sinphi
+    D['Y'] = DR*sinla*cosphi + DE*cosla - DN*sinla*sinphi
+    D['Z'] = DR*sinphi + DN*cosphi
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 def _latitude_dependence(
-        XYZ: np.ndarray,
-        SXYZ: np.ndarray,
-        LXYZ: np.ndarray,
+        XYZ: xr.Dataset,
+        SXYZ: xr.Dataset,
+        LXYZ: xr.Dataset,
         F2_solar: np.ndarray,
         F2_lunar: np.ndarray
     ):
@@ -1501,12 +1505,12 @@ def _latitude_dependence(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
-    SXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the sun (meters)
-    LXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the moon (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
     F2_solar: np.ndarray
         Factors for the sun
     F2_lunar: np.ndarray
@@ -1516,51 +1520,54 @@ def _latitude_dependence(
     l1d = 0.0012
     l1sd = 0.0024
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0*cosla*sinla
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(np.sum(SXYZ**2, axis=1))
-    lunar_radius = np.sqrt(np.sum(LXYZ**2, axis=1))
+    solar_radius = np.sqrt(SXYZ['X']**2 + SXYZ['Y']**2 + SXYZ['Z']**2)
+    lunar_radius = np.sqrt(LXYZ['X']**2 + LXYZ['Y']**2 + LXYZ['Z']**2)
     # calculate offsets for the diurnal band
-    dn_d_solar = -l1d*sinphi**2*F2_solar*SXYZ[:,2] * \
-        (SXYZ[:,0]*cosla+SXYZ[:,1]*sinla)/solar_radius**2
-    dn_d_lunar = -l1d*sinphi**2*F2_lunar*LXYZ[:,2] * \
-        (LXYZ[:,0]*cosla+LXYZ[:,1]*sinla)/lunar_radius**2
-    de_d_solar = l1d*sinphi*(cosphi**2-sinphi**2)*F2_solar*SXYZ[:,2] * \
-        (SXYZ[:,0]*sinla-SXYZ[:,1]*cosla)/solar_radius**2
-    de_d_lunar = l1d*sinphi*(cosphi**2-sinphi**2)*F2_lunar*LXYZ[:,2] * \
-        (LXYZ[:,0]*sinla-LXYZ[:,1]*cosla)/lunar_radius**2
+    dn_d_solar = -l1d*sinphi**2*F2_solar*SXYZ['Z'] * \
+        (SXYZ['X']*cosla+SXYZ['Y']*sinla)/solar_radius**2
+    dn_d_lunar = -l1d*sinphi**2*F2_lunar*LXYZ['Z'] * \
+        (LXYZ['X']*cosla+LXYZ['Y']*sinla)/lunar_radius**2
+    de_d_solar = l1d*sinphi*(cosphi**2-sinphi**2)*F2_solar*SXYZ['Z'] * \
+        (SXYZ['X']*sinla-SXYZ['Y']*cosla)/solar_radius**2
+    de_d_lunar = l1d*sinphi*(cosphi**2-sinphi**2)*F2_lunar*LXYZ['Z'] * \
+        (LXYZ['X']*sinla-LXYZ['Y']*cosla)/lunar_radius**2
     # calculate offsets for the semi-diurnal band
     dn_s_solar = -l1sd/2.0*sinphi*cosphi*F2_solar * \
-        ((SXYZ[:,0]**2-SXYZ[:,1]**2)*cos2la+2.0*SXYZ[:,0]*SXYZ[:,1]*sin2la) / \
+        ((SXYZ['X']**2-SXYZ['Y']**2)*cos2la+2.0*SXYZ['X']*SXYZ['Y']*sin2la) / \
         solar_radius**2
     dn_s_lunar =-l1sd/2.0*sinphi*cosphi*F2_lunar * \
-        ((LXYZ[:,0]**2-LXYZ[:,1]**2)*cos2la+2.0*LXYZ[:,0]*LXYZ[:,1]*sin2la) / \
+        ((LXYZ['X']**2-LXYZ['Y']**2)*cos2la+2.0*LXYZ['X']*LXYZ['Y']*sin2la) / \
         lunar_radius**2
     de_s_solar =-l1sd/2.0*sinphi**2*cosphi*F2_solar * \
-        ((SXYZ[:,0]**2-SXYZ[:,1]**2)*sin2la-2.0*SXYZ[:,0]*SXYZ[:,1]*cos2la) / \
+        ((SXYZ['X']**2-SXYZ['Y']**2)*sin2la-2.0*SXYZ['X']*SXYZ['Y']*cos2la) / \
         solar_radius**2
     de_s_lunar =-l1sd/2.0*sinphi**2*cosphi*F2_lunar * \
-        ((LXYZ[:,0]**2-LXYZ[:,1]**2)*sin2la-2.0*LXYZ[:,0]*LXYZ[:,1]*cos2la) / \
+        ((LXYZ['X']**2-LXYZ['Y']**2)*sin2la-2.0*LXYZ['X']*LXYZ['Y']*cos2la) / \
         lunar_radius**2
     # add solar and lunar offsets (diurnal and semi-diurnal)
     DN = 3.0*(dn_d_solar + dn_d_lunar + dn_s_solar + dn_s_lunar)
     DE = 3.0*(de_d_solar + de_d_lunar + de_s_solar + de_s_lunar)
-    # compute combined diurnal and semi-diurnal corrections
-    DX = -DE*sinla - DN*cosla*sinphi
-    DY = DE*cosla - DN*sinla*sinphi
-    DZ = DN*cosphi
+    # output corrections
+    D = xr.Dataset()
+    # compute corrections in cartesian coordinates
+    D['X'] = - DE*sinla - DN*cosla*sinphi
+    D['Y'] = DE*cosla - DN*sinla*sinphi
+    D['Z'] = DN*cosphi
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 def _frequency_dependence_diurnal(
-        XYZ: np.ndarray,
-        MJD: np.ndarray
+        XYZ: xr.Dataset,
+        MJD: np.ndarray,
+        deltat: float | np.ndarray = 0.0
     ):
     """
     Computes the in-phase and out-of-phase corrections induced by mantle
@@ -1568,13 +1575,13 @@ def _frequency_dependence_diurnal(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
     MJD: np.ndarray
         Modified Julian Day (MJD)
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
     """
-    # number of time steps
-    nt = len(np.atleast_1d(MJD))
     # Corrections to Diurnal Tides for Frequency Dependence
     # of Love and Shida Number Parameters
     # reduced version of table 7.3a from IERS conventions
@@ -1612,37 +1619,63 @@ def _frequency_dependence_diurnal(
         [3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     ])
     # get phase angles (Doodson arguments)
-    TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD)
+    TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD + deltat)
+    # dataset of arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            tau=(['time'], TAU),
+            s=(['time'], S),
+            h=(['time'], H),
+            p=(['time'], P),
+            np=(['time'], ZNS),
+            ps=(['time'], PS)
+        ),
+        coords=dict(time=np.atleast_1d(MJD)),
+    )
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
-    zla = np.arctan2(XYZ[:,1], XYZ[:,0])
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
+    # compute longitude
+    zla = np.arctan2(XYZ['Y'], XYZ['X'])
     # compute corrections (Mathews et al. 1997)
-    DX = np.zeros((nt))
-    DY = np.zeros((nt))
-    DZ = np.zeros((nt))
+    D = xr.Dataset()
     # iterate over rows in the table
     for i, row in enumerate(table):
-        thetaf = TAU + S*row[0] + H*row[1] + P*row[2] + \
-            ZNS*row[3] + PS*row[4]
-        dr = 2.0*row[5]*sinphi*cosphi*np.sin(thetaf + zla) + \
-            2.0*row[6]*sinphi*cosphi*np.cos(thetaf + zla)
-        dn = row[7]*(cosphi**2 - sinphi**2)*np.sin(thetaf + zla) + \
-            row[8]*(cosphi**2 - sinphi**2)*np.cos(thetaf + zla)
-        de = row[7]*sinphi*np.cos(thetaf + zla) - \
-            row[8]*sinphi*np.sin(thetaf + zla)
-        DX += 1e-3*(dr*cosla*cosphi - de*sinla - dn*cosla*sinphi)
-        DY += 1e-3*(dr*sinla*cosphi + de*cosla - dn*sinla*sinphi)
-        DZ += 1e-3*(dr*sinphi + dn*cosphi)
+        # compute phase angle of tide potential (Greenwich)
+        thetaf = arguments.tau + arguments.s*row[0] + \
+            arguments.h*row[1] + arguments.p*row[2] + \
+            arguments.np*row[3] + arguments.ps*row[4]
+        # calculate complex phase (local hour angle)
+        cphase = np.exp(1j*thetaf + 1j*zla)
+        # calculate offsets
+        dr = 2.0*sinphi*cosphi*(row[5]*cphase.imag + row[6]*cphase.real)
+        dn = (cosphi**2 - sinphi**2)*(row[7]*cphase.imag + row[8]*cphase.real)
+        de = sinphi*(row[7]*cphase.real - row[8]*cphase.imag)
+        # rotate to cartesian coordinates
+        DX = (dr*cosla*cosphi - de*sinla - dn*cosla*sinphi)
+        DY = (dr*sinla*cosphi + de*cosla - dn*sinla*sinphi)
+        DZ = (dr*sinphi + dn*cosphi)
+        # calculate or accumulate corrections
+        if (i == 0):
+            # convert from millimeters to meters
+            D['X'] = 1e-3*DX
+            D['Y'] = 1e-3*DY
+            D['Z'] = 1e-3*DZ
+        else:
+            # convert from millimeters to meters
+            D['X'] += 1e-3*DX
+            D['Y'] += 1e-3*DY
+            D['Z'] += 1e-3*DZ
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 def _frequency_dependence_long_period(
-        XYZ: np.ndarray,
-        MJD: np.ndarray
+        XYZ: xr.Dataset,
+        MJD: np.ndarray,
+        deltat: float | np.ndarray = 0.0
     ):
     """
     Computes the in-phase and out-of-phase corrections induced by mantle
@@ -1650,13 +1683,13 @@ def _frequency_dependence_long_period(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
     MJD: np.ndarray
         Modified Julian Day (MJD)
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
     """
-    # number of time steps
-    nt = len(np.atleast_1d(MJD))
     # Corrections to Long-Period Tides for Frequency Dependence
     # of Love and Shida Number Parameters
     # reduced version of table 7.3b from IERS conventions
@@ -1668,33 +1701,58 @@ def _frequency_dependence_long_period(
         [2.0, 0.0, 0.0, 1.0, 0.0, -0.05, -0.05, -0.06, -0.03]
     ])
     # get phase angles (Doodson arguments)
-    TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD)
+    TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD + deltat)
+    # dataset of arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            tau=(['time'], TAU),
+            s=(['time'], S),
+            h=(['time'], H),
+            p=(['time'], P),
+            np=(['time'], ZNS),
+            ps=(['time'], PS)
+        ),
+        coords=dict(time=np.atleast_1d(MJD)),
+    )
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
     # compute corrections (Mathews et al. 1997)
-    DX = np.zeros((nt))
-    DY = np.zeros((nt))
-    DZ = np.zeros((nt))
+    D = xr.Dataset()
     # iterate over rows in the table
     for i, row in enumerate(table):
-        thetaf = S*row[0] + H*row[1] + P*row[2] + ZNS*row[3] + PS*row[4]
-        dr = row[5]*(3.0*sinphi**2 - 1.0)*np.cos(thetaf)/2.0 + \
-            row[7]*(3.0*sinphi**2 - 1.0)*np.sin(thetaf)/2.0
-        dn = row[6]*(2.0*cosphi*sinphi)*np.cos(thetaf) + \
-            row[8]*(2.0*cosphi*sinphi)*np.sin(thetaf)
+        # compute phase angle of tide potential (Greenwich)
+        thetaf = arguments.s*row[0] + arguments.h*row[1] + \
+            arguments.p*row[2] + arguments.np*row[3] + arguments.ps*row[4]
+        # calculate complex phase (local hour angle)
+        cphase = np.exp(1j*thetaf)
+        # calculate offsets
+        dr = (3.0*sinphi**2 - 1.0)*(row[5]*cphase.real + row[7]*cphase.imag)/2.0
+        dn = (2.0*cosphi*sinphi)*(row[6]*cphase.real + row[8]*cphase.imag)
         de = 0.0
-        DX += 1e-3*(dr*cosla*cosphi - de*sinla - dn*cosla*sinphi)
-        DY += 1e-3*(dr*sinla*cosphi + de*cosla - dn*sinla*sinphi)
-        DZ += 1e-3*(dr*sinphi + dn*cosphi)
+        # rotate to cartesian coordinates
+        DX = (dr*cosla*cosphi - de*sinla - dn*cosla*sinphi)
+        DY = (dr*sinla*cosphi + de*cosla - dn*sinla*sinphi)
+        DZ = (dr*sinphi + dn*cosphi)
+        # calculate or accumulate corrections
+        if (i == 0):
+            # convert from millimeters to meters
+            D['X'] = 1e-3*DX
+            D['Y'] = 1e-3*DY
+            D['Z'] = 1e-3*DZ
+        else:
+            # convert from millimeters to meters
+            D['X'] += 1e-3*DX
+            D['Y'] += 1e-3*DY
+            D['Z'] += 1e-3*DZ
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 def _free_to_mean(
-        XYZ: np.ndarray,
+        XYZ: xr.Dataset,
         h2: float | np.ndarray,
         l2: float | np.ndarray,
         H0: float = -0.31460
@@ -1705,8 +1763,8 @@ def _free_to_mean(
 
     Parameters
     ----------
-    XYZ: np.ndarray
-        Cartesian coordinates of the prediction points (meters)
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
     h2: float or np.ndarray
         Degree-2 Love number of vertical displacement
     l2: float or np.ndarray
@@ -1715,11 +1773,11 @@ def _free_to_mean(
         Mean amplitude of the permanent tide (meters)
     """
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(np.sum(XYZ**2, axis=1))
-    sinphi = XYZ[:,2]/radius
-    cosphi = np.sqrt(XYZ[:,0]**2 + XYZ[:,1]**2)/radius
-    sinla = XYZ[:,1]/cosphi/radius
-    cosla = XYZ[:,0]/cosphi/radius
+    radius = np.sqrt(XYZ['X']**2 + XYZ['Y']**2 + XYZ['Z']**2)
+    sinphi = XYZ['Z']/radius
+    cosphi = np.sqrt(XYZ['X']**2 + XYZ['Y']**2)/radius
+    sinla = XYZ['Y']/cosphi/radius
+    cosla = XYZ['X']/cosphi/radius
     # in Mathews et al. (1997): dR0=-0.1196 m with h2=0.6026
     dR0 = np.sqrt(5.0/(4.0*np.pi))*h2*H0
     # in Mathews et al. (1997): dN0=-0.0247 m with l2=0.0831
@@ -1727,12 +1785,14 @@ def _free_to_mean(
     # use double angle formula for sin(2*phi)
     dr = dR0*(3.0/2.0*sinphi**2 - 1.0/2.0)
     dn = 2.0*dN0*cosphi*sinphi
+    # compute corrections (Mathews et al. 1997)
+    D = xr.Dataset()
     # compute as an additive correction (Mathews et al. 1997)
-    DX = -dr*cosla*cosphi + dn*cosla*sinphi
-    DY = -dr*sinla*cosphi + dn*sinla*sinphi
-    DZ = -dr*sinphi - dn*cosphi
+    D['X'] = -dr*cosla*cosphi + dn*cosla*sinphi
+    D['Y'] = -dr*sinla*cosphi + dn*sinla*sinphi
+    D['Z'] = -dr*sinphi - dn*cosphi
     # return the corrections
-    return np.c_[DX, DY, DZ]
+    return D
 
 # tide potential tables
 _tide_potential_table = {}
@@ -1750,8 +1810,7 @@ _tide_potential_table['W1990'] = pyTMD.arguments._w1990_table
 # using a simplified approach based on Cartwright and Tayler (1971)
 def body_tide(
         t: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
+        ds: xr.Dataset,
         deltat: float | np.ndarray = 0.0,
         method: str = 'ASTRO5',
         tide_system: str = 'tide_free',
@@ -1767,11 +1826,9 @@ def body_tide(
     Parameters
     ----------
     t: np.ndarray
-        Time (days relative to January 1, 1992)
-    lon: np.ndarray
-        longitude (degrees east)
-    lat: np.ndarray
-        latitude (degrees north)
+        days relative to 1992-01-01T00:00:00
+    ds: xarray.Dataset
+        Dataset with spatial coordinates
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     method: str, default 'ASTRO5'
@@ -1822,6 +1879,10 @@ def body_tide(
     kwargs.setdefault('l3', 0.015)
     kwargs.setdefault('h4', 0.18)
     kwargs.setdefault('l4', 0.014)
+    # current maximum degree supported within tide potential catalogs
+    lmax = 4
+    # check if user has provided degree-2 Love numbers
+    user_degree_2 = (kwargs['h2'] is not None) and (kwargs['l2'] is not None)
     # validate method and output tide system
     assert method.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     assert tide_system.lower() in ('tide_free', 'mean_tide')
@@ -1829,8 +1890,6 @@ def body_tide(
 
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
-    # number of temporal values
-    nt = len(np.atleast_1d(MJD))
 
     # compute principal mean longitudes
     # convert dates into Ephemeris Time
@@ -1843,7 +1902,7 @@ def body_tide(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
-    k = 90.0 + np.zeros((nt))
+    k = 90.0 + np.zeros_like(MJD)
 
     # astronomical and planetary mean longitudes
     if kwargs['include_planets']:
@@ -1855,12 +1914,12 @@ def body_tide(
         fargs = np.c_[tau, s, h, p, n, pp, k]
 
     # longitudes and colatitudes in radians
-    phi = np.radians(lon)
-    th = np.radians(90.0 - lat)
+    phi = np.radians(ds.x)
+    th = np.radians(90.0 - ds.y)
 
     # allocate for output body tide estimates (meters)
     # latitudinal, longitudinal and radial components
-    zeta = np.zeros((nt, 3))
+    zeta = xr.Dataset()
 
     # check if tide catalog includes planetary contributions
     if catalog in ('HW1995','T1987',):
@@ -1872,12 +1931,21 @@ def body_tide(
     CTE = pyTMD.arguments._parse_tide_potential_table(table,
         skiprows=1, columns=1, include_degree=True,
         include_planets=include_planets)
+    
+    # precompute spherical harmonic functions and derivatives
+    # will need to be rotated by constituent phase
+    Ylm, dYlm = xr.Dataset(), xr.Dataset()
+    # for each degree and order
+    for l in range(2, lmax + 1):
+        for m in range(l + 1):
+            Ylm[l,m], dYlm[l,m] = pyTMD.math.sph_harm(l, th, phi, m=m)
+
     # for each line in the table
     for i, line in enumerate(CTE):
         # spherical harmonic degree
         l = line['l']
         # currently only calculating for low-degree harmonics
-        if (l > 4):
+        if (l > lmax):
             continue
         # spherical harmonic dependence (order)
         TAU = line['tau']
@@ -1906,53 +1974,51 @@ def body_tide(
         # calculate angular frequency of constituent
         omega = pyTMD.arguments._frequency(coef, method=method,
             include_planets=kwargs['include_planets'])
-        # skip the permanent tide if using a mean-tide system
-        if (omega == 0) and (tide_system.lower() == 'mean_tide'):
-            continue
         # determine constituent phase using equilibrium arguments
         G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
         # convert phase angles to radians
-        phase = np.radians(G)
-        # calculate spherical harmonics (and derivatives)
-        S = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase)
-        dS = pyTMD.math.sph_harm(l, th, phi, m=TAU, phase=phase, deriv=True)
+        phase = xr.DataArray(np.radians(G), dims=dict(time=np.atleast_1d(MJD)))
+        # calculate spherical harmonic functions for constituent
+        S = Ylm[l,TAU]*np.exp(1j*phase)
+        dS = dYlm[l,TAU]*np.exp(1j*phase)
+        # initialize output body tides
+        if (i == 0):
+            zeta['N'] = xr.zeros_like(S.real)
+            zeta['E'] = xr.zeros_like(S.real)
+            zeta['R'] = xr.zeros_like(S.real)
+        # skip the permanent tide if using a mean-tide system
+        if (omega == 0) and (tide_system.lower() == 'mean_tide'):
+            continue
         # add components for degree and order to output body tides
-        if (l == 2):
-            # determine Love numbers for degree 2
-            if (kwargs['h2'] is not None) and (kwargs['l2'] is not None):
-                # user-defined Love numbers for all constituents
-                h2 = np.complex128(kwargs['h2'])
-                l2 = np.complex128(kwargs['l2'])
-            elif (method == 'IERS'):
-                # IERS: including both in-phase and out-of-phase components
-                # 1) using resonance formula for tides in the diurnal band
-                # 2) adjusting some long-period tides for anelastic effects
-                h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega,
-                    method=method)
-                # 3) including complex latitudinal dependence
-                h2 -= (0.615e-3 + 0.122e-4j)*(1.0 - 1.5*np.sin(th)**2)
-                l2 += (0.19334e-3 - 0.3819e-5j)*(1.0 - 1.5*np.sin(th)**2)
-            else:
-                # use resonance formula for tides in the diurnal band
-                h2, k2, l2 = pyTMD.arguments._love_numbers(omega,
-                    method=method, astype=np.complex128)
-                # include latitudinal dependence
-                h2 -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
-                l2 += 0.0002*(1.0 - 1.5*np.sin(th)**2)
-            # convert potentials for constituent and add to the total
-            # (latitudinal, longitudinal and radial components)
-            zeta[:,0] += line['Hs1']*(l2.real*dS.real - l2.imag*dS.imag)
-            zeta[:,1] -= line['Hs1']*TAU*(l2.real*S.imag - l2.imag*S.real)
-            zeta[:,2] += line['Hs1']*(h2.real*S.real - h2.imag*S.imag)
+        if (l == 2) and user_degree_2:
+            # user-defined Love numbers for all constituents
+            hl = np.complex128(kwargs['h2'])
+            ll = np.complex128(kwargs['l2'])
+        elif (l == 2) and (method == 'IERS'):
+            # IERS: including both in-phase and out-of-phase components
+            # 1) using resonance formula for tides in the diurnal band
+            # 2) adjusting some long-period tides for anelastic effects
+            hl, kl, ll = pyTMD.arguments._complex_love_numbers(omega,
+                method=method)
+            # 3) including complex latitudinal dependence
+            hl -= (0.615e-3 + 0.122e-4j)*(1.0 - 1.5*np.sin(th)**2)
+            ll += (0.19334e-3 - 0.3819e-5j)*(1.0 - 1.5*np.sin(th)**2)
+        elif (l == 2):
+            # use resonance formula for tides in the diurnal band
+            hl, kl, ll = pyTMD.arguments._love_numbers(omega,
+                method=method, astype=np.complex128)
+            # include latitudinal dependence
+            hl -= 0.0006*(1.0 - 1.5*np.sin(th)**2)
+            ll += 0.0002*(1.0 - 1.5*np.sin(th)**2)
         else:
             # use nominal Love numbers for all other degrees
-            hl = kwargs.get(f'h{l}', 0)
-            ll = kwargs.get(f'l{l}', 0)
-            # convert potentials for constituent and add to the total
-            # (latitudinal, longitudinal and radial components)
-            zeta[:,0] += line['Hs1']*ll*dS.real
-            zeta[:,1] -= line['Hs1']*TAU*ll*S.imag
-            zeta[:,2] += line['Hs1']*hl*S.real
+            hl = np.complex128(kwargs.get(f'h{l}', 0))
+            ll = np.complex128(kwargs.get(f'l{l}', 0))
+        # convert potentials for constituent and add to the total
+        # (latitudinal, longitudinal and radial components)
+        zeta['N'] += line['Hs1']*(ll.real*dS.real - ll.imag*dS.imag)
+        zeta['E'] -= line['Hs1']*TAU*(ll.real*S.imag - ll.imag*S.real)
+        zeta['R'] += line['Hs1']*(hl.real*S.real - hl.imag*S.imag)
 
     # return the body tides
     return zeta

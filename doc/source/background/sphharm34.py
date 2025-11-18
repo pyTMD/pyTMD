@@ -27,8 +27,9 @@ for n, l in enumerate(range(lmin, lmax+1)):
         # setup subplot
         i = n*ncols + tau + 1
         ax = fig.add_subplot(nrows, ncols, i, projection=projection)
-        # compute spherical harmonics
-        Y_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau).reshape(theta.shape)
+        # calculate spherical harmonics (and derivatives w.r.t. colatitude)
+        Y_lm, dY_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau)
+        Y_lm = Y_lm.reshape(theta.shape)
         # plot the surface
         ax.pcolormesh(lon, lat, Y_lm.real,
             transform=ccrs.PlateCarree(),

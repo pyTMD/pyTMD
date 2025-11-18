@@ -10,7 +10,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.math
-    P = pyTMD.math.legendre(2, x, m=0)
+    P, dP = pyTMD.math.legendre(2, x, m=0)
 
 `Source code`__
 

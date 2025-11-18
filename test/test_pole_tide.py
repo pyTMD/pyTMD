@@ -21,6 +21,7 @@ import inspect
 import pathlib
 import pytest
 import pyproj
+import xarray as xr
 import numpy as np
 import scipy.interpolate
 import pyTMD.compute
@@ -70,7 +71,7 @@ def test_load_pole_tide_displacements(TYPE):
     CONVENTION = '2018'
     FILL_VALUE = np.nan
 
-    # compute load pole tides using cartesian functions
+    # calculate load pole tide displacements
     test = pyTMD.compute.LPT_displacements(x, y, delta_time,
         EPSG=EPSG, EPOCH=EPOCH, TYPE=TYPE, TIME=TIME,
         ELLIPSOID=ELLIPSOID, CONVENTION=CONVENTION,
@@ -191,10 +192,8 @@ def test_load_pole_tide_displacements(TYPE):
     assert np.all(np.abs(Srad - test) < eps)
     assert np.all(np.abs(approx - test) < eps)
 
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','nearest','linear'])
 # test the interpolation of ocean pole tide values
-def test_read_ocean_pole(METHOD):
+def test_read_ocean_pole():
     # read ocean pole tide test file for header text
     ocean_pole_test_file = filepath.joinpath('opoleloadcmcor.test')
     with ocean_pole_test_file.open(mode='r', encoding='utf8') as f:
@@ -214,47 +213,21 @@ def test_read_ocean_pole(METHOD):
     header['latitude'] = np.float64(lat)
     # convert longitude from 0:360 to -180:180
     header['longitude'] = np.float64(lon) - 360.0
-
-    # number of points
-    npts = len(np.atleast_1d(header['longitude']))
+    # valid ocean pole tide coefficients
+    U_valid = {}
+    U_valid['R'] = 0.216192 + 0.285652j
+    U_valid['N'] = 0.012697 + 0.024930j
+    U_valid['E'] = 0.000868 + 0.010389j
     # read ocean pole tide map from Desai (2002)
-    Umap = {}
-    Umap['R'], Umap['N'], Umap['E'], ilon, ilat = \
-        pyTMD.io.IERS.read_binary_file()
-    # interpolate ocean pole tide map from Desai (2002)
-    Uint = {}
-    if (METHOD == 'spline'):
-        # use scipy bivariate splines to interpolate to output points
-        for key,val in Umap.items():
-            Uint[key] = np.zeros((npts), dtype=np.clongdouble)
-            f1 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-                val[:,::-1].real, kx=1, ky=1)
-            f2 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-                val[:,::-1].imag, kx=1, ky=1)
-            Uint[key].real = f1.ev(header['longitude'], header['latitude'])
-            Uint[key].imag = f2.ev(header['longitude'], header['latitude'])
-    else:
-        # use scipy regular grid to interpolate values for a given method
-        for key,val in Umap.items():
-            Uint[key] = np.zeros((npts), dtype=np.clongdouble)
-            r1 = scipy.interpolate.RegularGridInterpolator((ilon,ilat[::-1]),
-                val[:,::-1], bounds_error=False, method=METHOD)
-            points = np.c_[header['longitude'], header['latitude']]
-            Uint[key][:] = r1.__call__(points)
-
+    Umap = pyTMD.io.IERS.open_dataset()
     # extract coefficients from IERS pole tide map
-    U = pyTMD.io.IERS.extract_coefficients(
-        header['longitude'], header['latitude'],
-        method=METHOD)
-
+    U = Umap.interp(x=header['longitude'], y=header['latitude'])
     # compare with functional values
     for i, key in enumerate(['R','N','E']):
-        assert np.isclose(Uint[key], U[i])
+        assert np.isclose(U_valid[key], U[key])
 
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','nearest','linear'])
 # test the interpolation of ocean pole tide values
-def test_ocean_pole_tide(METHOD):
+def test_ocean_pole_tide():
     # read ocean pole tide test file for header text
     ocean_pole_test_file = filepath.joinpath('opoleloadcmcor.test')
     with ocean_pole_test_file.open(mode='r', encoding='utf8') as f:
@@ -316,18 +289,9 @@ def test_ocean_pole_tide(METHOD):
     xmean = np.array([header['xmean(t0)'], header['xmeandot']])
     ymean = np.array([header['ymean(t0)'], header['ymeandot']])
 
-    # read ocean pole tide map from Desai (2002)
-    ocean_pole_tide_file = pyTMD.utilities.get_data_path(
-        ['data','opoleloadcoefcmcor.txt.gz'])
     # interpolate ocean pole tide map to coordinates
-    iu = {}
-    iu['u_radial'], iu['u_north'], iu['u_east'], = \
-        pyTMD.io.IERS.extract_coefficients(
-            header['longitude'],
-            header['latitude'],
-            model_file=ocean_pole_tide_file,
-            method=METHOD
-        )
+    Umap = pyTMD.io.IERS.open_dataset()
+    U = Umap.interp(x=header['longitude'], y=header['latitude'])
 
     # create timescale object from MJD
     ts = timescale.time.Timescale(MJD=validation['MJD'])
@@ -358,16 +322,16 @@ def test_ocean_pole_tide(METHOD):
     assert np.all(np.abs(my - y_bar) < eps)
 
     # calculate ocean pole tide displacements at time
-    for key, val in iu.items():
+    # and compare with test values
+    for key, mapping in zip(['R','N','E'], ['u_radial', 'u_north', 'u_east']):
+        val = U[key].values
         u = K*atr*np.real((x_bar*gamma.real + y_bar*gamma.imag)*val.real +
             (y_bar*gamma.real - x_bar*gamma.imag)*val.imag)
         # assert that the predicted values are close
-        assert np.all(np.abs(u - validation[key]) < eps)
+        assert np.all(np.abs(u - validation[mapping]) < eps)
 
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','nearest','linear'])
 # test the interpolation of ocean pole tide values
-def test_predict_ocean_pole_tide(METHOD):
+def test_predict_ocean_pole_tide():
     # read ocean pole tide test file for header text
     ocean_pole_test_file = filepath.joinpath('opoleloadcmcor.test')
     with ocean_pole_test_file.open(mode='r', encoding='utf8') as f:
@@ -409,15 +373,25 @@ def test_predict_ocean_pole_tide(METHOD):
     # tidal love number differential (1 + kl - hl) for pole tide frequencies
     gamma = 0.6870 + 0.0036j
 
+    # calculate ocean pole tide displacements
+    test = pyTMD.compute.OPT_displacements(
+        header['longitude'],
+        header['latitude'],
+        ts.to_datetime(),
+        EPSG=4326,
+        TYPE='time series',
+        TIME='datetime',
+        ELLIPSOID='IERS',
+        CONVENTION='2003',
+        VARIABLE=['R','N','E']
+    )
+
     # read ocean pole tide map from Desai (2002)
     # interpolate ocean pole tide map to coordinates
-    iu = {}
-    iu['u_radial'], iu['u_north'], iu['u_east'], = \
-        pyTMD.io.IERS.extract_coefficients(
-            header['longitude'],
-            header['latitude'],
-            method=METHOD
-        )
+    Umap = pyTMD.io.IERS.open_dataset()
+    ui = Umap.interp(x=header['longitude'], y=header['latitude'])
+    # create dataset with spatial coordinates
+    ds = xr.Dataset(coords={'x': header['longitude'], 'y': header['latitude']})
 
     # convert latitude and longitude to ECEF cartesian coordinates
     X, Y, Z = pyTMD.spatial.to_cartesian(
@@ -426,28 +400,36 @@ def test_predict_ocean_pole_tide(METHOD):
         a_axis=units.a_axis,
         flat=units.flat
     )
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
     # calculate geocentric latitude and convert to degrees
     latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
     # geocentric colatitude and longitude in radians
     theta = dtr*(90.0 - latitude_geocentric)
     phi = dtr*header['longitude']
     # convert pole tide values to cartesian coordinates
-    R = np.zeros((file_lines, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,0,1] = -np.sin(phi)
-    R[:,0,2] = np.cos(phi)*np.sin(theta)
-    R[:,1,0] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,1,2] = np.sin(phi)*np.sin(theta)
-    R[:,2,0] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
+    R = np.zeros((3, 3))
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,2] = np.cos(theta)
     # calculate pole tide displacements in Cartesian coordinates
-    # coefficients reordered to N, E, R to match IERS rotation matrix
-    UXYZ = np.einsum('ti...,tji...->tj...',
-        np.c_[iu['u_north'], iu['u_east'], iu['u_radial']], R
-    )
+    UXYZ = xr.Dataset()
+    UXYZ['X'] = R[0,0]*ui['N'] + R[0,1]*ui['E'] + R[0,2]*ui['R']
+    UXYZ['Y'] = R[1,0]*ui['N'] + R[1,1]*ui['E'] + R[1,2]*ui['R']
+    UXYZ['Z'] = R[2,0]*ui['N'] + R[2,1]*ui['E'] + R[2,2]*ui['R']
     # use prediction function to calculate ocean pole tide displacements
-    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, np.c_[X, Y, Z], UXYZ,
+    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
         gamma_0=ge,
         a_axis=units.a_axis,
         GM=units.GM,
@@ -455,168 +437,20 @@ def test_predict_ocean_pole_tide(METHOD):
         rho_w=rho_w,
         g2=gamma,
         convention='2003')
-    # calculate components of ocean pole tides
-    dui = np.einsum('ti...,tji...->tj...', dxi, np.linalg.inv(R))
+    # rotate displacements from cartesian coordinates
+    OPT = xr.Dataset()
+    OPT['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    OPT['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    OPT['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
     # verify that the predicted values are close
     eps = np.finfo(np.float16).eps
-    for i, key in enumerate(['u_north','u_east','u_radial']):
+    for key, mapping in zip(['R','N','E'], ['u_radial', 'u_north', 'u_east']):
         # assert that the predicted values are close
-        assert np.all(np.abs(dui[:,i] - validation[key]) < eps)
-
-# PURPOSE: compute radial load pole tide displacements
-# following IERS Convention (2010) guidelines
-@pytest.mark.parametrize("TYPE", ['grid','drift','time series'])
-@pytest.mark.parametrize("METHOD", ['spline','nearest','linear'])
-def test_ocean_pole_tide_displacements(TYPE, METHOD):
-
-    # create a test dataset for data type
-    if (TYPE == 'drift'):
-        # number of data points
-        n_time = 3000
-        y = np.random.randint(-90,90,size=n_time)
-        x = np.random.randint(-180,180,size=n_time)
-        delta_time = np.random.randint(0,31557600,size=n_time)
-    elif (TYPE == 'grid'):
-        # number of data points
-        n_lat,n_lon,n_time = (181,361,100)
-        y = np.linspace(-90,90,n_lat)
-        x = np.linspace(-180,180,n_lon)
-        delta_time = np.random.randint(0,31557600,size=n_time)
-    elif (TYPE == 'time series'):
-        n_station,n_time = (300,100)
-        y = np.random.randint(-90,90,size=n_station)
-        x = np.random.randint(-180,180,size=n_station)
-        delta_time = np.random.randint(0,31557600,size=n_time)
-
-    # parameters for ocean pole tide
-    EPSG = 4326
-    EPOCH = (2018, 1, 1, 0, 0, 0)
-    TIME = 'UTC'
-    ELLIPSOID = 'WGS84'
-    CONVENTION = '2018'
-    FILL_VALUE = np.nan
-
-    # compute load pole tides using cartesian functions
-    test = pyTMD.compute.OPT_displacements(x, y, delta_time,
-        EPSG=EPSG, EPOCH=EPOCH, TYPE=TYPE, TIME=TIME,
-        ELLIPSOID=ELLIPSOID, CONVENTION=CONVENTION,
-        METHOD=METHOD, FILL_VALUE=FILL_VALUE)
-
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon,lat = transformer.transform(x.flatten(), y.flatten())
-
-    # assert delta time is an array
-    delta_time = np.atleast_1d(delta_time)
-    # convert delta times or datetimes objects to timescale
-    ts = timescale.time.Timescale().from_deltatime(delta_time,
-        epoch=EPOCH, standard=TIME)
-
-    # convert dynamic time to Modified Julian Days (MJD)
-    MJD = ts.tt - _jd_mjd
-    # convert Julian days to calendar dates
-    Y,M,D,h,m,s = timescale.time.convert_julian(ts.tt, format='tuple')
-    # calculate time in year-decimal format
-    time_decimal = timescale.time.convert_calendar_decimal(Y, M, day=D,
-        hour=h, minute=m, second=s)
-    # number of time points
-    nt = len(time_decimal)
-
-    # degrees and arcseconds to radians
-    dtr = np.pi/180.0
-    atr = np.pi/648000.0
-    # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
-    # mean equatorial gravitational acceleration [m/s^2]
-    ge = 9.7803278
-    # density of sea water [kg/m^3]
-    rho_w = 1025.0
-    # tidal love number differential (1 + kl - hl) for pole tide frequencies
-    gamma = 0.6870 + 0.0036j
-
-    # convert from geodetic latitude to geocentric latitude
-    # calculate X, Y and Z from geodetic latitude and longitude
-    X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
-        a_axis=units.a_axis, flat=units.flat)
-    rr = np.sqrt(X**2.0 + Y**2.0 + Z**2.0)
-    # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
-
-    # pole tide displacement scale factor
-    Hp = np.sqrt(8.0*np.pi/15.0)*(units.omega**2*units.a_axis**4)/units.GM
-    K = 4.0*np.pi*units.G*rho_w*Hp*units.a_axis/(3.0*ge)
-    K1 = 4.0*np.pi*units.G*rho_w*Hp*units.a_axis**3/(3.0*units.GM)
-
-    # calculate angular coordinates of mean/secular pole at time
-    mpx, mpy, fl = timescale.eop.iers_mean_pole(time_decimal,
-        convention=CONVENTION)
-    # read and interpolate IERS daily polar motion values
-    px, py = timescale.eop.iers_polar_motion(MJD, k=3, s=0)
-    # calculate differentials from mean/secular pole positions
-    mx = px - mpx
-    my = -(py - mpy)
-
-    # read ocean pole tide map from Desai (2002)
-    iur, iun, iue, ilon, ilat = pyTMD.io.IERS.read_binary_file()
-    # interpolate ocean pole tide map from Desai (2002)
-    if (METHOD == 'spline'):
-        # use scipy bivariate splines to interpolate to output points
-        f1 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-            iur[:,::-1].real, kx=1, ky=1)
-        f2 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-            iur[:,::-1].imag, kx=1, ky=1)
-        UR = np.zeros((len(latitude_geocentric)), dtype=np.clongdouble)
-        UR.real = f1.ev(lon.flatten(), latitude_geocentric)
-        UR.imag = f2.ev(lon.flatten(), latitude_geocentric)
-    else:
-        # use scipy regular grid to interpolate values for a given method
-        r1 = scipy.interpolate.RegularGridInterpolator((ilon,ilat[::-1]),
-            iur[:,::-1], bounds_error=False, method=METHOD)
-        UR = r1.__call__(np.c_[lon.flatten(), latitude_geocentric])
-
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        Urad = np.ma.zeros((ny,nx,nt),fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((ny,nx,nt),dtype=bool)
-        for i in range(nt):
-            URAD = K*atr*np.real((mx[i]*gamma.real + my[i]*gamma.imag)*UR.real +
-                (my[i]*gamma.real - mx[i]*gamma.imag)*UR.imag)
-            # reform grid
-            Urad.data[:,:,i] = np.reshape(URAD, (ny,nx))
-            Urad.mask[:,:,i] = np.isnan(Urad.data[:,:,i])
-    elif (TYPE == 'drift'):
-        Urad = np.ma.zeros((nt),fill_value=FILL_VALUE)
-        Urad.data[:] = K*atr*np.real((mx*gamma.real + my*gamma.imag)*UR.real +
-            (my*gamma.real - mx*gamma.imag)*UR.imag)
-        Urad.mask = np.isnan(Urad.data)
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        Urad = np.ma.zeros((nstation,nt),fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            URAD = K*atr*np.real((mx*gamma.real + my*gamma.imag)*UR.real[s] +
-                (my*gamma.real - mx*gamma.imag)*UR.imag[s])
-            Urad.data[s,:] = np.copy(URAD)
-            Urad.mask[s,:] = np.isnan(Urad.data[s,:])
-    # replace invalid data with fill values
-    Urad.data[Urad.mask] = Urad.fill_value
-    # compare with functional values
-    eps = np.finfo(np.float16).eps
-    assert np.all(np.abs(Urad - test) < eps)
+        val = OPT[key].values
+        assert np.all(np.abs(val - validation[mapping]) < eps)
+        # assert that the computed values are close
+        val = test[key].values
+        assert np.all(np.abs(val - validation[mapping]) < eps)
 
 # PURPOSE: verify inverse of rotation matrix
 def test_rotation_matrix():

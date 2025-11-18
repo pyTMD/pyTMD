@@ -11,7 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
-    Updated 11/2025: use xarray interface for node tide test
+    Updated 11/2025: use xarray interface for both equilibrium tide tests
     Updated 08/2025: added option to include mantle anelasticity
     Updated 11/2024: moved normalize_angle to math.py
     Written 10/2024
@@ -36,20 +36,31 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     if (TYPE == 'drift'):
         # number of data points
         n_time = 3000
+        lon = np.zeros((n_time))
         lat = np.random.randint(-90,90,size=n_time)
         delta_time = np.random.randint(0,31557600,size=n_time)
+        X = xr.DataArray(lon, dims=('time'))
+        Y = xr.DataArray(lat, dims=('time'))
     elif (TYPE == 'grid'):
         # number of data points
         n_lat,n_time = (181,100)
+        lon = np.array([0])
         lat = np.linspace(-90,90,n_lat)
         delta_time = np.random.randint(0,31557600,size=n_time)
+        X = xr.DataArray(lon, dims=('x'))
+        Y = xr.DataArray(lat, dims=('y'))
+    # create xarray dataset
+    ds = xr.Dataset(coords={'y':Y,'x':X})
 
     # convert from seconds since 2018 to tide time
     EPOCH = (2018, 1, 1, 0, 0, 0)
     t = timescale.from_deltatime(delta_time, epoch=EPOCH, standard='GPS')
     # calculate long-period equilibrium tides
-    lpet = pyTMD.predict.equilibrium_tide(t.tide, lat,
+    lpet = pyTMD.predict.equilibrium_tide(t.tide, ds,
         include_anelasticity=include_anelasticity)
+    # calculate long-period equilibrium tides using compute function
+    computed = pyTMD.compute.LPET_elevations(lon, lat, delta_time,
+        EPSG=4326, EPOCH=EPOCH, TYPE=TYPE, TIME='GPS')
 
     # longitude of moon
     # longitude of sun
@@ -99,6 +110,8 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     # compare with functional values
     eps = np.finfo(np.float16).eps
     assert np.all(np.abs(lpet - exp) < eps)
+    # compare with computed values
+    assert np.all(np.abs(lpet - computed) < eps)
 
 # PURPOSE: test the estimation of long-period equilibrium tides
 def test_node_tide(directory):
@@ -121,7 +134,7 @@ def test_node_tide(directory):
     t = timescale.from_deltatime(delta_time,
         epoch=EPOCH, standard='GPS')
     # calculate long-period equilibrium tides
-    lpet = pyTMD.predict.equilibrium_tide(t.tide, ds.y.values,
+    lpet = pyTMD.predict.equilibrium_tide(t.tide, ds,
         constituents='node', corrections='GOT')
     tide = ds.tmd.predict(t.tide, corrections='GOT')
     # compare with functional values

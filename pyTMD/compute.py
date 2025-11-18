@@ -366,10 +366,14 @@ def tide_elevations(
         mx, my = ds.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('y','x'))
         Y = xr.DataArray(my, dims=('y','x'))
-    elif TYPE.lower() in ('time series', 'drift'):
+    elif (TYPE.lower() == 'drift'):
         mx, my = ds.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        mx, my = ds.tmd.transform(x, y, crs=EPSG)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
 
     # crop tide model dataset to bounds
     if CROP:
@@ -411,7 +415,6 @@ def tide_elevations(
         tide += local.tmd.infer(ts.tide, deltat=deltat,
             corrections=nodal_corrections,
             minor=minor_constituents)
-
     # return the ocean or load tide correction
     return tide
 
@@ -551,10 +554,14 @@ def tide_currents(
         mx, my = dtree.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('y','x'))
         Y = xr.DataArray(my, dims=('y','x'))
-    elif TYPE.lower() in ('time series', 'drift'):
-        mx, my = dtree.tmd.transform(x, y, crs=EPSG)
+    elif (TYPE.lower() == 'drift'):
+        mx, my = ds.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        mx, my = ds.tmd.transform(x, y, crs=EPSG)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
 
     # crop tide model datasets to bounds
     if CROP:
@@ -602,7 +609,6 @@ def tide_currents(
             tide[key] += local.tmd.infer(ts.tide, deltat=deltat,
                 corrections=nodal_corrections,
                 minor=minor_constituents)
-            
     # return the ocean tide currents
     return tide
 
@@ -684,19 +690,20 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
         # convert to xarray DataArrays
         X = xr.DataArray(mx, dims=('y','x'))
         Y = xr.DataArray(my, dims=('y','x'))
-    elif TYPE.lower() in ('time series', 'drift'):
-        # converting x,y to model coordinates
+    elif (TYPE.lower() == 'drift'):
         mx, my = ds.tmd.transform(x, y, crs=EPSG)
-        # convert to xarray DataArrays
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        mx, my = ds.tmd.transform(x, y, crs=EPSG)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
         
     # interpolate model mask to grid points
     local = ds.tmd.interp(X, Y, method=METHOD)
     # get name of first listed constituent
     c = local.tmd.constituents[0]
     mz = np.logical_not(local[c].real.isnull()).astype(bool)
-
     # return mask
     return mz
 
@@ -754,56 +761,49 @@ def LPET_elevations(
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)
     assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
-    # convert tide times to dynamic time
-    tide_time = ts.tide + ts.tt_ut1
 
     # predict long-period equilibrium tides at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_lpe = np.zeros((ny,nx,nt))
-        for i in range(nt):
-            lpet = pyTMD.predict.equilibrium_tide(
-                tide_time[i], lat, **kwargs)
-            tide_lpe[:,:,i] = np.reshape(lpet, (ny,nx))
-    elif (TYPE == 'drift'):
-        tide_lpe = pyTMD.predict.equilibrium_tide(
-            tide_time, lat, **kwargs)
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_lpe = np.zeros((nstation,nt))
-        for s in range(nstation):
-            tide_lpe[s,:] = pyTMD.predict.equilibrium_tide(
-                tide_time, lat[s], **kwargs)
-
+    LPET = pyTMD.predict.equilibrium_tide(ts.tide, ds,
+        deltat=ts.tt_ut1,
+        **kwargs
+    )
     # return the long-period equilibrium tide elevations
-    return tide_lpe
+    return LPET
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
@@ -815,6 +815,7 @@ def LPT_displacements(
         TIME: str = 'UTC',
         ELLIPSOID: str = 'WGS84',
         CONVENTION: str = '2018',
+        VARIABLE: str = 'R',
         FILL_VALUE: float = np.nan,
         **kwargs
     ):
@@ -858,6 +859,12 @@ def LPT_displacements(
             - ``'2010'``
             - ``'2015'``
             - ``'2018'``
+    VARIABLE: str: default 'R'
+        Output variable to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
     FILL_VALUE: float, default np.nan
         Output invalid value
 
@@ -875,28 +882,38 @@ def LPT_displacements(
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)
     assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon,lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
@@ -912,98 +929,56 @@ def LPT_displacements(
 
     # convert from geodetic latitude to geocentric latitude
     # calculate X, Y and Z from geodetic latitude and longitude
-    X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
-    npts = len(latitude_geocentric)
-    # geocentric colatitude and longitude in radians
-    theta = np.radians(90.0 - latitude_geocentric)
-    phi = np.radians(lon.flatten())
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
+    # geocentric latitude (radians)
+    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # geocentric colatitude (radians)
+    theta = (np.pi/2.0 - latitude_geocentric)
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute normal gravity at spatial location
     # p. 80, Eqn.(2-199)
     gamma_0 = units.gamma_0(theta)
 
-    # rotation matrix for converting from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,1,0] = -np.sin(phi)
-    R[:,2,0] = np.cos(phi)*np.sin(theta)
-    R[:,0,1] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,2,1] = np.sin(phi)*np.sin(theta)
-    R[:,0,2] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        Srad = np.ma.zeros((ny,nx,nt), fill_value=FILL_VALUE)
-        Srad.mask = np.zeros((ny,nx,nt),dtype=bool)
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # calculate load pole tides in cartesian coordinates
-            dxi = pyTMD.predict.load_pole_tide(ts.tide[i], XYZ,
-                deltat=ts.tt_ut1[i],
-                gamma_0=gamma_0,
-                omega=units.omega,
-                h2=hb2,
-                l2=lb2,
-                convention=CONVENTION
-            )
-            # calculate components of load pole tides
-            S = np.einsum('ti...,tji...->tj...', dxi, R)
-            smask = np.reshape(np.any(dxi.mask, axis=1), (ny,nx))
-            # reshape to output dimensions
-            Srad.data[:,:,i] = np.reshape(S[:,2], (ny,nx))
-            Srad.mask[:,:,i] = np.isnan(Srad.data[:,:,i]) | smask
-    elif (TYPE == 'drift'):
-        # calculate load pole tides in cartesian coordinates
-        XYZ = np.c_[X, Y, Z]
-        dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
-            deltat=ts.tt_ut1,
-            gamma_0=gamma_0,
-            omega=units.omega,
-            h2=hb2,
-            l2=lb2,
-            convention=CONVENTION
-        )
-        # calculate components of load pole tides
-        S = np.einsum('ti...,tji...->tj...', dxi, R)
-        smask = np.any(dxi.mask, axis=1)
-        # reshape to output dimensions
-        Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
-        Srad.data[:] = S[:,2].copy()
-        Srad.mask = np.isnan(Srad.data) | smask
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        Srad = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-        Srad.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            # calculate load pole tides in cartesian coordinates
-            dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
-                deltat=ts.tt_ut1,
-                gamma_0=gamma_0[s],
-                omega=units.omega,
-                h2=hb2,
-                l2=lb2,
-                convention=CONVENTION
-            )
-            # calculate components of load pole tides
-            S = np.einsum('ti...,ji...->tj...', dxi, R[s,:,:])
-            smask = np.any(dxi.mask, axis=1)
-            # reshape to output dimensions
-            Srad.data[s,:] = S[:,2].copy()
-            Srad.mask[s,:] = np.isnan(Srad.data[s,:]) | smask
+    # calculate load pole tides in cartesian coordinates
+    dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
+        deltat=ts.tt_ut1,
+        gamma_0=gamma_0,
+        omega=units.omega,
+        h2=hb2,
+        l2=lb2,
+        convention=CONVENTION
+    )
 
-    # replace invalid data with fill values
-    Srad.data[Srad.mask] = Srad.fill_value
-
-    # return the load pole tide displacements
-    return Srad
+    # rotate displacements from cartesian coordinates
+    S = xr.Dataset()
+    S['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    S['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    S['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # return the load pole tide displacements for variable
+    return S[VARIABLE]
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
@@ -1016,6 +991,7 @@ def OPT_displacements(
         ELLIPSOID: str = 'WGS84',
         CONVENTION: str = '2018',
         METHOD: str = 'linear',
+        VARIABLE: str = 'R',
         FILL_VALUE: float = np.nan,
         **kwargs
     ):
@@ -1065,6 +1041,12 @@ def OPT_displacements(
             - ```bilinear```: quick bilinear interpolation
             - ```spline```: scipy bivariate spline interpolation
             - ```linear```, ```nearest```: scipy regular grid interpolations
+    VARIABLE: str: default 'R'
+        Output variable to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
     FILL_VALUE: float, default np.nan
         Output invalid value
 
@@ -1083,22 +1065,32 @@ def OPT_displacements(
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)
     assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon,lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
@@ -1122,109 +1114,64 @@ def OPT_displacements(
 
     # convert from geodetic latitude to geocentric latitude
     # calculate X, Y and Z from geodetic latitude and longitude
-    X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
-    npts = len(latitude_geocentric)
-    # geocentric colatitude and longitude in radians
-    theta = np.radians(90.0 - latitude_geocentric)
-    phi = np.radians(lon.flatten())
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
+    # geocentric latitude (radians)
+    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # geocentric colatitude (radians)
+    theta = (np.pi/2.0 - latitude_geocentric)
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
 
     # read and interpolate ocean pole tide map from Desai (2002)
-    ds = pyTMD.io.IERS.open_dataset().interp(lon.flatten(), 
-        latitude_geocentric, method=METHOD)
+    IERS = pyTMD.io.IERS.open_dataset()
+    Umap = IERS.interp(x=ds.x, y=np.degrees(latitude_geocentric), method=METHOD)
+
     # rotation matrix for converting to/from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,0,1] = -np.sin(phi)
-    R[:,0,2] = np.cos(phi)*np.sin(theta)
-    R[:,1,0] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,1,2] = np.sin(phi)*np.sin(theta)
-    R[:,2,0] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
-    Rinv = np.linalg.inv(R)
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
     # calculate pole tide displacements in Cartesian coordinates
-    # coefficients reordered to N, E, R to match IERS rotation matrix
-    UXYZ = np.einsum('ti...,tji...->tj...', ds.to_dataarray().T, R)
+    UXYZ = xr.Dataset()
+    UXYZ['X'] = R[0,0]*Umap['N'] + R[0,1]*Umap['E'] + R[0,2]*Umap['R']
+    UXYZ['Y'] = R[1,0]*Umap['N'] + R[1,1]*Umap['E'] + R[1,2]*Umap['R']
+    UXYZ['Z'] = R[2,0]*Umap['N'] + R[2,1]*Umap['E'] + R[2,2]*Umap['R']
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        Urad = np.ma.zeros((ny,nx,nt), fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((ny,nx,nt),dtype=bool)
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # calculate ocean pole tides in cartesian coordinates
-            dxi = pyTMD.predict.ocean_pole_tide(ts.tide[i], XYZ, UXYZ,
-                deltat=ts.tt_ut1[i],
-                a_axis=units.a_axis,
-                gamma_0=ge,
-                GM=units.GM,
-                omega=units.omega,
-                rho_w=rho_w,
-                g2=gamma,
-                convention=CONVENTION
-            )
-            # calculate components of ocean pole tides
-            U = np.einsum('ti...,tji...->tj...', dxi, Rinv)
-            umask = np.reshape(np.any(dxi.mask, axis=1), (ny,nx))
-            # reshape to output dimensions
-            Urad.data[:,:,i] = np.reshape(U[:,2], (ny,nx))
-            Urad.mask[:,:,i] = np.isnan(Urad.data[:,:,i]) | umask
-    elif (TYPE == 'drift'):
-        # calculate ocean pole tides in cartesian coordinates
-        XYZ = np.c_[X, Y, Z]
-        dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
-            deltat=ts.tt_ut1,
-            a_axis=units.a_axis,
-            gamma_0=ge,
-            GM=units.GM,
-            omega=units.omega,
-            rho_w=rho_w,
-            g2=gamma,
-            convention=CONVENTION
-        )
-        # calculate components of ocean pole tides
-        U = np.einsum('ti...,tji...->tj...', dxi, Rinv)
-        umask = np.any(dxi.mask, axis=1)
-        # convert to masked array
-        Urad = np.ma.zeros((nt), fill_value=FILL_VALUE)
-        Urad.data[:] = U[:,2].copy()
-        Urad.mask = np.isnan(Urad.data) | umask
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        Urad = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            uxyz = np.repeat(np.atleast_2d(UXYZ[s,:]), nt, axis=0)
-            # calculate ocean pole tides in cartesian coordinates
-            dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, uxyz,
-                deltat=ts.tt_ut1,
-                a_axis=units.a_axis,
-                gamma_0=ge,
-                GM=units.GM,
-                omega=units.omega,
-                rho_w=rho_w,
-                g2=gamma,
-                convention=CONVENTION
-            )
-            # calculate components of ocean pole tides
-            U = np.einsum('ti...,ji...->tj...', dxi, Rinv[s,:,:])
-            umask = np.any(dxi.mask, axis=1)
-            # reshape to output dimensions
-            Urad.data[s,:] = U[:,2].copy()
-            Urad.mask[s,:] = np.isnan(Urad.data[s,:]) | umask
+    # calculate ocean pole tides in cartesian coordinates
+    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
+        deltat=ts.tt_ut1,
+        a_axis=units.a_axis,
+        gamma_0=ge,
+        GM=units.GM,
+        omega=units.omega,
+        rho_w=rho_w,
+        g2=gamma,
+        convention=CONVENTION
+    )
 
-    # replace invalid data with fill values
-    Urad.data[Urad.mask] = Urad.fill_value
-
-    # return the ocean pole tide displacements
-    return Urad
+    # rotate displacements from cartesian coordinates
+    U = xr.Dataset()
+    U['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    U['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    U['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # return the ocean pole tide displacements for variable
+    return U[VARIABLE]
 
 # PURPOSE: compute solid earth tidal elevations
 def SET_displacements(
@@ -1272,6 +1219,7 @@ def _ephemeride_SET(
         ELLIPSOID: str = 'WGS84',
         TIDE_SYSTEM: str = 'tide_free',
         EPHEMERIDES: str = 'approximate',
+        VARIABLE: str = 'R',
         **kwargs
     ):
     """
@@ -1317,6 +1265,12 @@ def _ephemeride_SET(
 
             - ``'approximate'``: approximate lunisolar parameters
             - ``'JPL'``: computed from JPL ephmerides kernel
+    VARIABLE: str: default 'R'
+        Output variable to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
@@ -1332,117 +1286,110 @@ def _ephemeride_SET(
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)
     assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
-    # convert tide times to dynamical time
-    tide_time = ts.tide + ts.tt_ut1
-    # number of time points
-    nt = len(ts)
 
     # earth and physical parameters for ellipsoid
     units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
 
     # convert input coordinates to cartesian
-    X, Y, Z = pyTMD.spatial.to_cartesian(lon, lat,
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # compute ephemerides for lunisolar coordinates
-    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
-    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
-
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
     # geocentric latitude (radians)
-    latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))
-    npts = len(latitude_geocentric)
+    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # geocentric colatitude (radians)
     theta = (np.pi/2.0 - latitude_geocentric)
     # calculate longitude (radians)
-    phi = np.arctan2(Y, X)
-    # rotation matrix for converting from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,1,0] = -np.sin(phi)
-    R[:,2,0] = np.cos(phi)*np.sin(theta)
-    R[:,0,1] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,2,1] = np.sin(phi)*np.sin(theta)
-    R[:,0,2] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+
+    # compute ephemerides for lunisolar coordinates
+    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
+    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
+    # create datasets for lunisolar coordinates
+    SXYZ = xr.Dataset(
+        data_vars={
+            'X': (['time'], SX),
+            'Y': (['time'], SY),
+            'Z': (['time'], SZ)
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD))
+    )
+    LXYZ = xr.Dataset(
+        data_vars={
+            'X': (['time'], LX),
+            'Y': (['time'], LY),
+            'Z': (['time'], LZ)
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD))
+    )
+
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
     # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_se = np.zeros((ny,nx,nt))
-        # convert coordinates to column arrays
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # reshape time to match spatial
-            t = tide_time[i] + np.ones((ny*nx))
-            # convert coordinates to column arrays
-            SXYZ = np.repeat(np.c_[SX[i], SY[i], SZ[i]], ny*nx, axis=0)
-            LXYZ = np.repeat(np.c_[LX[i], LY[i], LZ[i]], ny*nx, axis=0)
-            # predict solid earth tides (cartesian)
-            dxi = pyTMD.predict.solid_earth_tide(t,
-                XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-                tide_system=TIDE_SYSTEM)
-            # calculate components of solid earth tides
-            SE = np.einsum('ti...,tji...->tj...', dxi, R)
-            # reshape to output dimensions
-            tide_se[:,:,i] = np.reshape(SE[:,2], (ny,nx))
-    elif (TYPE == 'drift'):
-        # convert coordinates to column arrays
-        XYZ = np.c_[X, Y, Z]
-        SXYZ = np.c_[SX, SY, SZ]
-        LXYZ = np.c_[LX, LY, LZ]
-        # predict solid earth tides (cartesian)
-        dxi = pyTMD.predict.solid_earth_tide(tide_time,
-            XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-            tide_system=TIDE_SYSTEM)
-        # calculate components of solid earth tides
-        SE = np.einsum('ti...,tji...->tj...', dxi, R)
-        # reshape to output dimensions
-        tide_se = SE[:,2].copy()
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_se = np.zeros((nstation,nt))
-        # convert coordinates to column arrays
-        SXYZ = np.c_[SX, SY, SZ]
-        LXYZ = np.c_[LX, LY, LZ]
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            # predict solid earth tides (cartesian)
-            dxi = pyTMD.predict.solid_earth_tide(tide_time,
-                XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-                tide_system=TIDE_SYSTEM)
-            # calculate components of solid earth tides
-            SE = np.einsum('ti...,ji...->tj...', dxi, R[s,:,:])
-            # reshape to output dimensions
-            tide_se[s,:] = SE[:,2].copy()
-
-    # return the solid earth tide displacements
-    return tide_se
+    # predict solid earth tides (cartesian)
+    dxi = pyTMD.predict.solid_earth_tide(ts.tide, XYZ, SXYZ, LXYZ,
+        deltat=ts.tt_ut1,
+        a_axis=units.a_axis,
+        tide_system=TIDE_SYSTEM
+    )
+    # rotate displacements from cartesian coordinates
+    SE = xr.Dataset()
+    SE['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    SE['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    SE['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # return the solid earth tide displacements for variable
+    return SE[VARIABLE]
 
 # PURPOSE: compute body tides following Cartwright and Tayler (1971)
 def _catalog_SET(
@@ -1455,6 +1402,7 @@ def _catalog_SET(
         TIDE_SYSTEM: str = 'tide_free',
         EPHEMERIDES: str = 'IERS',
         INCLUDE_PLANETS: bool = False,
+        VARIABLE: str = 'R',
         **kwargs
     ):
     """
@@ -1509,6 +1457,12 @@ def _catalog_SET(
             - ``'IERS'``: convert from IERS Delaunay arguments
     INCLUDE_PLANETS: bool, default False
         Include tide potentials from planetary bodies
+    VARIABLE: str: default 'R'
+        Output variable to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
@@ -1525,77 +1479,51 @@ def _catalog_SET(
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)
     assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (TYPE.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (TYPE.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
     if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
             epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_se = np.zeros((ny,nx,nt))
-        for i in range(nt):
-            # reshape time to match spatial
-            t = ts.tide[i] + np.ones((ny*nx))
-            deltat = ts.tt_ut1 + np.ones((ny*nx))
-            # calculate body tides
-            SE = pyTMD.predict.body_tide(t, lon, lat, 
-                deltat=deltat,
-                method=EPHEMERIDES,
-                tide_system=TIDE_SYSTEM,
-                catalog=CATALOG,
-                include_planets=INCLUDE_PLANETS,
-                **kwargs)
-            # reshape to output dimensions
-            tide_se[:,:,i] = np.reshape(SE[:,2], (ny,nx))
-    elif (TYPE == 'drift'):
-        # calculate body tides
-        SE = pyTMD.predict.body_tide(ts.tide, lon, lat, 
-            deltat=ts.tt_ut1,
-            method=EPHEMERIDES,
-            tide_system=TIDE_SYSTEM,
-            catalog=CATALOG,
-            include_planets=INCLUDE_PLANETS,
-            **kwargs)
-        # reshape to output dimensions
-        tide_se = SE[:,2].copy()
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_se = np.zeros((nstation,nt))
-        for s in range(nstation):
-            # calculate body tides
-            SE = pyTMD.predict.body_tide(ts.tide, lon[s], lat[s], 
-                deltat=ts.tt_ut1,
-                method=EPHEMERIDES,
-                tide_system=TIDE_SYSTEM,
-                catalog=CATALOG,
-                include_planets=INCLUDE_PLANETS,
-                **kwargs)
-            # reshape to output dimensions
-            tide_se[s,:] = SE[:,2].copy()
+    # calculate body tides
+    SE = pyTMD.predict.body_tide(ts.tide, ds, 
+        deltat=ts.tt_ut1,
+        method=EPHEMERIDES,
+        tide_system=TIDE_SYSTEM,
+        catalog=CATALOG,
+        include_planets=INCLUDE_PLANETS,
+        **kwargs
+    )
 
-    # return the solid earth tide displacements
-    return tide_se
+    # return the solid earth tide displacements for variable
+    return SE[VARIABLE]
