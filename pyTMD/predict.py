@@ -180,8 +180,8 @@ def time_series(
     # convert Dataset to DataArray of complex tidal harmonics
     darr = ds.tmd.to_dataarray(constituents=constituents)
     # sum over tidal constituents
-    tpred = (arguments.f*darr.real*arguments.theta.real - 
-        arguments.f*darr.imag*arguments.theta.imag).sum(
+    tpred = (darr.real*arguments.f*arguments.theta.real - 
+        darr.imag*arguments.f*arguments.theta.imag).sum(
         dim='constituent', skipna=False)
     # copy units attribute
     tpred.attrs['units'] = ds[constituents[0]].attrs.get('units', None)
@@ -368,8 +368,8 @@ def _infer_short_period(
     # select argument for constituents
     arg = arguments.sel(constituent=constituents)
     # sum over tidal constituents
-    tinfer = (arg.f*darr.real*arg.theta.real - 
-        arg.f*darr.imag*arg.theta.imag).sum(
+    tinfer = (darr.real*arg.f*arg.theta.real - 
+        darr.imag*arg.f*arg.theta.imag).sum(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['q1'].attrs.get('units', None)
@@ -531,8 +531,8 @@ def _infer_semi_diurnal(
     # rescale tide values
     darr = arg.amplitude*zmin
     # sum over tidal constituents
-    tinfer = (arg.f*darr.real*arg.theta.real - 
-        arg.f*darr.imag*arg.theta.imag).sum(
+    tinfer = (darr.real*arg.f*arg.theta.real - 
+        darr.imag*arg.f*arg.theta.imag).sum(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['n2'].attrs.get('units', None)
@@ -720,8 +720,8 @@ def _infer_diurnal(
     # rescale tide values
     darr = arg.amplitude*arg.gamma_2*zmin
     # sum over tidal constituents
-    tinfer = (arg.f*darr.real*arg.theta.real - 
-        arg.f*darr.imag*arg.theta.imag).sum(
+    tinfer = (darr.real*arg.f*arg.theta.real - 
+        darr.imag*arg.f*arg.theta.imag).sum(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['q1'].attrs.get('units', None)
@@ -886,8 +886,8 @@ def _infer_long_period(
     # rescale tide values
     darr = arg.amplitude*arg.gamma_2*zmin
     # sum over tidal constituents
-    tinfer = (arg.f*darr.real*arg.theta.real - 
-        arg.f*darr.imag*arg.theta.imag).sum(
+    tinfer = (darr.real*arg.f*arg.theta.real - 
+        darr.imag*arg.f*arg.theta.imag).sum(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['node'].attrs.get('units', None)
@@ -1057,7 +1057,7 @@ def equilibrium_tide(
     # and convert from centimeters to meters
     darr = amajor.tmd.to_dataarray(constituents=constituents)/100.0
     # sum equilibrium tide elevations
-    tpred = (P20*arg.gamma_2*np.cos(arg.G)*darr).sum(
+    tpred = (P20*darr*arg.gamma_2*np.cos(arg.G)).sum(
         dim='constituent', skipna=False)
     # add units attribute
     tpred.attrs['units'] = 'meters'
@@ -1258,8 +1258,8 @@ def ocean_pole_tide(
     K = 4.0*np.pi*G*rho_w*Hp*a_axis/(3.0*gamma_0)
     # calculate ocean pole tide displacements (meters)
     dxt = K*np.real(
-        (pm.X*g2.real + pm.Y*g2.imag)*UXYZ.real +
-        (pm.Y*g2.real - pm.X*g2.imag)*UXYZ.imag
+        UXYZ.real*(pm.X*g2.real + pm.Y*g2.imag) +
+        UXYZ.imag*(pm.Y*g2.real - pm.X*g2.imag)
     )
     # add units attributes to output dataset
     for var in dxt.data_vars:
