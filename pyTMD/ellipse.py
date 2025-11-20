@@ -5,20 +5,6 @@ Written by Tyler Sutterley (08/2025)
 Expresses the amplitudes and phases for the u and v components in terms of
     four ellipse parameters using Foreman's formula
 
-CALLING SEQUENCE:
-    umajor,uminor,uincl,uphase = pyTMD.ellipse.ellipse(u,v)
-
-INPUTS:
-    u: zonal current (EW)
-    v: meridional current (NS)
-
-OUTPUTS:
-    major: amplitude of the semimajor semi-axis
-    minor: amplitude of the semiminor semi-axis
-    incl: angle of inclination of the northern semimajor semi-axis
-    phase: phase lag of the maximum current behind the maximum tidal potential
-        of the individual constituent
-
 REFERENCE:
     M. G. G. Foreman and R. F. Henry, "The harmonic analysis of tidal model time
         series", Advances in Water Resources, 12(3), 109-120, (1989).

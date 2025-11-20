@@ -53,7 +53,6 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments  
-    crs.py: Coordinate Reference System (CRS) routines
     predict.py: predict tide values using harmonic constants
     io/model.py: retrieves tide model parameters for named tide models
     io/OTIS.py: extract tidal harmonic constants from OTIS tide models
@@ -150,7 +149,6 @@ import pathlib
 import numpy as np
 from io import IOBase
 import scipy.interpolate
-import pyTMD.crs
 import pyTMD.io
 import pyTMD.io.model
 import pyTMD.predict
@@ -294,11 +292,10 @@ def tide_elevations(
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
     METHOD: str
-        Interpolation method
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
     EXTRAPOLATE: bool, default False
         Extrapolate with nearest-neighbors
@@ -335,7 +332,7 @@ def tide_elevations(
 
     # validate input arguments
     assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert METHOD.lower() in ('linear', 'nearest')
 
     # get parameters for tide model
     if DEFINITION_FILE is not None:
@@ -484,11 +481,10 @@ def tide_currents(
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
     METHOD: str
-        Interpolation method
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
     EXTRAPOLATE: bool, default False
         Extrapolate with nearest-neighbors
@@ -524,7 +520,7 @@ def tide_currents(
 
     # validate input arguments
     assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert METHOD.lower() in ('linear', 'nearest')
 
     # get parameters for tide model
     if DEFINITION_FILE is not None:
@@ -639,12 +635,11 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
         Tide model definition file for use
     EPSG: str or int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    METHOD: str, default 'spline'
-        interpolation method
+    METHOD: str, default 'linear'
+        interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
     Returns
     -------
@@ -1034,11 +1029,10 @@ def OPT_displacements(
             - ``'2015'``
             - ``'2018'``
     METHOD: str
-        Interpolation method
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
     VARIABLE: str: default 'R'
         Output variable to extract from dataset
 
@@ -1058,7 +1052,7 @@ def OPT_displacements(
     assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
     assert ELLIPSOID.upper() in pyTMD.spatial._ellipsoids
     assert CONVENTION.isdigit() and CONVENTION in timescale.eop._conventions
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert METHOD.lower() in ('linear', 'nearest')
     # determine input data type based on variable dimensions
     if not TYPE:
         TYPE = pyTMD.spatial.data_type(x, y, delta_time)

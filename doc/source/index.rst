@@ -124,7 +124,6 @@ Project Details
     api_reference/astro.rst
     api_reference/compute.rst
     api_reference/constituents.rst
-    api_reference/crs.rst
     api_reference/datasets/datasets.rst
     api_reference/ellipse.rst
     api_reference/interpolate.rst

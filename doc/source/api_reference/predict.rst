@@ -8,14 +8,6 @@ predict
 - Predicts ocean and load pole tides
 - Predicts solid earth tides
 
-Calling Sequence
-----------------
-
-.. code-block:: python
-
-    import pyTMD.predict
-    ht = pyTMD.predict.time_series(ds, time)
-
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/predict.py

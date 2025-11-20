@@ -206,7 +206,7 @@ For other projected models, a formatted coordinate reference system (CRS) descri
 Interpolation
 #############
 
-For converting from model coordinates, ``pyTMD`` uses spatial interpolation routines from ``xarray``.
+For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
 For coastal or near-grounded points, the model can be extrapolated with :func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.

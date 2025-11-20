@@ -25,20 +25,6 @@ import pyTMD.version
 from pyTMD import datasets
 from pyTMD import io
 from pyTMD import solve
-from pyTMD.crs import crs
-
-# Attempt to import the experimental xarray support
-try:
-    from pyTMD import xio
-except (ImportError, AttributeError):
-    pass
-
-# Deprecated functions
-def compute_tide_corrections(*args, **kwargs):
-    """Wrapper function to compute tide corrections
-    Deprecated, use :func:`pyTMD.compute.tide_elevations` instead
-    """
-    return pyTMD.compute.tide_elevations(*args, **kwargs)
 
 # get version information
 __version__ = pyTMD.version.version

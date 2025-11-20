@@ -89,7 +89,7 @@ def test_load_pole_tide_displacements(TYPE):
         y = np.atleast_1d(y)
 
     # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    crs1 = pyproj.CRS.from_user_input(EPSG)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     lon,lat = transformer.transform(x.flatten(), y.flatten())

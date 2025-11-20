@@ -17,7 +17,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
-    Updated 11/2025: get crs directly using pyTMD.CRS.from_user_input
+    Updated 11/2025: get crs directly using pyproj.CRS.from_user_input
         set variable name to constituent for to_dataarray method
         added is_global property for models covering a global domain
         added pad function to pad global datasets along boundaries

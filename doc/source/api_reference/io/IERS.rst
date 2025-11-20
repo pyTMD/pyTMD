@@ -15,9 +15,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    import pyTMD.utilities
-    ocean_pole_tide_file = pyTMD.utilities.get_data_path(['data','opoleloadcoefcmcor.txt.gz'])
-    ds = pyTMD.io.IERS.open_dataset(input_file=ocean_pole_tide_file)
+    ds = pyTMD.io.IERS.open_dataset()
 
 `Source code`__
 

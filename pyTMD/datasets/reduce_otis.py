@@ -109,12 +109,9 @@ def reduce_otis(MODEL: str,
     """
     # get parameters for tide model grid
     m = pyTMD.io.model(directory=directory).from_database(MODEL)
-    # directionaries with input and output files
-    model_file = {}
-    new_model_file = {}
 
     # read the OTIS-format tide grid file
-    if (model.format == 'ATLAS-compact'):
+    if (m.format == 'ATLAS-compact'):
         # if reading a global solution with localized solutions
         dsg, dtg = pyTMD.io.OTIS.open_atlas_grid(m['z'].grid_file)
         dsz, dtz = pyTMD.io.OTIS.open_atlas_elevation(m['z'].model_file)
@@ -131,7 +128,8 @@ def reduce_otis(MODEL: str,
         dsu, dsv = pyTMD.io.OTIS.open_otis_transport(m['u'].model_file)
 
     # convert bounds to model coordinates
-    x, y = dsg.tmd.transform(xbox, ybox)
+    xmin, xmax, ymin, ymax = np.copy(bounds)
+    x, y = dsg.tmd.transform(xmin, xmax, ymin, ymax, crs=projection)
     # merge bathymetry and elevation datasets
     ds = xr.merge([dsg, dsz], compat='override')
     # crop datasets and create new datatree
@@ -141,9 +139,9 @@ def reduce_otis(MODEL: str,
     dtree['V'] = dsv.tmd.crop([x.min(), x.max(), y.min(), y.max()])
 
     # create unique filenames for reduced datasets
-    new_grid_file = create_unique_filename(model.grid_file)
-    new_elevation_file = create_unique_filename(model_file['z'])
-    new_transport_file = create_unique_filename(model_file['u'])
+    new_grid_file = create_unique_filename(m['z'].grid_file)
+    new_elevation_file = create_unique_filename(m['z'].model_file)
+    new_transport_file = create_unique_filename(m['u'].model_file)
     # output reduced datasets to file
     dtree.otis.to_grid(new_grid_file)
     dtree.otis.to_elevation(new_elevation_file)

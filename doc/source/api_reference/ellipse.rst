@@ -4,13 +4,10 @@ ellipse
 
 - Expresses the amplitudes and phases for the `u` and `v` components in terms of four ellipse parameters using Foreman's formula :cite:p:`Foreman:1989dt`
 
-Calling Sequence
-----------------
-
-.. code-block:: python
-
-    import pyTMD
-    umajor,uminor,uincl,uphase = pyTMD.ellipse.ellipse(u,v)
+    * Semi-major axis
+    * Semi-minor axis
+    * Inclination
+    * Phase angle
 
 `Source code`__
 

@@ -7,15 +7,6 @@ constituents
 .. note::
     Originally based on Richard Ray's ``ARGUMENTS`` fortran subroutine
 
-Calling Sequence
-----------------
-
-.. code-block:: python
-
-    import pyTMD.constituents
-    pu,pf,G = pyTMD.constituents.arguments(MJD, constituents,
-        deltat=DELTAT, corrections=CORRECTIONS)
-
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/constituents.py
