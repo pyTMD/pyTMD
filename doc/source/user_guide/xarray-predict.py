@@ -2,8 +2,8 @@ import zarr
 import pyTMD
 import obstore
 import timescale
+import pandas as pd
 import xarray as xr
-import geopandas as gpd
 
 # set tide model and s3 bucket
 s3_bucket = 'pytmd-scratch'
@@ -20,25 +20,23 @@ store = zarr.storage.ObjectStore(s3_store, read_only=True)
 
 # read zarr store for tide model
 ds = xr.open_zarr(store, group='z', zarr_format=3)
-constituents = ds.tmd.constituents
 
 # read data from parquet
-df = gpd.pd.read_parquet('pytmd-test.parquet')
+df = pd.read_parquet('pytmd-test.parquet')
 ts = timescale.from_deltatime(df.time, epoch=(2018,1,1), standard='GPS')
-# convert points to EPSG of model (default is 4326)
-geometry = gpd.points_from_xy(df.x, df.y, crs=3031).to_crs(ds.tmd.crs)
 
+# convert points to crs of model
+x, y = ds.tmd.transform(df.x, df.y, crs=3031)
 # create xarray DataArrays for coordinates
-x = xr.DataArray(geometry.x, dims='i')
-y = xr.DataArray(geometry.y, dims='i')
-
-# interpolate to points and convert to DataArray
+x = xr.DataArray(x, dims='time')
+y = xr.DataArray(y, dims='time')
+# interpolate to points
 local = ds.tmd.interp(x, y, method='linear')
 
 # predict tides and infer minor constituents
-df[m.variable] = local.tmd.predict(ts.tide,
+df[m.z.variable] = local.tmd.predict(ts.tide,
     deltat=ts.tt_ut1, corrections=m.corrections)
-df[m.variable] += local.tmd.infer(ts.tide,
+df[m.z.variable] += local.tmd.infer(ts.tide,
     deltat=ts.tt_ut1, corrections=m.corrections)
 
 # save model outputs to parquet

@@ -61,9 +61,9 @@ Repository = "https://github.com/pyTMD/pyTMD"
 Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
-doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
+doc = ["docutils", "graphviz", "ipympl", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas"]
-aws = ["dask", "geopandas", "obstore", "pyarrow", "s3fs", "zarr>=3"]
+aws = ["dask", "obstore", "pandas", "pyarrow", "s3fs", "zarr>=3"]
 dev = ["dask", "flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
@@ -202,8 +202,8 @@ notebook = "*"
 
 [tool.pixi.feature.aws.dependencies]
 dask = "*"
-geopandas = "*"
 obstore = "*"
+pandas = "*"
 pyarrow = "*"
 s3fs = "*"
 zarr = ">=3"
@@ -220,6 +220,7 @@ pytest-xdist = "*"
 [tool.pixi.feature.doc.dependencies]
 docutils = "*"
 graphviz = "*"
+ipympl = "*"
 myst-nb = "*"
 numpydoc = "*"
 sphinx = "*"

@@ -6,7 +6,7 @@ import obstore
 s3_bucket = 'pytmd-scratch'
 tide_model = 'FES2022'
 # setup tide model
-m = pyTMD.io.model(verify=False).from_database(tide_model)
+m = pyTMD.io.model().from_database(tide_model)
 # read tide model as an xarray DataTree
 dtree = m.open_datatree(tide_model)
 # gap-fill missing data with inpainting
