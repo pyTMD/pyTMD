@@ -209,6 +209,7 @@ s3fs = "*"
 zarr = ">=3"
 
 [tool.pixi.feature.dev.dependencies]
+dask = "*"
 flake8 = "*"
 gh = "*"
 oct2py = "*"
