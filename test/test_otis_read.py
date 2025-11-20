@@ -261,8 +261,8 @@ class Test_CATS2008:
     def test_check_CATS2008(self):
         lons = np.zeros((10)) + 178.0
         lats = -45.0 - np.arange(10)*5.0
-        obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=self.directory,
-            MODEL='CATS2008', EPSG=4326)
+        obs = pyTMD.compute.tide_masks(lons, lats, directory=self.directory,
+            model='CATS2008', crs=4326)
         exp = np.array([False, False, False, False, True,
             True, True, True, False, False])
         assert np.all(obs == exp)
@@ -586,14 +586,12 @@ class Test_CATS2008:
         TIDE = local.tmd.predict(ts.tide, deltat=DELTAT,
             corrections=model.corrections)
         # solve for amplitude and phase
-        famp, fph = pyTMD.solve.constants(ts.tide, TIDE, c,
+        ds = pyTMD.solve.constants(ts.tide, TIDE, c,
             solver=SOLVER)
-        # calculate complex form of constituent oscillation
-        fhc = famp*np.exp(-1j*fph*np.pi/180.0)
         # verify differences are within tolerance
         eps = 5e-3
         for k,cons in enumerate(c):
-            assert np.isclose(local[cons], fhc[k], rtol=eps, atol=eps)
+            assert np.isclose(local[cons], ds[cons], rtol=eps, atol=eps)
 
     # PURPOSE: test the tide correction wrapper function
     def test_Ross_Ice_Shelf(self):
@@ -610,9 +608,9 @@ class Test_CATS2008:
         delta_time = np.random.random((100))*86400
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_elevations(x, y, delta_time,
-            DIRECTORY=self.directory, MODEL='CATS2008',
-            EPOCH=timescale.time._j2000_epoch, TYPE='drift', TIME='UTC',
-            EPSG=3031, EXTRAPOLATE=True)
+            directory=self.directory, model='CATS2008',
+            epoch=timescale.time._j2000_epoch, type='drift', standard='UTC',
+            crs=3031, extrapolate=True)
         assert np.any(tide)
 
     # PURPOSE: test the tide currents wrapper function
@@ -630,9 +628,9 @@ class Test_CATS2008:
         delta_time = np.random.random((100))*86400
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_currents(x, y, delta_time,
-            DIRECTORY=self.directory, MODEL='CATS2008',
-            EPOCH=timescale.time._j2000_epoch, TYPE='drift', TIME='UTC',
-            EPSG=3031, EXTRAPOLATE=True)
+            directory=self.directory, model='CATS2008',
+            epoch=timescale.time._j2000_epoch, type='drift', standard='UTC',
+            crs=3031, extrapolate=True)
         # iterate over zonal and meridional currents
         for key,val in tide.items():
             assert np.any(val)
@@ -813,9 +811,9 @@ class Test_AOTIM5_2018:
         delta_time = 0.0
         # calculate tide map
         tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-            DIRECTORY=self.directory, MODEL='AOTIM-5-2018',
-            EPOCH=timescale.time._j2000_epoch, TYPE='grid', TIME='UTC',
-            EPSG=3413, EXTRAPOLATE=True)
+            directory=self.directory, model='AOTIM-5-2018',
+            epoch=timescale.time._j2000_epoch, type='grid', standard='UTC',
+            crs=3413, extrapolate=True)
         assert np.any(tide)
 
     # PURPOSE: test definition file functionality

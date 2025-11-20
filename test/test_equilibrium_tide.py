@@ -60,7 +60,7 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
         include_anelasticity=include_anelasticity)
     # calculate long-period equilibrium tides using compute function
     computed = pyTMD.compute.LPET_elevations(lon, lat, delta_time,
-        EPSG=4326, EPOCH=EPOCH, TYPE=TYPE, TIME='GPS')
+        crs=4326, epoch=EPOCH, type=TYPE, standard='GPS')
 
     # longitude of moon
     # longitude of sun

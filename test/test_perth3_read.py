@@ -123,8 +123,8 @@ def test_verify_GOT47(directory, CROP):
 def test_check_GOT47(directory):
     lons = np.zeros((10)) + 178.0
     lats = -45.0 - np.arange(10)*5.0
-    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=directory,
-        MODEL='GOT4.7', EPSG=4326)
+    obs = pyTMD.compute.tide_masks(lons, lats, directory=directory,
+        model='GOT4.7', crs=4326)
     exp = np.array([True, True, True, True, True,
         True, True, True, False, False])
     assert np.all(obs == exp)
@@ -143,9 +143,9 @@ def test_Ross_Ice_Shelf(directory):
     delta_time = 0.0
     # calculate tide map
     tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-        DIRECTORY=directory, MODEL='GOT4.7',
-        EPOCH=timescale.time._atlas_sdp_epoch, TYPE='grid', TIME='GPS',
-        EPSG=3031, EXTRAPOLATE=True)
+        directory=directory, model='GOT4.7',
+        epoch=timescale.time._atlas_sdp_epoch, type='grid', standard='GPS',
+        crs=3031, extrapolate=True)
     assert np.any(tide)
 
 # PURPOSE: test definition file functionality
@@ -185,4 +185,4 @@ def test_unlisted_model(directory):
     msg = "Unlisted tide model"
     with pytest.raises(Exception, match=msg):
         pyTMD.compute.tide_elevations(None, None, None,
-            DIRECTORY=directory, MODEL='invalid')
+            directory=directory, model='invalid')

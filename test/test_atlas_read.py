@@ -10,8 +10,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
-    netCDF4: Python interface to the netCDF C library
-        https://unidata.github.io/netcdf4-python/netCDF4/index.html
+    h5netcdf: Pythonic interface to netCDF4 via h5py
+        https://h5netcdf.org/
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 

@@ -35,7 +35,6 @@ __all__ = [
     "rotate",
     "aliasing",
     "legendre",
-    "assoc_legendre",
     "sph_harm"
 ]
 
@@ -201,6 +200,9 @@ def legendre(
     # assert values
     assert (l >= 0) and (l <= lmax), f'Degree must be between 0 and {lmax}'
     assert (m >= 0) and (m <= l), 'Order must be between 0 and l'
+    # verify x is array
+    if isinstance(x, list):
+        x = np.atleast_1d(x)
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
     # since tides only use low-degree harmonics:
@@ -255,50 +257,6 @@ def legendre(
     dPlm *= np.power(-1.0, m)
     # return the associated legendre functions
     return Plm, dPlm
-
-def assoc_legendre(lmax, x):
-    """
-    Computes fully-normalized associated Legendre Polynomials using a
-    standard forward-column method :cite:p:`Colombo:1981vh`
-    :cite:p:`HofmannWellenhof:2006hy`
-
-    Parameters
-    ----------
-    lmax: int
-        maximum degree and order of Legendre polynomials
-    x: np.ndarray
-        elements ranging from -1 to 1
-
-        Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
-
-    Returns
-    -------
-    Plm: np.ndarray
-        fully-normalized Legendre polynomials
-    """
-    # verify values are integers
-    lmax = np.int64(lmax)
-    # if x is the cos of colatitude, u is the sine
-    u = np.sqrt(1.0 - x**2)
-    # allocate for associated legendre functions
-    Plm = xr.Dataset()
-    # initial polynomials for the recursion
-    Plm[0,0] = xr.ones_like(x)
-    Plm[1,0] = np.sqrt(3.0)*x
-    Plm[1,1] = np.sqrt(3.0)*u
-    for l in range(2, lmax+1):
-        # normalization factor
-        norm = np.sqrt(2.0*l+1.0)
-        for m in range(0, l):
-            # zonal and tesseral terms (non-sectorial)
-            a = np.sqrt((2.0*l-1.0)/((l-m)*(l+m)))
-            b = np.sqrt((l+m-1.0)*(l-m-1.0)/((l-m)*(l+m)*(2.0*l-3.0)))
-            Plm[l,m] = a*norm*x*Plm[l-1,m] - b*norm*Plm[l-2,m]
-        # sectorial terms: serve as seed values for the recursion
-        # starting with P00 and P11 (outside the loop)
-        Plm[l,l] = u*norm*np.sqrt(1.0/(2.0*l))*Plm[l-1,l-1]
-    # return values
-    return Plm
 
 def sph_harm(
         l: int,

@@ -11,8 +11,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
-    netCDF4: Python interface to the netCDF C library
-        https://unidata.github.io/netcdf4-python/netCDF4/index.html
+    h5netcdf: Pythonic interface to netCDF4 via h5py
+        https://h5netcdf.org/
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
@@ -52,8 +52,8 @@ filepath = pathlib.Path(filename).absolute().parent
 def test_check_FES2014(directory):
     lons = np.zeros((10)) + 178.0
     lats = -45.0 - np.arange(10)*5.0
-    obs = pyTMD.compute.tide_masks(lons, lats, DIRECTORY=directory,
-        MODEL='FES2014', EPSG=4326)
+    obs = pyTMD.compute.tide_masks(lons, lats, directory=directory,
+        model='FES2014', crs=4326)
     exp = np.array([True, True, True, True, True,
         True, True, True, False, False])
     assert np.all(obs == exp)

@@ -238,11 +238,11 @@ def test_solid_earth_radial(EPHEMERIDES):
     tide_expected = tide_earth - tide_earth_free2mean
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        EPSG=4326, TYPE='drift', TIME='datetime', ELLIPSOID='WGS84',
-        EPHEMERIDES=EPHEMERIDES)
+        crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
+        ephemerides=EPHEMERIDES)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        EPSG=4326, TYPE='drift', TIME='datetime', ELLIPSOID='WGS84',
-        TIDE_SYSTEM='mean_tide', EPHEMERIDES=EPHEMERIDES)
+        crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
+        tide_system='mean_tide', ephemerides=EPHEMERIDES)
     # as using estimated ephemerides, assert within 1/2 mm
     assert np.isclose(tide_earth, tide_free, atol=5e-4).all()
     # sign differences with ATLAS product: correction is subtractive
@@ -294,11 +294,11 @@ def test_body_tides(CATALOG, METHOD):
     assert np.isclose(tide_expected, tide_mean['R'], atol=2e-3).all()
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        EPSG=4326, TYPE='drift', TIME='datetime', TIDE_SYSTEM='tide_free',
-        METHOD='catalog', EPHEMERIDES=METHOD, CATALOG=CATALOG)
+        crs=4326, type='drift', standard='datetime', tide_system='tide_free',
+        method='catalog', ephemerides=METHOD, catalog=CATALOG)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        EPSG=4326, TYPE='drift', TIME='datetime', TIDE_SYSTEM='mean_tide',
-        METHOD='catalog', EPHEMERIDES=METHOD, CATALOG=CATALOG)
+        crs=4326, type='drift', standard='datetime', tide_system='mean_tide',
+        method='catalog', ephemerides=METHOD, catalog=CATALOG)
     # since we are using simplified body tides: assert within 2 mm
     assert np.isclose(tide_earth, tide_free, atol=2e-3).all()
     assert np.isclose(tide_expected, tide_mean, atol=2e-3).all()

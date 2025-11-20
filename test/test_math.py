@@ -74,7 +74,7 @@ def test_legendre(l, x=[-1.0, -0.9, -0.8]):
     nx = len(x)
     obs = np.zeros((l+1, nx))
     for m in range(l+1):
-        obs[m,:] = pyTMD.math.legendre(l, x, m=m)
+        obs[m,:], dobs = pyTMD.math.legendre(l, x, m=m)
     # expected values for each spherical harmonic degree
     if (l == 1):
         expected = np.array([
@@ -96,32 +96,6 @@ def test_legendre(l, x=[-1.0, -0.9, -0.8]):
         ])
     # check with expected values
     assert np.isclose(obs, expected, atol=1e-05).all()
-
-# PURPOSE: test fully-normalized Legendre polynomials
-def test_normalized(lmax=3, x=[-1.0, -0.9, -0.8]):
-    """test the calculation of normalized Legendre polynomials
-    """
-    obs = pyTMD.math.assoc_legendre(lmax, x)
-    expected = np.array([
-        [-2.64575, -1.25012, -0.21166],
-        [-0.00000, 2.15398, 2.13864],
-        [0.00000, -0.87611, -1.47556],
-        [-0.00000, 0.17323, 0.45180]
-    ])
-    assert np.isclose(obs[lmax:,:], expected, atol=1e-05).all()
-
-# PURPOSE: test fully-normalized zonal Legendre polynomials
-def test_zonal(lmax=3, x=[-1.0, -0.9, -0.8]):
-    """test the calculation of zonal Legendre polynomials
-    """
-    obs = pyTMD.math.assoc_legendre(lmax, x)
-    expected = np.array([
-        [1.00000, 1.00000, 1.00000],
-        [-1.73205, -1.55885, -1.38564],
-        [2.23607, 1.59879, 1.02859],
-        [-2.64575, -1.25012, -0.21166],
-    ])
-    assert np.isclose(obs[:lmax+1,0,:], expected, atol=1e-05).all()
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():

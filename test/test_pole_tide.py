@@ -73,9 +73,13 @@ def test_load_pole_tide_displacements(TYPE):
 
     # calculate load pole tide displacements
     test = pyTMD.compute.LPT_displacements(x, y, delta_time,
-        EPSG=EPSG, EPOCH=EPOCH, TYPE=TYPE, TIME=TIME,
-        ELLIPSOID=ELLIPSOID, CONVENTION=CONVENTION,
-        FILL_VALUE=FILL_VALUE)
+        crs=EPSG,
+        epoch=EPOCH,
+        type=TYPE,
+        standard=TIME,
+        ellipsoid=ELLIPSOID,
+        convention=CONVENTION,
+    )
 
     # reform coordinate dimensions for input grids
     # or verify coordinate dimension shapes
@@ -284,7 +288,6 @@ def test_ocean_pole_tide():
     formats = ('i4','f4','f4','f4','f4','f4','f4','f4','f4','f4')
     validation = np.loadtxt(ocean_pole_test_file, skiprows=26,
         dtype=dict(names=names, formats=formats))
-    file_lines = len(validation)
     # mean pole coordinates for test
     xmean = np.array([header['xmean(t0)'], header['xmeandot']])
     ymean = np.array([header['ymean(t0)'], header['ymeandot']])
@@ -358,7 +361,6 @@ def test_predict_ocean_pole_tide():
     formats = ('i4','f4','f4','f4','f4','f4','f4','f4','f4','f4')
     validation = np.loadtxt(ocean_pole_test_file, skiprows=26,
         dtype=dict(names=names, formats=formats))
-    file_lines = len(validation)
     # create timescale object from MJD
     ts = timescale.time.Timescale(MJD=validation['MJD'])
 
@@ -378,12 +380,12 @@ def test_predict_ocean_pole_tide():
         header['longitude'],
         header['latitude'],
         ts.to_datetime(),
-        EPSG=4326,
-        TYPE='time series',
-        TIME='datetime',
-        ELLIPSOID='IERS',
-        CONVENTION='2003',
-        VARIABLE=['R','N','E']
+        crs=4326,
+        type='time series',
+        standard='datetime',
+        ellipsoid='IERS',
+        convention='2003',
+        variable=['R','N','E']
     )
 
     # read ocean pole tide map from Desai (2002)

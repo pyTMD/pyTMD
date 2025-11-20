@@ -182,8 +182,8 @@ compute the corresponding tidal elevation or currents.
 .. code-block:: python
 
     >>> import pyTMD
-    >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='linear', FILL_VALUE=np.nan)
-    >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, DIRECTORY=path_to_tide_models, MODEL='CATS2008', EPSG=3031, EPOCH=(2000,1,1,0,0,0), TYPE='drift', TIME='GPS', METHOD='linear', FILL_VALUE=np.nan)
+    >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, directory=path_to_tide_models, model='CATS2008', crs=3031, epoch=(2000,1,1,0,0,0), type='drift', standard='GPS', method='linear')
+    >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, directory=path_to_tide_models, model='CATS2008', crs=3031, epoch=(2000,1,1,0,0,0), type='drift', standard='GPS', method='linear')
 
 Time
 ####

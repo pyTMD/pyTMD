@@ -25,8 +25,8 @@ readme = {file = "README.md", content-type = "text/markdown"}
 
 requires-python = "~=3.6"
 dependencies = [
+    "h5netcdf",
     "lxml",
-    "netCDF4",
     "numpy",
     "pint",
     "platformdirs",
@@ -64,7 +64,7 @@ Issues = "https://github.com/pyTMD/pyTMD/issues"
 doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
 all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas"]
 aws = ["dask", "geopandas", "obstore", "pyarrow", "s3fs", "zarr>=3"]
-dev = ["flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
+dev = ["dask", "flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
 "fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
@@ -179,8 +179,8 @@ cmd = "flake8 {{ test }} --count {{ flags }} --statistics --extend-exclude 'buil
 description = "Run flake8 to check for compilation errors"
 
 [tool.pixi.dependencies]
+h5netcdf = "*"
 numpy = "*"
-netcdf4 = "*"
 lxml = "*"
 pint = "*"
 platformdirs = "*"
