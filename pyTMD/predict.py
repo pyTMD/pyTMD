@@ -1381,8 +1381,8 @@ def solid_earth_tide(
     # corrections for the latitudinal dependence
     dxt += _latitude_dependence(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
     # corrections for the frequency dependence
-    dxt += _frequency_dependence_diurnal(XYZ, MJD)
-    dxt += _frequency_dependence_long_period(XYZ, MJD)
+    dxt += _frequency_dependence_diurnal(XYZ, MJD, deltat=deltat)
+    dxt += _frequency_dependence_long_period(XYZ, MJD, deltat=deltat)
     # convert the permanent tide system if specified
     if (tide_system.lower() == 'mean_tide'):
         dxt += _free_to_mean(XYZ, h2, l2)
