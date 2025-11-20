@@ -11,9 +11,9 @@ matplotlib and cartopy
 
 Documentation is available at https://pytmd.readthedocs.io
 """
-import pyTMD.arguments
 import pyTMD.astro
 import pyTMD.compute
+import pyTMD.constituents
 import pyTMD.ellipse
 import pyTMD.interpolate
 import pyTMD.math

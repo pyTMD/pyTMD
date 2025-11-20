@@ -51,8 +51,8 @@ PROGRAM DEPENDENCIES:
     time.py: utilities for calculating time operations
     spatial: utilities for reading, writing and operating on spatial data
     utilities.py: download and management utilities for syncing files
-    arguments.py: load the nodal corrections for tidal constituents
     astro.py: computes the basic astronomical mean longitudes
+    constituents.py: calculates constituent parameters and nodal arguments  
     crs.py: Coordinate Reference System (CRS) routines
     predict.py: predict tide values using harmonic constants
     io/model.py: retrieves tide model parameters for named tide models
@@ -555,11 +555,11 @@ def tide_currents(
         X = xr.DataArray(mx, dims=('y','x'))
         Y = xr.DataArray(my, dims=('y','x'))
     elif (TYPE.lower() == 'drift'):
-        mx, my = ds.tmd.transform(x, y, crs=EPSG)
+        mx, my = dtree.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
     elif (TYPE.lower() == 'time series'):
-        mx, my = ds.tmd.transform(x, y, crs=EPSG)
+        mx, my = dtree.tmd.transform(x, y, crs=EPSG)
         X = xr.DataArray(mx, dims=('station'))
         Y = xr.DataArray(my, dims=('station'))
 
@@ -938,11 +938,9 @@ def LPT_displacements(
             'Z': (ds.dims, Z)
         },
         coords=ds.coords
-    )
-    # geocentric latitude (radians)
-    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    ) 
     # geocentric colatitude (radians)
-    theta = (np.pi/2.0 - latitude_geocentric)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 
@@ -1124,16 +1122,16 @@ def OPT_displacements(
         },
         coords=ds.coords
     )
-    # geocentric latitude (radians)
-    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # geocentric colatitude (radians)
-    theta = (np.pi/2.0 - latitude_geocentric)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
+    # geocentric latitude (degrees)
+    latitude_geocentric = 90.0 - np.degrees(theta)
 
     # read and interpolate ocean pole tide map from Desai (2002)
     IERS = pyTMD.io.IERS.open_dataset()
-    Umap = IERS.interp(x=ds.x, y=np.degrees(latitude_geocentric), method=METHOD)
+    Umap = IERS.interp(x=ds.x, y=latitude_geocentric, method=METHOD)
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
@@ -1154,7 +1152,7 @@ def OPT_displacements(
     UXYZ['Z'] = R[2,0]*Umap['N'] + R[2,1]*Umap['E'] + R[2,2]*Umap['R']
 
     # calculate ocean pole tides in cartesian coordinates
-    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
+    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, UXYZ,
         deltat=ts.tt_ut1,
         a_axis=units.a_axis,
         gamma_0=ge,
@@ -1336,10 +1334,8 @@ def _ephemeride_SET(
         },
         coords=ds.coords
     )
-    # geocentric latitude (radians)
-    latitude_geocentric = np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # geocentric colatitude (radians)
-    theta = (np.pi/2.0 - latitude_geocentric)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 

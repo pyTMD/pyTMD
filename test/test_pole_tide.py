@@ -429,7 +429,7 @@ def test_predict_ocean_pole_tide():
     UXYZ['Y'] = R[1,0]*ui['N'] + R[1,1]*ui['E'] + R[1,2]*ui['R']
     UXYZ['Z'] = R[2,0]*ui['N'] + R[2,1]*ui['E'] + R[2,2]*ui['R']
     # use prediction function to calculate ocean pole tide displacements
-    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
+    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, UXYZ,
         gamma_0=ge,
         a_axis=units.a_axis,
         GM=units.GM,

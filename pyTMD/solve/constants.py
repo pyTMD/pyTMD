@@ -21,10 +21,11 @@ PYTHON DEPENDENCIES:
         https://scipy.org
 
 PROGRAM DEPENDENCIES:
-    arguments.py: loads nodal corrections for tidal constituents
     astro.py: computes the basic astronomical mean longitudes
+    constituents.py: calculates constituent parameters and nodal arguments  
 
 UPDATE HISTORY:
+    Updated 11/2025: output as xarray Dataset of complex harmonic constants
     Updated 10/2025: added option to infer minor constituents (post-fit)
     Updated 08/2025: use numpy degree to radian conversions
     Updated 06/2025: verify that height values are all finite
@@ -39,8 +40,9 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.linalg
+import xarray as xr
 import scipy.optimize
-import pyTMD.arguments
+import pyTMD.constituents
 import pyTMD.predict
 
 __all__ = [
@@ -102,10 +104,8 @@ def constants(t: float | np.ndarray,
 
     Returns
     -------
-    amp: np.ndarray
-        amplitude of each harmonic constant (units of input data)
-    phase: np.ndarray
-        phase of each harmonic constant (degrees)
+    ds: xr.Dataset
+        xarray dataset of complex harmonic constants
     """
     # check if input constituents is a string
     if isinstance(constituents, str):
@@ -129,7 +129,7 @@ def constants(t: float | np.ndarray,
 
     # load the nodal corrections
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.arguments.arguments(t + _mjd_tide, constituents,
+    pu, pf, G = pyTMD.constituents.arguments(t + _mjd_tide, constituents,
         deltat=deltat, corrections=corrections)
 
     # create design matrix
@@ -142,7 +142,7 @@ def constants(t: float | np.ndarray,
     for k,c in enumerate(constituents):
         if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
             amp, ph, omega, alpha, species = \
-                pyTMD.arguments._constituent_parameters(c)
+                pyTMD.constituents._constituent_parameters(c)
             th = omega*t*86400.0 + ph + pu[:,k]
         else:
             th = np.radians(G[:,k]) + pu[:,k]
@@ -173,9 +173,12 @@ def constants(t: float | np.ndarray,
         isin = 2*np.arange(nc) + order + 2
         icos = 2*np.arange(nc) + order + 1
         # complex model amplitudes for major constituents
-        hmajor = p[icos] + 1j*p[isin]
+        darr = xr.DataArray(p[icos] + 1j*p[isin],
+            coords=dict(constituent=constituents),
+            dims=['constituent'])
+        ds = darr.to_dataset(dim='constituent')
         # inferred minor constituent time series
-        hminor = pyTMD.predict.infer_minor(t, hmajor, constituents,
+        hminor = pyTMD.predict.infer_minor(t, ds,
             deltat=deltat, corrections=corrections,
             minor=minor_constituents)
         # corrected height (without minor constituents)
@@ -192,20 +195,13 @@ def constants(t: float | np.ndarray,
                 max_iter=max_iter).x
 
     # calculate amplitude and phase for each constituent
-    amp = np.zeros((nc))
-    ph = np.zeros((nc))
+    ds = xr.Dataset(coords=dict(constituent=constituents))
     # for each constituent
     for k,c in enumerate(constituents):
         # indices for the sine and cosine terms
         # skip over the polynomial terms
         isin = 2*k + order + 2
         icos = 2*k + order + 1
-        # calculate amplitude and phase
-        amp[k] = np.abs(1j*p[isin] + p[icos])
-        ph[k] = np.arctan2(-p[isin], p[icos])
-    # convert phase to degrees
-    phase = np.degrees(ph)
-    phase[phase < 0] += 360.0
-
-    # return the amplitude and phase
-    return (amp, phase)
+        ds[c] = xr.DataArray(p[icos] + 1j*p[isin])
+    # return the xarray dataset
+    return ds

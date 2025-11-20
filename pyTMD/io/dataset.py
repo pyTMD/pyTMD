@@ -27,7 +27,6 @@ UPDATE HISTORY:
     Written 08/2025
 """
 import numpy as np
-import pyTMD.arguments
 from pyTMD.utilities import import_dependency
 # attempt imports
 xr = import_dependency('xarray')
@@ -166,6 +165,7 @@ class DataTree:
         - ``incl``: angle of inclination of the northern semi-major axis
         - ``phase``: phase lag of the current behind the tidal potential  
         """
+        from pyTMD.ellipse import ellipse
         # get u and v components from datatree
         dsu = (self._dtree.get('u',None) or self._dtree.get('U',None)).to_dataset()
         dsv = (self._dtree.get('v',None) or self._dtree.get('V',None)).to_dataset()
@@ -180,8 +180,7 @@ class DataTree:
             if (dsu[c].attrs.get('units','') != dsv[c].attrs.get('units','')):
                 raise ValueError(f'Incompatible units for {c} in u and v datasets')
             # calculate ellipse parameters
-            major, minor, incl, phase = pyTMD.ellipse.ellipse(
-                dsu[c].values, dsv[c].values)
+            major, minor, incl, phase = ellipse(dsu[c].values, dsv[c].values)
             # create xarray DataArray for ellipse parameters
             dmajor[c] = xr.DataArray(major, dims=dsu[c].dims, coords=dsu.coords)
             dminor[c] = xr.DataArray(minor, dims=dsu[c].dims, coords=dsu.coords)
@@ -211,7 +210,7 @@ class DataTree:
         - ``incl``: angle of inclination of the northern semi-major axis
         - ``phase``: phase lag of the current behind the tidal potential  
         """
-        
+        from pyTMD.ellipse import inverse
         # get ellipse parameters from datatree
         dmajor = self._dtree['major'].to_dataset()
         dminor = self._dtree['minor'].to_dataset()
@@ -223,7 +222,7 @@ class DataTree:
         # for each constituent in the major parameter
         for c in dmajor.tmd.constituents:
             # calculate ellipse parameters
-            u, v = pyTMD.ellipse.inverse(dmajor[c].values, dminor[c].values,
+            u, v = inverse(dmajor[c].values, dminor[c].values,
                 dincl[c].values, dphase[c].values)
             # create xarray DataArray for ellipse parameters
             dsu[c] = xr.DataArray(u, dims=dmajor[c].dims, coords=dmajor.coords)
@@ -266,7 +265,9 @@ class Dataset:
         """
         kwargs.setdefault('constituents', self.constituents)
         # reduce dataset to constituents and convert to dataarray
-        da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent').T
+        da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent')
+        # stack constituents as the last dimension
+        da = da.transpose(*da.dims[1:],da.dims[0])
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
     
@@ -285,7 +286,7 @@ class Dataset:
             buffer to add to bounds for cropping
         """
         # number of points to pad for global grids
-        n = int(180//(self._ds.x[1] - self._ds.x[0]))
+        n = int(180//(self._x[1] - self._x[0]))
         # pad global grids along x-dimension (if necessary)
         lon_wrap = self.crs.to_dict().get('lon_wrap', 0)
         if self.is_global and (lon_wrap == 180) and (np.min(bounds[:2]) < 0):
@@ -321,8 +322,9 @@ class Dataset:
         darr: xarray.DataArray
             predicted tides
         """
+        from pyTMD.predict import infer_minor
         # infer minor tides at times
-        darr = pyTMD.predict.infer_minor(t, self._ds, **kwargs)
+        darr = infer_minor(t, self._ds, **kwargs)
         # return the inferred tides
         return darr
 
@@ -346,10 +348,8 @@ class Dataset:
         ds = self._ds.copy()
         # inpaint each variable in the dataset
         for v in ds.data_vars.keys():
-            ds[v].values = inpaint(
-                self._ds.x.values, self._ds.y.values,
-                self._ds[v].values,
-                **kwargs
+            ds[v].values = inpaint(self._x, self._y,
+                self._ds[v].values, **kwargs
             )
         # return the dataset
         return ds
@@ -394,13 +394,13 @@ class Dataset:
         # verify longitudinal convention for geographic models
         if self.crs.is_geographic:
             # grid spacing in x-direction
-            dx = self._ds.x[1] - self._ds.x[0]
+            dx = self._x[1] - self._x[0]
             # adjust input longitudes to be consistent with model
-            if (np.min(x) < 0.0) & (self._ds.x.max() > (180.0 + dx)):
+            if (np.min(x) < 0.0) & (self._x.max() > (180.0 + dx)):
                 # input points convention (-180:180)
                 # tide model convention (0:360)
                 x = xr.where(x < 0, x + 360, x)
-            elif (np.max(x) > 180.0) & (self._ds.x.min() < (0.0 - dx)):
+            elif (np.max(x) > 180.0) & (self._x.min() < (0.0 - dx)):
                 # input points convention (0:360)
                 # tide model convention (-180:180)
                 x = xr.where(x > 180, x - 360, x)
@@ -417,16 +417,14 @@ class Dataset:
                 elif (ds[v].ndim == 0):
                     # single point extrapolation
                     ds[v].values, = extrapolate(
-                        self._ds.x.values, self._ds.y.values,
-                        self._ds[v].values, x, y,
+                        self._x, self._y, self._ds[v].values, x, y,
                         is_geographic=self.crs.is_geographic,
                         **kwargs
                     )
                 else:
                     # only extrapolate invalid points
                     ds[v].values[invalid] = extrapolate(
-                        self._ds.x.values, self._ds.y.values,
-                        self._ds[v].values,
+                        self._x, self._y, self._ds[v].values,
                         x.values[invalid], y.values[invalid],
                         is_geographic=self.crs.is_geographic,
                         **kwargs
@@ -449,9 +447,9 @@ class Dataset:
         # tilt factor: response with respect to the solid earth
         gamma_2 = (1.0 + k2 - h2)
         # check dimensions
-        if ds.x.ndim == 1 and (ds.y.ndim == 1):
+        if (ds.x.ndim == 1) and (ds.y.ndim == 1):
             # 2D grid of coordinates
-            x, y = np.meshgrid(ds.x.values, ds.y.values)
+            x, y = np.meshgrid(self._x, self._y)
         else:
             x, y = ds.x.values, ds.y.values
         # transform model coordinates to lat/lon coordinates
@@ -483,9 +481,12 @@ class Dataset:
             padded xarray Dataset
         """
         # (possibly) unchunk x-coordinates and pad to wrap at meridian
-        x = self._ds.x.chunk(x=-1).pad(x=n, mode="reflect", reflect_type="odd")
+        x = xr.DataArray(self._x, dims='x').pad(
+            x=n, mode="reflect", reflect_type="odd"
+        )
         # pad dataset and re-assign x-coordinates
-        ds = self._ds.pad(x=n, mode="wrap").assign_coords(x=x)
+        ds = self._ds.copy()
+        ds = ds.pad(x=n, mode="wrap").assign_coords(x=x)
         # rechunk dataset (if specified)
         if chunks is not None:
             ds = ds.chunk(chunks)
@@ -508,8 +509,9 @@ class Dataset:
         darr: xarray.DataArray
             predicted tides
         """
+        from pyTMD.predict import time_series
         # predict tides at times
-        darr = pyTMD.predict.time_series(t, self._ds, **kwargs)
+        darr = time_series(t, self._ds, **kwargs)
         # return the predicted tides
         return darr
 
@@ -619,14 +621,14 @@ class Dataset:
     def constituents(self):
         """List of tidal constituent names in the ``Dataset``
         """
-        # import constituents class
-        from pyTMD.io import constituents
+        # import constituents parser
+        from pyTMD.constituents import _parse_name
         # output list of tidal constituents
         cons = []
         # parse list of model constituents
         for i,c in enumerate(self._ds.data_vars.keys()):
             try:
-                cons.append(constituents.parse(c))
+                cons.append(_parse_name(c))
             except ValueError:
                 pass
         # return list of constituents
@@ -646,9 +648,9 @@ class Dataset:
         """Determine if the dataset covers a global domain
         """
         # grid spacing in x-direction
-        dx = self._ds.x[1] - self._ds.x[0]
+        dx = self._x[1] - self._x[0]
         # check if global grid
-        cyclic = np.isclose(self._ds.x[-1] - self._ds.x[0], 360.0 - dx)
+        cyclic = np.isclose(self._x[-1] - self._x[0], 360.0 - dx)
         return self.crs.is_geographic and cyclic
 
     @property
@@ -657,6 +659,18 @@ class Dataset:
         """
         if self.crs.area_of_use is not None:
             return self.crs.area_of_use.name.replace('.','').lower()
+        
+    @property
+    def _x(self):
+        """x-coordinates of the ``Dataset``
+        """
+        return self._ds.x.values
+    
+    @property
+    def _y(self):
+        """y-coordinates of the ``Dataset``
+        """
+        return self._ds.y.values
 
 @xr.register_dataarray_accessor('tmd')
 class DataArray:

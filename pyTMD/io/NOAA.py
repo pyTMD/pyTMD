@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import traceback
 import numpy as np
-import pyTMD.io.constituents
+import pyTMD.constituents
 from pyTMD.utilities import import_dependency
 
 # attempt imports
@@ -178,7 +178,7 @@ def harmonic_constituents(
     # set the index to the constituent number
     df = df.set_index('constNum')
     # parse harmonic constituents
-    c = [pyTMD.io.constituents.parse(row['name']) for i, row in df.iterrows()]
+    c = [pyTMD.constituents._parse_name(row['name']) for i, row in df.iterrows()]
     df['constituent'] = c
     # return the dataframe
     return df

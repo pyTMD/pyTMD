@@ -15,6 +15,7 @@ UPDATE HISTORY:
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
         generalize vectorized 1D linear interpolation for more cases of fp
+        allow iterating over variable with a recursion in interp1d
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
@@ -43,7 +44,7 @@ __all__ = [
 
 # PURPOSE: 1-dimensional linear interpolation on arrays
 def interp1d(
-        x: float,
+        x: float | np.ndarray,
         xp: np.ndarray,
         fp: np.ndarray,
         extrapolate: str = 'linear',
@@ -54,8 +55,8 @@ def interp1d(
 
     Parameters
     ----------
-    x: np.ndarray
-        x-coordinates of the interpolated values
+    x: float | np.ndarray
+        x-coordinate(s) of the interpolated values
     xp: np.ndarray
         x-coordinates of the data points
     fp: np.ndarray
@@ -71,6 +72,14 @@ def interp1d(
     f: np.ndarray
         Interpolated values at x
     """
+    # recursion for multiple x values
+    if isinstance(x, np.ndarray) and (x.ndim > 0):
+        # allocate output array
+        f = np.zeros((*fp.shape[:-1], len(x)), dtype=fp.dtype)
+        for i, val in enumerate(x):
+            f[...,i] = interp1d(val, xp, fp, **kwargs)
+        # return the array of interpolated values
+        return f
     # clip coordinates to handle nearest-neighbor extrapolation
     if (extrapolate == 'nearest'):
         x = np.clip(x, a_min=xp.min(), a_max=xp.max())
@@ -83,6 +92,7 @@ def interp1d(
     d = np.divide(x - xp[j], xp[j+1] - xp[j])
     # calculate interpolated values
     f = (1.0 - d)*fp[...,j] + d*fp[...,j+1]
+    # return the interpolated values
     return f
 
 def inpaint(

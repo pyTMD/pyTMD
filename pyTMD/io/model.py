@@ -744,13 +744,13 @@ class model:
         constituent: str or list
             constituent name
         """
-        # import constituents class
-        from pyTMD.io import constituents
+        # import constituents parser
+        from pyTMD.constituents import _parse_name
         # convert to pathlib.Path
         model_file = pathlib.Path(model_file)
         # try to parse the constituent name from the file name
         try:
-            return constituents.parse(model_file.name)
+            return _parse_name(model_file.name)
         except ValueError:
             pass
         # if no constituent name is found

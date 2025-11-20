@@ -8,5 +8,4 @@ from .OTIS import *
 from .IERS import *
 from .NOAA import *
 from .dataset import *
-from .constituents import constituents
 from .model import model, load_database

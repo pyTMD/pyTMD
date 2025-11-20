@@ -68,7 +68,7 @@ import datetime
 import numpy as np
 import xarray as xr
 import pyTMD.version
-import pyTMD.io.constituents
+import pyTMD.constituents
 
 __all__ = [
     'open_mfdataset',
@@ -178,7 +178,7 @@ def open_got_ascii(
             file_contents = f.read().splitlines()
     # parse header text
     # constituent identifier
-    cons = pyTMD.io.constituents.parse(file_contents[0])
+    cons = pyTMD.constituents._parse_name(file_contents[0])
     # get units
     units = re.findall(r'\((\w+m)\)', file_contents[0], re.IGNORECASE)
     # grid dimensions
@@ -276,7 +276,7 @@ def open_got_netcdf(
     else:
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # extract constituent from attribute
-    cons = pyTMD.io.constituents.parse(tmp.attrs['Constituent'])
+    cons = pyTMD.constituents._parse_name(tmp.attrs['Constituent'])
     # create output xarray dataset for file
     ds = xr.Dataset()
     # assign coordinates

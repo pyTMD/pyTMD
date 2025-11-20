@@ -67,7 +67,7 @@ import datetime
 import numpy as np
 import xarray as xr
 import pyTMD.version
-import pyTMD.io.constituents
+import pyTMD.constituents
 
 # versions of FES models
 _ascii_versions = ('FES1999','FES2004')
@@ -176,7 +176,7 @@ def open_fes_ascii(
         with open(input_file, mode="r", encoding='utf8') as f:
             file_contents = f.read().splitlines()
     # parse model file for constituent identifier
-    cons = pyTMD.io.constituents.parse(input_file.stem)
+    cons = pyTMD.constituents._parse_name(input_file.stem)
     # longitude range (lonmin, lonmax)
     lonmin, lonmax = np.array(file_contents[0].split(), dtype=np.float64)
     # latitude range (latmin, latmax)
@@ -286,7 +286,7 @@ def open_fes_netcdf(
     else:
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # parse model file for constituent identifier
-    cons = pyTMD.io.constituents.parse(input_file.stem)
+    cons = pyTMD.constituents._parse_name(input_file.stem)
     # amplitude and phase components for each type
     if kwargs['version'] in ('FES2012',):
         mapping_coords = dict(lon='x', lat='y')
