@@ -26,8 +26,12 @@ UPDATE HISTORY:
         when converting to an xarray DataArray
     Written 08/2025
 """
+import warnings
 import numpy as np
 from pyTMD.utilities import import_dependency
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
 # attempt imports
 xr = import_dependency('xarray')
 pyproj = import_dependency('pyproj')

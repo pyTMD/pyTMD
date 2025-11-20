@@ -84,7 +84,7 @@ exclude = ["providers*", "run*", "test*"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 norecursedirs = ".git"
-addopts = "-n auto --verbose --capture=no"
+addopts = "-n auto --verbose --capture=no -W ignore::UserWarning"
 python_files = [
     "test*.py"
 ]

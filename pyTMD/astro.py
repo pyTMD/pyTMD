@@ -293,7 +293,7 @@ def planetary_longitudes(MJD: np.ndarray):
     jupiter_longitude = np.array([34.351519, 3036.3027748, 2.233e-4, 3.7e-8])
     LJu = polynomial_sum(jupiter_longitude, T)
     # mean longitudes of Saturn
-    saturn_longitude = np.array([50.077444, 1223.5110686, 5.1908-4, -3.0e-8])
+    saturn_longitude = np.array([50.077444, 1223.5110686, 5.1908e-4, -3.0e-8])
     LSa = polynomial_sum(saturn_longitude, T)
     # take the modulus of each
     LMe = normalize_angle(LMe)
@@ -303,17 +303,6 @@ def planetary_longitudes(MJD: np.ndarray):
     LSa = normalize_angle(LSa)
     # return as tuple
     return (LMe, LVe, LMa, LJu, LSa)
-
-# PURPOSE: computes the phase angles of astronomical means
-def phase_angles(MJD: np.ndarray):
-    # raise warning for deprecated function call
-    warnings.warn(("Deprecated. Please use "
-        "pyTMD.astro.doodson_arguments instead"),
-        DeprecationWarning)
-    # call updated function to not break current workflows
-    TAU, S, H, P, ZNS, PS = doodson_arguments(MJD)
-    # return as tuple
-    return (S, H, P, TAU, ZNS, PS)
 
 # PURPOSE: computes the phase angles of astronomical means
 def doodson_arguments(
@@ -358,8 +347,9 @@ def doodson_arguments(
     hour = np.mod(MJD, 1)*24.0
     # calculate Doodson phase angles
     # mean longitude of moon (degrees)
-    S = polynomial_sum(np.array([218.3164477, 481267.88123421,
-        -1.5786e-3, 1.855835e-6, -1.53388e-8]), T)
+    lunar_longitude = np.array([218.3164477, 481267.88123421,
+        -1.5786e-3, 1.855835e-6, -1.53388e-8])
+    S = polynomial_sum(lunar_longitude, T)
     # mean lunar time (degrees)
     if equinox:
         # create timescale from Modified Julian Day (MJD)
@@ -368,27 +358,33 @@ def doodson_arguments(
         # Equinox method converted to degrees
         TAU = 360.0*ts.st + 180.0 - S
     else:
-        LAMBDA = polynomial_sum(np.array([280.4606184,
-            36000.7700536, 3.8793e-4, -2.58e-8]), T)
+        lambda_coefficients = np.array([280.4606184,
+            36000.7700536, 3.8793e-4, -2.58e-8])
+        LAMBDA = polynomial_sum(lambda_coefficients, T)
         TAU = (hour*15.0) - S + LAMBDA
     # calculate correction for mean lunar longitude (degrees)
     if apply_correction:
-        PR = polynomial_sum(np.array([0.0, 1.396971278,
-            3.08889e-4, 2.1e-8, 7.0e-9]), T)
+        lunar_correction = np.array([0.0, 1.396971278,
+            3.08889e-4, 2.1e-8, 7.0e-9])
+        PR = polynomial_sum(lunar_correction, T)
         S += PR
     # mean longitude of sun (degrees)
-    H = polynomial_sum(np.array([280.46645, 36000.7697489,
-        3.0322222e-4, 2.0e-8, -6.54e-9]), T)
+    solar_longitude = np.array([280.46645, 36000.7697489,
+        3.0322222e-4, 2.0e-8, -6.54e-9])
+    H = polynomial_sum(solar_longitude, T)
     # mean longitude of lunar perigee (degrees)
-    P = polynomial_sum(np.array([83.3532465, 4069.0137287,
-        -1.032172222e-2, -1.24991e-5, 5.263e-8]), T)
+    lunar_perigee =np.array([83.3532465, 4069.0137287,
+        -1.032172222e-2, -1.24991e-5, 5.263e-8])
+    P = polynomial_sum(lunar_perigee, T)
     # negative of the mean longitude of the ascending node
     # of the moon (degrees)
-    Np = polynomial_sum(np.array([234.95544499, 1934.13626197,
-        -2.07561111e-3, -2.13944e-6, 1.65e-8]), T)
+    lunar_node = np.array([234.95544499, 1934.13626197,
+        -2.07561111e-3, -2.13944e-6, 1.65e-8])
+    Np = polynomial_sum(lunar_node, T)
     # mean longitude of solar perigee (degrees)
-    Ps = polynomial_sum(np.array([282.93734098, 1.71945766667,
-        4.5688889e-4, -1.778e-8, -3.34e-9]), T)
+    solar_perigee = np.array([282.93734098, 1.71945766667,
+        4.5688889e-4, -1.778e-8, -3.34e-9])
+    Ps = polynomial_sum(solar_perigee, T)
     # take the modulus of each and convert to radians
     S = np.radians(normalize_angle(S))
     H = np.radians(normalize_angle(H))
@@ -429,21 +425,26 @@ def delaunay_arguments(MJD: np.ndarray):
     # 360 degrees
     circle = 1296000
     # mean anomaly of the moon (arcseconds)
-    l = polynomial_sum(np.array([485868.249036, 1717915923.2178,
-        31.8792, 0.051635, -2.447e-04]), T)
+    lunar_anomaly = np.array([485868.249036, 1717915923.2178,
+        31.8792, 0.051635, -2.447e-04])
+    l = polynomial_sum(lunar_anomaly, T)
     # mean anomaly of the sun (arcseconds)
-    lp = polynomial_sum(np.array([1287104.79305,  129596581.0481,
-        -0.5532, 1.36e-4, -1.149e-05]), T)
+    solar_anomaly = np.array([1287104.79305,  129596581.0481,
+        -0.5532, 1.36e-4, -1.149e-05])
+    lp = polynomial_sum(solar_anomaly, T)
     # mean argument of the moon (arcseconds)
     # (angular distance from the ascending node)
-    F = polynomial_sum(np.array([335779.526232, 1739527262.8478,
-        -12.7512, -1.037e-3, 4.17e-6]), T)
+    lunar_argument = np.array([335779.526232, 1739527262.8478,
+        -12.7512, -1.037e-3, 4.17e-6])
+    F = polynomial_sum(lunar_argument, T)
     # mean elongation of the moon from the sun (arcseconds)
-    D = polynomial_sum(np.array([1072260.70369, 1602961601.2090,
-        -6.3706, 6.593e-3, -3.169e-05]), T)
+    lunisolar_elongation = np.array([1072260.70369, 1602961601.2090,
+        -6.3706, 6.593e-3, -3.169e-05])
+    D = polynomial_sum(lunisolar_elongation, T)
     # mean longitude of the ascending node of the moon (arcseconds)
-    N = polynomial_sum(np.array([450160.398036, -6962890.5431,
-        7.4722, 7.702e-3, -5.939e-05]), T)
+    lunar_node = np.array([450160.398036, -6962890.5431,
+        7.4722, 7.702e-3, -5.939e-05])
+    N = polynomial_sum(lunar_node, T)
     # take the modulus of each and convert to radians
     l = asec2rad(normalize_angle(l, circle=circle))
     lp = asec2rad(normalize_angle(lp, circle=circle))
@@ -978,21 +979,31 @@ def _eqeq_complement(T: float | np.ndarray):
     # get the fundamental arguments in radians
     fa = np.zeros((14, len(ts)))
     # mean anomaly of the moon (arcseconds)
-    fa[0,:] = asec2rad(polynomial_sum(np.array([485868.249036, 715923.2178,
-        31.8792, 0.051635, -2.447e-04]), ts.T)) + ts.tau*np.mod(1325.0*ts.T, 1.0)
+    lunar_anomaly = np.array([485868.249036, 715923.2178,
+        31.8792, 0.051635, -2.447e-04])
+    fa[0,:] = asec2rad(polynomial_sum(lunar_anomaly, ts.T)) + \
+        ts.tau*np.mod(1325.0*ts.T, 1.0)
     # mean anomaly of the sun (arcseconds)
-    fa[1,:] = asec2rad(polynomial_sum(np.array([1287104.79305,  1292581.0481,
-        -0.5532, 1.36e-4, -1.149e-05]), ts.T)) + ts.tau*np.mod(99.0*ts.T, 1.0)
+    solar_anomaly = np.array([1287104.79305,  1292581.0481,
+        -0.5532, 1.36e-4, -1.149e-05])
+    fa[1,:] = asec2rad(polynomial_sum(solar_anomaly, ts.T)) + \
+        ts.tau*np.mod(99.0*ts.T, 1.0)
     # mean argument of the moon (arcseconds)
     # (angular distance from the ascending node)
-    fa[2,:] = asec2rad(polynomial_sum(np.array([335779.526232, 295262.8478,
-        -12.7512, -1.037e-3, 4.17e-6]), ts.T)) + ts.tau*np.mod(1342.0*ts.T, 1.0)
+    lunar_argument = np.array([335779.526232, 295262.8478,
+        -12.7512, -1.037e-3, 4.17e-6])
+    fa[2,:] = asec2rad(polynomial_sum(lunar_argument, ts.T)) + \
+        ts.tau*np.mod(1342.0*ts.T, 1.0)
     # mean elongation of the moon from the sun (arcseconds)
-    fa[3,:] = asec2rad(polynomial_sum(np.array([1072260.70369, 1105601.2090,
-        -6.3706, 6.593e-3, -3.169e-05]), ts.T)) + ts.tau*np.mod(1236.0*ts.T, 1.0)
+    lunisolar_elongation = np.array([1072260.70369, 1105601.2090,
+        -6.3706, 6.593e-3, -3.169e-05])
+    fa[3,:] = asec2rad(polynomial_sum(lunisolar_elongation, ts.T)) + \
+        ts.tau*np.mod(1236.0*ts.T, 1.0)
     # mean longitude of the ascending node of the moon (arcseconds)
-    fa[4,:] = asec2rad(polynomial_sum(np.array([450160.398036, -482890.5431,
-        7.4722, 7.702e-3, -5.939e-05]), ts.T)) + ts.tau*np.mod(-5.0*ts.T, 1.0)
+    lunar_node = np.array([450160.398036, -482890.5431,
+        7.4722, 7.702e-3, -5.939e-05])
+    fa[4,:] = asec2rad(polynomial_sum(lunar_node, ts.T)) + \
+        ts.tau*np.mod(-5.0*ts.T, 1.0)
     # additional polynomial terms
     fa[5,:] = polynomial_sum(np.array([4.402608842, 2608.7903141574]), ts.T)
     fa[6,:] = polynomial_sum(np.array([3.176146697, 1021.3285546211]), ts.T)
@@ -1157,21 +1168,24 @@ def _nutation_matrix(
     psi: np.ndarray
         Nutation in longitude
     """
+    # compute trigonometric terms
+    cospsi = np.cos(psi)
+    sinpsi = np.sin(psi)
+    cosmean = np.cos(mean_obliquity)
+    sinmean = np.sin(mean_obliquity)
+    costrue = np.cos(true_obliquity)
+    sintrue = np.sin(true_obliquity)
     # compute elements of nutation rotation matrix
     R = np.zeros((3,3,len(np.atleast_1d(psi))))
-    R[0,0,:] = np.cos(psi)
-    R[0,1,:] = -np.sin(psi)*np.cos(mean_obliquity)
-    R[0,2,:] = -np.sin(psi)*np.sin(mean_obliquity)
-    R[1,0,:] = np.sin(psi)*np.cos(true_obliquity)
-    R[1,1,:] = np.cos(psi)*np.cos(mean_obliquity)*np.cos(true_obliquity) + \
-        np.sin(mean_obliquity)*np.sin(true_obliquity)
-    R[1,2,:] = np.cos(psi)*np.sin(mean_obliquity)*np.cos(true_obliquity) - \
-        np.cos(mean_obliquity)*np.sin(true_obliquity)
-    R[2,0,:] = np.sin(psi)*np.sin(true_obliquity)
-    R[2,1,:] = np.cos(psi)*np.cos(mean_obliquity)*np.sin(true_obliquity) - \
-        np.sin(mean_obliquity)*np.cos(true_obliquity)
-    R[2,2,:] = np.cos(psi)*np.sin(mean_obliquity)*np.sin(true_obliquity) + \
-        np.cos(mean_obliquity)*np.cos(true_obliquity)
+    R[0,0,:] = cospsi
+    R[0,1,:] = -sinpsi*cosmean
+    R[0,2,:] = -sinpsi*sinmean
+    R[1,0,:] = sinpsi*costrue
+    R[1,1,:] = cospsi*cosmean*costrue + sinmean*sintrue
+    R[1,2,:] = cospsi*sinmean*costrue - cosmean*sintrue
+    R[2,0,:] = sinpsi*sintrue
+    R[2,1,:] = cospsi*cosmean*sintrue - sinmean*costrue
+    R[2,2,:] = cospsi*sinmean*sintrue + cosmean*costrue
     # return the rotation matrix
     return R
 
@@ -1213,11 +1227,10 @@ def _precession_matrix(T: float | np.ndarray):
     # Capitaine et al. (2003), eqs. (4), (37), & (39).
     # obliquity of the ecliptic
     epsilon0 = 84381.406
-    EPS = asec2rad(epsilon0)
     # lunisolar precession
-    phi0 = np.array([0.0, 5038.481507, -1.0790069,
+    psi0 = np.array([0.0, 5038.481507, -1.0790069,
         -1.14045e-3, 1.32851e-4, -9.51e-8])
-    psi = asec2rad(polynomial_sum(phi0, T))
+    psi = asec2rad(polynomial_sum(psi0, T))
     # inclination of moving equator on fixed ecliptic
     omega0 = np.array([epsilon0, -2.5754e-2, 5.12623e-2,
         -7.72503e-3, -4.67e-7, 3.337e-7])
@@ -1226,29 +1239,30 @@ def _precession_matrix(T: float | np.ndarray):
     chi0 = np.array([0.0, 10.556403, -2.3814292,
         -1.21197e-3, 1.70663e-4, -5.60e-8])
     chi = asec2rad(polynomial_sum(chi0, T))
+    # compute trigonometric terms
+    coschi = np.cos(chi)
+    sinchi = np.sin(chi)
+    cospsi = np.cos(-psi)
+    sinpsi = np.sin(-psi)
+    cosomega = np.cos(-omega)
+    sinomega = np.sin(-omega)
+    coseps = np.cos(asec2rad(epsilon0))
+    sineps = np.sin(asec2rad(epsilon0))
     # compute elements of precession rotation matrix
     P = np.zeros((3,3,len(np.atleast_1d(T))))
-    P[0,0,:] = np.cos(chi)*np.cos(-psi) - \
-        np.sin(-psi)*np.sin(chi)*np.cos(-omega)
-    P[0,1,:] = np.cos(chi)*np.sin(-psi)*np.cos(EPS) + \
-        np.sin(chi)*np.cos(-omega)*np.cos(-psi)*np.cos(EPS) - \
-        np.sin(EPS)*np.sin(chi)*np.sin(-omega)
-    P[0,2,:] = np.cos(chi)*np.sin(-psi)*np.sin(EPS) + \
-        np.sin(chi)*np.cos(-omega)*np.cos(-psi)*np.sin(EPS) + \
-        np.cos(EPS)*np.sin(chi)*np.sin(-omega)
-    P[1,0,:] = -np.sin(chi)*np.cos(-psi) - \
-        np.sin(-psi)*np.cos(chi)*np.cos(-omega)
-    P[1,1,:] = -np.sin(chi)*np.sin(-psi)*np.cos(EPS) + \
-        np.cos(chi)*np.cos(-omega)*np.cos(-psi)*np.cos(EPS) - \
-        np.sin(EPS)*np.cos(chi)*np.sin(-omega)
-    P[1,2,:] = -np.sin(chi)*np.sin(-psi)*np.sin(EPS) + \
-        np.cos(chi)*np.cos(-omega)*np.cos(-psi)*np.sin(EPS) + \
-        np.cos(EPS)*np.cos(chi)*np.sin(-omega)
-    P[2,0,:] = np.sin(-psi)*np.sin(-omega)
-    P[2,1,:] = -np.sin(-omega)*np.cos(-psi)*np.cos(EPS) - \
-        np.sin(EPS)*np.cos(-omega)
-    P[2,2,:] = -np.sin(-omega)*np.cos(-psi)*np.sin(EPS) + \
-        np.cos(-omega)*np.cos(EPS)
+    P[0,0,:] = coschi*cospsi - sinpsi*sinchi*cosomega
+    P[0,1,:] = coschi*sinpsi*coseps + \
+        sinchi*cosomega*cospsi*coseps - sineps*sinchi*sinomega
+    P[0,2,:] = coschi*sinpsi*sineps + \
+        sinchi*cosomega*cospsi*sineps + coseps*sinchi*sinomega
+    P[1,0,:] = -sinchi*cospsi - sinpsi*coschi*cosomega
+    P[1,1,:] = -sinchi*sinpsi*coseps + \
+        coschi*cosomega*cospsi*coseps - sineps*coschi*sinomega
+    P[1,2,:] = -sinchi*sinpsi*sineps + \
+        coschi*cosomega*cospsi*sineps + coseps*coschi*sinomega
+    P[2,0,:] = sinpsi*sinomega
+    P[2,1,:] = -sinomega*cospsi*coseps - sineps*cosomega
+    P[2,2,:] = -sinomega*cospsi*sineps + cosomega*coseps
     # return the rotation matrix
     return P
 
