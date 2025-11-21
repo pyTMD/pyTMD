@@ -7,7 +7,7 @@
 [![commits-since](https://img.shields.io/github/commits-since/pyTMD/pyTMD/latest)](https://github.com/pyTMD/pyTMD/releases/latest)
 [![zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.5555395.svg)](https://doi.org/10.5281/zenodo.5555395)
 
-Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides powered by `xarray`
+Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides
 
 For more information: see the documentation at [pytmd.readthedocs.io](https://pytmd.readthedocs.io/)
 
