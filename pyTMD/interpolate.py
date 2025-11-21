@@ -42,7 +42,6 @@ def interp1d(
         x: float | np.ndarray,
         xp: np.ndarray,
         fp: np.ndarray,
-        extrapolate: str = 'linear',
         **kwargs
     ):
     """
@@ -67,6 +66,9 @@ def interp1d(
     f: np.ndarray
         Interpolated values at x
     """
+    # get extrapolation method
+    extrapolate = kwargs.get('extrapolate', 'linear').lower()
+    assert extrapolate in ('linear', 'nearest')
     # recursion for multiple x values
     if isinstance(x, np.ndarray) and (x.ndim > 0):
         # allocate output array

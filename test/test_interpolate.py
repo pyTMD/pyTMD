@@ -75,6 +75,10 @@ def test_interp1d(extrapolate):
         val = pyTMD.interpolate.interp1d(xi, xp, fp,
             extrapolate=extrapolate)
         assert np.isclose(exp[i],val).all()
+    # run interpolation over all output points
+    val = pyTMD.interpolate.interp1d(x, xp, fp,
+        extrapolate=extrapolate)
+    assert np.all(np.isclose(exp, val))
 
 # use max determinant nodes from spherepts
 def test_cartesian(N=324):
