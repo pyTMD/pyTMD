@@ -59,6 +59,10 @@ import pathlib
 import datetime
 import xarray as xr
 import pyTMD.version
+from pyTMD.utilities import import_dependency
+# attempt imports
+dask = import_dependency('dask')
+dask_available = xr.namedarray.utils.module_available('dask')
 
 __all__ = [
     'open_dataset',
@@ -110,6 +114,7 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
 # PURPOSE: read a list of ATLAS netCDF4 files
 def open_mfdataset(
         model_files: list[str] | list[pathlib.Path],
+        parallel: bool = False,
         **kwargs
     ):
     """
@@ -119,6 +124,8 @@ def open_mfdataset(
     ----------
     model_files: list of str or pathlib.Path
         list of ATLAS model files
+    parallel: bool, default False
+        Open files in parallel using ``dask.delayed``
     **kwargs: dict
         additional keyword arguments for opening ATLAS files
 
@@ -127,8 +134,16 @@ def open_mfdataset(
     ds: xarray.Dataset
         ATLAS tide model data
     """
-    # read each file and store constituents in list
-    d = [open_atlas_dataset(f, **kwargs) for f in model_files]
+    # merge multiple granules
+    if parallel and dask_available:
+        opener = dask.delayed(open_atlas_dataset)
+    else:
+        opener = open_atlas_dataset
+    # read each file as xarray dataset and append to list
+    d = [opener(f, **kwargs) for f in model_files]
+    # read datasets as dask arrays
+    if parallel and dask_available:
+        d, = dask.compute(d)
     # merge datasets
     ds = xr.merge(d, compat='override')
     # return xarray dataset
@@ -196,8 +211,6 @@ def open_atlas_grid(
     # add attributes
     ds.attrs['type'] = type
     ds.attrs['format'] = 'ATLAS'
-    # close open gzip file if compressed
-    f.close() if kwargs['compressed'] else None
     # return xarray dataset
     return ds
     

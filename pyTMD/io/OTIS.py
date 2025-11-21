@@ -98,6 +98,11 @@ import pathlib
 import warnings
 import numpy as np
 import xarray as xr
+from pyTMD.utilities import import_dependency
+# attempt imports
+dask = import_dependency('dask')
+dask_available = xr.namedarray.utils.module_available('dask')
+
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -274,6 +279,8 @@ def open_mfdataset(
             - ``'U'``: zonal depth-averaged transport
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
+    parallel: bool, default False
+        Open files in parallel using ``dask.delayed``
     **kwargs: dict
         additional keyword arguments for opening OTIS files
 
@@ -282,13 +289,28 @@ def open_mfdataset(
     ds: xarray.Dataset
         OTIS tide model data
     """
-    # read each file and store constituents in list
-    if type == 'z':
+    # set default keyword arguments
+    kwargs.setdefault('parallel', False)
+    parallel = kwargs.get('parallel') and dask_available
+    # read each file as xarray dataset and append to list
+    if (type == 'z') and parallel:
+        # elevations
+        opener = dask.delayed(open_otis_elevation)
+        d, = dask.compute([opener(f, **kwargs) for f in model_files])
+    elif type == 'z':
         # elevations
         d = [open_otis_elevation(f, **kwargs) for f in model_files]
+    elif type in ('u','U') and parallel:
+        # transports are returned as (u,v)
+        opener = dask.delayed(open_otis_transport)
+        d, = dask.compute([opener(f, **kwargs)[0] for f in model_files])
     elif type in ('u','U'):
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[0] for f in model_files]
+    elif type in ('v','V') and parallel:
+        # transports are returned as (u,v)
+        opener = dask.delayed(open_otis_transport)
+        d, = dask.compute([opener(f, **kwargs)[1] for f in model_files])
     elif type in ('v','V'):
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[1] for f in model_files]

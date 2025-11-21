@@ -311,8 +311,7 @@ class model:
             Serialize dictionary for JSON output
         """
         # default fields
-        keys = ['name', 'format', 'projection', 'scale', 'z', 'u', 'v',
-            'version', 'reference']
+        keys = ['name', 'format', 'projection', 'reference', 'z', 'u', 'v']
         # set default keyword arguments
         kwargs.setdefault('fields', keys)
         kwargs.setdefault('serialize', False)
@@ -656,10 +655,6 @@ class model:
         # verify that projection attribute exists for projected models
         if temp.format in ('OTIS','ATLAS-compact','TMD3'):
             assert temp.projection
-        # assert that FES model has a version
-        # get model constituents from constituent files
-        if temp.format in ('FES-ascii','FES-netcdf',):
-            assert temp.version
         # return the model parameters
         return temp
 
@@ -832,7 +827,7 @@ class model:
         elif self.format in ('FES-ascii', 'FES-netcdf'):
             # open FES ASCII/netCDF4 files as xarray Dataset
             ds = FES.open_mfdataset(model_file,
-                version=self.version, **kwargs)
+                format=self.file_format, **kwargs)
         # append node equilibrium tide if not in constituents list
         if kwargs['append_node'] and ('node' not in ds.tmd.constituents):
             # calculate and append node equilibrium tide

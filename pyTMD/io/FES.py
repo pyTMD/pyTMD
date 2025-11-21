@@ -66,12 +66,11 @@ import pathlib
 import datetime
 import numpy as np
 import xarray as xr
-import pyTMD.version
 import pyTMD.constituents
-
-# versions of FES models
-_ascii_versions = ('FES1999','FES2004')
-_netcdf_versions = ('FES2012','FES2014','FES2022','EOT20','HAMTIDE11')
+from pyTMD.utilities import import_dependency
+# attempt imports
+dask = import_dependency('dask')
+dask_available = xr.namedarray.utils.module_available('dask')
 
 __all__ = [
     'open_mfdataset',
@@ -84,6 +83,7 @@ __all__ = [
 # PURPOSE: read a list of FES ASCII or netCDF4 files
 def open_mfdataset(
         model_files: list[str] | list[pathlib.Path],
+        parallel: bool = False,
         **kwargs,
     ):
     """
@@ -93,6 +93,8 @@ def open_mfdataset(
     ----------
     model_files: list of str or pathlib.Path
         list of FES model files
+    parallel: bool, default False
+        Open files in parallel using ``dask.delayed``
     kwargs: dict
         additional keyword arguments for opening FES files
 
@@ -101,8 +103,16 @@ def open_mfdataset(
     ds: xarray.Dataset
         FES tide model data
     """
-    # read each file and store constituents in list
-    d = [open_fes_dataset(f, **kwargs) for f in model_files]     
+    # merge multiple granules
+    if parallel and dask_available:
+        opener = dask.delayed(open_fes_dataset)
+    else:
+        opener = open_fes_dataset
+    # read each file as xarray dataset and append to list
+    d = [opener(f, **kwargs) for f in model_files]
+    # read datasets as dask arrays
+    if parallel and dask_available:
+        d, = dask.compute(d)
     # merge datasets
     ds = xr.merge(d, compat='override')
     # return xarray dataset
@@ -128,15 +138,15 @@ def open_fes_dataset(
     ds: xarray.Dataset
         FES tide model data
     """
-    # set default keyword arguments
-    if kwargs['version'] in _ascii_versions:
+    # open FES files based on format
+    if kwargs['format'] == 'ascii':
         # FES ascii constituent files
         ds = open_fes_ascii(input_file, **kwargs)
-    elif kwargs['version'] in _netcdf_versions:
+    elif kwargs['format'] == 'netcdf':
         # FES netCDF4 constituent files
         ds = open_fes_netcdf(input_file, **kwargs)
     else:
-        raise ValueError(f"Unrecognized version: {kwargs['version']}") 
+        raise ValueError(f"Unrecognized file format: {kwargs['format']}") 
     # return xarray dataset
     return ds
 
@@ -230,7 +240,6 @@ def open_fes_ascii(
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes
-    ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
     # return xarray dataset
     return ds
@@ -254,14 +263,6 @@ def open_fes_netcdf(
             - ``'z'``: heights
             - ``'u'``: zonal currents
             - ``'v'``: meridional currents
-    version: str or NoneType, default None
-        FES model version
-
-            - ``'FES2012'``
-            - ``'FES2014'``
-            - ``'FES2022'``
-            - ``'EOT20'``
-            - ``'HAMTIDE11'``
     chunks: int, dict, str, or None, default None
         variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
@@ -274,7 +275,6 @@ def open_fes_netcdf(
     """
     # set default keyword arguments
     kwargs.setdefault('type', 'z')
-    kwargs.setdefault('version', 'FES2022')
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pathlib.Path(input_file).expanduser()
@@ -287,16 +287,19 @@ def open_fes_netcdf(
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # parse model file for constituent identifier
     cons = pyTMD.constituents._parse_name(input_file.stem)
-    # amplitude and phase components for each type
-    if kwargs['version'] in ('FES2012',):
+    # amplitude and phase components for different versions
+    if 'Ha' in tmp.variables:
+        # FES2012 variable names
         mapping_coords = dict(lon='x', lat='y')
         mapping_amp = dict(z='Ha', u='Ua', v='Va')
         mapping_ph = dict(z='Hg', u='Ug', v='Vg')
-    elif kwargs['version'] in ('FES2014','FES2022','EOT20'):
+    elif 'amplitude' in tmp.variables:
+        # FES2014/2022 variable names
         mapping_coords = dict(lon='x', lat='y')
         mapping_amp = dict(z='amplitude', u='Ua', v='Va')
         mapping_ph = dict(z='phase', u='Ug', v='Vg')
-    elif kwargs['version'] in ('HAMTIDE11',):
+    elif 'AMPL' in tmp.variables:
+        # HAMTIDE11 variable names
         mapping_coords = dict(LON='x', LAT='y')
         mapping_amp = dict(z='AMPL', u='UAMP', v='VAMP')
         mapping_ph = dict(z='PHAS', u='UPHA', v='VPHA')
@@ -314,9 +317,8 @@ def open_fes_netcdf(
     # rename coordinates
     ds = ds.rename(mapping_coords)
     # add attributes
-    ds.attrs['version'] = kwargs['version']
     ds.attrs['type'] = kwargs['type']
-    ds[cons].attrs['units'] = tmp[amp_key].attrs.get('units')
+    ds[cons].attrs['units'] = tmp[amp_key].attrs.get('units', '')
     # return xarray dataset
     return ds
 
@@ -332,7 +334,6 @@ class FESDataset:
     def to_netcdf(self,
             path: str | pathlib.Path,
             mode: str = 'w',
-            units: str = 'cm',
             encoding: dict = {"zlib": True, "complevel": 9},
             **kwargs
         ):
@@ -380,7 +381,7 @@ class FESDataset:
             # calculate amplitude and phase
             ds[amp_key] = self._ds[v].tmd.amplitude
             ds[phase_key] = self._ds[v].tmd.phase
-            ds[amp_key].attrs['units'] = self._ds[v].attrs['units']
+            ds[amp_key].attrs['units'] = self._ds[v].attrs.get('units', '')
             ds[phase_key].attrs['units'] = 'degrees'
             ds[amp_key].attrs['long_name'] = f'Tide amplitude at {v} frequency'
             ds[phase_key].attrs['long_name'] = f'Tide phase at {v} frequency'

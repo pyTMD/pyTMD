@@ -69,6 +69,10 @@ import numpy as np
 import xarray as xr
 import pyTMD.version
 import pyTMD.constituents
+from pyTMD.utilities import import_dependency
+# attempt imports
+dask = import_dependency('dask')
+dask_available = xr.namedarray.utils.module_available('dask')
 
 __all__ = [
     'open_mfdataset',
@@ -81,6 +85,7 @@ __all__ = [
 # PURPOSE: read a list of GOT ASCII or netCDF4 files
 def open_mfdataset(
         model_files: list[str] | list[pathlib.Path],
+        parallel: bool = False,
         **kwargs,
     ):
     """
@@ -90,6 +95,8 @@ def open_mfdataset(
     ----------
     model_files: list of str or pathlib.Path
         list of OTIS model files
+    parallel: bool, default False
+        Open files in parallel using ``dask.delayed``
     **kwargs: dict
         additional keyword arguments for opening GOT files
 
@@ -98,10 +105,19 @@ def open_mfdataset(
     ds: xarray.Dataset
         combined GOT model data
     """
-    # read each file and store constituents in list
-    d = [open_got_dataset(f, **kwargs) for f in model_files]     
+    # merge multiple granules
+    if parallel and dask_available:
+        opener = dask.delayed(open_got_dataset)
+    else:
+        opener = open_got_dataset
+    # read each file as xarray dataset and append to list
+    d = [opener(f, **kwargs) for f in model_files]
+    # read datasets as dask arrays
+    if parallel and dask_available:
+        d, = dask.compute(d)
     # merge datasets
     ds = xr.merge(d, compat='override')
+    # return xarray dataset
     return ds
 
 # PURPOSE: reads a GOT ASCII or netCDF4 file
@@ -338,7 +354,7 @@ class GOTDataset:
             # calculate amplitude and phase
             ds['amplitude'] = self._ds[v].tmd.amplitude
             ds['phase'] = self._ds[v].tmd.phase
-            ds['amplitude'].attrs['units'] = self._ds[v].attrs['units']
+            ds['amplitude'].attrs['units'] = self._ds[v].attrs.get('units','')
             ds['phase'].attrs['units'] = 'degrees'
             ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
             ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'
