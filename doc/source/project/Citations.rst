@@ -8,7 +8,8 @@ References
 This work was initially supported by an appointment to the NASA Postdoctoral
 Program (NPP) at NASA Goddard Space Flight Center (GSFC), administered by
 Universities Space Research Association (USRA) under contract with NASA.
-It is currently supported under the NASA Cryospheric Sciences Program (Grant Number 80NSSC22K0379).
+It is currently supported under the NASA Cryospheric Sciences Program
+(Grant Number 80NSSC22K0379).
 
 .. admonition:: Please consider citing our library
 
@@ -21,14 +22,14 @@ Dependencies
 
 This software is also dependent on other commonly used Python packages:
 
-- `dateutil: powerful extensions to datetime <https://dateutil.readthedocs.io/en/stable/>`_
+- `h5netcdf: Pythonic interface to netCDF4 via h5py <https://h5netcdf.org/>`_
 - `lxml: processing XML and HTML in Python <https://pypi.python.org/pypi/lxml>`_
-- `netCDF4: Python interface to the netCDF C library <https://unidata.github.io/netcdf4-python/>`_
 - `numpy: Scientific Computing Tools For Python <https://www.numpy.org>`_
 - `platformdirs: Python module for determining platform-specific directories <https://pypi.org/project/platformdirs/>`_
 - `pyproj: Python interface to PROJ library <https://pypi.org/project/pyproj/>`_
 - `scipy: Scientific Tools for Python <https://www.scipy.org/>`_
 - `timescale: Python tools for time and astronomical calculations <https://pypi.org/project/timescale/>`_
+- `xarray: N-D labeled arrays and datasets in Python <https://docs.xarray.dev/en/stable/>`_
 
 Optional Dependencies
 ---------------------
