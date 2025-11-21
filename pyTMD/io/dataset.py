@@ -467,6 +467,7 @@ class Dataset:
         # calculate equilibrium node constants
         hc = dfactor*P20*gamma_2*amajor*np.exp(-1j*np.pi)
         ds['node'] = xr.DataArray(hc, dims=ds.dims, coords=ds.coords)
+        ds['node'].attrs['units'] = 'm'
         # return xarray dataset
         return ds
 

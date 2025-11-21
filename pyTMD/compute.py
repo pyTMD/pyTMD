@@ -973,6 +973,9 @@ def LPT_displacements(
     S['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
     S['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
     S['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in S.data_vars:
+        S[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
     # return the load pole tide displacements for variable(s)
     return S[variable]
 
@@ -1160,6 +1163,9 @@ def OPT_displacements(
     U['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
     U['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
     U['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in U.data_vars:
+        U[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
     # return the ocean pole tide displacements for variable(s)
     return U[variable]
 
@@ -1376,6 +1382,9 @@ def _ephemeride_SET(
     SE['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
     SE['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
     SE['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in SE.data_vars:
+        SE[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
     # return the solid earth tide displacements for variable(s)
     return SE[variable]
 

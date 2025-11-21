@@ -373,6 +373,7 @@ def _infer_short_period(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['q1'].attrs.get('units', None)
+    tinfer.attrs['constituents'] = constituents
     # return the inferred values
     return tinfer
 
@@ -536,6 +537,7 @@ def _infer_semi_diurnal(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['n2'].attrs.get('units', None)
+    tinfer.attrs['constituents'] = constituents
     # return the inferred values
     return tinfer
 
@@ -725,6 +727,7 @@ def _infer_diurnal(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['q1'].attrs.get('units', None)
+    tinfer.attrs['constituents'] = constituents
     # return the inferred values
     return tinfer
 
@@ -891,6 +894,7 @@ def _infer_long_period(
         dim='constituent', skipna=False)
     # copy units attribute
     tinfer.attrs['units'] = ds['node'].attrs.get('units', None)
+    tinfer.attrs['constituents'] = constituents
     # return the inferred values
     return tinfer
 
@@ -911,8 +915,6 @@ def equilibrium_tide(
         days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset with spatial coordinates
-    lat: np.ndarray
-        latitude (degrees north)
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
@@ -1023,10 +1025,10 @@ def equilibrium_tide(
     dfactor = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
     # 2nd degree Legendre polynomials
     Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m)
-    P20 = dfactor*Plm
+    P20 = dfactor*Plm.real
 
     # calculate tilt factors for each constituent
-    gamma_2 = np.zeros((nc), dtype=np.complex128)
+    gamma_2 = np.zeros((nc))
     for i,c in enumerate(cindex):
         # calculate angular frequencies of constituents
         omega = pyTMD.constituents._frequency(coef[:, i])
@@ -1054,15 +1056,14 @@ def equilibrium_tide(
     # reduce to selected constituents
     arg = arguments.sel(constituent=constituents)
     # convert dataset to dataarray of complex tidal elevations
-    # and convert from centimeters to meters
-    darr = amajor.tmd.to_dataarray(constituents=constituents)/100.0
+    darr = amajor.tmd.to_dataarray(constituents=constituents)
     # sum equilibrium tide elevations
     tpred = (P20*darr*arg.gamma_2*np.cos(arg.G)).sum(
         dim='constituent', skipna=False)
     # add units attribute
-    tpred.attrs['units'] = 'meters'
+    tpred.attrs['units'] = 'centimeters'
     # return the long-period equilibrium tides
-    return tpred
+    return tpred.tmd.to_units('meters')
 
 # PURPOSE: estimate load pole tides in Cartesian coordinates
 def load_pole_tide(
