@@ -25,6 +25,7 @@ This software is also dependent on other commonly used Python packages:
 - `h5netcdf: Pythonic interface to netCDF4 via h5py <https://h5netcdf.org/>`_
 - `lxml: processing XML and HTML in Python <https://pypi.python.org/pypi/lxml>`_
 - `numpy: Scientific Computing Tools For Python <https://www.numpy.org>`_
+- `pint: Python package to define, operate and manipulate physical quantities <https://pypi.org/project/Pint/>`_
 - `platformdirs: Python module for determining platform-specific directories <https://pypi.org/project/platformdirs/>`_
 - `pyproj: Python interface to PROJ library <https://pypi.org/project/pyproj/>`_
 - `scipy: Scientific Tools for Python <https://www.scipy.org/>`_
@@ -35,11 +36,16 @@ Optional Dependencies
 ---------------------
 
 - `cartopy: Python package designed for geospatial data processing <https://scitools.org.uk/cartopy/docs/latest/>`_
+- `dask: Parallel computing with task scheduling <https://www.dask.org/>`_
 - `ipyleaflet: Jupyter / Leaflet bridge enabling interactive maps <https://github.com/jupyter-widgets/ipyleaflet>`_
 - `ipywidgets: interactive HTML widgets for Jupyter notebooks and IPython <https://ipywidgets.readthedocs.io/en/latest/>`_
 - `jplephem: Astronomical Ephemeris for Python <https://pypi.org/project/jplephem/>`_
 - `matplotlib: Python 2D plotting library <https://matplotlib.org/>`_
+- `obstore: Simple, high-throughput Python interface for object storage <https://developmentseed.org/obstore>`_
 - `pandas: Python Data Analysis Library <https://pandas.pydata.org/>`_
+- `pyarrow: Apache Arrow Python bindings <https://arrow.apache.org/docs/python/>`_
+- `s3fs: Pythonic file interface to S3 built on top of botocore <https://s3fs.readthedocs.io/en/latest/>`_
+- `zarr: Chunked, compressed, N-dimensional arrays in Python <https://zarr.readthedocs.io/en/stable/>`_
 
 Credits
 #######

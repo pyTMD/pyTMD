@@ -31,7 +31,6 @@ dependencies = [
     "pint",
     "platformdirs",
     "pyproj>=2.5.0",
-    "python-dateutil",
     "scipy>=1.10.1",
     "timescale>=0.0.8",
     "xarray"
@@ -185,7 +184,6 @@ lxml = "*"
 pint = "*"
 platformdirs = "*"
 pyproj = ">=2.5.0"
-python-dateutil = "*"
 scipy = ">=1.16.0"
 timescale = ">=0.0.8"
 xarray = "*"

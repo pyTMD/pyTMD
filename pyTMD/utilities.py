@@ -71,7 +71,6 @@ import subprocess
 import lxml.etree
 import platformdirs
 import calendar, time
-import dateutil.parser
 if sys.version_info[0] == 2:
     from urllib import quote_plus
     from cookielib import CookieJar
@@ -416,13 +415,6 @@ def get_unix_time(
         pass
     else:
         return calendar.timegm(parsed_time)
-    # try parsing with dateutil
-    try:
-        parsed_time = dateutil.parser.parse(time_string.rstrip())
-    except (TypeError, ValueError):
-        return None
-    else:
-        return parsed_time.timestamp()
 
 # PURPOSE: rounds a number to an even number less than or equal to original
 def even(value: float):

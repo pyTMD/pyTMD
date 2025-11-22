@@ -12588,7 +12588,7 @@ packages:
 - pypi: ./
   name: pytmd
   version: 2.2.8
-  sha256: 5616486d90d8096942520ec667a2e0f3898d2e39c0c352f694f6769cec94d136
+  sha256: 7ad0ac02304309038878ae39a6ccc7f51a2a51e83d1b9940b2bf68f4a3f95cae
   requires_dist:
   - h5netcdf
   - lxml
@@ -12596,7 +12596,6 @@ packages:
   - pint
   - platformdirs
   - pyproj>=2.5.0
-  - python-dateutil
   - scipy>=1.10.1
   - timescale>=0.0.8
   - xarray
