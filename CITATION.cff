@@ -5,6 +5,17 @@ cff-version: 1.2.0
 title: pyTMD
 message: Python-based tidal prediction software
 type: software
+keywords:
+  - Ocean Tides
+  - Load Tides
+  - Pole Tides
+  - Solid Earth Tides
+  - Tidal Prediction
+license: MIT
+version: "2.2.9"
+date-released: "2025-11-21"
+message: If you use this software, please consider citing our library.
+
 authors:
   - given-names: Tyler
     family-names: Sutterley
@@ -36,12 +47,33 @@ url: 'https://pytmd.readthedocs.io'
 repository: 'https://pypi.org/project/pyTMD'
 repository-artifact: 'https://anaconda.org/conda-forge/pytmd'
 doi: "10.5281/zenodo.5555395"
-version: "2.2.8"
-date-released: "2025-09-05"
-keywords:
-  - Ocean Tides
-  - Load Tides
-  - Pole Tides
-  - Solid Earth Tides
-  - Tidal Prediction
-license: MIT
+
+references:
+  - type: grant
+    title: "Investigating Antarctic grounding zones using ICESat-2"
+    institution:
+      name: National Aeronautics and Space Administration
+    number: 80NSSC22K0379
+    authors:
+      - given-names: Tyler
+        family-names: Sutterley
+      - given-names: Kelly
+        family-names: Brunt
+  - type: software
+    title: "TMD Matlab Toolbox"
+    version: 2.5
+    repository-code: "https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5"
+    authors:
+      - given-names: Susan
+        family-names: Howard
+      - given-names: Laurie
+        family-names: Padman
+      - given-names: Lana
+        family-names: Erofeeva
+  - type: software
+    title: "perth: Tide prediction from model grids"
+    version: 5
+    repository-code: "https://codeberg.org/rray/perth5"
+    authors:
+      - given-names: Richard
+        family-names: Ray
