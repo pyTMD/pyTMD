@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 11/2025: add accessor for pandas dataframe objects
+        added function to reduce prediction stations to active
     Updated 08/2025: replace invalid water level values with NaN
         convert all station names to title case (some are upper)
     Written 07/2025: extracted from Compare NOAA Tides notebook
@@ -28,6 +29,7 @@ pd = import_dependency('pandas')
 __all__ = [
     "build_query",
     "from_xml",
+    "active_stations",
     "prediction_stations",
     "harmonic_constituents",
     "water_level",
@@ -35,6 +37,7 @@ __all__ = [
 ]
 
 _apis = [
+    'activestations',
     'currentpredictionstations',
     'tidepredictionstations',
     'harmonicconstituents',
@@ -47,6 +50,7 @@ _apis = [
 ]
 
 _xpaths = {
+    'activestations': '//wsdl:station',
     'currentpredictionstations': '//wsdl:station',
     'tidepredictionstations': '//wsdl:station',
     'harmonicconstituents': '//wsdl:item',
@@ -117,8 +121,45 @@ def from_xml(url, **kwargs):
     else:
         return df
 
+def active_stations(
+        api: str = 'activestations',
+        **kwargs
+    ):
+    """
+    Retrieve a list of active tide stations
+    
+    Parameters
+    ----------
+    api: str
+        NOAA webservices API endpoint to query
+    **kwargs: dict
+        Additional query parameters to include in the request
+
+    Returns
+    -------
+    df: pandas.DataFrame
+        A ``DataFrame`` containing the station information
+    """
+    # get list of active tide stations
+    xpath = _xpaths[api]
+    url, namespaces = build_query(api, **kwargs)
+    df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    # rename columns for consistency
+    df = df.rename(columns={'name':'ID', 'ID':'name'})
+    # convert station names to title case
+    df['name'] = df['name'].str.title()
+    # convert station IDs to strings
+    df['ID'] = df['ID'].astype(str)
+    # set the index to the station name
+    df = df.set_index('name')
+    # sort the index and drop metadata column
+    df = df.sort_index().drop(columns=['metadata','parameter'])
+    # return the dataframe
+    return df
+
 def prediction_stations(
         api: str = 'tidepredictionstations',
+        active_only: bool = True,
         **kwargs
     ):
     """
@@ -128,6 +169,8 @@ def prediction_stations(
     ----------
     api: str
         NOAA webservices API endpoint to query
+    active_only: bool, default True
+        Reduce list to active stations only
     **kwargs: dict
         Additional query parameters to include in the request
 
@@ -142,10 +185,15 @@ def prediction_stations(
     df = from_xml(url, xpath=xpath, namespaces=namespaces)
     # convert station names to title case
     df['name'] = df['name'].str.title()
+    # convert station IDs to strings
+    df['ID'] = df['ID'].astype(str)
     # set the index to the station name
     df = df.set_index('name')
     # sort the index and drop metadata column
     df = df.sort_index().drop(columns=['metadata'])
+    # reduce list to active stations only
+    if active_only:
+        df = df[df.ID.isin(active_stations().ID)]
     # return the dataframe
     return df
 
