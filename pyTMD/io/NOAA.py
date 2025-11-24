@@ -22,7 +22,7 @@ import traceback
 import numpy as np
 import pyTMD.constituents
 from pyTMD.pyTMD.io.ATLAS import dependency_available
-from pyTMD.utilities import (import_dependency
+from pyTMD.utilities import (
     import_dependency,
     dependency_available
 )
