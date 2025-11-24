@@ -302,7 +302,7 @@ def _infer_short_period(
         if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No short-period tidal constituents to infer'
-    if not np.any(constituents):
+    if not any(constituents):
         logging.debug(msg)
         return 0.0
 
@@ -458,7 +458,7 @@ def _infer_semi_diurnal(
         if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No semi-diurnal tidal constituents to infer'
-    if not np.any(constituents):
+    if not any(constituents):
         logging.debug(msg)
         return 0.0
 
@@ -635,7 +635,7 @@ def _infer_diurnal(
         if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No diurnal tidal constituents to infer'
-    if not np.any(constituents):
+    if not any(constituents):
         logging.debug(msg)
         return 0.0
 
@@ -818,7 +818,7 @@ def _infer_long_period(
         if (m not in ds.tmd.constituents) and (m in minor)]
     # if there are no constituents to infer
     msg = 'No long-period tidal constituents to infer'
-    if not np.any(constituents):
+    if not any(constituents):
         logging.debug(msg)
         return 0.0
 
