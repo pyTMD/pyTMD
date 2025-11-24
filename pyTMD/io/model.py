@@ -93,7 +93,6 @@ from pyTMD.utilities import (
     get_cache_path
 )
 from collections.abc import Iterable
-from dataclasses import dataclass
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -112,11 +111,10 @@ _default_directory = get_cache_path()
 
 # allow model database to be subscriptable
 # and have attribute access
-# set unsafe_hash to allow mutable attributes
-@dataclass(unsafe_hash=True)
 class DataBase:
     """pyTMD model database and parameters"""
-    __dict__: dict
+    def __init__(self, d: dict):
+        self.__dict__ = d
 
     def update(self, d: dict):
         """Update the keys of the model database"""
@@ -133,6 +131,11 @@ class DataBase:
     def items(self):
         """Returns the items of the model database"""
         return self.__dict__.items()
+
+    def __repr__(self):
+        """Representation of the ``DataBase`` object
+        """
+        return str(self.__dict__)
 
     def __str__(self):
         """String representation of the ``DataBase`` object
