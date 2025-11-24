@@ -98,10 +98,14 @@ import pathlib
 import warnings
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import import_dependency, is_valid_url
+from pyTMD.utilities import (
+    import_dependency,
+    dependency_available,
+    is_valid_url
+)
 # attempt imports
 dask = import_dependency('dask')
-dask_available = xr.namedarray.utils.module_available('dask')
+dask_available = dependency_available('dask')
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)

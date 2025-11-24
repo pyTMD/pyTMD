@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 11/2025: added string check to determine if is a valid URL
+        added function to check if a dependency is available
     Updated 10/2025: allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale
@@ -86,6 +87,7 @@ __all__ = [
     "get_data_path",
     "get_cache_path",
     "import_dependency",
+    "dependency_available",
     "is_valid_url",
     "file_opener",
     "compressuser",
@@ -197,6 +199,34 @@ def import_dependency(
             logging.debug(err)
     # return the module
     return module
+
+def dependency_available(name: str, minversion: str | None = None):
+    """
+    Checks whether a module is installed without importing it
+
+    Adapted from ``xarray.namedarray.utils.module_available``
+
+    Parameters
+    ----------
+    name: str
+        Module name
+    minversion : str, optional
+        Minimum version of the module
+
+    Returns
+    -------
+    available : bool
+        Whether the module is installed
+    """
+    # check if module is available
+    if importlib.util.find_spec(name) is None:
+        return False
+    # check if the version is greater than the minimum required
+    if minversion is not None:
+        version = importlib.metadata.version(name)
+        return (version >= minversion)
+    # return if both checks are passed
+    return True
 
 def is_valid_url(url: str) -> bool:
     """

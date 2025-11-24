@@ -59,10 +59,14 @@ import pathlib
 import datetime
 import xarray as xr
 import pyTMD.version
-from pyTMD.utilities import import_dependency, is_valid_url
+from pyTMD.utilities import (
+    import_dependency,
+    dependency_available,
+    is_valid_url
+)
 # attempt imports
 dask = import_dependency('dask')
-dask_available = xr.namedarray.utils.module_available('dask')
+dask_available = dependency_available('dask')
 
 __all__ = [
     'open_dataset',

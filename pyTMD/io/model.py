@@ -86,18 +86,16 @@ import json
 import pathlib
 import warnings
 import numpy as np
+import xarray as xr
 from pyTMD.utilities import (
     import_dependency,
-    is_valid_url,
     get_data_path,
     get_cache_path
 )
 from collections.abc import Iterable
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
-
 # attempt imports
-xr = import_dependency('xarray')
 pyproj = import_dependency('pyproj')
 
 __all__ = [

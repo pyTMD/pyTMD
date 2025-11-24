@@ -81,6 +81,7 @@ from pyTMD.utilities import (
     get_data_path,
     get_cache_path,
     import_dependency,
+    dependency_available,
     from_jpl_ssd
 )
 # attempt imports
@@ -620,6 +621,8 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     if (kwargs['ephemerides'].lower() == 'approximate'):
         return solar_approximate(MJD, **kwargs)
     elif (kwargs['ephemerides'].upper() == 'JPL'):
+        assert dependency_available('jplephem'), \
+            'jplephem is required for JPL ephemerides'
         return solar_ephemerides(MJD, **kwargs)
 
 def solar_approximate(MJD, **kwargs):
@@ -760,6 +763,8 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     if (kwargs['ephemerides'].lower() == 'approximate'):
         return lunar_approximate(MJD, **kwargs)
     elif (kwargs['ephemerides'].upper() == 'JPL'):
+        assert dependency_available('jplephem'), \
+            'jplephem is required for JPL ephemerides'
         return lunar_ephemerides(MJD, **kwargs)
 
 def lunar_approximate(MJD, **kwargs):

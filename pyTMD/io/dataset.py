@@ -28,12 +28,12 @@ UPDATE HISTORY:
 """
 import warnings
 import numpy as np
+import xarray as xr
 from pyTMD.utilities import import_dependency
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # attempt imports
-xr = import_dependency('xarray')
 pyproj = import_dependency('pyproj')
 pint = import_dependency('pint')
 
