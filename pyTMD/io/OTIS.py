@@ -98,7 +98,7 @@ import pathlib
 import warnings
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import import_dependency
+from pyTMD.utilities import import_dependency, is_valid_url
 # attempt imports
 dask = import_dependency('dask')
 dask_available = xr.namedarray.utils.module_available('dask')
@@ -475,7 +475,9 @@ def open_tmd3_dataset(
         TMD3 tide model data
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # read the netCDF4-format tide grid file
     tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # replace constituents array with names
@@ -533,7 +535,9 @@ def open_otis_grid(
         OTIS grid data
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # set initial offset (skip 4 bytes)
     offset = 4
     # read data as big endian
@@ -674,7 +678,9 @@ def open_otis_elevation(
         OTIS tidal elevation data
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # set initial offset
     offset = 0
     # read data as big endian
@@ -786,7 +792,9 @@ def open_otis_transport(
         OTIS meridional tidal transport data
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # set initial offset
     offset = 0
     # read data as big endian
@@ -908,7 +916,9 @@ def open_atlas_grid(
         local ATLAS grid solutions
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # get file information
     file_info = input_file.stat()
     # set initial offset (skip 4 bytes)
@@ -1154,7 +1164,9 @@ def open_atlas_elevation(
         local ATLAS tidal elevation solutions
     """
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser().absolute()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # get file information
     file_info = input_file.stat()
     # set initial offset
@@ -1847,7 +1859,7 @@ class OTISDataTree:
             output OTIS grid file name
         """
         # tilde-expand output file
-        path = pathlib.Path(path).expanduser()
+        path = pathlib.Path(path).expanduser().absolute()
         path.touch()
         # offset in output file
         offset = 0
@@ -1935,7 +1947,7 @@ class OTISDataTree:
             output OTIS elevation file name
         """
         # tilde-expand output file
-        path = pathlib.Path(path).expanduser()
+        path = pathlib.Path(path).expanduser().absolute()
         path.touch()
         # offset in output file
         offset = 0
@@ -2005,7 +2017,7 @@ class OTISDataTree:
             output OTIS elevation file name
         """
         # tilde-expand output file
-        path = pathlib.Path(path).expanduser()
+        path = pathlib.Path(path).expanduser().absolute()
         path.touch()
         # offset in output file
         offset = 0
@@ -2075,7 +2087,7 @@ class OTISDataTree:
             output directory for OTIS elevation files
         """
         # tilde-expand output directory
-        directory = pathlib.Path(directory).expanduser()
+        directory = pathlib.Path(directory).expanduser().absolute()
         # get z data
         ds = self._dtree['z'].to_dataset()
         # write each constituent to file
@@ -2094,7 +2106,7 @@ class OTISDataTree:
             output directory for OTIS transport files
         """
         # tilde-expand output directory
-        directory = pathlib.Path(directory).expanduser()
+        directory = pathlib.Path(directory).expanduser().absolute()
         # get u and v data
         dsu = self._dtree['u'].to_dataset()
         dsv = self._dtree['v'].to_dataset()

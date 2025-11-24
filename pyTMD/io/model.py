@@ -86,7 +86,13 @@ import json
 import pathlib
 import warnings
 import numpy as np
-from pyTMD.utilities import import_dependency, get_data_path, get_cache_path
+from pyTMD.utilities import (
+    import_dependency,
+    is_valid_url,
+    get_data_path,
+    get_cache_path
+)
+from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass
 # suppress warnings
@@ -108,7 +114,7 @@ _default_directory = get_cache_path()
 @dataclass
 class DataBase:
     """pyTMD model database and parameters"""
-    __dict__: dict
+    __dict__: OrderedDict
 
     def update(self, d: dict):
         """Update the keys of the model database"""

@@ -59,7 +59,7 @@ import pathlib
 import datetime
 import xarray as xr
 import pyTMD.version
-from pyTMD.utilities import import_dependency
+from pyTMD.utilities import import_dependency, is_valid_url
 # attempt imports
 dask = import_dependency('dask')
 dask_available = xr.namedarray.utils.module_available('dask')
@@ -180,7 +180,9 @@ def open_atlas_grid(
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    grid_file = pathlib.Path(grid_file).expanduser()
+    if not is_valid_url(grid_file):
+        grid_file = pathlib.Path(grid_file).expanduser().absolute()
+        assert grid_file.exists(), f'File not found: {grid_file}'
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file
@@ -249,7 +251,9 @@ def open_atlas_dataset(
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file
@@ -463,7 +467,7 @@ class ATLASDataTree:
             additional keyword arguments for netCDF4 writer
         """
         # tilde-expand grid file
-        grid_file = pathlib.Path(grid_file).expanduser()
+        grid_file = pathlib.Path(grid_file).expanduser().absolute()
         # set default output directory
         directory = grid_file.parent if directory is None else directory
         # for each model type

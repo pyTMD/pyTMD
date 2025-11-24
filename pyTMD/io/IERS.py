@@ -51,7 +51,11 @@ import pathlib
 import warnings
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import get_data_path, import_dependency
+from pyTMD.utilities import (
+    get_data_path,
+    import_dependency,
+    is_valid_url
+)
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 # attempt imports
@@ -95,7 +99,9 @@ def open_dataset(
     # default coordinate reference system is EPSG:4326 (WGS84)
     crs = kwargs.get('crs', 4326)
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser()
+    if not is_valid_url(input_file):
+        input_file = pathlib.Path(input_file).expanduser().absolute()
+        assert input_file.exists(), f'File not found: {input_file}'
     # read compressed ocean pole tide file
     if kwargs['compressed']:
         # read gzipped ascii file

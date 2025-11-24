@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 utilities.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 11/2025: added string check to determine if is a valid URL
     Updated 10/2025: allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale
@@ -74,9 +75,10 @@ import calendar, time
 if sys.version_info[0] == 2:
     from urllib import quote_plus
     from cookielib import CookieJar
+    from urlparse import urlparse
     import urllib2
 else:
-    from urllib.parse import quote_plus
+    from urllib.parse import quote_plus, urlparse
     from http.cookiejar import CookieJar
     import urllib.request as urllib2
 
@@ -84,6 +86,7 @@ __all__ = [
     "get_data_path",
     "get_cache_path",
     "import_dependency",
+    "is_valid_url",
     "file_opener",
     "compressuser",
     "get_hash",
@@ -194,6 +197,21 @@ def import_dependency(
             logging.debug(err)
     # return the module
     return module
+
+def is_valid_url(url: str) -> bool:
+    """
+    Checks if a string is a valid URL
+
+    Parameters
+    ----------
+    url: str
+        URL to check
+    """
+    try:
+        result = urlparse(str(url))
+        return all([result.scheme, result.netloc])
+    except AttributeError:
+        return False
 
 class reify(object):
     """Class decorator that puts the result of the method it
