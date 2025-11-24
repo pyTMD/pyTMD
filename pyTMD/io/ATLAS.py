@@ -413,8 +413,8 @@ class ATLASDataset:
             # create xarray dataset
             ds = xr.Dataset()
             # extract real and imaginary components
-            ds[f'{type_key}Re'] = self._ds[v].real.values()
-            ds[f'{type_key}Im'] = self._ds[v].imag.values()
+            ds[f'{type_key}Re'] = self._ds[v].real.values
+            ds[f'{type_key}Im'] = self._ds[v].imag.values
             # remap coordinates to ATLAS convention
             ds = ds.rename(mapping_coords)
             # update variable attributes

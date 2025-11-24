@@ -327,24 +327,6 @@ class model:
         # return the model dictionary
         return d
 
-    def elevation(self, m):
-        """Backwards compatibility accessor for elevation models
-        """
-        temp = self.from_database(m, type='z')
-        for attr in temp.z.__dict__.keys():
-            setattr(self, attr, getattr(temp.z, attr))
-        temp.model_file = temp.z.model_file
-        return temp
-
-    def currents(self, m):
-        """Backwards compatibility accessor for current models
-        """
-        temp = self.from_database(m, type=('u','v'))
-        for attr in temp.u.__dict__.keys():
-            setattr(self, attr, getattr(temp.u, attr))
-        temp.model_file = dict(u=temp.u.model_file, v=temp.v.model_file)
-        return temp
-
     @property
     def gzip(self) -> str:
         """Returns suffix for gzip compression

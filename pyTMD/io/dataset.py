@@ -444,7 +444,7 @@ class Dataset:
         # copy dataset
         ds = self._ds.copy()
         # Cartwright and Edden potential amplitude
-        amajor = 0.027929# node
+        amajor = 0.027929 # node
         # Love numbers for long-period tides (Wahr, 1981)
         k2 = 0.299
         h2 = 0.606
