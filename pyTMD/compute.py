@@ -326,8 +326,8 @@ def tide_elevations(
     kwargs.setdefault('apply_flexure', False)
 
     # check that tide directory is accessible
-    if directory is not None:
-        directory = pathlib.Path(directory).expanduser()
+    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
+        directory = pathlib.Path(directory).expanduser().absolute()
         if not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
@@ -524,8 +524,8 @@ def tide_currents(
     kwargs.setdefault('minor_constituents', None)
 
     # check that tide directory is accessible
-    if directory is not None:
-        directory = pathlib.Path(directory).expanduser()
+    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
+        directory = pathlib.Path(directory).expanduser().absolute()
         if not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
@@ -661,8 +661,8 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
     """
 
     # check that tide directory is accessible
-    if directory is not None:
-        directory = pathlib.Path(directory).expanduser()
+    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
+        directory = pathlib.Path(directory).expanduser().absolute()
         if not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 

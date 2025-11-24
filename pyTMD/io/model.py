@@ -92,7 +92,6 @@ from pyTMD.utilities import (
     get_data_path,
     get_cache_path
 )
-from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass
 # suppress warnings
@@ -111,10 +110,13 @@ __all__ = [
 # default working data directory for tide models
 _default_directory = get_cache_path()
 
-@dataclass
+# allow model database to be subscriptable
+# and have attribute access
+# set unsafe_hash to allow mutable attributes
+@dataclass(unsafe_hash=True)
 class DataBase:
     """pyTMD model database and parameters"""
-    __dict__: OrderedDict
+    __dict__: dict
 
     def update(self, d: dict):
         """Update the keys of the model database"""
