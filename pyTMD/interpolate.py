@@ -68,7 +68,8 @@ def interp1d(
     """
     # get extrapolation method
     extrapolate = kwargs.get('extrapolate', 'linear').lower()
-    assert extrapolate in ('linear', 'nearest')
+    assert extrapolate in ('linear', 'nearest'), \
+        f"Invalid extrapolate method: {extrapolate}"
     # recursion for multiple x values
     if isinstance(x, np.ndarray) and (x.ndim > 0):
         # allocate output array

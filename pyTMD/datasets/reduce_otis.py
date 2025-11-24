@@ -128,8 +128,8 @@ def reduce_otis(MODEL: str,
         dsu, dsv = pyTMD.io.OTIS.open_otis_transport(m['u'].model_file)
 
     # convert bounds to model coordinates
-    xmin, xmax, ymin, ymax = np.copy(bounds)
-    x, y = dsg.tmd.transform(xmin, xmax, ymin, ymax, crs=projection)
+    # bounds is in the form [xmin,xmax,ymin,ymax]
+    x, y = dsg.tmd.transform(bounds[:2], bounds[2:], crs=projection)
     # merge bathymetry and elevation datasets
     ds = xr.merge([dsg, dsz], compat='override')
     # crop datasets and create new datatree
