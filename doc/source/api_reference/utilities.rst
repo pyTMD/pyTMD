@@ -26,6 +26,10 @@ General Methods
 .. autoclass:: pyTMD.utilities.reify
    :members:
 
+.. autofunction:: pyTMD.utilities.detect_format
+
+.. autofunction:: pyTMD.utilities.detect_compression
+
 .. autofunction:: pyTMD.utilities.get_hash
 
 .. autofunction:: pyTMD.utilities.get_git_revision_hash
