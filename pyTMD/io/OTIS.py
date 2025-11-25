@@ -488,15 +488,16 @@ def open_tmd3_dataset(
     # flip y orientation to be monotonically increasing
     tmp = tmp.reindex(y=tmp.y[::-1])
     # convert imaginary component to negative to match convention
+    # get units attributes for model type
     if (type == 'z'):
         ds = (tmp['hRe'] + -1j*tmp['hIm']).to_dataset(dim='constituents')
-        ds[ds.data_vars].attrs['units'] = tmp['hRe'].attrs.get('units')
+        units = tmp['hRe'].attrs.get('units')
     elif type in ('U','u'):
         ds = (tmp['URe'] + -1j*tmp['UIm']).to_dataset(dim='constituents')
-        ds[ds.data_vars].attrs['units'] = tmp['URe'].attrs.get('units')
+        units = tmp['URe'].attrs.get('units')
     elif type in ('V','v'):
         ds = (tmp['VRe'] + -1j*tmp['VIm']).to_dataset(dim='constituents')
-        ds[ds.data_vars].attrs['units'] = tmp['VRe'].attrs.get('units')
+        units = tmp['VRe'].attrs.get('units')
     # read water column thickness, mask and flexure
     ds['mask'] = tmp['mask']
     # convert bathymetry to float and rename to match
@@ -504,8 +505,9 @@ def open_tmd3_dataset(
     # convert flexure from percent to scale factor
     ds['flexure'] = tmp.flexure.astype('f') / 100.0
     # add attributes
+    for con in ds.data_vars:
+        ds[con].attrs['units'] = units
     ds.attrs['crs'] = pyproj.CRS.from_user_input(spatial_proj4).to_dict()
-    # add attributes
     ds.attrs['type'] = type.upper() if type in ('u','v') else type
     # return xarray dataset
     return ds
