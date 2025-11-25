@@ -145,6 +145,12 @@ def open_got_dataset(
     ds: xarray.Dataset
         GOT tide model data
     """
+    # detect file format if not provided
+    if kwargs.get('format', None) is None:
+        kwargs['format'] = pyTMD.utilities.detect_format(input_file)
+    # detect if file is compressed if not provided
+    if kwargs.get('compressed', None) is None:
+        kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
     # read constituent from elevation file
     if kwargs['format'] == 'ascii':
         # GOT ascii constituent files

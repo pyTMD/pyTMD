@@ -177,8 +177,9 @@ def open_atlas_grid(
     ds: xarray.Dataset
         ATLAS tide model data
     """
-    # set default keyword arguments
-    kwargs.setdefault('compressed', False)
+    # detect if file is compressed if not provided
+    if kwargs.get('compressed', None) is None:
+        kwargs['compressed'] = pyTMD.utilities.detect_compression(grid_file)
     # tilde-expand input file
     grid_file = pyTMD.utilities.Path(grid_file).resolve()
     if grid_file.is_file:
@@ -248,8 +249,9 @@ def open_atlas_dataset(
     ds: xarray.Dataset
         ATLAS tide model data
     """
-    # set default keyword arguments
-    kwargs.setdefault('compressed', False)
+    # detect if file is compressed if not provided
+    if kwargs.get('compressed', None) is None:
+        kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if input_file.is_file:

@@ -61,6 +61,7 @@ UPDATE HISTORY:
 """
 from __future__ import division, annotations
 
+import re
 import gzip
 import pathlib
 import datetime
@@ -130,6 +131,11 @@ def open_fes_dataset(
     ----------
     input_file: str or pathlib.Path
         input transport file
+    format: str, default 'netcdf'
+        Model format
+
+            - ``'ascii'``: FES ascii format
+            - ``'netcdf'``: FES netCDF4 format
     **kwargs: dict
         additional keyword arguments for opening FES files
     
@@ -138,6 +144,12 @@ def open_fes_dataset(
     ds: xarray.Dataset
         FES tide model data
     """
+    # detect file format if not provided
+    if kwargs.get('format', None) is None:
+        kwargs['format'] = pyTMD.utilities.detect_format(input_file)
+    # detect if file is compressed if not provided
+    if kwargs.get('compressed', None) is None:
+        kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
     # open FES files based on format
     if kwargs['format'] == 'ascii':
         # FES ascii constituent files

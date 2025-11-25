@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 11/2025: added string check to determine if is a valid URL
         added function to check if a dependency is available
+        added detection functions for compression and model format
     Updated 10/2025: allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale
@@ -91,6 +92,8 @@ __all__ = [
     "is_valid_url",
     "Path",
     "reify",
+    "detect_format",
+    "detect_compression",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -348,6 +351,50 @@ class reify(object):
         val = self.wrapped(inst)
         setattr(inst, self.wrapped.__name__, val)
         return val
+
+def detect_format(filename: str | pathlib.Path) -> str:
+    """
+    Detect tide file format based on file extension
+
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        model file
+
+    Returns
+    -------
+    format: str
+        Model format
+
+            - ``'ascii'``: ascii format
+            - ``'netcdf'``: netCDF4 format
+    """
+    filename = Path(filename    ).resolve()
+    if re.search(r'(\.asc|\.d)(\.gz)?$', filename.name, re.IGNORECASE):
+        # FES or GOT ascii formats
+        return 'ascii'
+    elif re.search(r'\.nc(\.gz)?$', filename.name, re.IGNORECASE):
+        # FES or GOT netCDF4 formats
+        return 'netcdf'
+    else:
+        raise ValueError(f'Unrecognized FES file format: {filename}')
+
+def detect_compression(filename: str | pathlib.Path) -> bool:
+    """
+    Detect if file is compressed based on file extension
+
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        model file
+
+    Returns
+    -------
+    compressed: bool
+        Input file is gzip compressed
+    """
+    filename = Path(filename).resolve()
+    return bool(re.search(r'\.gz$', filename.name, re.IGNORECASE))
 
 # PURPOSE: get the hash value of a file
 def get_hash(
