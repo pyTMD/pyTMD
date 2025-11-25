@@ -67,7 +67,7 @@ Directories
 
 ``pyTMD`` uses a tree structure for storing and accessing the tidal constituent data.
 This structure was chosen based on the different formats of each tide model.
-The base of the tree structure (in the table below as ``<path_to_tide_models>``) can be the default internal directory (``pyTMD/data``) or a user-specified (external) directory.
+The base of the tree structure (in the table below as ``<path_to_tide_models>``) can be the default ``pyTMD`` cache directory or a user-specified (external) directory.
 Several models can be programmatically downloaded from their providers to their parameterized directories using the fetching routines in ``pyTMD.datasets``.
 
 Presently, the following models and their directories are parameterized within ``pyTMD``:
