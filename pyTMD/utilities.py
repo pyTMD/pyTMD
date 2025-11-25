@@ -306,6 +306,15 @@ class Path(pathlib.Path):
             return Path(self.filename.expanduser().absolute())
         
     @property
+    def _raw_paths(self):
+        """List of raw path components
+        """
+        if self.is_url:
+            return list(url_split(self.filename))
+        else:
+            return self.filename._raw_paths
+
+    @property
     def md5_hash(self):
         """MD5 hash value of the file
         """
