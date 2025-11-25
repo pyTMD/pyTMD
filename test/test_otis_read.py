@@ -647,8 +647,8 @@ class Test_CATS2008:
         fid.seek(0)
         # use model definition file as input
         m = pyTMD.io.model().from_file(fid)
-        for attr in ['name','format','z','u','v','projection']:
-            assert getattr(model,attr) == getattr(m,attr)
+        # check that (serialized) attributes are the same
+        assert m.__parameters__ == model.__parameters__
 
 # PURPOSE: Test and Verify AOTIM-5-2018 model read and prediction programs
 class Test_AOTIM5_2018:
@@ -828,5 +828,5 @@ class Test_AOTIM5_2018:
         fid.seek(0)
         # use model definition file as input
         m = pyTMD.io.model().from_file(fid)
-        for attr in ['name','format','z','u','v','projection']:
-            assert getattr(model,attr) == getattr(m,attr)
+        # check that (serialized) attributes are the same
+        assert m.__parameters__ == model.__parameters__

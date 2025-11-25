@@ -51,22 +51,20 @@ import pathlib
 import warnings
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import (
-    get_data_path,
-    import_dependency,
-    is_valid_url
-)
+import pyTMD.utilities
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 # attempt imports
-pyproj = import_dependency('pyproj')
+pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 __all__ = [
     "open_dataset",
 ]
 
 # ocean pole tide file from Desai (2002) and IERS conventions
-_ocean_pole_tide_file = get_data_path(['data','opoleloadcoefcmcor.txt.gz'])
+_ocean_pole_tide_file = pyTMD.utilities.get_data_path(
+    ['data','opoleloadcoefcmcor.txt.gz']
+)
 
 # PURPOSE: read real and imaginary ocean pole tide coefficients
 def open_dataset(
@@ -99,8 +97,8 @@ def open_dataset(
     # default coordinate reference system is EPSG:4326 (WGS84)
     crs = kwargs.get('crs', 4326)
     # tilde-expand input file
-    if not is_valid_url(input_file):
-        input_file = pathlib.Path(input_file).expanduser().absolute()
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_file:
         assert input_file.exists(), f'File not found: {input_file}'
     # read compressed ocean pole tide file
     if kwargs['compressed']:

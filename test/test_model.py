@@ -233,7 +233,7 @@ def test_definition_FES_currents():
     # assert that all model files are in the model definition
     for t in ['u','v']:
         for f in model_files[t]:
-            assert pathlib.Path(f) in m[t].model_file
+            assert pyTMD.utilities.Path(f) in m[t].model_file
         assert m[t].units == 'cm/s'
     assert m.compressed is True
     # check validity of parsed constituents
@@ -349,7 +349,7 @@ def test_definition_FES_currents_glob():
     for t in ['u','v']:
         assert (len(model[t].model_file) == len(model_files[t]))
         for f in model_files[t]:
-            assert pathlib.Path(filepath).joinpath(f) in model[t].model_file
+            assert pyTMD.utilities.Path(filepath).joinpath(f) in model[t].model_file
     # check validity of parsed constituents
     parsed_constituents = \
         [pyTMD.io.model.parse_file(f) for f in model_files['u']]
@@ -383,7 +383,7 @@ def test_definition_GOT():
     assert m.name == 'GOT4.10'
     # assert that all model files are in the model definition
     for f in model_files:
-        assert pathlib.Path(f) in m['z'].model_file
+        assert pyTMD.utilities.Path(f) in m['z'].model_file
     assert m['z'].units == 'mm'
     assert m['z'].variable == 'tide_load'
     assert m.compressed is True
@@ -430,7 +430,7 @@ def test_definition_GOT_glob():
     # verify that the model files match
     assert (len(model['z'].model_file) == len(model_files))
     for f in model_files:
-        assert pathlib.Path(filepath).joinpath(f) in model['z'].model_file
+        assert pyTMD.utilities.Path(filepath).joinpath(f) in model['z'].model_file
     # close the glob definition file
     fid.close()
     # clean up model

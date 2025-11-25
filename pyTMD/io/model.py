@@ -6,9 +6,6 @@ Retrieves tide model parameters for named tide models and
     from model definition files
 
 PYTHON DEPENDENCIES:
-    numpy: Scientific Computing Tools For Python
-        https://numpy.org
-        https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     pyproj: Python interface to PROJ library
         https://pypi.org/project/pyproj/
         https://pyproj4.github.io/pyproj/
@@ -85,18 +82,13 @@ import copy
 import json
 import pathlib
 import warnings
-import numpy as np
 import xarray as xr
-from pyTMD.utilities import (
-    import_dependency,
-    get_data_path,
-    get_cache_path
-)
+import pyTMD.utilities
 from collections.abc import Iterable
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 # attempt imports
-pyproj = import_dependency('pyproj')
+pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 __all__ = [
     'DataBase',
@@ -105,7 +97,7 @@ __all__ = [
 ]
 
 # default working data directory for tide models
-_default_directory = get_cache_path()
+_default_directory = pyTMD.utilities.get_cache_path()
 
 # allow model database to be subscriptable
 # and have attribute access
@@ -166,7 +158,7 @@ def load_database(extra_databases: list = []):
         Database of model parameters
     """
     # path to model database
-    database = get_data_path(['data','database.json'])
+    database = pyTMD.utilities.get_data_path(['data','database.json'])
     # extract JSON data
     with database.open(mode='r', encoding='utf-8') as fid:
         parameters = json.load(fid)
@@ -181,7 +173,7 @@ def load_database(extra_databases: list = []):
         # otherwise load parameters from JSON file path
         else:
             # verify that extra database file exists
-            db = pathlib.Path(db).expanduser()
+            db = pyTMD.utilities.Path(db)
             if not db.exists():
                 raise FileNotFoundError(db)
             # extract JSON data
@@ -219,8 +211,8 @@ class model:
         self.minor = None
         # set working data directory
         self.directory = None
-        if directory is not None:
-            self.directory = pathlib.Path(directory).expanduser()
+        if (directory is not None):
+            self.directory = pyTMD.utilities.Path(directory)
         # set any extra databases
         self.extra_databases = copy.copy(kwargs['extra_databases'])
         self.format = None
@@ -243,7 +235,7 @@ class model:
         """
         # set working data directory if unset
         if self.directory is None:
-            self.directory = pathlib.Path(_default_directory)
+            self.directory = pyTMD.utilities.Path(_default_directory)
         # select between known tide models
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
@@ -288,9 +280,11 @@ class model:
         if isinstance(definition_file, io.IOBase):
             self._parse_file(definition_file)
         elif isinstance(definition_file, (str, pathlib.Path)):
-            definition_file = pathlib.Path(definition_file).expanduser()
+            definition_file = pyTMD.utilities.Path(definition_file)
             with definition_file.open(mode='r', encoding='utf8') as fid:
                 self._parse_file(fid)
+        # set dictionary of parameters
+        self.__parameters__ = self.to_dict(serialize=True)
         # return the model object
         return self
 
@@ -552,7 +546,7 @@ class model:
         """
         # set working data directory if unset
         if self.directory is None:
-            self.directory = pathlib.Path(_default_directory)
+            self.directory = pyTMD.utilities.Path(_default_directory)
         # complete model file paths
         if isinstance(model_file, list):
             output_file = [self.pathfinder(f) for f in model_file]
@@ -617,10 +611,10 @@ class model:
                 # check if grid file is relative or absolute
                 if (temp.directory is not None):
                     temp[mtype].grid_file = \
-                        temp.directory.joinpath(temp[mtype].grid_file).resolve()
+                        temp.directory.joinpath(temp[mtype].grid_file)
                 else:
                     temp[mtype].grid_file = \
-                        pathlib.Path(temp[mtype].grid_file).expanduser()
+                        pyTMD.utilities.Path(temp[mtype].grid_file)
         # extract model files
         for mtype in ('z', 'u', 'v'):
             # check that model type is available
@@ -641,11 +635,11 @@ class model:
                         temp[mtype].model_file.extend(temp.directory.glob(p))
             elif isinstance(temp[mtype].model_file, list):
                 # resolve paths to model files
-                temp[mtype].model_file = [pathlib.Path(f).expanduser() for f in
+                temp[mtype].model_file = [pyTMD.utilities.Path(f) for f in
                     temp[mtype].model_file]
             else:
                 # fully defined single file case
-                temp[mtype].model_file = pathlib.Path(temp[mtype].model_file).expanduser()
+                temp[mtype].model_file = pyTMD.utilities.Path(temp[mtype].model_file)
         # verify that projection attribute exists for projected models
         if temp.format in ('OTIS','ATLAS-compact','TMD3'):
             assert temp.projection

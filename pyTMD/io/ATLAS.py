@@ -59,14 +59,10 @@ import pathlib
 import datetime
 import xarray as xr
 import pyTMD.version
-from pyTMD.utilities import (
-    import_dependency,
-    dependency_available,
-    is_valid_url
-)
+import pyTMD.utilities
 # attempt imports
-dask = import_dependency('dask')
-dask_available = dependency_available('dask')
+dask = pyTMD.utilities.import_dependency('dask')
+dask_available = pyTMD.utilities.dependency_available('dask')
 
 __all__ = [
     'open_dataset',
@@ -184,8 +180,8 @@ def open_atlas_grid(
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    if not is_valid_url(grid_file):
-        grid_file = pathlib.Path(grid_file).expanduser().absolute()
+    grid_file = pyTMD.utilities.Path(grid_file).resolve()
+    if grid_file.is_file:
         assert grid_file.exists(), f'File not found: {grid_file}'
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
@@ -255,8 +251,8 @@ def open_atlas_dataset(
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    if not is_valid_url(input_file):
-        input_file = pathlib.Path(input_file).expanduser().absolute()
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_file:
         assert input_file.exists(), f'File not found: {input_file}'
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
@@ -322,7 +318,7 @@ class ATLASDataset:
             additional keyword arguments for xarray netCDF4 writer
         """
         # tilde-expand output file
-        path = pathlib.Path(path).expanduser()
+        path = pyTMD.utilities.Path(path).resolve()
         # set variable names for type
         type = self._ds.attrs['type'].lower()
         depth_key = f'h{type}'
@@ -381,7 +377,7 @@ class ATLASDataset:
             additional keyword arguments for xarray netCDF4 writer
         """
         # tilde-expand output directory
-        path = pathlib.Path(path).expanduser()
+        path = pyTMD.utilities.Path(path).resolve()
         # set variable names 
         type = self._ds.attrs['type'].lower()
         type_key = dict(z='h', u='U', v='V')[type]
@@ -471,7 +467,7 @@ class ATLASDataTree:
             additional keyword arguments for netCDF4 writer
         """
         # tilde-expand grid file
-        grid_file = pathlib.Path(grid_file).expanduser().absolute()
+        grid_file = pyTMD.utilities.Path(grid_file).resolve()
         # set default output directory
         directory = grid_file.parent if directory is None else directory
         # for each model type

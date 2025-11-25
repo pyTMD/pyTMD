@@ -89,8 +89,8 @@ __all__ = [
     "import_dependency",
     "dependency_available",
     "is_valid_url",
-    "file_opener",
-    "compressuser",
+    "Path",
+    "reify",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -127,7 +127,7 @@ def get_data_path(relpath: list | str | pathlib.Path):
     """
     # current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
-    filepath = pathlib.Path(filename).absolute().parent
+    filepath = Path(filename).absolute().parent
     if isinstance(relpath, list):
         # use *splat operator to extract from list
         return filepath.joinpath(*relpath)
@@ -157,7 +157,7 @@ def get_cache_path(
         filepath = filepath.joinpath(*relpath)
     elif isinstance(relpath, (str, pathlib.Path)):
         filepath = filepath.joinpath(relpath)
-    return filepath
+    return Path(filepath)
 
 def import_dependency(
         name: str,
@@ -243,6 +243,96 @@ def is_valid_url(url: str) -> bool:
     except AttributeError:
         return False
 
+class Path(pathlib.Path):
+    """``Pathlib.Path`` subclass with additional methods and properties
+    """
+
+    def __init__(self, filename: str | pathlib.Path, *args, **kwargs):
+        if is_valid_url(filename):
+            self.filename = str(filename)
+        else:
+            super().__init__(filename)
+            self.filename = pathlib.Path(filename, *args, **kwargs)
+
+    def joinpath(self, *args):
+        """Join path components to the existing path
+        """
+        if self.is_url:
+            return Path('/'.join([self.filename, *args]))
+        else:
+            return Path(self.filename.joinpath(*args))
+
+    # PURPOSE: platform independent file opener
+    def openfile(self):
+        """Platform independent file opener
+        """
+        if self.is_url:
+            raise RuntimeError('Cannot open URL paths')
+        if (sys.platform == "win32"):
+            os.startfile(self.filename, "explore")
+        elif (sys.platform == "darwin"):
+            subprocess.call(["open", self.filename])
+        else:
+            subprocess.call(["xdg-open", self.filename])
+
+    def compressuser(self):
+        """Tilde-compress a file to be relative to the home directory
+        """
+        if self.is_url:
+            raise RuntimeError('Cannot compress URL paths')
+        # attempt to compress filename relative to home directory
+        filename = pathlib.Path(self.filename).expanduser().absolute()
+        try:
+            relative_to = filename.relative_to(pathlib.Path().home())
+        except (ValueError, AttributeError) as exc:
+            return self.filename
+        else:
+            return Path('~').joinpath(relative_to)
+        
+    def exists(self):
+        """Check if the resolved path exists
+        """
+        if self.is_url:
+            return is_valid_url(self.filename)
+        else:
+            return self.filename.expanduser().absolute().exists()
+        
+    def resolve(self):
+        """Resolve the path to an absolute path
+        """
+        if self.is_url:
+            return '/'.join(url_split(self.filename))
+        else:
+            return Path(self.filename.expanduser().absolute())
+        
+    @property
+    def md5_hash(self):
+        """MD5 hash value of the file
+        """
+        return get_hash(self.filename, algorithm='md5')
+
+    @property
+    def is_file(self):
+        """Boolean flag if path is a local file
+        """
+        return not is_valid_url(self.filename)
+
+    @property
+    def is_url(self):
+        """Boolean flag if path is a URL
+        """
+        return is_valid_url(self.filename)
+
+    def __repr__(self):
+        """Representation of the ``Path`` object
+        """
+        return str(self.filename)
+
+    def __str__(self):
+        """String representation of the ``Path`` object
+        """
+        return str(self.filename)
+
 class reify(object):
     """Class decorator that puts the result of the method it
     decorates into the instance"""
@@ -257,42 +347,6 @@ class reify(object):
         val = self.wrapped(inst)
         setattr(inst, self.wrapped.__name__, val)
         return val
-
-# PURPOSE: platform independent file opener
-def file_opener(filename: str | pathlib.Path):
-    """
-    Platform independent file opener
-
-    Parameters
-    ----------
-    filename: str or pathlib.Path
-        path to file
-    """
-    filename = pathlib.Path(filename).expanduser()
-    if (sys.platform == "win32"):
-        os.startfile(filename, "explore")
-    elif (sys.platform == "darwin"):
-        subprocess.call(["open", filename])
-    else:
-        subprocess.call(["xdg-open", filename])
-
-def compressuser(filename: str | pathlib.Path):
-    """
-    Tilde-compresses a file to be relative to the home directory
-
-    Parameters
-    ----------
-    filename: str or pathlib.Path
-        input filename to compress
-    """
-    filename = pathlib.Path(filename).expanduser().absolute()
-    # attempt to compress filename relative to home directory
-    try:
-        relative_to = filename.relative_to(pathlib.Path().home())
-    except (ValueError, AttributeError) as exc:
-        return filename
-    else:
-        return pathlib.Path('~').joinpath(relative_to)
 
 # PURPOSE: get the hash value of a file
 def get_hash(

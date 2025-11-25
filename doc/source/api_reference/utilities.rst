@@ -18,10 +18,13 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.import_dependency
 
-.. autoclass:: pyTMD.utilities.reify
+.. autofunction:: pyTMD.utilities.dependency_available
+
+.. autoclass:: pyTMD.utilities.Path
    :members:
 
-.. autofunction:: pyTMD.utilities.file_opener
+.. autoclass:: pyTMD.utilities.reify
+   :members:
 
 .. autofunction:: pyTMD.utilities.get_hash
 

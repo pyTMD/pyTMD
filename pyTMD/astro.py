@@ -87,6 +87,7 @@ from pyTMD.utilities import (
 # attempt imports
 jplephem = import_dependency('jplephem')
 jplephem.spk = import_dependency('jplephem.spk')
+jplephem_available = dependency_available('jplephem')
 
 __all__ = [
     "mean_longitudes",
@@ -621,8 +622,7 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     if (kwargs['ephemerides'].lower() == 'approximate'):
         return solar_approximate(MJD, **kwargs)
     elif (kwargs['ephemerides'].upper() == 'JPL'):
-        assert dependency_available('jplephem'), \
-            'jplephem is required for JPL ephemerides'
+        assert jplephem_available, 'jplephem is required for JPL ephemerides'
         return solar_ephemerides(MJD, **kwargs)
 
 def solar_approximate(MJD, **kwargs):
@@ -763,8 +763,7 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     if (kwargs['ephemerides'].lower() == 'approximate'):
         return lunar_approximate(MJD, **kwargs)
     elif (kwargs['ephemerides'].upper() == 'JPL'):
-        assert dependency_available('jplephem'), \
-            'jplephem is required for JPL ephemerides'
+        assert jplephem_available, 'jplephem is required for JPL ephemerides'
         return lunar_ephemerides(MJD, **kwargs)
 
 def lunar_approximate(MJD, **kwargs):

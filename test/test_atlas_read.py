@@ -176,8 +176,8 @@ def test_definition_file(MODEL):
     fid.seek(0)
     # use model definition file as input
     m = pyTMD.io.model().from_file(fid)
-    for attr in ['name','format','z','u','v']:
-        assert getattr(model,attr) == getattr(m,attr)
+    # check that (serialized) attributes are the same
+    assert m.__parameters__ == model.__parameters__
 
 # parametrize over reading with dask
 @pytest.mark.parametrize("CHUNKS", [None, "auto"])

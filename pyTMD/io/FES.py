@@ -67,14 +67,10 @@ import datetime
 import numpy as np
 import xarray as xr
 import pyTMD.constituents
-from pyTMD.utilities import (
-    import_dependency,
-    dependency_available,
-    is_valid_url
-)
+import pyTMD.utilities
 # attempt imports
-dask = import_dependency('dask')
-dask_available = dependency_available('dask')
+dask = pyTMD.utilities.import_dependency('dask')
+dask_available = pyTMD.utilities.dependency_available('dask')
 
 __all__ = [
     'open_mfdataset',
@@ -180,8 +176,8 @@ def open_fes_ascii(
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    if not is_valid_url(input_file):
-        input_file = pathlib.Path(input_file).expanduser().absolute()
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_file:
         assert input_file.exists(), f'File not found: {input_file}'
     # read the ASCII-format tide elevation file
     if kwargs['compressed']:
@@ -283,8 +279,8 @@ def open_fes_netcdf(
     kwargs.setdefault('type', 'z')
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    if not is_valid_url(input_file):
-        input_file = pathlib.Path(input_file).expanduser().absolute()
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_file:
         assert input_file.exists(), f'File not found: {input_file}'
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
@@ -360,7 +356,7 @@ class FESDataset:
             additional keyword arguments for xarray netCDF4 writer
         """
         # tilde-expand output path
-        path = pathlib.Path(path).expanduser().absolute() 
+        path = pyTMD.utilities.Path(path).resolve()
         # set variable names and units for type
         if (self._ds.attrs['type'] == 'z'):
             amp_key = 'amplitude'

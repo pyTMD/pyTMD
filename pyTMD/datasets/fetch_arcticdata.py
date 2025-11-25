@@ -100,7 +100,7 @@ def fetch_arcticdata(model: str,
     LOCAL['Gr1kmTM'] = 'Gr1kmTM'
 
     # recursively create directories if non-existent
-    directory = pathlib.Path(directory).expanduser().absolute()
+    directory = pyTMD.utilities.Path(directory).resolve()
     local_dir = directory.joinpath(LOCAL[model])
     local_dir.mkdir(mode=mode, parents=True, exist_ok=True)
 

@@ -144,13 +144,11 @@ UPDATE HISTORY:
 """
 from __future__ import print_function, annotations
 
-import logging
 import pathlib
 import numpy as np
+import xarray as xr
 from io import IOBase
-import scipy.interpolate
 import pyTMD.io
-import pyTMD.io.model
 import pyTMD.predict
 import pyTMD.spatial
 import pyTMD.utilities
@@ -158,7 +156,6 @@ import timescale.eop
 import timescale.time
 # attempt imports
 pyproj = pyTMD.utilities.import_dependency('pyproj')
-xr = pyTMD.utilities.import_dependency('xarray')
 
 __all__ = [
     "corrections",
@@ -326,9 +323,9 @@ def tide_elevations(
     kwargs.setdefault('apply_flexure', False)
 
     # check that tide directory is accessible
-    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
-        directory = pathlib.Path(directory).expanduser().absolute()
-        if not directory.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # validate input arguments
@@ -524,9 +521,9 @@ def tide_currents(
     kwargs.setdefault('minor_constituents', None)
 
     # check that tide directory is accessible
-    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
-        directory = pathlib.Path(directory).expanduser().absolute()
-        if not directory.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # validate input arguments
@@ -661,9 +658,9 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
     """
 
     # check that tide directory is accessible
-    if (directory is not None) and not pyTMD.utilities.is_valid_url(directory):
-        directory = pathlib.Path(directory).expanduser().absolute()
-        if not directory.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # get parameters for tide model

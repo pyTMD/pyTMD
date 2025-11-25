@@ -57,9 +57,7 @@ class widgets:
         self.VBox = ipywidgets.VBox
 
         # default working data directory for tide models
-        default_directory = pyTMD.utilities.compressuser(
-            pyTMD.utilities.get_cache_path()
-        )
+        default_directory = pyTMD.utilities.get_cache_path().compressuser()
         # set the directory with tide models
         self.directory = ipywidgets.Text(
             value=str(default_directory),

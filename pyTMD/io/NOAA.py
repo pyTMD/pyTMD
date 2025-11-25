@@ -21,13 +21,11 @@ import logging
 import traceback
 import numpy as np
 import pyTMD.constituents
-from pyTMD.utilities import (
-    import_dependency,
-    dependency_available
-)
+import pyTMD.utilities
 
 # attempt imports
-pd = import_dependency('pandas')
+pd = pyTMD.utilities.import_dependency('pandas')
+pandas_available = pyTMD.utilities.dependency_available('pandas')
 
 __all__ = [
     "build_query",
@@ -115,8 +113,7 @@ def from_xml(url, **kwargs):
         The ``DataFrame`` containing the parsed XML data
     """
     # query the NOAA webservices API
-    assert dependency_available('pandas'), \
-        'pandas is required for accessing NOAA webservices'
+    assert pandas_available, 'pandas is required for accessing NOAA webservices'
     try:
         logging.debug(url)
         df = pd.read_xml(url, **kwargs)
