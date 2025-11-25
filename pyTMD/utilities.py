@@ -250,6 +250,7 @@ class Path(pathlib.Path):
     def __init__(self, filename: str | pathlib.Path, *args, **kwargs):
         if is_valid_url(filename):
             self.filename = str(filename)
+            self._raw_paths = list(url_split(self.filename))
         else:
             super().__init__(filename)
             self.filename = pathlib.Path(filename, *args, **kwargs)
@@ -304,15 +305,6 @@ class Path(pathlib.Path):
             return Path('/'.join(url_split(self.filename)))
         else:
             return Path(self.filename.expanduser().absolute())
-        
-    @property
-    def _raw_paths(self):
-        """List of raw path components
-        """
-        if self.is_url:
-            return list(url_split(self.filename))
-        else:
-            return self.filename._raw_paths
 
     @property
     def md5_hash(self):
