@@ -11,7 +11,7 @@ Recipes
       :text-align: center
       :link: ./Cloud_Access.html
 
-      :material-outlined:`insert_chart;5em`
+      :material-outlined:`cloud_download;5em`
 
 .. toctree::
     :maxdepth: 1
