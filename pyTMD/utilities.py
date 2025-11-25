@@ -301,7 +301,7 @@ class Path(pathlib.Path):
         """Resolve the path to an absolute path
         """
         if self.is_url:
-            return '/'.join(url_split(self.filename))
+            return Path('/'.join(url_split(self.filename)))
         else:
             return Path(self.filename.expanduser().absolute())
         
