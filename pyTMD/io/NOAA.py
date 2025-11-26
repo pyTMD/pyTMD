@@ -228,8 +228,7 @@ def harmonic_constituents(
     # set the index to the constituent number
     df = df.set_index('constNum')
     # parse harmonic constituents
-    c = [pyTMD.constituents._parse_name(row['name']) for i, row in df.iterrows()]
-    df['constituent'] = c
+    df['constituent'] = df['name'].apply(pyTMD.constituents._parse_name)
     # return the dataframe
     return df
 
