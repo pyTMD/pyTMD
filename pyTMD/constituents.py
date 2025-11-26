@@ -2107,7 +2107,7 @@ def _parse_name(constituent: str) -> str:
     Parameters
     ----------
     constituent: str
-        Unparsed tidal constituent name
+        Text containing the name of a tidal constituent
     """
     # list of tidal constituents (not all are included in tidal program)
     # include negative look-behind and look-ahead for complex cases
@@ -2168,7 +2168,7 @@ def _parse_name(constituent: str) -> str:
     # check if tide model is a regex case for compound tides
     if re.search(patterns, constituent, re.IGNORECASE):
         return "".join(cases.findall(constituent)[0]).lower()
-    # known remapped cases
+    # known cases for remapping from different naming conventions
     mapping = [('2n','2n2'), ('alp1', 'alpha1'), ('alp2', 'alpha2'),
         ('bet1', 'beta1'), ('bet2', 'beta2'), ('del2', 'delta2'),
         ('e2','eps2'), ('ep2','eps2'), ('gam2', 'gamma2'),
