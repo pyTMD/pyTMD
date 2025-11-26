@@ -112,6 +112,7 @@ __all__ = [
     "_love_numbers",
     "_complex_love_numbers",
     "_parse_tide_potential_table",
+    "_parse_name",
     "_to_constituent_id",
     "_to_doodson_number",
     "_to_extended_doodson",

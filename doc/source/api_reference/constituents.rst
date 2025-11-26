@@ -39,6 +39,8 @@ constituents
 
 .. autofunction:: pyTMD.constituents._parse_tide_potential_table
 
+.. autofunction:: pyTMD.constituents._parse_name
+
 .. autofunction:: pyTMD.constituents._to_constituent_id
 
 .. autofunction:: pyTMD.constituents._to_doodson_number
