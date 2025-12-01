@@ -92,7 +92,6 @@ jplephem_available = dependency_available('jplephem')
 __all__ = [
     "mean_longitudes",
     "planetary_longitudes",
-    "phase_angles",
     "doodson_arguments",
     "delaunay_arguments",
     "schureman_arguments",
