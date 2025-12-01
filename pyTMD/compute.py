@@ -667,7 +667,7 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
     if definition_file is not None:
         m = pyTMD.io.model(directory).from_file(definition_file)
     else:
-        m = pyTMD.io.model(directory).from_database(model)
+        m = pyTMD.io.model(directory).from_database(model, type='z')
     # reduce list of constituents to only those required for mask
     if m.multifile:
         m.parse_constituents()

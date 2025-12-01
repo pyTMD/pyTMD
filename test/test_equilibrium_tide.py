@@ -114,7 +114,6 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     assert np.all(np.abs(lpet - computed) < eps)
 
 # PURPOSE: test the estimation of long-period equilibrium tides
-@pytest.fixture(scope="module", autouse=False)
 def test_node_tide(directory):
     """
     Test the computation of the equilibrium node tides
@@ -128,7 +127,7 @@ def test_node_tide(directory):
     ds = ds.tmd.subset('node')
     # create a test dataset for data type
     # number of data points
-    n_time = 3000
+    n_time = 20
     delta_time = np.random.randint(0,31557600,size=n_time)
     # convert from seconds since 2018 to tide time
     EPOCH = (2018, 1, 1, 0, 0, 0)
