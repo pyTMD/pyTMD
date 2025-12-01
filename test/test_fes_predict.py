@@ -63,7 +63,7 @@ def test_check_FES2014(directory):
 # PURPOSE: Tests that interpolated results are comparable to FES program
 def test_verify_FES2014(directory, CROP):
     # model parameters for FES2014
-    m = pyTMD.io.model(directory).from_database('FES2014')
+    m = pyTMD.io.model(directory).from_database('FES2014', type='z')
     # constituent files included in test
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
@@ -138,7 +138,7 @@ def test_definition_file(MODEL):
 # PURPOSE: test extend function
 def test_extend_array(directory, CHUNKS):
     # model parameters for FES2014
-    m = pyTMD.io.model(directory).from_database('FES2014')
+    m = pyTMD.io.model(directory).from_database('FES2014', type='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2'])
     # open dataset
