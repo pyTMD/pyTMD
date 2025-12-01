@@ -197,7 +197,7 @@ def aviso_fes_tar(MODEL, f, logger,
     """
 
     # check if local directory exists and recursively create if not
-    localpath = pathlib.Path(DIRECTORY).joinpath(MODEL.lower()).expanduser()
+    localpath = pyTMD.utilities.Path(DIRECTORY).joinpath(MODEL.lower())
     localpath.mkdir(MODE, parents=True, exist_ok=True)
 
     # path to remote directory for FES
@@ -311,7 +311,7 @@ def aviso_fes_list(MODEL, f, logger,
     """
 
     # validate local directory
-    DIRECTORY = pathlib.Path(DIRECTORY).expanduser().absolute()
+    DIRECTORY = pyTMD.utilities.Path(DIRECTORY).resolve()
 
     # path to remote directory for FES
     FES = {}

@@ -11,6 +11,9 @@ dataset
 General Attributes and Methods
 ==============================
 
+.. autoclass:: pyTMD.io.DataTree
+   :members:
+
 .. autoclass:: pyTMD.io.Dataset
    :members:
 

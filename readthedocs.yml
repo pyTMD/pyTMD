@@ -19,7 +19,7 @@ build:
         - pixi install -e doc
     build:
         html:
-          - pixi run -e doc sphinx-build -T -b html doc/source $READTHEDOCS_OUTPUT/html
+          - pixi run -e dev sphinx-build -T -b html doc/source $READTHEDOCS_OUTPUT/html
 
 # Build documentation with Sphinx
 sphinx:

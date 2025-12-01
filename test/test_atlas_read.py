@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_atlas_read.py (10/2025)
+test_atlas_read.py (11/2025)
 Tests that ATLAS compact and netCDF4 data can be downloaded from AWS S3 bucket
 Tests the read program to verify that constituents are being extracted
 
@@ -10,12 +10,13 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
-    netCDF4: Python interface to the netCDF C library
-        https://unidata.github.io/netcdf4-python/netCDF4/index.html
+    h5netcdf: Pythonic interface to netCDF4 via h5py
+        https://h5netcdf.org/
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 11/2025: using new xarray interface for tidal model data
     Updated 10/2025: split directories between validation and model data
         fetch data from pyTMD developers test data repository
     Updated 09/2025: added check if running on GitHub Actions or locally
@@ -42,6 +43,7 @@ import pytest
 import inspect
 import pathlib
 import numpy as np
+import xarray as xr
 import pyTMD
 import timescale
 
@@ -49,17 +51,16 @@ import timescale
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 filepath = pathlib.Path(filename).absolute().parent
 
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','nearest'])
-@pytest.mark.parametrize("EXTRAPOLATE", [False])
+# parametrize over cropping the model fields
 @pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_read_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
+def test_read_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
-    constituents = ['m2','s2','k1','o1']
-    # convert units from millimeters to meters
-    m.scale = 1.0/1000.0
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2','s2','k1','o1'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks='auto')
 
     # read validation dataset (m2, s2, k1, o1)
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
@@ -68,166 +69,47 @@ def test_read_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
     val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
         skiprows=3,dtype=dict(names=names,formats=formats))
 
+    # convert to xarray DataArrays
+    X = xr.DataArray(val['Lon'], dims=('time'))
+    Y = xr.DataArray(val['Lat'], dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
-    amp,ph,c = m.extract_constants(val['Lon'], val['Lat'],
-        constituents=constituents, method=METHOD,
-        extrapolate=EXTRAPOLATE, crop=CROP)
-    # convert phase from 0:360 to -180:180
-    ph[ph > 180] -= 360.0
+    local = ds.tmd.interp(X, Y)
 
     # will verify differences between model outputs are within tolerance
     amp_eps = 0.05
     ph_eps = 10.0
     # calculate differences between OTPSnc and python version
-    for i,cons in enumerate(c):
-        # verify constituents
-        assert (cons == constituents[i])
-        # calculate difference in amplitude and phase
-        amp_diff = amp[:,i] - val[f'{cons}_amp']
-        ph_diff = ph[:,i] - val[f'{cons}_ph']
+    for i,cons in enumerate(local.tmd.constituents):
+        # amplitude and phase
+        amp = local[cons].tmd.amplitude
+        ph = local[cons].tmd.phase
+        # convert phase from 0:360 to -180:180
+        phase = np.arctan2(np.sin(np.radians(ph)), np.cos(np.radians(ph)))
+        ph = np.degrees(phase)
+        # calculate differences
+        amp_diff = amp.values - val[f'{cons}_amp']
+        ph_diff = ph.values - val[f'{cons}_ph']
         assert np.all(np.abs(amp_diff) <= amp_eps)
         assert np.all(np.abs(ph_diff) <= ph_eps)
 
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline'])
-# PURPOSE: Tests that interpolated results are comparable
-def test_compare_TPXO9_v2(directory, METHOD):
-    # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
-    constituents = ['m2','s2','k1','o1']
-    # keep units consistent with test outputs
-    m.scale = 1.0
-
-    # read validation dataset (m2, s2, k1, o1)
-    names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
-        'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
-    formats = ('f','f','f','f','f','f','f','f','f','f')
-    val = np.loadtxt(filepath.joinpath('extract_HC_sample_out.gz'),
-        skiprows=3,dtype=dict(names=names,formats=formats))
-
-    # extract amplitude and phase from tide model
-    amp1, ph1, c1 = m.extract_constants(val['Lon'], val['Lat'], 
-        constituents=constituents, method=METHOD)
-    # calculate complex form of constituent oscillation
-    hc1 = amp1*np.exp(-1j*ph1*np.pi/180.0)
-
-    # read and interpolate constituents from tide model
-    m.read_constants(constituents=constituents)
-    amp2, ph2 = m.interpolate_constants(val['Lon'], val['Lat'], 
-        method=METHOD)
-    # calculate complex form of constituent oscillation
-    hc2 = amp2*np.exp(-1j*ph2*np.pi/180.0)
-
-    # expected Doodson numbers for constituents
-    exp = {}
-    exp['m2'] = 255.555
-    exp['s2'] = 273.555
-    exp['o1'] = 145.555
-    exp['k1'] = 165.555
-
-    # will verify differences between model outputs are within tolerance
-    eps = np.finfo(np.float16).eps
-    # calculate differences between methods
-    for i,cons in enumerate(c1):
-        # verify constituents
-        assert (cons == m._constituents.fields[i])
-        # calculate difference in amplitude and phase
-        difference = hc1[:,i] - hc2[:,i]
-        assert np.all(np.abs(difference) <= eps)
-        # verify doodson numbers
-        assert (m._constituents.doodson_number[i] == exp[cons])
-        # verify cartwright numbers
-        assert np.all(m._constituents.cartwright_number[i] ==
-                pyTMD.arguments._from_doodson_number(exp[cons]))
-
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['bilinear'])
-@pytest.mark.parametrize("EXTRAPOLATE", [False])
-@pytest.mark.parametrize("CROP", [False, True])
-@pytest.mark.parametrize("use_mmap", [False, True])
-@pytest.mark.skip(reason='Need to validate over grounded point')
-# PURPOSE: Tests that interpolated results are comparable to OTPS2 program
-def test_verify_TPXO8(directory, METHOD, EXTRAPOLATE, CROP, use_mmap):
-    # model parameters for TPXO8-atlas
-    m = pyTMD.io.model(directory,compressed=False).elevation('TPXO8-atlas')
-    # constituents for test
-    constituents = ['m2','s2']
-
-    # compile numerical expression operator
-    rx = re.compile(r'[-+]?(?:(?:\d+\.\d+\.\d+)|(?:\d+\:\d+\:\d+)'
-        r'|(?:\d*\.\d+)|(?:\d+\.?))')
-    # read validation dataset (m2, s2)
-    # Lat  Lon  mm.dd.yyyy hh:mm:ss  z(m)  Depth(m)
-    with gzip.open(filepath.joinpath('predict_tide.out.gz'),'r') as f:
-        file_contents = f.read().decode('ISO-8859-1').splitlines()
-    # number of validation data points
-    nval = len(file_contents) - 13
-    # allocate for validation dataset
-    val = dict(latitude=np.zeros((nval)),longitude=np.zeros((nval)),
-        time=np.zeros((nval)),height=np.zeros((nval)))
-    # counter for filling variables
-    j = 0
-    # for each line in the validation file
-    for i,line in enumerate(file_contents):
-        # extract numerical values
-        line_contents = rx.findall(line)
-        # skip line if not a data line
-        if (len(line_contents) != 6):
-            continue
-        # save longitude, latitude and tide height
-        val['latitude'][j] = np.float64(line_contents[0])
-        val['longitude'][j] = np.float64(line_contents[1])
-        val['height'][j] = np.float64(line_contents[4])
-        # extract dates
-        MM,DD,YY = np.array(line_contents[2].split('.'),dtype='f')
-        hh,mm,ss = np.array(line_contents[3].split(':'),dtype='f')
-        # convert from calendar dates into days since 1992-01-01T00:00:00
-        val['time'][j] = timescale.time.convert_calendar_dates(YY, MM, DD,
-            hour=hh, minute=mm, second=ss, epoch=timescale.time._tide_epoch)
-        # add to counter
-        j += 1
-
-    # extract amplitude and phase from tide model
-    amp,ph,c = m.extract_constants(
-        val['longitude'], val['latitude'],
-        constituents=constituents,
-        method=METHOD, extrapolate=EXTRAPOLATE,
-        CROP=CROP, use_mmap=use_mmap)
-    # delta time
-    deltat = np.zeros_like(val['time'])
-    # calculate complex phase in radians for Euler's
-    # calculate constituent oscillations
-    hc = amp*np.exp(-1j*ph*np.pi/180.0)
-
-    # allocate for out tides at point
-    tide = np.ma.zeros((nval))
-    tide.mask = np.zeros((nval),dtype=bool)
-    # predict tidal elevations at time
-    tide.mask[:] = np.any(hc.mask, axis=1)
-    tide.data[:] = pyTMD.predict.drift(val['time'], hc,
-        constituents, deltat=deltat,
-        corrections=m.corrections)
-
-    # will verify differences between model outputs are within tolerance
-    eps = 0.03
-    # calculate differences between OTPS2 and python version
-    difference = np.ma.zeros((nval))
-    difference.data[:] = tide.data - val['height']
-    difference.mask = np.copy(tide.mask)
-    if not np.all(difference.mask):
-        assert np.all(np.abs(difference) <= eps)
-
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline'])
-@pytest.mark.parametrize("EXTRAPOLATE", [False])
+# parametrize over cropping the model fields
 @pytest.mark.parametrize("CROP", [False, True])
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
-def test_verify_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
+def test_verify_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory,compressed=True).elevation('TPXO9-atlas-v2-nc')
-    constituents = ['m2','s2','k1','o1']
-    # convert units from millimeters to meters
-    m.scale = 1.0/1000.0
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2','s2','k1','o1'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks='auto')
 
     # compile numerical expression operator
     rx = re.compile(r'[-+]?(?:(?:\d+\.\d+\.\d+)|(?:\d+\:\d+\:\d+)'
@@ -254,81 +136,62 @@ def test_verify_TPXO9_v2(directory, METHOD, EXTRAPOLATE, CROP):
         val['time'][i] = timescale.time.convert_calendar_dates(YY, MM, DD,
             hour=hh, minute=mm, second=ss, epoch=timescale.time._tide_epoch)
 
+    # convert to xarray DataArrays
+    X = xr.DataArray(val['longitude'], dims=('time'))
+    Y = xr.DataArray(val['latitude'], dims=('time'))
+    # crop tide model dataset to bounds
+    if CROP:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        bounds = [xmin, xmax, ymin, ymax]
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=1)
     # extract amplitude and phase from tide model
-    amp,ph,c = m.extract_constants(val['longitude'], val['latitude'],
-        constituents=constituents, method=METHOD,
-        extrapolate=EXTRAPOLATE, crop=CROP)
+    local = ds.tmd.interp(X, Y)
     # delta time
     deltat = np.zeros_like(val['time'])
-    # verify constituents
-    assert (c == constituents)
-    # calculate complex phase in radians for Euler's
-    # calculate constituent oscillations
-    hc = amp*np.exp(-1j*ph*np.pi/180.0)
 
-    # allocate for out tides at point
-    tide = np.ma.zeros((nval))
-    tide.mask = np.zeros((nval),dtype=bool)
     # predict tidal elevations at time
-    tide.mask[:] = np.any(hc.mask, axis=1)
-    tide.data[:] = pyTMD.predict.drift(val['time'], hc, c,
-        deltat=deltat, corrections=m['corrections'])
+    tide = local.tmd.predict(val['time'], deltat=deltat, corrections=m['corrections'])
 
     # will verify differences between model outputs are within tolerance
     eps = 0.05
     # calculate differences between OTPSnc and python version
     difference = np.ma.zeros((nval))
     difference.data[:] = tide.data - val['height']
-    difference.mask = np.copy(tide.mask)
+    difference.mask = np.isnan(tide)
     if not np.all(difference.mask):
         assert np.all(np.abs(difference) <= eps)
 
-# parameterize ATLAS tide model
-@pytest.mark.parametrize("MODEL", ['TPXO8-atlas','TPXO9-atlas-v2-nc'])
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','nearest'])
-@pytest.mark.parametrize("EXTRAPOLATE", [False])
-# PURPOSE: test the tide correction wrapper function
-@pytest.mark.skip(reason='does not presently validate the ATLAS outputs')
-def test_Ross_Ice_Shelf(directory, MODEL, METHOD, EXTRAPOLATE):
-    # create an image around the Ross Ice Shelf
-    xlimits = np.array([-750000,550000])
-    ylimits = np.array([-1450000,-300000])
-    spacing = np.array([50e3,-50e3])
-    # x and y coordinates
-    x = np.arange(xlimits[0],xlimits[1]+spacing[0],spacing[0])
-    y = np.arange(ylimits[1],ylimits[0]+spacing[1],spacing[1])
-    xgrid,ygrid = np.meshgrid(x,y)
-    # time dimension
-    delta_time = 0.0
-    # calculate tide map
-    tide = pyTMD.compute.tide_elevations(xgrid, ygrid, delta_time,
-        DIRECTORY=directory, MODEL=MODEL, GZIP=True,
-        EPOCH=(2000,1,1,0,0,0), TYPE='grid', TIME='TAI',
-        EPSG=3031, METHOD=METHOD, EXTRAPOLATE=EXTRAPOLATE)
-    assert np.any(tide)
-
 # PURPOSE: test definition file functionality
 @pytest.mark.parametrize("MODEL", ['TPXO9-atlas-v2-nc'])
-def test_definition_file(directory, MODEL):
+def test_definition_file(MODEL):
     # get model parameters
-    model = pyTMD.io.model(directory,compressed=True).elevation(MODEL)
+    model = pyTMD.io.model(verify=False).from_database(MODEL)
     # create model definition file
     fid = io.StringIO()
-    attrs = ['name','format','grid_file','model_file',
-        'compressed','type','scale']
-    d = model.to_dict(fields=attrs, serialize=True)
+    d = model.to_dict(serialize=True)
     json.dump(d, fid)
     fid.seek(0)
     # use model definition file as input
     m = pyTMD.io.model().from_file(fid)
-    for attr in attrs:
-        assert getattr(model,attr) == getattr(m,attr)
+    # check that (serialized) attributes are the same
+    assert m.__parameters__ == model.__parameters__
 
+# parametrize over reading with dask
+@pytest.mark.parametrize("CHUNKS", [None, "auto"])
 # PURPOSE: test extend function
-def test_extend_array():
-    dlon = 1
-    lon = np.arange(0, 360, dlon)
-    valid = np.arange(-dlon, 360 + dlon, dlon)
-    test = pyTMD.io.ATLAS._extend_array(lon, dlon)
-    assert np.all(test == valid)
+def test_extend_array(directory, CHUNKS):
+    # model parameters for TPXO9-atlas-v2
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    # reduce to constituents for test
+    m.reduce_constituents(['m2'])
+    # open dataset
+    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    # pad in longitudinal direction
+    ds = ds.tmd.pad()
+    # check that longitude values are as expected
+    dlon = 1.0/30.0
+    lon = np.arange(0, 360 + 2.0*dlon, dlon)
+    assert np.all(np.isclose(lon, ds.x.values))

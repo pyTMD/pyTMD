@@ -18,10 +18,17 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.import_dependency
 
+.. autofunction:: pyTMD.utilities.dependency_available
+
+.. autoclass:: pyTMD.utilities.Path
+   :members:
+
 .. autoclass:: pyTMD.utilities.reify
    :members:
 
-.. autofunction:: pyTMD.utilities.file_opener
+.. autofunction:: pyTMD.utilities.detect_format
+
+.. autofunction:: pyTMD.utilities.detect_compression
 
 .. autofunction:: pyTMD.utilities.get_hash
 

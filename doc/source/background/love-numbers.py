@@ -1,5 +1,5 @@
 import numpy as np
-import pyTMD.arguments
+import pyTMD.constituents
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
@@ -18,7 +18,7 @@ for i, key in enumerate(['h', 'k', 'l']):
 # calculate Love numbers
 for i, omega in enumerate(omegas):
     love['h'][i], love['k'][i], love['l'][i] = \
-        pyTMD.arguments._love_numbers(omega, model='1066A-N')
+        pyTMD.constituents._love_numbers(omega, model='1066A-N')
 
 # create figure and subplots
 fig, ax = plt.subplots(num=1, nrows=3, sharex=True, figsize=(6, 5))
@@ -36,9 +36,9 @@ cons = ['o1', 'p1', 'k1', 'phi1', 'j1',  'oo1']
 labels= ['o1', 'p1', 'k1', '\u03C61', 'j1',  'oo1']
 plot_colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(cons))))
 for i, c in enumerate(cons):
-    om = pyTMD.arguments.frequency(c)
+    om = pyTMD.constituents.frequency(c)
     p = 2.0 * np.pi / (86400.0*om)
-    h, k, l = pyTMD.arguments._love_numbers(om, model='1066A-N')
+    h, k, l = pyTMD.constituents._love_numbers(om, model='1066A-N')
     s, = ax[0].plot(p, h, '.', color=next(plot_colors), label=labels[i])
     ax[1].plot(p, k, '.', color=s.get_markerfacecolor(), label=labels[i])
     ax[2].plot(p, l, '.', color=s.get_markerfacecolor(), label=labels[i])

@@ -1,24 +1,15 @@
 """
 Input/output functions for reading and writing tidal data
 """
+import os
 from .ATLAS import *
 from .FES import *
 from .GOT import *
 from .OTIS import *
 from .IERS import *
 from .NOAA import *
-from .constituents import constituents
-from .model import (
-    model,
-    load_database,
-    extract_constants,
-    read_constants,
-    interpolate_constants
-)
+from .dataset import *
+from .model import model, load_database
 
-# Attempt to import the dataset module for xarray support
-try:
-    from .dataset import Dataset, DataArray
-except (ImportError, AttributeError):
-    Dataset = None
-    DataArray = None
+# set environmental variable for anonymous s3 access
+os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'

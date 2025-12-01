@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
 # create a timescale object from a range of dates
-start_date = np.array('1980-01-01', dtype=f'datetime64[D]')
-end_date = np.array(datetime.datetime.now(), dtype=f'datetime64[D]')
+start_date = np.array('1980-01-01', dtype='datetime64[D]')
+end_date = np.array(datetime.datetime.now(), dtype='datetime64[D]')
 ts = timescale.from_range(start_date, end_date)
 # calculate TT-UT1 and convert to seconds
 tt_ut1 = 86400.0*ts.tt_ut1

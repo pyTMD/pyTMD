@@ -6,7 +6,8 @@ IERS
 - See `materials from Chapter 7 of the IERS Conventions <https://webtai.bipm.org/iers/convupdt/convupdt_c7.html>`_
 
 .. tip::
-    `Ocean Pole Tide File <ftp://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/additional_info/opoleloadcoefcmcor.txt.gz>`_
+    `Ocean Pole Tide file <ftp://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/additional_info/opoleloadcoefcmcor.txt.gz>`_
+    is accessible from the US Naval Observatory (USNO)
 
 Calling Sequence
 ----------------
@@ -14,14 +15,10 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    import pyTMD.utilities
-    ocean_pole_tide_file = pyTMD.utilities.get_data_path(['data','opoleloadcoefcmcor.txt.gz'])
-    ur,un,ue,glon,glat = pyTMD.io.IERS.read_binary_file(model_file=ocean_pole_tide_file)
+    ds = pyTMD.io.IERS.open_dataset()
 
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/IERS.py
 
-.. autofunction:: pyTMD.io.IERS.extract_coefficients
-
-.. autofunction:: pyTMD.io.IERS.read_binary_file
+.. autofunction:: pyTMD.io.IERS.open_dataset

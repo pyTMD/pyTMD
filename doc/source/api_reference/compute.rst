@@ -25,19 +25,6 @@ compute
   * Following `IERS Convention (2010) guidelines <https://iers-conventions.obspm.fr/chapter7.php>`_
   * Using a tide potential catalog following :cite:t:`Cartwright:1971iz`
 
-Calling Sequence
-----------------
-
-.. code-block:: python
-
-    import pyTMD
-    tide_h = pyTMD.compute.tide_elevations(x, y, delta_time,
-        DIRECTORY=DIRECTORY, MODEL=MODEL, EPOCH=(2000,1,1,0,0,0),
-        EPSG=3031, TYPE='drift')
-    tide_uv = pyTMD.compute.tide_currents(x, y, delta_time,
-        DIRECTORY=DIRECTORY, MODEL=MODEL, EPOCH=(2000,1,1,0,0,0),
-        EPSG=3031, TYPE='drift')
-
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/compute.py

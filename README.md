@@ -68,14 +68,14 @@ This will automatically create the environment, install all dependencies, and la
 
 ## Dependencies
 
-- [dateutil: powerful extensions to datetime](https://dateutil.readthedocs.io/en/stable/)
+- [h5netcdf: Pythonic interface to netCDF4 via h5py](https://h5netcdf.org/)
 - [lxml: processing XML and HTML in Python](https://pypi.python.org/pypi/lxml)
-- [netCDF4: Python interface to the netCDF C library](https://unidata.github.io/netcdf4-python/)
 - [numpy: Scientific Computing Tools For Python](https://www.numpy.org)
 - [platformdirs: Python module for determining platform-specific directories](https://pypi.org/project/platformdirs/)
 - [pyproj: Python interface to PROJ library](https://pypi.org/project/pyproj/)
 - [scipy: Scientific Tools for Python](https://www.scipy.org/)
 - [timescale: Python tools for time and astronomical calculations](https://pypi.org/project/timescale/)
+- [xarray: N-D labeled arrays and datasets in Python](https://docs.xarray.dev/en/stable/) 
 
 ## References
 

@@ -1,1066 +1,263 @@
 {
-    "current": {
-        "AODTM-5": {
-            "format": "OTIS",
+    "AODTM-5": {
+        "format": "OTIS",
+        "name": "AODTM-5",
+        "projection": {
+            "R": 6399938.5716113,
+            "lat_0": 90,
+            "lon_0": 270,
+            "proj": "aeqd",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
+        },
+        "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aodtm-5/",
+        "u": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
-            "model_file": {
-                "u": "aodtm5_tmd/UV0_Arc5km"
-            },
-            "name": "AODTM-5",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aodtm-5/",
-            "type": [
-                "u",
-                "v"
-            ]
+            "model_file": "aodtm5_tmd/UV0_Arc5km",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "AOTIM-5": {
-            "format": "OTIS",
-            "grid_file": "aotim5_tmd/grid_Arc5km",
-            "model_file": {
-                "u": "aotim5_tmd/UV_Arc5km"
-            },
-            "name": "AOTIM-5",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-            "type": [
-                "u",
-                "v"
-            ]
+        "v": {
+            "grid_file": "aodtm5_tmd/grid_Arc5km",
+            "model_file": "aodtm5_tmd/UV0_Arc5km",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
         },
-        "AOTIM-5-2018": {
-            "format": "OTIS",
-            "grid_file": "Arc5km2018/grid_Arc5km2018",
-            "model_file": {
-                "u": "Arc5km2018/UV_Arc5km2018"
-            },
-            "name": "AOTIM-5-2018",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "2018"
-        },
-        "Arc2kmTM": {
-            "format": "OTIS",
-            "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
-            "model_file": {
-                "u": "Arc2kmTM/UV_Arc2kmTM_v1"
-            },
-            "name": "Arc2kmTM",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.18739/A2D21RK6K",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v1"
-        },
-        "CATS0201": {
-            "format": "OTIS",
-            "grid_file": "cats0201_tmd/grid_CATS",
-            "model_file": {
-                "u": "cats0201_tmd/UV0_CATS02_01"
-            },
-            "name": "CATS0201",
-            "projection": "EPSG:4326",
-            "reference": "https://mail.esr.org/polar_tide_models/Model_CATS0201.html",
-            "type": [
-                "u",
-                "v"
-            ]
-        },
-        "CATS2008": {
-            "format": "OTIS",
-            "grid_file": "CATS2008/grid_CATS2008",
-            "model_file": {
-                "u": "CATS2008/uv.CATS2008.out"
-            },
-            "name": "CATS2008",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601235",
-            "type": [
-                "u",
-                "v"
-            ]
-        },
-        "CATS2008-v2023": {
-            "format": "TMD3",
-            "grid_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "model_file": {
-                "u": "CATS2008_v2023/CATS2008_v2023.nc"
-            },
-            "name": "CATS2008-v2023",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601772",
-            "type": [
-                "u",
-                "v"
-            ]
-        },
-        "FES2014": {
-            "format": "FES-netcdf",
-            "model_file": {
-                "u": [
-                    "fes2014/eastward_velocity/2n2.nc",
-                    "fes2014/eastward_velocity/eps2.nc",
-                    "fes2014/eastward_velocity/j1.nc",
-                    "fes2014/eastward_velocity/k1.nc",
-                    "fes2014/eastward_velocity/k2.nc",
-                    "fes2014/eastward_velocity/l2.nc",
-                    "fes2014/eastward_velocity/la2.nc",
-                    "fes2014/eastward_velocity/m2.nc",
-                    "fes2014/eastward_velocity/m3.nc",
-                    "fes2014/eastward_velocity/m4.nc",
-                    "fes2014/eastward_velocity/m6.nc",
-                    "fes2014/eastward_velocity/m8.nc",
-                    "fes2014/eastward_velocity/mf.nc",
-                    "fes2014/eastward_velocity/mks2.nc",
-                    "fes2014/eastward_velocity/mm.nc",
-                    "fes2014/eastward_velocity/mn4.nc",
-                    "fes2014/eastward_velocity/ms4.nc",
-                    "fes2014/eastward_velocity/msf.nc",
-                    "fes2014/eastward_velocity/msqm.nc",
-                    "fes2014/eastward_velocity/mtm.nc",
-                    "fes2014/eastward_velocity/mu2.nc",
-                    "fes2014/eastward_velocity/n2.nc",
-                    "fes2014/eastward_velocity/n4.nc",
-                    "fes2014/eastward_velocity/nu2.nc",
-                    "fes2014/eastward_velocity/o1.nc",
-                    "fes2014/eastward_velocity/p1.nc",
-                    "fes2014/eastward_velocity/q1.nc",
-                    "fes2014/eastward_velocity/r2.nc",
-                    "fes2014/eastward_velocity/s1.nc",
-                    "fes2014/eastward_velocity/s2.nc",
-                    "fes2014/eastward_velocity/s4.nc",
-                    "fes2014/eastward_velocity/sa.nc",
-                    "fes2014/eastward_velocity/ssa.nc",
-                    "fes2014/eastward_velocity/t2.nc"
-                ],
-                "v": [
-                    "fes2014/northward_velocity/2n2.nc",
-                    "fes2014/northward_velocity/eps2.nc",
-                    "fes2014/northward_velocity/j1.nc",
-                    "fes2014/northward_velocity/k1.nc",
-                    "fes2014/northward_velocity/k2.nc",
-                    "fes2014/northward_velocity/l2.nc",
-                    "fes2014/northward_velocity/la2.nc",
-                    "fes2014/northward_velocity/m2.nc",
-                    "fes2014/northward_velocity/m3.nc",
-                    "fes2014/northward_velocity/m4.nc",
-                    "fes2014/northward_velocity/m6.nc",
-                    "fes2014/northward_velocity/m8.nc",
-                    "fes2014/northward_velocity/mf.nc",
-                    "fes2014/northward_velocity/mks2.nc",
-                    "fes2014/northward_velocity/mm.nc",
-                    "fes2014/northward_velocity/mn4.nc",
-                    "fes2014/northward_velocity/ms4.nc",
-                    "fes2014/northward_velocity/msf.nc",
-                    "fes2014/northward_velocity/msqm.nc",
-                    "fes2014/northward_velocity/mtm.nc",
-                    "fes2014/northward_velocity/mu2.nc",
-                    "fes2014/northward_velocity/n2.nc",
-                    "fes2014/northward_velocity/n4.nc",
-                    "fes2014/northward_velocity/nu2.nc",
-                    "fes2014/northward_velocity/o1.nc",
-                    "fes2014/northward_velocity/p1.nc",
-                    "fes2014/northward_velocity/q1.nc",
-                    "fes2014/northward_velocity/r2.nc",
-                    "fes2014/northward_velocity/s1.nc",
-                    "fes2014/northward_velocity/s2.nc",
-                    "fes2014/northward_velocity/s4.nc",
-                    "fes2014/northward_velocity/sa.nc",
-                    "fes2014/northward_velocity/ssa.nc",
-                    "fes2014/northward_velocity/t2.nc"
-                ]
-            },
-            "name": "FES2014",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.aviso.altimetry.fr/en/data/productsauxiliary-products/global-tide-fes.html",
-            "scale": 1.0,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "FES2014"
-        },
-        "Gr1km-v2": {
-            "format": "OTIS",
-            "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
-            "model_file": {
-                "u": "greenlandTMD_v2/u_Greenland8_rot.v2"
-            },
-            "name": "Gr1km-v2",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.1002/2016RG000546",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v2"
-        },
-        "Gr1kmTM": {
-            "format": "OTIS",
-            "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
-            "model_file": {
-                "u": "Gr1kmTM/UV_Gr1kmTM_v1"
-            },
-            "name": "Gr1kmTM",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.18739/A2B853K18",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v1"
-        },
-        "HAMTIDE11": {
-            "format": "FES-netcdf",
-            "model_file": {
-                "u": [
-                    "hamtide/HAMcurrent11a_2n.nc",
-                    "hamtide/HAMcurrent11a_k1.nc",
-                    "hamtide/HAMcurrent11a_k2.nc",
-                    "hamtide/HAMcurrent11a_m2.nc",
-                    "hamtide/HAMcurrent11a_n2.nc",
-                    "hamtide/HAMcurrent11a_o1.nc",
-                    "hamtide/HAMcurrent11a_p1.nc",
-                    "hamtide/HAMcurrent11a_q1.nc",
-                    "hamtide/HAMcurrent11a_s2.nc"
-                ],
-                "v": [
-                    "hamtide/HAMcurrent11a_2n.nc",
-                    "hamtide/HAMcurrent11a_k1.nc",
-                    "hamtide/HAMcurrent11a_k2.nc",
-                    "hamtide/HAMcurrent11a_m2.nc",
-                    "hamtide/HAMcurrent11a_n2.nc",
-                    "hamtide/HAMcurrent11a_o1.nc",
-                    "hamtide/HAMcurrent11a_p1.nc",
-                    "hamtide/HAMcurrent11a_q1.nc",
-                    "hamtide/HAMcurrent11a_s2.nc"
-                ]
-            },
-            "name": "HAMTIDE11",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.1002/2013JC009766",
-            "scale": 1.0,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "HAMTIDE11"
-        },
-        "TPXO10-atlas-v2": {
-            "format": "OTIS",
-            "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
-            "model_file": {
-                "u": [
-                    "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2",
-                    "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2"
-                ]
-            },
-            "name": "TPXO10-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v2"
-        },
-        "TPXO10-atlas-v2-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
-            "model_file": {
-                "u": [
-                    "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
-                ],
-                "v": [
-                    "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
-                    "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
-                ]
-            },
-            "name": "TPXO10-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v2"
-        },
-        "TPXO7.2": {
-            "format": "OTIS",
-            "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
-            "model_file": {
-                "u": "TPXO7.2_tmd/u_tpxo7.2"
-            },
-            "name": "TPXO7.2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/global.html",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "7.2"
-        },
-        "TPXO8-atlas": {
-            "format": "ATLAS-compact",
-            "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
-            "model_file": {
-                "u": "tpxo8_atlas/uv.tpxo8_atlas_30_v1"
-            },
-            "name": "TPXO8-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "8"
-        },
-        "TPXO9-atlas": {
-            "format": "OTIS",
-            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas/u_q1_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_o1_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_p1_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_k1_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_n2_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_m2_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_s2_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_k2_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_m4_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_ms4_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_mn4_tpxo9_atlas_30",
-                    "TPXO9_atlas/u_2n2_tpxo9_atlas_30"
-                ]
-            },
-            "name": "TPXO9-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v1"
-        },
-        "TPXO9-atlas-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas/u_q1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_o1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_p1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_k1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_n2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_m2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_s2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_k2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_m4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_ms4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_mn4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/u_2n2_tpxo9_atlas_30.nc"
-                ],
-                "v": [
-                    "TPXO9_atlas/v_q1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_o1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_p1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_k1_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_n2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_m2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_s2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_k2_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_m4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_ms4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_mn4_tpxo9_atlas_30.nc",
-                    "TPXO9_atlas/v_2n2_tpxo9_atlas_30.nc"
-                ]
-            },
-            "name": "TPXO9-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v1"
-        },
-        "TPXO9-atlas-v2": {
-            "format": "OTIS",
-            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_o1_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_p1_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_k1_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_n2_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_m2_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_s2_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_k2_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_m4_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_ms4_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2",
-                    "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2"
-                ]
-            },
-            "name": "TPXO9-atlas-v2",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v2"
-        },
-        "TPXO9-atlas-v2-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_o1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_p1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_k1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_n2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_m2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_s2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_k2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_m4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_ms4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2.nc"
-                ],
-                "v": [
-                    "TPXO9_atlas_v2/v_q1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_o1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_p1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_k1_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_n2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_m2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_s2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_k2_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_m4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_ms4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_mn4_tpxo9_atlas_30_v2.nc",
-                    "TPXO9_atlas_v2/v_2n2_tpxo9_atlas_30_v2.nc"
-                ]
-            },
-            "name": "TPXO9-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v2"
-        },
-        "TPXO9-atlas-v3": {
-            "format": "OTIS",
-            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_o1_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_p1_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_k1_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_n2_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_m2_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_s2_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_k2_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_m4_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_ms4_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_mn4_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_2n2_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3",
-                    "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3"
-                ]
-            },
-            "name": "TPXO9-atlas-v3",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v3"
-        },
-        "TPXO9-atlas-v3-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_o1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_p1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_k1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_n2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_m2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_s2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_k2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_m4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_ms4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_mn4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_2n2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3.nc"
-                ],
-                "v": [
-                    "TPXO9_atlas_v3/v_q1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_o1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_p1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_k1_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_n2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_m2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_s2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_k2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_m4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_ms4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_mn4_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_2n2_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_mf_tpxo9_atlas_30_v3.nc",
-                    "TPXO9_atlas_v3/v_mm_tpxo9_atlas_30_v3.nc"
-                ]
-            },
-            "name": "TPXO9-atlas-v3",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v3"
-        },
-        "TPXO9-atlas-v4": {
-            "format": "OTIS",
-            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_o1_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_p1_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_k1_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_n2_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_m2_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_s2_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_k2_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_m4_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_ms4_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_mn4_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_2n2_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4",
-                    "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4"
-                ]
-            },
-            "name": "TPXO9-atlas-v4",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v4"
-        },
-        "TPXO9-atlas-v4-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_o1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_p1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_k1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_n2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_m2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_s2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_k2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_m4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_ms4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_mn4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_2n2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4.nc"
-                ],
-                "v": [
-                    "TPXO9_atlas_v4/v_q1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_o1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_p1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_k1_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_n2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_m2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_s2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_k2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_m4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_ms4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_mn4_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_2n2_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_mf_tpxo9_atlas_30_v4.nc",
-                    "TPXO9_atlas_v4/v_mm_tpxo9_atlas_30_v4.nc"
-                ]
-            },
-            "name": "TPXO9-atlas-v4",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v4"
-        },
-        "TPXO9-atlas-v5": {
-            "format": "OTIS",
-            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5",
-                    "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5"
-                ]
-            },
-            "name": "TPXO9-atlas-v5",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v5"
-        },
-        "TPXO9-atlas-v5-nc": {
-            "format": "ATLAS-netcdf",
-            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
-            "model_file": {
-                "u": [
-                    "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
-                ],
-                "v": [
-                    "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
-                    "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
-                ]
-            },
-            "name": "TPXO9-atlas-v5",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.0001,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "v5"
-        },
-        "TPXO9.1": {
-            "format": "OTIS",
-            "grid_file": "TPXO9.1/grid_tpxo9",
-            "model_file": {
-                "u": "TPXO9.1/u_tpxo9.v1"
-            },
-            "name": "TPXO9.1",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/global.html",
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "9.1"
-        }
-    },
-    "elevation": {
-        "AODTM-5": {
-            "format": "OTIS",
+        "z": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/h0_Arc5km.oce",
-            "name": "AODTM-5",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aodtm-5/",
-            "type": "z",
+            "units": "m",
             "variable": "tide_ocean"
+        }
+    },
+    "AOTIM-5": {
+        "format": "OTIS",
+        "name": "AOTIM-5",
+        "projection": {
+            "R": 6399938.5716113,
+            "lat_0": 90,
+            "lon_0": 270,
+            "proj": "aeqd",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "AOTIM-5": {
-            "format": "OTIS",
+        "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
+        "u": {
+            "grid_file": "aotim5_tmd/grid_Arc5km",
+            "model_file": "aotim5_tmd/UV_Arc5km",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "aotim5_tmd/grid_Arc5km",
+            "model_file": "aotim5_tmd/UV_Arc5km",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "z": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/h_Arc5km.oce",
-            "name": "AOTIM-5",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-            "type": "z",
+            "units": "m",
             "variable": "tide_ocean"
+        }
+    },
+    "AOTIM-5-2018": {
+        "format": "OTIS",
+        "name": "AOTIM-5-2018",
+        "projection": {
+            "R": 6399938.5716113,
+            "lat_0": 90,
+            "lon_0": 270,
+            "proj": "aeqd",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "AOTIM-5-2018": {
-            "format": "OTIS",
+        "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
+        "u": {
+            "grid_file": "Arc5km2018/grid_Arc5km2018",
+            "model_file": "Arc5km2018/UV_Arc5km2018",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "Arc5km2018/grid_Arc5km2018",
+            "model_file": "Arc5km2018/UV_Arc5km2018",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "2018",
+        "z": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/h_Arc5km2018",
-            "name": "AOTIM-5-2018",
-            "projection": {
-                "R": 6399938.5716113,
-                "lat_0": 90,
-                "lon_0": 270,
-                "proj": "aeqd",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "2018"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "Arc2kmTM": {
+        "format": "OTIS",
+        "name": "Arc2kmTM",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": 90,
+            "lat_ts": 70,
+            "lon_0": -45,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "Arc2kmTM": {
-            "format": "OTIS",
+        "reference": "https://doi.org/10.18739/A2D21RK6K",
+        "u": {
+            "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
+            "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
+            "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v1",
+        "z": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/h_Arc2kmTM_v1",
-            "name": "Arc2kmTM",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.18739/A2D21RK6K",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v1"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "CATS0201": {
+        "format": "OTIS",
+        "name": "CATS0201",
+        "projection": "EPSG:4326",
+        "reference": "https://mail.esr.org/polar_tide_models/Model_CATS0201.html",
+        "u": {
+            "grid_file": "cats0201_tmd/grid_CATS",
+            "model_file": "cats0201_tmd/UV0_CATS02_01",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "CATS0201": {
-            "format": "OTIS",
+        "v": {
+            "grid_file": "cats0201_tmd/grid_CATS",
+            "model_file": "cats0201_tmd/UV0_CATS02_01",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "z": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/h0_CATS02_01",
-            "name": "CATS0201",
-            "projection": "EPSG:4326",
-            "reference": "https://mail.esr.org/polar_tide_models/Model_CATS0201.html",
-            "type": "z",
+            "units": "m",
             "variable": "tide_ocean"
+        }
+    },
+    "CATS2008": {
+        "format": "OTIS",
+        "name": "CATS2008",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": -90,
+            "lat_ts": -71,
+            "lon_0": -70,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "CATS2008": {
-            "format": "OTIS",
+        "reference": "https://doi.org/10.15784/601235",
+        "u": {
+            "grid_file": "CATS2008/grid_CATS2008",
+            "model_file": "CATS2008/uv.CATS2008.out",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "CATS2008/grid_CATS2008",
+            "model_file": "CATS2008/uv.CATS2008.out",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "z": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/hf.CATS2008.out",
-            "name": "CATS2008",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601235",
-            "type": "z",
+            "units": "m",
             "variable": "tide_ocean"
+        }
+    },
+    "CATS2008-v2023": {
+        "format": "TMD3",
+        "name": "CATS2008-v2023",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": -90,
+            "lat_ts": -71,
+            "lon_0": -70,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "CATS2008-v2023": {
-            "format": "TMD3",
-            "grid_file": "CATS2008_v2023/CATS2008_v2023.nc",
+        "reference": "https://doi.org/10.15784/601772",
+        "u": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
-            "name": "CATS2008-v2023",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601772",
-            "type": "z",
-            "variable": "tide_ocean"
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "CATS2008_load": {
-            "format": "OTIS",
+        "v": {
+            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "z": {
+            "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "CATS2008_load": {
+        "format": "OTIS",
+        "name": "CATS2008_load",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": -90,
+            "lat_ts": -71,
+            "lon_0": -70,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
+        },
+        "reference": "https://doi.org/10.15784/601235",
+        "z": {
             "grid_file": "CATS2008a_SPOTL_Load/grid_CATS2008a_opt",
             "model_file": "CATS2008a_SPOTL_Load/h_CATS2008a_SPOTL_load",
-            "name": "CATS2008_load",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": -90,
-                "lat_ts": -71,
-                "lon_0": -70,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.15784/601235",
-            "type": "z",
+            "units": "m",
             "variable": "tide_load"
+        }
+    },
+    "DTU23": {
+        "format": "GOT-ascii",
+        "name": "DTU23",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "DTU23": {
-            "format": "GOT-ascii",
+        "reference": "https://doi.org/10.3390/rs15184479",
+        "version": "2023",
+        "z": {
             "model_file": [
                 "DTU23_OceanTide/DTU23/K1_DTU23.d",
                 "DTU23_OceanTide/DTU23/K2_DTU23.d",
@@ -1073,22 +270,23 @@
                 "DTU23_OceanTide/DTU23/S1_DTU23.d",
                 "DTU23_OceanTide/DTU23/S2_DTU23.d"
             ],
-            "name": "DTU23",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.3390/rs15184479",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "2023"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "EOT20": {
+        "format": "FES-netcdf",
+        "name": "EOT20",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "EOT20": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.17882/79489",
+        "version": "EOT20",
+        "z": {
             "model_file": [
                 "EOT20/ocean_tides/2N2_ocean_eot20.nc",
                 "EOT20/ocean_tides/J1_ocean_eot20.nc",
@@ -1108,22 +306,23 @@
                 "EOT20/ocean_tides/SSA_ocean_eot20.nc",
                 "EOT20/ocean_tides/T2_ocean_eot20.nc"
             ],
-            "name": "EOT20",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.17882/79489",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "EOT20"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "EOT20_load": {
+        "format": "FES-netcdf",
+        "name": "EOT20_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "EOT20_load": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.17882/79489",
+        "version": "EOT20",
+        "z": {
             "model_file": [
                 "EOT20/load_tides/2N2_load_eot20.nc",
                 "EOT20/load_tides/J1_load_eot20.nc",
@@ -1143,22 +342,23 @@
                 "EOT20/load_tides/SSA_load_eot20.nc",
                 "EOT20/load_tides/T2_load_eot20.nc"
             ],
-            "name": "EOT20_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.17882/79489",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "EOT20"
+            "units": "cm",
+            "variable": "tide_load"
+        }
+    },
+    "FES2012": {
+        "format": "FES-netcdf",
+        "name": "FES2012",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2012": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2012",
+        "z": {
             "model_file": [
                 "fes2012/data/T2_FES2012_SLEV.nc",
                 "fes2012/data/MSf_FES2012_SLEV.nc",
@@ -1193,22 +393,103 @@
                 "fes2012/data/M8_FES2012_SLEV.nc",
                 "fes2012/data/Nu2_FES2012_SLEV.nc"
             ],
-            "name": "FES2012",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2012"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014": {
+        "format": "FES-netcdf",
+        "name": "FES2014",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/productsauxiliary-products/global-tide-fes.html",
+        "u": {
+            "model_file": [
+                "fes2014/eastward_velocity/2n2.nc",
+                "fes2014/eastward_velocity/eps2.nc",
+                "fes2014/eastward_velocity/j1.nc",
+                "fes2014/eastward_velocity/k1.nc",
+                "fes2014/eastward_velocity/k2.nc",
+                "fes2014/eastward_velocity/l2.nc",
+                "fes2014/eastward_velocity/la2.nc",
+                "fes2014/eastward_velocity/m2.nc",
+                "fes2014/eastward_velocity/m3.nc",
+                "fes2014/eastward_velocity/m4.nc",
+                "fes2014/eastward_velocity/m6.nc",
+                "fes2014/eastward_velocity/m8.nc",
+                "fes2014/eastward_velocity/mf.nc",
+                "fes2014/eastward_velocity/mks2.nc",
+                "fes2014/eastward_velocity/mm.nc",
+                "fes2014/eastward_velocity/mn4.nc",
+                "fes2014/eastward_velocity/ms4.nc",
+                "fes2014/eastward_velocity/msf.nc",
+                "fes2014/eastward_velocity/msqm.nc",
+                "fes2014/eastward_velocity/mtm.nc",
+                "fes2014/eastward_velocity/mu2.nc",
+                "fes2014/eastward_velocity/n2.nc",
+                "fes2014/eastward_velocity/n4.nc",
+                "fes2014/eastward_velocity/nu2.nc",
+                "fes2014/eastward_velocity/o1.nc",
+                "fes2014/eastward_velocity/p1.nc",
+                "fes2014/eastward_velocity/q1.nc",
+                "fes2014/eastward_velocity/r2.nc",
+                "fes2014/eastward_velocity/s1.nc",
+                "fes2014/eastward_velocity/s2.nc",
+                "fes2014/eastward_velocity/s4.nc",
+                "fes2014/eastward_velocity/sa.nc",
+                "fes2014/eastward_velocity/ssa.nc",
+                "fes2014/eastward_velocity/t2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "model_file": [
+                "fes2014/northward_velocity/2n2.nc",
+                "fes2014/northward_velocity/eps2.nc",
+                "fes2014/northward_velocity/j1.nc",
+                "fes2014/northward_velocity/k1.nc",
+                "fes2014/northward_velocity/k2.nc",
+                "fes2014/northward_velocity/l2.nc",
+                "fes2014/northward_velocity/la2.nc",
+                "fes2014/northward_velocity/m2.nc",
+                "fes2014/northward_velocity/m3.nc",
+                "fes2014/northward_velocity/m4.nc",
+                "fes2014/northward_velocity/m6.nc",
+                "fes2014/northward_velocity/m8.nc",
+                "fes2014/northward_velocity/mf.nc",
+                "fes2014/northward_velocity/mks2.nc",
+                "fes2014/northward_velocity/mm.nc",
+                "fes2014/northward_velocity/mn4.nc",
+                "fes2014/northward_velocity/ms4.nc",
+                "fes2014/northward_velocity/msf.nc",
+                "fes2014/northward_velocity/msqm.nc",
+                "fes2014/northward_velocity/mtm.nc",
+                "fes2014/northward_velocity/mu2.nc",
+                "fes2014/northward_velocity/n2.nc",
+                "fes2014/northward_velocity/n4.nc",
+                "fes2014/northward_velocity/nu2.nc",
+                "fes2014/northward_velocity/o1.nc",
+                "fes2014/northward_velocity/p1.nc",
+                "fes2014/northward_velocity/q1.nc",
+                "fes2014/northward_velocity/r2.nc",
+                "fes2014/northward_velocity/s1.nc",
+                "fes2014/northward_velocity/s2.nc",
+                "fes2014/northward_velocity/s4.nc",
+                "fes2014/northward_velocity/sa.nc",
+                "fes2014/northward_velocity/ssa.nc",
+                "fes2014/northward_velocity/t2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/ocean_tide/2n2.nc",
                 "fes2014/ocean_tide/eps2.nc",
@@ -1245,22 +526,23 @@
                 "fes2014/ocean_tide/ssa.nc",
                 "fes2014/ocean_tide/t2.nc"
             ],
-            "name": "FES2014",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2014"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014_extrapolated": {
+        "format": "FES-netcdf",
+        "name": "FES2014",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014_extrapolated": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/ocean_tide_extrapolated/2n2.nc",
                 "fes2014/ocean_tide_extrapolated/eps2.nc",
@@ -1297,22 +579,23 @@
                 "fes2014/ocean_tide_extrapolated/ssa.nc",
                 "fes2014/ocean_tide_extrapolated/t2.nc"
             ],
-            "name": "FES2014",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2014"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014_load": {
+        "format": "FES-netcdf",
+        "name": "FES2014_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014_load": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/load_tide/2n2.nc",
                 "fes2014/load_tide/eps2.nc",
@@ -1349,22 +632,23 @@
                 "fes2014/load_tide/ssa.nc",
                 "fes2014/load_tide/t2.nc"
             ],
-            "name": "FES2014_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "FES2014"
+            "units": "cm",
+            "variable": "tide_load"
+        }
+    },
+    "FES2022": {
+        "format": "FES-netcdf",
+        "name": "FES2022",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/ocean_tide_20241025/2n2_fes2022.nc",
                 "fes2022b/ocean_tide_20241025/eps2_fes2022.nc",
@@ -1401,22 +685,23 @@
                 "fes2022b/ocean_tide_20241025/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_20241025/t2_fes2022.nc"
             ],
-            "name": "FES2022",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2022"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2022_extrapolated": {
+        "format": "FES-netcdf",
+        "name": "FES2022",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022_extrapolated": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/ocean_tide_extrapolated/2n2_fes2022.nc",
                 "fes2022b/ocean_tide_extrapolated/eps2_fes2022.nc",
@@ -1453,22 +738,23 @@
                 "fes2022b/ocean_tide_extrapolated/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_extrapolated/t2_fes2022.nc"
             ],
-            "name": "FES2022",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2022"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2022_load": {
+        "format": "FES-netcdf",
+        "name": "FES2022_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022_load": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/load_tide/2n2_fes2022.nc",
                 "fes2022b/load_tide/eps2_fes2022.nc",
@@ -1505,22 +791,23 @@
                 "fes2022b/load_tide/ssa_fes2022.nc",
                 "fes2022b/load_tide/t2_fes2022.nc"
             ],
-            "name": "FES2022_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "FES2022"
+            "units": "cm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.10": {
+        "format": "GOT-ascii",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_oceantide/q1.d",
                 "GOT4.10c/grids_oceantide/o1.d",
@@ -1533,22 +820,23 @@
                 "GOT4.10c/grids_oceantide/s1.d",
                 "GOT4.10c/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.10",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.10_SAL": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_SAL": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_SAL/p1sal.nc",
                 "GOT4.10c/grids_SAL/n2sal.nc",
@@ -1559,22 +847,23 @@
                 "GOT4.10c/grids_SAL/m2sal.nc",
                 "GOT4.10c/grids_SAL/q1sal.nc"
             ],
-            "name": "GOT4.10",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.10_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.10_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_loadtide/q1load.d",
                 "GOT4.10c/grids_loadtide/o1load.d",
@@ -1587,22 +876,23 @@
                 "GOT4.10c/grids_loadtide/s1load.d",
                 "GOT4.10c/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.10_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.10"
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.10_nc": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.10",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.10_nc": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.10",
+        "z": {
             "model_file": [
                 "GOT4.10c/grids_oceantide_netcdf/q1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/o1.nc",
@@ -1615,22 +905,23 @@
                 "GOT4.10c/grids_oceantide_netcdf/s1.nc",
                 "GOT4.10c/grids_oceantide_netcdf/m4.nc"
             ],
-            "name": "GOT4.10",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.10"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.7": {
+        "format": "GOT-ascii",
+        "name": "GOT4.7",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.7": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.7",
+        "z": {
             "model_file": [
                 "GOT4.7/grids_oceantide/q1.d",
                 "GOT4.7/grids_oceantide/o1.d",
@@ -1643,22 +934,23 @@
                 "GOT4.7/grids_oceantide/s1.d",
                 "GOT4.7/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.7",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.7"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.7_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.7_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.7_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.7",
+        "z": {
             "model_file": [
                 "GOT4.7/grids_loadtide/q1load.d",
                 "GOT4.7/grids_loadtide/o1load.d",
@@ -1671,22 +963,23 @@
                 "GOT4.7/grids_loadtide/s1load.d",
                 "GOT4.7/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.7_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.7"
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.8": {
+        "format": "GOT-ascii",
+        "name": "GOT4.8",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "got4.8/grids_oceantide/q1.d",
                 "got4.8/grids_oceantide/o1.d",
@@ -1699,22 +992,23 @@
                 "got4.8/grids_oceantide/s1.d",
                 "got4.8/grids_oceantide/m4.d"
             ],
-            "name": "GOT4.8",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.8"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT4.8_load": {
+        "format": "GOT-ascii",
+        "name": "GOT4.8_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8_load": {
-            "format": "GOT-ascii",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "got4.8/grids_loadtide/q1load.d",
                 "got4.8/grids_loadtide/o1load.d",
@@ -1727,22 +1021,23 @@
                 "got4.8/grids_loadtide/s1load.d",
                 "got4.8/grids_loadtide/m4load.d"
             ],
-            "name": "GOT4.8_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "4.8"
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT4.8_nc": {
+        "format": "GOT-netcdf",
+        "name": "GOT4.8",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT4.8_nc": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "4.8",
+        "z": {
             "model_file": [
                 "GOT4.8/grids_oceantide_netcdf/q1.nc",
                 "GOT4.8/grids_oceantide_netcdf/o1.nc",
@@ -1755,22 +1050,23 @@
                 "GOT4.8/grids_oceantide_netcdf/s1.nc",
                 "GOT4.8/grids_oceantide_netcdf/m4.nc"
             ],
-            "name": "GOT4.8",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "4.8"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -1789,22 +1085,23 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "name": "GOT5.5",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5D": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5D",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5D": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -1823,22 +1120,23 @@
                 "GOT5.5D/ocean_tides/s2_5.5D.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "name": "GOT5.5D",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5D_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5D",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5D_extrapolated": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/extrapolated/2n2x.nc",
                 "GOT5.5/extrapolated/j1x.nc",
@@ -1857,22 +1155,23 @@
                 "GOT5.5D/extrapolated/s2_5.5Dx.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "name": "GOT5.5D",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5_extrapolated": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/extrapolated/2n2x.nc",
                 "GOT5.5/extrapolated/j1x.nc",
@@ -1891,22 +1190,23 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "name": "GOT5.5",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.5"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.5_load": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.5_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.5_load": {
-            "format": "GOT-netcdf",
+        "reference": "https://ntrs.nasa.gov/citations/19990089548",
+        "version": "5.5",
+        "z": {
             "model_file": [
                 "GOT5.5/load_tides/2n2load.nc",
                 "GOT5.5/load_tides/k1load.nc",
@@ -1925,22 +1225,23 @@
                 "GOT5.5/load_tides/s1load.nc",
                 "GOT5.5/load_tides/sig1load.nc"
             ],
-            "name": "GOT5.5_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://ntrs.nasa.gov/citations/19990089548",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "5.5"
+            "units": "mm",
+            "variable": "tide_load"
+        }
+    },
+    "GOT5.6": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.6",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.6": {
-            "format": "GOT-netcdf",
+        "reference": "https://doi.org/10.1126/sciadv.abd4744",
+        "version": "5.6",
+        "z": {
             "model_file": [
                 "GOT5.5/ocean_tides/2n2.nc",
                 "GOT5.5/ocean_tides/j1.nc",
@@ -1963,22 +1264,23 @@
                 "GOT5.5/ocean_tides/s2.nc",
                 "GOT5.5/ocean_tides/sig1.nc"
             ],
-            "name": "GOT5.6",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.1126/sciadv.abd4744",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.6"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "GOT5.6_extrapolated": {
+        "format": "GOT-netcdf",
+        "name": "GOT5.6",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "GOT5.6_extrapolated": {
-            "format": "GOT-netcdf",
+        "reference": "https://doi.org/10.1126/sciadv.abd4744",
+        "version": "5.6",
+        "z": {
             "model_file": [
                 "GOT5.5/extrapolated/2n2x.nc",
                 "GOT5.5/extrapolated/j1x.nc",
@@ -2001,64 +1303,123 @@
                 "GOT5.5/extrapolated/s2x.nc",
                 "GOT5.5/extrapolated/sig1x.nc"
             ],
-            "name": "GOT5.6",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.1126/sciadv.abd4744",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "5.6"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "Gr1km-v2": {
+        "format": "OTIS",
+        "name": "Gr1km-v2",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": 90,
+            "lat_ts": 70,
+            "lon_0": -45,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "Gr1km-v2": {
-            "format": "OTIS",
+        "reference": "https://doi.org/10.1002/2016RG000546",
+        "u": {
+            "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
+            "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
+            "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v2",
+        "z": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/h_Greenland8.v2",
-            "name": "Gr1km-v2",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.1002/2016RG000546",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v2"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "Gr1kmTM": {
+        "format": "OTIS",
+        "name": "Gr1kmTM",
+        "projection": {
+            "datum": "WGS84",
+            "lat_0": 90,
+            "lat_ts": 70,
+            "lon_0": -45,
+            "proj": "stere",
+            "type": "crs",
+            "units": "km",
+            "x_0": 0,
+            "y_0": 0
         },
-        "Gr1kmTM": {
-            "format": "OTIS",
+        "reference": "https://doi.org/10.18739/A2B853K18",
+        "u": {
+            "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
+            "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
+            "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v1",
+        "z": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/h_Gr1kmTM_v1",
-            "name": "Gr1kmTM",
-            "projection": {
-                "datum": "WGS84",
-                "lat_0": 90,
-                "lat_ts": 70,
-                "lon_0": -45,
-                "proj": "stere",
-                "type": "crs",
-                "units": "km",
-                "x_0": 0,
-                "y_0": 0
-            },
-            "reference": "https://doi.org/10.18739/A2B853K18",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v1"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "HAMTIDE11": {
+        "format": "FES-netcdf",
+        "name": "HAMTIDE11",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "HAMTIDE11": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.1002/2013JC009766",
+        "u": {
+            "model_file": [
+                "hamtide/HAMcurrent11a_2n.nc",
+                "hamtide/HAMcurrent11a_k1.nc",
+                "hamtide/HAMcurrent11a_k2.nc",
+                "hamtide/HAMcurrent11a_m2.nc",
+                "hamtide/HAMcurrent11a_n2.nc",
+                "hamtide/HAMcurrent11a_o1.nc",
+                "hamtide/HAMcurrent11a_p1.nc",
+                "hamtide/HAMcurrent11a_q1.nc",
+                "hamtide/HAMcurrent11a_s2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "model_file": [
+                "hamtide/HAMcurrent11a_2n.nc",
+                "hamtide/HAMcurrent11a_k1.nc",
+                "hamtide/HAMcurrent11a_k2.nc",
+                "hamtide/HAMcurrent11a_m2.nc",
+                "hamtide/HAMcurrent11a_n2.nc",
+                "hamtide/HAMcurrent11a_o1.nc",
+                "hamtide/HAMcurrent11a_p1.nc",
+                "hamtide/HAMcurrent11a_q1.nc",
+                "hamtide/HAMcurrent11a_s2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "HAMTIDE11",
+        "z": {
             "model_file": [
                 "hamtide/2n.hamtide11a.nc",
                 "hamtide/k1.hamtide11a.nc",
@@ -2070,22 +1431,23 @@
                 "hamtide/q1.hamtide11a.nc",
                 "hamtide/s2.hamtide11a.nc"
             ],
-            "name": "HAMTIDE11",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.1002/2013JC009766",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "HAMTIDE11"
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "RE14": {
+        "format": "GOT-netcdf",
+        "name": "RE14",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "RE14": {
-            "format": "GOT-netcdf",
+        "reference": "https://doi.org/10.1002/2013JB010830",
+        "version": "2014",
+        "z": {
             "model_file": [
                 "RE14_LongPeriodTides_rel/oceantides/Mf_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Mm_RE14_oceantide.nc",
@@ -2094,22 +1456,67 @@
                 "RE14_LongPeriodTides_rel/oceantides/Sa_RE14_oceantide.nc",
                 "RE14_LongPeriodTides_rel/oceantides/Ssa_RE14_oceantide.nc"
             ],
-            "name": "RE14",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://doi.org/10.1002/2013JB010830",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_lpe",
-            "version": "2014"
+            "units": "cm",
+            "variable": "tide_lpe"
+        }
+    },
+    "TPXO10-atlas-v2": {
+        "format": "OTIS",
+        "name": "TPXO10-atlas-v2",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO10-atlas-v2": {
-            "format": "OTIS",
+        "reference": "https://www.tpxo.net/global/tpxo10-atlas",
+        "u": {
+            "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
+            "model_file": [
+                "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
+            "model_file": [
+                "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2",
+                "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v2",
+        "z": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
             "model_file": [
                 "TPXO10_atlas_v2/h_2n2_tpxo10_atlas_30_v2",
@@ -2128,22 +1535,67 @@
                 "TPXO10_atlas_v2/h_s1_tpxo10_atlas_30_v2",
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2"
             ],
-            "name": "TPXO10-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v2"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO10-atlas-v2-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO10-atlas-v2",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO10-atlas-v2-nc": {
-            "format": "ATLAS-netcdf",
+        "reference": "https://www.tpxo.net/global/tpxo10-atlas",
+        "u": {
+            "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
+            "model_file": [
+                "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
+            "model_file": [
+                "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_k1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_k2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_m2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_m4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mf_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mm_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_mn4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_ms4_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_n2_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_o1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_p1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_q1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_s1_tpxo10_atlas_30_v2.nc",
+                "TPXO10_atlas_v2/u_s2_tpxo10_atlas_30_v2.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v2",
+        "z": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
             "model_file": [
                 "TPXO10_atlas_v2/h_2n2_tpxo10_atlas_30_v2.nc",
@@ -2162,73 +1614,104 @@
                 "TPXO10_atlas_v2/h_s1_tpxo10_atlas_30_v2.nc",
                 "TPXO10_atlas_v2/h_s2_tpxo10_atlas_30_v2.nc"
             ],
-            "name": "TPXO10-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v2"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO7.2": {
+        "format": "OTIS",
+        "name": "TPXO7.2",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO7.2": {
-            "format": "OTIS",
+        "reference": "http://volkov.oce.orst.edu/tides/global.html",
+        "u": {
+            "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
+            "model_file": "TPXO7.2_tmd/u_tpxo7.2",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
+            "model_file": "TPXO7.2_tmd/u_tpxo7.2",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "7.2",
+        "z": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/h_tpxo7.2",
-            "name": "TPXO7.2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/global.html",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "7.2"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO7.2_load": {
+        "format": "OTIS",
+        "name": "TPXO7.2_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO7.2_load": {
-            "format": "OTIS",
+        "reference": "http://volkov.oce.orst.edu/tides/global.html",
+        "version": "7.2",
+        "z": {
             "grid_file": "TPXO7.2_load/grid_tpxo6.2",
             "model_file": "TPXO7.2_load/h_tpxo7.2_load",
-            "name": "TPXO7.2_load",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/global.html",
-            "type": "z",
-            "variable": "tide_load",
-            "version": "7.2"
+            "units": "m",
+            "variable": "tide_load"
+        }
+    },
+    "TPXO8-atlas": {
+        "format": "ATLAS-compact",
+        "name": "TPXO8-atlas",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO8-atlas": {
-            "format": "ATLAS-compact",
+        "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
+        "u": {
+            "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
+            "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
+            "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "8",
+        "z": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/hf.tpxo8_atlas_30_v1",
-            "name": "TPXO8-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "8"
+            "units": "m",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO8-atlas-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO8-atlas-nc",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO8-atlas-nc": {
-            "format": "ATLAS-netcdf",
+        "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
+        "version": "v1",
+        "z": {
             "grid_file": "TPXO8_atlas_v1/grid_tpxo8atlas_30_v1.nc",
             "model_file": [
                 "TPXO8_atlas_v1/hf.k1_tpxo8_atlas_30c_v1.nc",
@@ -2241,22 +1724,61 @@
                 "TPXO8_atlas_v1/hf.m4_tpxo8_atlas_30c_v1.nc",
                 "TPXO8_atlas_v1/hf.m2_tpxo8_atlas_30c_v1.nc"
             ],
-            "name": "TPXO8-atlas-nc",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v1"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas": {
+        "format": "OTIS",
+        "name": "TPXO9-atlas",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9-atlas": {
-            "format": "OTIS",
+        "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
+        "u": {
+            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
+            "model_file": [
+                "TPXO9_atlas/u_q1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_o1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_p1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_k1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_n2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_m2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_s2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_k2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_m4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_ms4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_mn4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_2n2_tpxo9_atlas_30"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
+            "model_file": [
+                "TPXO9_atlas/u_q1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_o1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_p1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_k1_tpxo9_atlas_30",
+                "TPXO9_atlas/u_n2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_m2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_s2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_k2_tpxo9_atlas_30",
+                "TPXO9_atlas/u_m4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_ms4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_mn4_tpxo9_atlas_30",
+                "TPXO9_atlas/u_2n2_tpxo9_atlas_30"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v1",
+        "z": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
             "model_file": [
                 "TPXO9_atlas/h_q1_tpxo9_atlas_30",
@@ -2272,22 +1794,61 @@
                 "TPXO9_atlas/h_mn4_tpxo9_atlas_30",
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30"
             ],
-            "name": "TPXO9-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v1"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO9-atlas",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9-atlas-nc": {
-            "format": "ATLAS-netcdf",
+        "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
+        "u": {
+            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
+            "model_file": [
+                "TPXO9_atlas/u_q1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_o1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_p1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_k1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_n2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_m2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_s2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_k2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_m4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_ms4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_mn4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/u_2n2_tpxo9_atlas_30.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
+            "model_file": [
+                "TPXO9_atlas/v_q1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_o1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_p1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_k1_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_n2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_m2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_s2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_k2_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_m4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_ms4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_mn4_tpxo9_atlas_30.nc",
+                "TPXO9_atlas/v_2n2_tpxo9_atlas_30.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v1",
+        "z": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
             "model_file": [
                 "TPXO9_atlas/h_q1_tpxo9_atlas_30.nc",
@@ -2303,22 +1864,55 @@
                 "TPXO9_atlas/h_mn4_tpxo9_atlas_30.nc",
                 "TPXO9_atlas/h_2n2_tpxo9_atlas_30.nc"
             ],
-            "name": "TPXO9-atlas",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v1"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v2": {
+        "format": "OTIS",
+        "name": "TPXO9-atlas-v2",
+        "projection": "EPSG:4326",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
+            "model_file": [
+                "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_o1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_p1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_k1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_n2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_m2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_s2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_k2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_m4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_ms4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "TPXO9-atlas-v2": {
-            "format": "OTIS",
+        "v": {
+            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
+            "model_file": [
+                "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_o1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_p1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_k1_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_n2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_m2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_s2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_k2_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_m4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_ms4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2",
+                "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v2",
+        "z": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
             "model_file": [
                 "TPXO9_atlas_v2/h_q1_tpxo9_atlas_30_v2",
@@ -2334,16 +1928,61 @@
                 "TPXO9_atlas_v2/h_mn4_tpxo9_atlas_30_v2",
                 "TPXO9_atlas_v2/h_2n2_tpxo9_atlas_30_v2"
             ],
-            "name": "TPXO9-atlas-v2",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v2"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v2-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO9-atlas-v2",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9-atlas-v2-nc": {
-            "format": "ATLAS-netcdf",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
+            "model_file": [
+                "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_o1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_p1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_k1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_n2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_m2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_s2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_k2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_m4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_ms4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_mn4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/u_2n2_tpxo9_atlas_30_v2.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
+            "model_file": [
+                "TPXO9_atlas_v2/v_q1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_o1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_p1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_k1_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_n2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_m2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_s2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_k2_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_m4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_ms4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_mn4_tpxo9_atlas_30_v2.nc",
+                "TPXO9_atlas_v2/v_2n2_tpxo9_atlas_30_v2.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v2",
+        "z": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
             "model_file": [
                 "TPXO9_atlas_v2/h_q1_tpxo9_atlas_30_v2.nc",
@@ -2359,22 +1998,59 @@
                 "TPXO9_atlas_v2/h_mn4_tpxo9_atlas_30_v2.nc",
                 "TPXO9_atlas_v2/h_2n2_tpxo9_atlas_30_v2.nc"
             ],
-            "name": "TPXO9-atlas-v2",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v2"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v3": {
+        "format": "OTIS",
+        "name": "TPXO9-atlas-v3",
+        "projection": "EPSG:4326",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
+            "model_file": [
+                "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_o1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_p1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_k1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_n2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_m2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_s2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_k2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_m4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_ms4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mn4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_2n2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "TPXO9-atlas-v3": {
-            "format": "OTIS",
+        "v": {
+            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
+            "model_file": [
+                "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_o1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_p1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_k1_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_n2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_m2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_s2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_k2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_m4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_ms4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mn4_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_2n2_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3",
+                "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v3",
+        "z": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
             "model_file": [
                 "TPXO9_atlas_v3/h_q1_tpxo9_atlas_30_v3",
@@ -2392,16 +2068,65 @@
                 "TPXO9_atlas_v3/h_mf_tpxo9_atlas_30_v3",
                 "TPXO9_atlas_v3/h_mm_tpxo9_atlas_30_v3"
             ],
-            "name": "TPXO9-atlas-v3",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v3"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v3-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO9-atlas-v3",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9-atlas-v3-nc": {
-            "format": "ATLAS-netcdf",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
+            "model_file": [
+                "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_o1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_p1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_k1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_n2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_m2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_s2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_k2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_m4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_ms4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_mn4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_2n2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_mf_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/u_mm_tpxo9_atlas_30_v3.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
+            "model_file": [
+                "TPXO9_atlas_v3/v_q1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_o1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_p1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_k1_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_n2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_m2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_s2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_k2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_m4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_ms4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_mn4_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_2n2_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_mf_tpxo9_atlas_30_v3.nc",
+                "TPXO9_atlas_v3/v_mm_tpxo9_atlas_30_v3.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v3",
+        "z": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
             "model_file": [
                 "TPXO9_atlas_v3/h_q1_tpxo9_atlas_30_v3.nc",
@@ -2419,22 +2144,65 @@
                 "TPXO9_atlas_v3/h_mf_tpxo9_atlas_30_v3.nc",
                 "TPXO9_atlas_v3/h_mm_tpxo9_atlas_30_v3.nc"
             ],
-            "name": "TPXO9-atlas-v3",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v3"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v4": {
+        "format": "OTIS",
+        "name": "TPXO9-atlas-v4",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9-atlas-v4": {
-            "format": "OTIS",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
+            "model_file": [
+                "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_o1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_p1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_k1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_n2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_m2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_s2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_k2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_m4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_ms4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mn4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_2n2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
+            "model_file": [
+                "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_o1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_p1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_k1_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_n2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_m2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_s2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_k2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_m4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_ms4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mn4_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_2n2_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4",
+                "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v4",
+        "z": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
             "model_file": [
                 "TPXO9_atlas_v4/h_q1_tpxo9_atlas_30_v4",
@@ -2452,22 +2220,59 @@
                 "TPXO9_atlas_v4/h_mf_tpxo9_atlas_30_v4",
                 "TPXO9_atlas_v4/h_mm_tpxo9_atlas_30_v4"
             ],
-            "name": "TPXO9-atlas-v4",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v4"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v4-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO9-atlas-v4",
+        "projection": "EPSG:4326",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
+            "model_file": [
+                "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_o1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_p1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_k1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_n2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_m2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_s2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_k2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_m4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_ms4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_mn4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_2n2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_mf_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/u_mm_tpxo9_atlas_30_v4.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "TPXO9-atlas-v4-nc": {
-            "format": "ATLAS-netcdf",
+        "v": {
+            "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
+            "model_file": [
+                "TPXO9_atlas_v4/v_q1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_o1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_p1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_k1_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_n2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_m2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_s2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_k2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_m4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_ms4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_mn4_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_2n2_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_mf_tpxo9_atlas_30_v4.nc",
+                "TPXO9_atlas_v4/v_mm_tpxo9_atlas_30_v4.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v4",
+        "z": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
             "model_file": [
                 "TPXO9_atlas_v4/h_q1_tpxo9_atlas_30_v4.nc",
@@ -2485,16 +2290,61 @@
                 "TPXO9_atlas_v4/h_mf_tpxo9_atlas_30_v4.nc",
                 "TPXO9_atlas_v4/h_mm_tpxo9_atlas_30_v4.nc"
             ],
-            "name": "TPXO9-atlas-v4",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v4"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v5": {
+        "format": "OTIS",
+        "name": "TPXO9-atlas-v5",
+        "projection": "EPSG:4326",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
+            "model_file": [
+                "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "TPXO9-atlas-v5": {
-            "format": "OTIS",
+        "v": {
+            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
+            "model_file": [
+                "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5",
+                "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v5",
+        "z": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
             "model_file": [
                 "TPXO9_atlas_v5/h_q1_tpxo9_atlas_30_v5",
@@ -2513,16 +2363,61 @@
                 "TPXO9_atlas_v5/h_mf_tpxo9_atlas_30_v5",
                 "TPXO9_atlas_v5/h_mm_tpxo9_atlas_30_v5"
             ],
-            "name": "TPXO9-atlas-v5",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v5"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9-atlas-v5-nc": {
+        "format": "ATLAS-netcdf",
+        "name": "TPXO9-atlas-v5",
+        "projection": "EPSG:4326",
+        "reference": "https://www.tpxo.net/global/tpxo9-atlas",
+        "u": {
+            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
+            "model_file": [
+                "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "zonal_tidal_current"
         },
-        "TPXO9-atlas-v5-nc": {
-            "format": "ATLAS-netcdf",
+        "v": {
+            "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
+            "model_file": [
+                "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_o1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_p1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_k1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_n2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_m2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_s1_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_s2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_k2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_m4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_ms4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mn4_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_2n2_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mf_tpxo9_atlas_30_v5.nc",
+                "TPXO9_atlas_v5/u_mm_tpxo9_atlas_30_v5.nc"
+            ],
+            "units": "cm^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "v5",
+        "z": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
             "model_file": [
                 "TPXO9_atlas_v5/h_q1_tpxo9_atlas_30_v5.nc",
@@ -2541,30 +2436,39 @@
                 "TPXO9_atlas_v5/h_mf_tpxo9_atlas_30_v5.nc",
                 "TPXO9_atlas_v5/h_mm_tpxo9_atlas_30_v5.nc"
             ],
-            "name": "TPXO9-atlas-v5",
-            "projection": "EPSG:4326",
-            "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-            "scale": 0.001,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "v5"
+            "units": "mm",
+            "variable": "tide_ocean"
+        }
+    },
+    "TPXO9.1": {
+        "format": "OTIS",
+        "name": "TPXO9.1",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "TPXO9.1": {
-            "format": "OTIS",
+        "reference": "http://volkov.oce.orst.edu/tides/global.html",
+        "u": {
+            "grid_file": "TPXO9.1/grid_tpxo9",
+            "model_file": "TPXO9.1/u_tpxo9.v1",
+            "units": "m^2/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "grid_file": "TPXO9.1/grid_tpxo9",
+            "model_file": "TPXO9.1/u_tpxo9.v1",
+            "units": "m^2/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "9.1",
+        "z": {
             "grid_file": "TPXO9.1/DATA/grid_tpxo9",
             "model_file": "TPXO9.1/DATA/h_tpxo9.v1",
-            "name": "TPXO9.1",
-            "projection": {
-                "datum": "WGS84",
-                "ellps": "WGS84",
-                "lon_wrap": 180,
-                "proj": "longlat",
-                "type": "crs"
-            },
-            "reference": "http://volkov.oce.orst.edu/tides/global.html",
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "9.1"
+            "units": "m",
+            "variable": "tide_ocean"
         }
     }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 verify_box_tpxo.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 Verifies downloaded TPXO9-atlas global tide models from the box file
     sharing service
 
@@ -26,6 +26,7 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 11/2025: use from_database to access model parameters
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: made a callable function and added function docstrings
     Updated 07/2025: add a default directory for tide models
@@ -100,8 +101,8 @@ def verify_box_tpxo(model, folder_id,
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # check if local directory exists and recursively create if not
-    m = pyTMD.io.model(directory=directory).elevation(model)
-    localpath = m.model_file[0].parent
+    m = pyTMD.io.model(directory=directory).from_database(model)
+    localpath = m['z'].model_file[0].parent
     # create output directory if non-existent
     localpath.mkdir(mode=mode, parents=True, exist_ok=True)
 

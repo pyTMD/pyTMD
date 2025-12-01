@@ -40,8 +40,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
-    netCDF4: Python interface to the netCDF C library
-        https://unidata.github.io/netcdf4-python/netCDF4/index.html
+    h5netcdf: Pythonic interface to netCDF4 via h5py
+        https://h5netcdf.org/
     pyproj: Python interface to PROJ library
         https://pypi.org/project/pyproj/
     timescale: Python tools for time and astronomical calculations
@@ -51,9 +51,8 @@ PROGRAM DEPENDENCIES:
     time.py: utilities for calculating time operations
     spatial: utilities for reading, writing and operating on spatial data
     utilities.py: download and management utilities for syncing files
-    arguments.py: load the nodal corrections for tidal constituents
     astro.py: computes the basic astronomical mean longitudes
-    crs.py: Coordinate Reference System (CRS) routines
+    constituents.py: calculates constituent parameters and nodal arguments  
     predict.py: predict tide values using harmonic constants
     io/model.py: retrieves tide model parameters for named tide models
     io/OTIS.py: extract tidal harmonic constants from OTIS tide models
@@ -145,14 +144,11 @@ UPDATE HISTORY:
 """
 from __future__ import print_function, annotations
 
-import logging
 import pathlib
 import numpy as np
+import xarray as xr
 from io import IOBase
-import scipy.interpolate
-import pyTMD.crs
 import pyTMD.io
-import pyTMD.io.model
 import pyTMD.predict
 import pyTMD.spatial
 import pyTMD.utilities
@@ -172,16 +168,13 @@ __all__ = [
     "SET_displacements"
 ]
 
-# number of days between the Julian day epoch and MJD
-_jd_mjd = 2400000.5
-
 # default working data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: wrapper function for computing values
 def corrections(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        CORRECTION: str = 'ocean',
+        correction: str = 'ocean',
         **kwargs
     ):
     """
@@ -195,7 +188,7 @@ def corrections(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    CORRECTION: str, default 'ocean'
+    correction: str, default 'ocean'
         Correction type to compute
 
             - ``'ocean'``: ocean tide from model constituents
@@ -212,43 +205,35 @@ def corrections(
     values: np.ndarray
         tidal correction at coordinates and time in meters
     """
-    if CORRECTION.lower() in ('ocean', 'load'):
+    if correction.lower() in ('ocean', 'load'):
         return tide_elevations(x, y, delta_time, **kwargs)
-    elif (CORRECTION.upper() == 'LPET'):
+    elif (correction.upper() == 'LPET'):
         return LPET_elevations(x, y, delta_time, **kwargs)
-    elif (CORRECTION.upper() == 'LPT'):
+    elif (correction.upper() == 'LPT'):
         return LPT_displacements(x, y, delta_time, **kwargs)
-    elif (CORRECTION.upper() == 'OPT'):
+    elif (correction.upper() == 'OPT'):
         return OPT_displacements(x, y, delta_time, **kwargs)
-    elif (CORRECTION.upper() == 'SET'):
+    elif (correction.upper() == 'SET'):
         return SET_displacements(x, y, delta_time, **kwargs)
     else:
-        raise ValueError(f'Unrecognized correction type: {CORRECTION}')
+        raise ValueError(f'Unrecognized correction type: {correction}')
 
 # PURPOSE: compute tides at points and times using tide model algorithms
 def tide_elevations(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = _default_directory,
-        MODEL: str | None = None,
-        GZIP: bool = False,
-        DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
-        CROP: bool = False,
-        BOUNDS: list | np.ndarray | None = None,
-        BUFFER: int | float | None = None,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        METHOD: str = 'spline',
-        EXTRAPOLATE: bool = False,
-        CUTOFF: int | float = 10.0,
-        CORRECTIONS: str | None = None,
-        CONSTITUENTS: list | None = None,
-        INFER_MINOR: bool = True,
-        MINOR_CONSTITUENTS: list | None = None,
-        APPEND_NODE: bool = False,
-        APPLY_FLEXURE: bool = False,
-        FILL_VALUE: float = np.nan,
+        directory: str | pathlib.Path | None = _default_directory,
+        model: str | None = None,
+        definition_file: str | pathlib.Path | IOBase | None = None,
+        crop: bool = False,
+        bounds: list | np.ndarray | None = None,
+        buffer: int | float = 0,
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        method: str = 'linear',
+        extrapolate: bool = False,
+        cutoff: int | float = 10.0,
         **kwargs
     ):
     """
@@ -263,221 +248,193 @@ def tide_elevations(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    DIRECTORY: str or NoneType, default None
+    directory: str or NoneType, default None
         working data directory for tide models
-    MODEL: str or NoneType, default None
+    model: str or NoneType, default None
         Tide model to use in correction
-    GZIP: bool, default False
-        Tide model files are gzip compressed
-    DEFINITION_FILE: str, pathlib.Path, io.IOBase or NoneType, default None
+    definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
-    CROP: bool, default False
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
+    crop: bool, default False
         Crop tide model data to (buffered) bounds
-    BOUNDS: list, np.ndarray or NoneType, default None
+    bounds: list, np.ndarray or NoneType, default None
         Boundaries for cropping tide model data
-    BUFFER: int, float or NoneType, default None
+    buffer: int or float, default 0
         Buffer distance for cropping tide model data
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
-        Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
+        Input coordinate reference system
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    METHOD: str
-        Interpolation method
+    method: str = 'linear'
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
-    EXTRAPOLATE: bool, default False
+    extrapolate: bool, default False
         Extrapolate with nearest-neighbors
-    CUTOFF: int or float, default 10.0
+    cutoff: int or float, default 10.0
         Extrapolation cutoff in kilometers
 
         Set to ``np.inf`` to extrapolate for all points
-    CORRECTIONS: str or None, default None
+    corrections: str or None, default None
         Nodal correction type, default based on model
-    CONSTITUENTS: list or None, default None
+    constituents: list or None, default None
         Specify constituents to read from model
-    INFER_MINOR: bool, default True
+    infer_minor: bool, default True
         Infer the height values for minor tidal constituents
-    MINOR_CONSTITUENTS: list or None, default None
+    minor_constituents: list or None, default None
         Specify constituents to infer
-    APPEND_NODE: bool, default False
+    append_node: bool, default False
         Append equilibrium amplitudes for node tides
-    APPLY_FLEXURE: bool, default False
+    apply_flexure: bool, default False
         Apply ice flexure scaling factor to height values
 
         Only valid for models containing flexure fields
-    FILL_VALUE: float, default np.nan
-        Output invalid value
 
     Returns
     -------
-    tide: np.ndarray
+    tide: xarray.DataArray
         tidal elevation in meters
     """
+    # default keyword arguments
+    kwargs.setdefault('chunks', None)
+    kwargs.setdefault('corrections', None)
+    kwargs.setdefault('constituents', None)
+    kwargs.setdefault('infer_minor', True)
+    kwargs.setdefault('minor_constituents', None)
+    kwargs.setdefault('append_node', False)
+    kwargs.setdefault('apply_flexure', False)
 
     # check that tide directory is accessible
-    if DIRECTORY is not None:
-        DIRECTORY = pathlib.Path(DIRECTORY).expanduser()
-        if not DIRECTORY.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert method.lower() in ('linear', 'nearest')
 
     # get parameters for tide model
-    if DEFINITION_FILE is not None:
-        model = pyTMD.io.model(DIRECTORY).from_file(DEFINITION_FILE)
+    if definition_file is not None:
+        m = pyTMD.io.model(directory).from_file(definition_file)
     else:
-        model = pyTMD.io.model(DIRECTORY, compressed=GZIP).elevation(MODEL)
+        m = pyTMD.io.model(directory).from_database(model)
+    # open dataset
+    ds = m.open_dataset(type='z', chunks=kwargs['chunks'],
+        append_node=kwargs['append_node'])
+    # apply flexure field to each constituent
+    if kwargs['apply_flexure']:
+        for c in ds.tmd.constituents:
+            ds[c] *= ds['flexure']
+    # subset to constituents
+    if kwargs['constituents']:
+        ds = ds.tmd.subset(kwargs['constituents'])
 
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # convert coordinates to xarray DataArrays
+    # in coordinate reference system of model
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        X, Y = ds.tmd.transform(x, y, crs=crs)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        mx, my = ds.tmd.transform(gridx, gridy, crs=crs)
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('time'))
+        Y = xr.DataArray(my, dims=('time'))
+    elif (type.lower() == 'time series'):
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
 
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # crop tide model dataset to bounds
+    if crop and bounds is None:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        # crop dataset to buffered default bounds
+        ds = ds.tmd.crop([xmin, xmax, ymin, ymax], buffer=buffer)
+    elif crop:
+        # crop dataset to buffered bounds
+        ds = ds.tmd.crop(bounds, buffer=buffer) 
 
-    # verify that delta time is an array
-    delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
-
-    # read tidal constants and interpolate to grid points
-    amp, ph, c = model.extract_constants(lon, lat,
-        type=model.type, constituents=CONSTITUENTS,
-        crop=CROP, bounds=BOUNDS, buffer=BUFFER, method=METHOD,
-        extrapolate=EXTRAPOLATE, cutoff=CUTOFF,
-        append_node=APPEND_NODE, apply_flexure=APPLY_FLEXURE)
-    # calculate complex phase in radians for Euler's
-    cph = -1j*ph*np.pi/180.0
-    # calculate constituent oscillation
-    hc = amp*np.exp(cph)
+            epoch=epoch, standard=standard)
 
     # nodal corrections to apply
-    nodal_corrections = CORRECTIONS or model.corrections
+    nodal_corrections = kwargs['corrections'] or m.corrections
     # minor constituents to infer
-    minor_constituents = MINOR_CONSTITUENTS or model.minor
+    minor_constituents = kwargs['minor_constituents'] or m.minor
     # delta time (TT - UT1) for tide model
     if nodal_corrections in ('OTIS','ATLAS','TMD3','netcdf'):
-        # use delta time at 2000.0 to match TMD outputs
+        # use delta time at 2000.0 to match TMDv2.5 outputs
         deltat = np.zeros_like(ts.tt_ut1)
     else:
         # use interpolated delta times
         deltat = ts.tt_ut1
 
+    # interpolate model to grid points
+    local = ds.tmd.interp(X, Y, method=method,
+        extrapolate=extrapolate, cutoff=cutoff)
     # calculate tide values for input data type
-    if (TYPE.lower() == 'grid'):
-        ny,nx = np.shape(x)
-        tide = np.ma.zeros((ny,nx,nt),fill_value=FILL_VALUE)
-        tide.mask = np.zeros((ny,nx,nt),dtype=bool)
-        for i in range(nt):
-            TIDE = pyTMD.predict.map(ts.tide[i], hc, c,
-                deltat=deltat[i], corrections=nodal_corrections)
-            # calculate values for minor constituents by inference
-            if INFER_MINOR:
-                MINOR = pyTMD.predict.infer_minor(ts.tide[i], hc, c,
-                    deltat=deltat[i], corrections=nodal_corrections,
-                    minor=minor_constituents)
-            else:
-                MINOR = np.ma.zeros_like(TIDE)
-            # add major and minor components and reform grid
-            tide[:,:,i] = np.reshape((TIDE+MINOR), (ny,nx))
-            tide.mask[:,:,i] = np.reshape((TIDE.mask | MINOR.mask), (ny,nx))
-    elif (TYPE.lower() == 'drift'):
-        tide = np.ma.zeros((nt), fill_value=FILL_VALUE)
-        tide.mask = np.any(hc.mask,axis=1)
-        tide.data[:] = pyTMD.predict.drift(ts.tide, hc, c,
-            deltat=deltat, corrections=nodal_corrections)
-        # calculate values for minor constituents by inference
-        if INFER_MINOR:
-            minor = pyTMD.predict.infer_minor(ts.tide, hc, c,
-                deltat=deltat, corrections=nodal_corrections,
-                minor=minor_constituents)
-            tide.data[:] += minor.data[:]
-    elif (TYPE.lower() == 'time series'):
-        nstation = len(x)
-        tide = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-        tide.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            HC = hc[s,None,:]
-            TIDE = pyTMD.predict.time_series(ts.tide, HC, c,
-                deltat=deltat, corrections=nodal_corrections)
-            # calculate values for minor constituents by inference
-            if INFER_MINOR:
-                MINOR = pyTMD.predict.infer_minor(ts.tide, HC, c,
-                    deltat=deltat, corrections=nodal_corrections,
-                    minor=minor_constituents)
-            else:
-                MINOR = np.ma.zeros_like(TIDE)
-            # add major and minor components
-            tide.data[s,:] = TIDE.data[:] + MINOR.data[:]
-            tide.mask[s,:] = (TIDE.mask | MINOR.mask)
-    # replace invalid values with fill value
-    tide.data[tide.mask] = tide.fill_value
-
+    tide = local.tmd.predict(ts.tide, deltat=deltat,
+        corrections=nodal_corrections)
+    # calculate values for minor constituents by inference
+    if kwargs['infer_minor']:
+        # add major and minor components
+        tide += local.tmd.infer(ts.tide, deltat=deltat,
+            corrections=nodal_corrections,
+            minor=minor_constituents)
     # return the ocean or load tide correction
     return tide
 
 # PURPOSE: compute tides at points and times using tide model algorithms
 def tide_currents(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = _default_directory,
-        MODEL: str | None = None,
-        GZIP: bool = False,
-        DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
-        CROP: bool = False,
-        BOUNDS: list | np.ndarray | None = None,
-        BUFFER: int | float | None = None,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        METHOD: str = 'spline',
-        EXTRAPOLATE: bool = False,
-        CUTOFF: int | float = 10.0,
-        CORRECTIONS: str | None = None,
-        CONSTITUENTS: list | None = None,
-        INFER_MINOR: bool = True,
-        MINOR_CONSTITUENTS: list | None = None,
-        FILL_VALUE: float = np.nan,
+        directory: str | pathlib.Path | None = _default_directory,
+        model: str | None = None,
+        definition_file: str | pathlib.Path | IOBase | None = None,
+        crop: bool = False,
+        bounds: list | np.ndarray | None = None,
+        buffer: int | float = 0,
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        method: str = 'linear',
+        extrapolate: bool = False,
+        cutoff: int | float = 10.0,
         **kwargs
     ):
     """
@@ -492,209 +449,184 @@ def tide_currents(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    DIRECTORY: str or NoneType, default None
+    directory: str or NoneType, default None
         working data directory for tide models
-    MODEL: str or NoneType, default None
+    model: str or NoneType, default None
         Tide model to use in correction
-    GZIP: bool, default False
-        Tide model files are gzip compressed
-    DEFINITION_FILE: str, pathlib.Path, io.IOBase or NoneType, default None
+    definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
-    CROP: bool, default False
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
+    crop: bool, default False
         Crop tide model data to (buffered) bounds
-    BOUNDS: list, np.ndarray or NoneType, default None
+    bounds: list, np.ndarray or NoneType, default None
         Boundaries for cropping tide model data
-    BUFFER: int, float or NoneType, default None
+    buffer: int or float, default 0
         Buffer distance for cropping tide model data
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    METHOD: str
-        Interpolation method
+    method: str
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
-    EXTRAPOLATE: bool, default False
+    extrapolate: bool, default False
         Extrapolate with nearest-neighbors
-    CUTOFF: int or float, default 10.0
+    cutoff: int or float, default 10.0
         Extrapolation cutoff in kilometers
 
         Set to ``np.inf`` to extrapolate for all points
-    CORRECTIONS: str or None, default None
+    corrections: str or None, default None
         Nodal correction type, default based on model
-    CONSTITUENTS: list or None, default None
+    constituents: list or None, default None
         Specify constituents to read from model
-    INFER_MINOR: bool, default True
+    infer_minor: bool, default True
         Infer the height values for minor tidal constituents
-    MINOR_CONSTITUENTS: list or None, default None
+    minor_constituents: list or None, default None
         Specify constituents to infer
-    FILL_VALUE: float, default np.nan
-        Output invalid value
 
     Returns
     -------
-    tide: dict
+    tide: xr.DataTree
         tidal currents in cm/s
 
-        u: np.ndarray
-            horizontal transport velocities
-        v: np.ndarray
-            vertical transport velocities
+        u: xr.Dataset
+            zonal velocities
+        v: xr.Dataset
+            meridional velocities
     """
+    # default keyword arguments
+    kwargs.setdefault('chunks', None)
+    kwargs.setdefault('corrections', None)
+    kwargs.setdefault('constituents', None)
+    kwargs.setdefault('infer_minor', True)
+    kwargs.setdefault('minor_constituents', None)
 
     # check that tide directory is accessible
-    if DIRECTORY is not None:
-        DIRECTORY = pathlib.Path(DIRECTORY).expanduser()
-        if not DIRECTORY.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert method.lower() in ('linear', 'nearest')
 
     # get parameters for tide model
-    if DEFINITION_FILE is not None:
-        model = pyTMD.io.model(DIRECTORY).from_file(DEFINITION_FILE)
+    if definition_file is not None:
+        m = pyTMD.io.model(directory).from_file(definition_file)
     else:
-        model = pyTMD.io.model(DIRECTORY, compressed=GZIP).current(MODEL)
+        m = pyTMD.io.model(directory).from_database(model)
+    # open datatree with model currents
+    dtree = m.open_datatree(type=['u', 'v'], chunks=kwargs['chunks'])
+    # subset to constituents
+    if kwargs['constituents']:
+        dtree = dtree.tmd.subset(kwargs['constituents'])
 
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # convert coordinates to xarray DataArrays
+    # in coordinate reference system of model
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        X, Y = dtree.tmd.transform(x, y, crs=crs)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        mx, my = dtree.tmd.transform(gridx, gridy, crs=crs)
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        mx, my = dtree.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        mx, my = dtree.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('time'))
+        Y = xr.DataArray(my, dims=('time'))
+    elif (type.lower() == 'time series'):
+        mx, my = dtree.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
 
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # crop tide model datatree to bounds
+    if crop and bounds is None:
+        # default bounds if cropping data
+        xmin, xmax = np.min(X), np.max(X)
+        ymin, ymax = np.min(Y), np.max(Y)
+        # crop datatree to buffered default bounds
+        dtree = dtree.tmd.crop([xmin, xmax, ymin, ymax], buffer=buffer)
+    elif crop:
+        # crop datatree to buffered bounds
+        dtree = dtree.tmd.crop(bounds, buffer=buffer)
 
-    # verify that delta time is an array
-    delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
+            epoch=epoch, standard=standard)
+
+    # nodal corrections to apply
+    nodal_corrections = kwargs['corrections'] or m.corrections
+    # minor constituents to infer
+    minor_constituents = kwargs['minor_constituents'] or m.minor
+    # delta time (TT - UT1) for tide model
+    if nodal_corrections in ('OTIS','ATLAS','TMD3','netcdf'):
+        # use delta time at 2000.0 to match TMDv2.5 outputs
+        deltat = np.zeros_like(ts.tt_ut1)
+    else:
+        # use interpolated delta times
+        deltat = ts.tt_ut1
 
     # python dictionary with tide model data
-    tide = {}
+    tide = xr.DataTree()
     # iterate over u and v currents
-    for t in model.type:
-        # read tidal constants and interpolate to grid points
-        amp, ph, c = model.extract_constants(lon, lat,
-            type=t, constituents=CONSTITUENTS,
-            crop=CROP, bounds=BOUNDS, buffer=BUFFER, method=METHOD,
-            extrapolate=EXTRAPOLATE, cutoff=CUTOFF)
-        # calculate complex phase in radians for Euler's
-        cph = -1j*ph*np.pi/180.0
-        # calculate constituent oscillation
-        hc = amp*np.exp(cph)
-
-        # nodal corrections to apply
-        nodal_corrections = CORRECTIONS or model.corrections
-        # minor constituents to infer
-        minor_constituents = MINOR_CONSTITUENTS or model.minor
-        # delta time (TT - UT1) for tide model
-        if nodal_corrections in ('OTIS','ATLAS','TMD3','netcdf'):
-            # use delta time at 2000.0 to match TMD outputs
-            deltat = np.zeros_like(ts.tt_ut1)
-        else:
-            # use interpolated delta times
-            deltat = ts.tt_ut1
-
-        # predict tidal currents at time
-        if (TYPE.lower() == 'grid'):
-            ny,nx = np.shape(x)
-            tide[t] = np.ma.zeros((ny,nx,nt),fill_value=FILL_VALUE)
-            tide[t].mask = np.zeros((ny,nx,nt),dtype=bool)
-            for i in range(nt):
-                TIDE = pyTMD.predict.map(ts.tide[i], hc, c,
-                    deltat=deltat[i], corrections=nodal_corrections)
-                # calculate values for minor constituents by inference
-                if INFER_MINOR:
-                    MINOR = pyTMD.predict.infer_minor(ts.tide[i], hc, c,
-                        deltat=deltat[i], corrections=nodal_corrections,
-                        minor=minor_constituents)
-                else:
-                    MINOR = np.ma.zeros_like(TIDE)
-                # add major and minor components and reform grid
-                tide[t][:,:,i] = np.reshape((TIDE+MINOR), (ny,nx))
-                tide[t].mask[:,:,i] = np.reshape((TIDE.mask | MINOR.mask), (ny,nx))
-        elif (TYPE.lower() == 'drift'):
-            tide[t] = np.ma.zeros((nt), fill_value=FILL_VALUE)
-            tide[t].mask = np.any(hc.mask,axis=1)
-            tide[t].data[:] = pyTMD.predict.drift(ts.tide, hc, c,
-                deltat=deltat, corrections=nodal_corrections)
-            # calculate values for minor constituents by inference
-            if INFER_MINOR:
-                minor = pyTMD.predict.infer_minor(ts.tide, hc, c,
-                    deltat=deltat, corrections=nodal_corrections,
-                    minor=minor_constituents)
-                tide[t].data[:] += minor.data[:]
-        elif (TYPE.lower() == 'time series'):
-            nstation = len(x)
-            tide[t] = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-            tide[t].mask = np.zeros((nstation,nt),dtype=bool)
-            for s in range(nstation):
-                HC = hc[s,None,:]
-                TIDE = pyTMD.predict.time_series(ts.tide, HC, c,
-                    deltat=deltat, corrections=nodal_corrections)
-                # calculate values for minor constituents by inference
-                if INFER_MINOR:
-                    MINOR = pyTMD.predict.infer_minor(ts.tide, HC, c,
-                        deltat=deltat, corrections=nodal_corrections,
-                        minor=minor_constituents)
-                else:
-                    MINOR = np.ma.zeros_like(TIDE)
-                # add major and minor components
-                tide[t].data[s,:] = TIDE.data[:] + MINOR.data[:]
-                tide[t].mask[s,:] = (TIDE.mask | MINOR.mask)
-        # replace invalid values with fill value
-        tide[t].data[tide[t].mask] = tide[t].fill_value
-
-    # return the ocean tide currents
+    for key, ds in dtree.items():
+        # convert component to dataset
+        ds = ds.to_dataset()
+        # interpolate model to grid points
+        local = ds.tmd.interp(X, Y, method=method,
+            extrapolate=extrapolate, cutoff=cutoff)
+        # calculate tide values for input data type
+        tide[key] = local.tmd.predict(ts.tide, deltat=deltat,
+            corrections=nodal_corrections)
+        # calculate values for minor constituents by inference
+        if kwargs['infer_minor']:
+            # add major and minor components
+            tide[key] += local.tmd.infer(ts.tide, deltat=deltat,
+                corrections=nodal_corrections,
+                minor=minor_constituents)
+    # return the tidal currents
     return tide
 
 # PURPOSE: check if points are within a tide model domain
 def tide_masks(x: np.ndarray, y: np.ndarray,
-        DIRECTORY: str | pathlib.Path | None = _default_directory,
-        MODEL: str | None = None,
-        GZIP: bool = False,
-        DEFINITION_FILE: str | pathlib.Path | IOBase | None = None,
-        EPSG: str | int = 4326,
-        METHOD: str = 'spline'
+        directory: str | pathlib.Path | None = _default_directory,
+        model: str | None = None,
+        definition_file: str | pathlib.Path | IOBase | None = None,
+        crs: str | int = 4326,
+        type: str | None = 'drift',
+        method: str = 'linear',
+        **kwargs
     ):
     """
     Check if points are within a tide model domain
@@ -705,126 +637,88 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
         x-coordinates in projection EPSG
     y: np.ndarray
         y-coordinates in projection EPSG
-    DIRECTORY: str or NoneType, default None
+    directory: str or NoneType, default None
         working data directory for tide models
-    MODEL: str or NoneType, default None
+    model: str or NoneType, default None
         Tide model to use
-    GZIP: bool, default False
-        Tide model files are gzip compressed
-    DEFINITION_FILE: str or NoneType, default None
+    definition_file: str or NoneType, default None
         Tide model definition file for use
-    EPSG: str or int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: str or int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    METHOD: str, default 'spline'
-        interpolation method
+    method: str, default 'linear'
+        interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
 
     Returns
     -------
-    valid: bool
-        array describing if input coordinate is within model domain
+    mask: xr.DataArray
+        ocean tide mask
     """
 
     # check that tide directory is accessible
-    if DIRECTORY is not None:
-        DIRECTORY = pathlib.Path(DIRECTORY).expanduser()
-        if not DIRECTORY.exists():
+    if (directory is not None):
+        directory = pyTMD.utilities.Path(directory).resolve()
+        if directory.is_file and not directory.exists():
             raise FileNotFoundError("Invalid tide directory")
 
     # get parameters for tide model
-    if DEFINITION_FILE is not None:
-        model = pyTMD.io.model(DIRECTORY).from_file(DEFINITION_FILE)
+    if definition_file is not None:
+        m = pyTMD.io.model(directory).from_file(definition_file)
     else:
-        model = pyTMD.io.model(DIRECTORY, compressed=GZIP).elevation(MODEL)
-
-    # input shape of data
-    idim = np.shape(x)
-    # converting x,y from input coordinate reference system
-    crs1 = pyTMD.crs().from_input(EPSG)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(
-        np.atleast_1d(x).flatten(), np.atleast_1d(y).flatten()
-    )
-
-    # read tidal constants and interpolate to grid points
-    if model.format in ('OTIS','ATLAS-compact','TMD3'):
-        # if reading a single OTIS solution
-        xi, yi, hz, mz, iob, dt = pyTMD.io.OTIS.read_otis_grid(
-            pathlib.Path(model.grid_file).expanduser())
-        # invert model mask
-        mz = np.logical_not(mz)
-        # adjust dimensions of input coordinates to be iterable
-        # run wrapper function to convert coordinate systems of input lat/lon
-        X, Y = pyTMD.crs().convert(lon, lat, model.projection, 'F')
-    elif (model.format == 'ATLAS-netcdf'):
-        # if reading a netCDF OTIS atlas solution
-        xi, yi, hz = pyTMD.io.ATLAS.read_netcdf_grid(
-            pathlib.Path(model.grid_file).expanduser(),
-            compressed=model.compressed, type=model.type)
-        # copy bathymetry mask
-        mz = np.copy(hz.mask)
-        # copy latitude and longitude and adjust longitudes
-        X,Y = np.copy([lon,lat]).astype(np.float64)
-        lt0, = np.nonzero(X < 0)
-        X[lt0] += 360.0
-    elif model.format in ('GOT-ascii', 'GOT-netcdf'):
-        # if reading a NASA GOT solution
-        hc, xi, yi, c = pyTMD.io.GOT.read_ascii_file(
-            pathlib.Path(model.model_file[0]).expanduser(),
-            compressed=model.compressed)
-        # copy tidal constituent mask
-        mz = np.copy(hc.mask)
-        # copy latitude and longitude and adjust longitudes
-        X, Y = np.copy([lon,lat]).astype(np.float64)
-        lt0, = np.nonzero(X < 0)
-        X[lt0] += 360.0
-    elif (model.format == 'FES-netcdf'):
-        # if reading a FES netCDF solution
-        hc, xi, yi = pyTMD.io.FES.read_netcdf_file(
-            pathlib.Path(model.model_file[0]).expanduser(),
-            compressed=model.compressed, type=model.type,
-            version=model.version)
-        # copy tidal constituent mask
-        mz = np.copy(hc.mask)
-        # copy latitude and longitude and adjust longitudes
-        X, Y = np.copy([lon,lat]).astype(np.float64)
-        lt0, = np.nonzero(X < 0)
-        X[lt0] += 360.0
-
-    # interpolate masks
-    if (METHOD == 'bilinear'):
-        # replace invalid values with nan
-        mz1 = pyTMD.interpolate.bilinear(xi, yi, mz, X, Y)
-        mask = np.floor(mz1).astype(mz.dtype)
-    elif (METHOD == 'spline'):
-        f1 = scipy.interpolate.RectBivariateSpline(xi, yi, mz.T,
-            kx=1, ky=1)
-        mask = np.floor(f1.ev(X, Y)).astype(mz.dtype)
-    else:
-        # use scipy regular grid to interpolate values
-        r1 = scipy.interpolate.RegularGridInterpolator((yi, xi), mz,
-            method=METHOD, bounds_error=False, fill_value=1)
-        mask = np.floor(r1.__call__(np.c_[y, x])).astype(mz.dtype)
-
-    # reshape to original dimensions
-    valid = np.logical_not(mask).reshape(idim).astype(mz.dtype)
-    # replace points outside model domain with invalid
-    valid &= (X >= xi.min()) & (X <= xi.max())
-    valid &= (Y >= yi.min()) & (Y <= yi.max())
-    # return the valid mask
-    return valid
+        m = pyTMD.io.model(directory).from_database(model, type='z')
+    # reduce list of constituents to only those required for mask
+    if m.multifile:
+        m.parse_constituents()
+        m.reduce_constituents(m.constituents[0])
+    # open model as dataset
+    ds = m.open_dataset(type='z')
+    
+    # reform coordinate dimensions for input grids
+    # or verify coordinate dimension shapes
+    assert type.lower() in ('grid', 'drift', 'time series')
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        # converting x,y to model coordinates
+        X, Y = ds.tmd.transform(x, y, crs=crs)
+    if (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        # convert to meshgrid
+        gridx, gridy = np.meshgrid(x, y)
+        # converting x,y to model coordinates
+        mx, my = ds.tmd.transform(gridx, gridy, crs=crs)
+        # convert to xarray DataArrays
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        # converting x,y to model coordinates
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        # convert to xarray DataArrays
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('time'))
+        Y = xr.DataArray(my, dims=('time'))
+    elif (type.lower() == 'time series'):
+        mx, my = ds.tmd.transform(x, y, crs=crs)
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
+        
+    # interpolate model mask to grid points
+    local = ds.tmd.interp(X, Y, method=method)
+    # get name of first listed constituent
+    c = local.tmd.constituents[0]
+    mask = np.logical_not(local[c].real.isnull()).astype(bool)
+    # return mask
+    return mask
 
 # PURPOSE: compute long-period equilibrium tidal elevations
 def LPET_elevations(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
         **kwargs
     ):
     """
@@ -838,102 +732,91 @@ def LPET_elevations(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    FILL_VALUE: float, default np.nan
-        Output invalid value
 
     Returns
     -------
-    tide_lpe: np.ndarray
+    LPET: xr.DataArray
         long-period equilibrium tide at coordinates and time in meters
     """
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(crs)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (type.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
-    # convert tide times to dynamic time
-    tide_time = ts.tide + ts.tt_ut1
+            epoch=epoch, standard=standard)
 
     # predict long-period equilibrium tides at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_lpe = np.zeros((ny,nx,nt))
-        for i in range(nt):
-            lpet = pyTMD.predict.equilibrium_tide(
-                tide_time[i], lat, **kwargs)
-            tide_lpe[:,:,i] = np.reshape(lpet, (ny,nx))
-    elif (TYPE == 'drift'):
-        tide_lpe = pyTMD.predict.equilibrium_tide(
-            tide_time, lat, **kwargs)
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_lpe = np.zeros((nstation,nt))
-        for s in range(nstation):
-            tide_lpe[s,:] = pyTMD.predict.equilibrium_tide(
-                tide_time, lat[s], **kwargs)
-
+    LPET = pyTMD.predict.equilibrium_tide(ts.tide, ds,
+        deltat=ts.tt_ut1, **kwargs)
     # return the long-period equilibrium tide elevations
-    return tide_lpe
+    return LPET
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
 def LPT_displacements(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        ELLIPSOID: str = 'WGS84',
-        CONVENTION: str = '2018',
-        FILL_VALUE: float = np.nan,
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        ellipsoid: str = 'WGS84',
+        convention: str = '2018',
+        variable: str | list = 'R',
         **kwargs
     ):
     """
@@ -948,193 +831,163 @@ def LPT_displacements(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    ELLIPSOID: str, default 'WGS84'
-        Ellipsoid for calculating Earth parameters
-    CONVENTION: str, default '2018'
+    ellipsoid: str, default 'WGS84'
+        Ellipsoid name for calculating Earth parameters
+    convention: str, default '2018'
         IERS Mean or Secular Pole Convention
 
             - ``'2003'``
             - ``'2010'``
             - ``'2015'``
             - ``'2018'``
-    FILL_VALUE: float, default np.nan
-        Output invalid value
+    variable: str or list, default 'R'
+        Output variable(s) to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
-    Srad: np.ndarray
+    S: xr.DataArray
         solid earth pole tide at coordinates and time in meters
     """
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert ELLIPSOID.upper() in pyTMD.spatial._ellipsoids
-    assert CONVENTION.isdigit() and CONVENTION in timescale.eop._conventions
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert ellipsoid.upper() in pyTMD.spatial._ellipsoids
+    assert convention.isdigit() and convention in timescale.eop._conventions
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(crs)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon,lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (type.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-
-    # number of time points
-    nt = len(ts)
+            epoch=epoch, standard=standard)
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units='MKS')
     # tidal love/shida numbers appropriate for the load tide
     hb2 = 0.6207
     lb2 = 0.0836
 
     # convert from geodetic latitude to geocentric latitude
     # calculate X, Y and Z from geodetic latitude and longitude
-    X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
-    npts = len(latitude_geocentric)
-    # geocentric colatitude and longitude in radians
-    theta = np.radians(90.0 - latitude_geocentric)
-    phi = np.radians(lon.flatten())
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    ) 
+    # geocentric colatitude (radians)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute normal gravity at spatial location
     # p. 80, Eqn.(2-199)
     gamma_0 = units.gamma_0(theta)
 
-    # rotation matrix for converting from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,1,0] = -np.sin(phi)
-    R[:,2,0] = np.cos(phi)*np.sin(theta)
-    R[:,0,1] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,2,1] = np.sin(phi)*np.sin(theta)
-    R[:,0,2] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        Srad = np.ma.zeros((ny,nx,nt), fill_value=FILL_VALUE)
-        Srad.mask = np.zeros((ny,nx,nt),dtype=bool)
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # calculate load pole tides in cartesian coordinates
-            dxi = pyTMD.predict.load_pole_tide(ts.tide[i], XYZ,
-                deltat=ts.tt_ut1[i],
-                gamma_0=gamma_0,
-                omega=units.omega,
-                h2=hb2,
-                l2=lb2,
-                convention=CONVENTION
-            )
-            # calculate components of load pole tides
-            S = np.einsum('ti...,tji...->tj...', dxi, R)
-            smask = np.reshape(np.any(dxi.mask, axis=1), (ny,nx))
-            # reshape to output dimensions
-            Srad.data[:,:,i] = np.reshape(S[:,2], (ny,nx))
-            Srad.mask[:,:,i] = np.isnan(Srad.data[:,:,i]) | smask
-    elif (TYPE == 'drift'):
-        # calculate load pole tides in cartesian coordinates
-        XYZ = np.c_[X, Y, Z]
-        dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
-            deltat=ts.tt_ut1,
-            gamma_0=gamma_0,
-            omega=units.omega,
-            h2=hb2,
-            l2=lb2,
-            convention=CONVENTION
-        )
-        # calculate components of load pole tides
-        S = np.einsum('ti...,tji...->tj...', dxi, R)
-        smask = np.any(dxi.mask, axis=1)
-        # reshape to output dimensions
-        Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
-        Srad.data[:] = S[:,2].copy()
-        Srad.mask = np.isnan(Srad.data) | smask
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        Srad = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-        Srad.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            # calculate load pole tides in cartesian coordinates
-            dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
-                deltat=ts.tt_ut1,
-                gamma_0=gamma_0[s],
-                omega=units.omega,
-                h2=hb2,
-                l2=lb2,
-                convention=CONVENTION
-            )
-            # calculate components of load pole tides
-            S = np.einsum('ti...,ji...->tj...', dxi, R[s,:,:])
-            smask = np.any(dxi.mask, axis=1)
-            # reshape to output dimensions
-            Srad.data[s,:] = S[:,2].copy()
-            Srad.mask[s,:] = np.isnan(Srad.data[s,:]) | smask
+    # calculate load pole tides in cartesian coordinates
+    dxi = pyTMD.predict.load_pole_tide(ts.tide, XYZ,
+        deltat=ts.tt_ut1,
+        gamma_0=gamma_0,
+        omega=units.omega,
+        h2=hb2,
+        l2=lb2,
+        convention=convention
+    )
 
-    # replace invalid data with fill values
-    Srad.data[Srad.mask] = Srad.fill_value
-
-    # return the load pole tide displacements
-    return Srad
+    # rotate displacements from cartesian coordinates
+    S = xr.Dataset()
+    S['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    S['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    S['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in S.data_vars:
+        S[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
+    # return the load pole tide displacements for variable(s)
+    return S[variable]
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
 def OPT_displacements(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        ELLIPSOID: str = 'WGS84',
-        CONVENTION: str = '2018',
-        METHOD: str = 'spline',
-        FILL_VALUE: float = np.nan,
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        ellipsoid: str = 'WGS84',
+        convention: str = '2018',
+        method: str = 'linear',
+        variable: str | list = 'R',
         **kwargs
     ):
     """
@@ -1149,88 +1002,99 @@ def OPT_displacements(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: str | int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    ELLIPSOID: str, default 'WGS84'
-        Ellipsoid for calculating Earth parameters
-    CONVENTION: str, default '2018'
+    ellipsoid: str, default 'WGS84'
+        Ellipsoid name for calculating Earth parameters
+    convention: str, default '2018'
         IERS Mean or Secular Pole Convention
 
             - ``'2003'``
             - ``'2010'``
             - ``'2015'``
             - ``'2018'``
-    METHOD: str
-        Interpolation method
+    method: str
+        Interpolation method from xarray
 
-            - ```bilinear```: quick bilinear interpolation
-            - ```spline```: scipy bivariate spline interpolation
-            - ```linear```, ```nearest```: scipy regular grid interpolations
-    FILL_VALUE: float, default np.nan
-        Output invalid value
+            - ``'linear'``: linear interpolation for regular grids
+            - ``'nearest'``: nearest-neighbor interpolation
+    variable: str or list, default 'R'
+        Output variable(s) to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
-    Urad: np.ndarray
+    U: xr.DataArray
         ocean pole tide at coordinates and time in meters
     """
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert ELLIPSOID.upper() in pyTMD.spatial._ellipsoids
-    assert CONVENTION.isdigit() and CONVENTION in timescale.eop._conventions
-    assert METHOD.lower() in ('bilinear', 'spline', 'linear', 'nearest')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert ellipsoid.upper() in pyTMD.spatial._ellipsoids
+    assert convention.isdigit() and convention in timescale.eop._conventions
+    assert method.lower() in ('linear', 'nearest')
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(crs)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon,lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (type.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
+    if (standard.lower() == 'datetime'):
         ts = timescale.from_datetime(delta_time.flatten())
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
+            epoch=epoch, standard=standard)
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units='MKS')
     # mean equatorial gravitational acceleration [m/s^2]
     ge = 9.7803278
     # density of sea water [kg/m^3]
@@ -1240,114 +1104,72 @@ def OPT_displacements(
 
     # convert from geodetic latitude to geocentric latitude
     # calculate X, Y and Z from geodetic latitude and longitude
-    X,Y,Z = pyTMD.spatial.to_cartesian(lon.flatten(), lat.flatten(),
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # calculate geocentric latitude and convert to degrees
-    latitude_geocentric = np.degrees(np.arctan(Z / np.sqrt(X**2.0 + Y**2.0)))
-    npts = len(latitude_geocentric)
-    # geocentric colatitude and longitude in radians
-    theta = np.radians(90.0 - latitude_geocentric)
-    phi = np.radians(lon.flatten())
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
+    # geocentric colatitude (radians)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+    # geocentric latitude (degrees)
+    latitude_geocentric = 90.0 - np.degrees(theta)
 
     # read and interpolate ocean pole tide map from Desai (2002)
-    ur, un, ue = pyTMD.io.IERS.extract_coefficients(lon.flatten(),
-        latitude_geocentric, method=METHOD)
+    IERS = pyTMD.io.IERS.open_dataset()
+    Umap = IERS.interp(x=ds.x, y=latitude_geocentric, method=method)
+
     # rotation matrix for converting to/from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,0,1] = -np.sin(phi)
-    R[:,0,2] = np.cos(phi)*np.sin(theta)
-    R[:,1,0] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,1,2] = np.sin(phi)*np.sin(theta)
-    R[:,2,0] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
-    Rinv = np.linalg.inv(R)
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
     # calculate pole tide displacements in Cartesian coordinates
-    # coefficients reordered to N, E, R to match IERS rotation matrix
-    UXYZ = np.einsum('ti...,tji...->tj...', np.c_[un, ue, ur], R)
+    UXYZ = xr.Dataset()
+    UXYZ['X'] = R[0,0]*Umap['N'] + R[0,1]*Umap['E'] + R[0,2]*Umap['R']
+    UXYZ['Y'] = R[1,0]*Umap['N'] + R[1,1]*Umap['E'] + R[1,2]*Umap['R']
+    UXYZ['Z'] = R[2,0]*Umap['N'] + R[2,1]*Umap['E'] + R[2,2]*Umap['R']
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        Urad = np.ma.zeros((ny,nx,nt), fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((ny,nx,nt),dtype=bool)
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # calculate ocean pole tides in cartesian coordinates
-            dxi = pyTMD.predict.ocean_pole_tide(ts.tide[i], XYZ, UXYZ,
-                deltat=ts.tt_ut1[i],
-                a_axis=units.a_axis,
-                gamma_0=ge,
-                GM=units.GM,
-                omega=units.omega,
-                rho_w=rho_w,
-                g2=gamma,
-                convention=CONVENTION
-            )
-            # calculate components of ocean pole tides
-            U = np.einsum('ti...,tji...->tj...', dxi, Rinv)
-            umask = np.reshape(np.any(dxi.mask, axis=1), (ny,nx))
-            # reshape to output dimensions
-            Urad.data[:,:,i] = np.reshape(U[:,2], (ny,nx))
-            Urad.mask[:,:,i] = np.isnan(Urad.data[:,:,i]) | umask
-    elif (TYPE == 'drift'):
-        # calculate ocean pole tides in cartesian coordinates
-        XYZ = np.c_[X, Y, Z]
-        dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, UXYZ,
-            deltat=ts.tt_ut1,
-            a_axis=units.a_axis,
-            gamma_0=ge,
-            GM=units.GM,
-            omega=units.omega,
-            rho_w=rho_w,
-            g2=gamma,
-            convention=CONVENTION
-        )
-        # calculate components of ocean pole tides
-        U = np.einsum('ti...,tji...->tj...', dxi, Rinv)
-        umask = np.any(dxi.mask, axis=1)
-        # convert to masked array
-        Urad = np.ma.zeros((nt), fill_value=FILL_VALUE)
-        Urad.data[:] = U[:,2].copy()
-        Urad.mask = np.isnan(Urad.data) | umask
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        Urad = np.ma.zeros((nstation,nt), fill_value=FILL_VALUE)
-        Urad.mask = np.zeros((nstation,nt),dtype=bool)
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            uxyz = np.repeat(np.atleast_2d(UXYZ[s,:]), nt, axis=0)
-            # calculate ocean pole tides in cartesian coordinates
-            dxi = pyTMD.predict.ocean_pole_tide(ts.tide, XYZ, uxyz,
-                deltat=ts.tt_ut1,
-                a_axis=units.a_axis,
-                gamma_0=ge,
-                GM=units.GM,
-                omega=units.omega,
-                rho_w=rho_w,
-                g2=gamma,
-                convention=CONVENTION
-            )
-            # calculate components of ocean pole tides
-            U = np.einsum('ti...,ji...->tj...', dxi, Rinv[s,:,:])
-            umask = np.any(dxi.mask, axis=1)
-            # reshape to output dimensions
-            Urad.data[s,:] = U[:,2].copy()
-            Urad.mask[s,:] = np.isnan(Urad.data[s,:]) | umask
+    # calculate ocean pole tides in cartesian coordinates
+    dxi = pyTMD.predict.ocean_pole_tide(ts.tide, UXYZ,
+        deltat=ts.tt_ut1,
+        a_axis=units.a_axis,
+        gamma_0=ge,
+        GM=units.GM,
+        omega=units.omega,
+        rho_w=rho_w,
+        g2=gamma,
+        convention=convention
+    )
 
-    # replace invalid data with fill values
-    Urad.data[Urad.mask] = Urad.fill_value
-
-    # return the ocean pole tide displacements
-    return Urad
+    # rotate displacements from cartesian coordinates
+    U = xr.Dataset()
+    U['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    U['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    U['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in U.data_vars:
+        U[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
+    # return the ocean pole tide displacements for variable(s)
+    return U[variable]
 
 # PURPOSE: compute solid earth tidal elevations
 def SET_displacements(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        METHOD: str = 'ephemerides',
+        method: str = 'ephemerides',
         **kwargs
     ):
     """
@@ -1361,35 +1183,36 @@ def SET_displacements(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    METHOD: str, default 'IERS'
+    method: str, default 'IERS'
         method for calculating solid earth tidal elevations
 
             - ``'ephemerides'``: following :cite:t:`Petit:2010tp` guidelines
             - ``'catalog'``: using tide potential catalogs
     """
-    if (METHOD.lower() == 'ephemerides'):
+    if (method.lower() == 'ephemerides'):
         return _ephemeride_SET(
             x, y, delta_time,
             **kwargs
         )
-    elif (METHOD.lower() == 'catalog'):
+    elif (method.lower() == 'catalog'):
         return _catalog_SET(
             x, y, delta_time,
             **kwargs
         )
     else:
-        raise ValueError(f"Invalid METHOD: {METHOD}")
+        raise ValueError(f"Invalid calculation method: {method}")
 
 # PURPOSE: compute solid earth tides following IERS conventions
 def _ephemeride_SET(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        ELLIPSOID: str = 'WGS84',
-        TIDE_SYSTEM: str = 'tide_free',
-        EPHEMERIDES: str = 'approximate',
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        ellipsoid: str = 'WGS84',
+        tide_system: str = 'tide_free',
+        ephemerides: str = 'approximate',
+        variable: str | list = 'R',
         **kwargs
     ):
     """
@@ -1404,175 +1227,176 @@ def _ephemeride_SET(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    ELLIPSOID: str, default 'WGS84'
-        Ellipsoid for calculating Earth parameters
-    TIDE_SYSTEM: str, default 'tide_free'
+    ellipsoid: str, default 'WGS84'
+        Ellipsoid name for calculating Earth parameters
+    tide_system: str, default 'tide_free'
         Permanent tide system for the output solid Earth tide
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
-    EPHEMERIDES: str, default 'approximate'
+    ephemerides: str, default 'approximate'
         Ephemerides for calculating Earth parameters
 
             - ``'approximate'``: approximate lunisolar parameters
             - ``'JPL'``: computed from JPL ephmerides kernel
+    variable: str or list, default 'R'
+        Output variable(s) to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
-    tide_se: np.ndarray
+    SE: xr.DataArray
         solid earth tide at coordinates and time in meters
     """
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert TIDE_SYSTEM.lower() in ('mean_tide', 'tide_free')
-    assert EPHEMERIDES.lower() in ('approximate', 'jpl')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert tide_system.lower() in ('mean_tide', 'tide_free')
+    assert ephemerides.lower() in ('approximate', 'jpl')
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(crs)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (type.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # convert tide times to dynamical time
-    tide_time = ts.tide + ts.tt_ut1
-    # number of time points
-    nt = len(ts)
+            epoch=epoch, standard=standard)
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ELLIPSOID, units='MKS')
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units='MKS')
 
     # convert input coordinates to cartesian
-    X, Y, Z = pyTMD.spatial.to_cartesian(lon, lat,
+    X,Y,Z = pyTMD.spatial.to_cartesian(ds.x, ds.y,
         a_axis=units.a_axis, flat=units.flat)
-    # compute ephemerides for lunisolar coordinates
-    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
-    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=EPHEMERIDES)
-
-    # geocentric latitude (radians)
-    latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))
-    npts = len(latitude_geocentric)
+    XYZ = xr.Dataset(
+        data_vars={
+            'X': (ds.dims, X),
+            'Y': (ds.dims, Y),
+            'Z': (ds.dims, Z)
+        },
+        coords=ds.coords
+    )
     # geocentric colatitude (radians)
-    theta = (np.pi/2.0 - latitude_geocentric)
+    theta = np.pi/2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
     # calculate longitude (radians)
-    phi = np.arctan2(Y, X)
-    # rotation matrix for converting from cartesian coordinates
-    R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,1,0] = -np.sin(phi)
-    R[:,2,0] = np.cos(phi)*np.sin(theta)
-    R[:,0,1] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,2,1] = np.sin(phi)*np.sin(theta)
-    R[:,0,2] = -np.sin(theta)
-    R[:,2,2] = np.cos(theta)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+
+    # compute ephemerides for lunisolar coordinates
+    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
+    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=ephemerides)
+    # create datasets for lunisolar coordinates
+    SXYZ = xr.Dataset(
+        data_vars={
+            'X': (['time'], SX),
+            'Y': (['time'], SY),
+            'Z': (['time'], SZ)
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD))
+    )
+    LXYZ = xr.Dataset(
+        data_vars={
+            'X': (['time'], LX),
+            'Y': (['time'], LY),
+            'Z': (['time'], LZ)
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD))
+    )
+
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0,0] = np.cos(phi)*np.cos(theta)
+    R[0,1] = -np.sin(phi)
+    R[0,2] = np.cos(phi)*np.sin(theta)
+    R[1,0] = np.sin(phi)*np.cos(theta)
+    R[1,1] = np.cos(phi)
+    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[2,0] = -np.sin(theta)
+    R[2,1] = xr.zeros_like(theta)
+    R[2,2] = np.cos(theta)
 
     # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_se = np.zeros((ny,nx,nt))
-        # convert coordinates to column arrays
-        XYZ = np.c_[X, Y, Z]
-        for i in range(nt):
-            # reshape time to match spatial
-            t = tide_time[i] + np.ones((ny*nx))
-            # convert coordinates to column arrays
-            SXYZ = np.repeat(np.c_[SX[i], SY[i], SZ[i]], ny*nx, axis=0)
-            LXYZ = np.repeat(np.c_[LX[i], LY[i], LZ[i]], ny*nx, axis=0)
-            # predict solid earth tides (cartesian)
-            dxi = pyTMD.predict.solid_earth_tide(t,
-                XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-                tide_system=TIDE_SYSTEM)
-            # calculate components of solid earth tides
-            SE = np.einsum('ti...,tji...->tj...', dxi, R)
-            # reshape to output dimensions
-            tide_se[:,:,i] = np.reshape(SE[:,2], (ny,nx))
-    elif (TYPE == 'drift'):
-        # convert coordinates to column arrays
-        XYZ = np.c_[X, Y, Z]
-        SXYZ = np.c_[SX, SY, SZ]
-        LXYZ = np.c_[LX, LY, LZ]
-        # predict solid earth tides (cartesian)
-        dxi = pyTMD.predict.solid_earth_tide(tide_time,
-            XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-            tide_system=TIDE_SYSTEM)
-        # calculate components of solid earth tides
-        SE = np.einsum('ti...,tji...->tj...', dxi, R)
-        # reshape to output dimensions
-        tide_se = SE[:,2].copy()
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_se = np.zeros((nstation,nt))
-        # convert coordinates to column arrays
-        SXYZ = np.c_[SX, SY, SZ]
-        LXYZ = np.c_[LX, LY, LZ]
-        for s in range(nstation):
-            # convert coordinates to column arrays
-            XYZ = np.repeat(np.c_[X[s], Y[s], Z[s]], nt, axis=0)
-            # predict solid earth tides (cartesian)
-            dxi = pyTMD.predict.solid_earth_tide(tide_time,
-                XYZ, SXYZ, LXYZ, a_axis=units.a_axis,
-                tide_system=TIDE_SYSTEM)
-            # calculate components of solid earth tides
-            SE = np.einsum('ti...,ji...->tj...', dxi, R[s,:,:])
-            # reshape to output dimensions
-            tide_se[s,:] = SE[:,2].copy()
-
-    # return the solid earth tide displacements
-    return tide_se
+    # predict solid earth tides (cartesian)
+    dxi = pyTMD.predict.solid_earth_tide(ts.tide, XYZ, SXYZ, LXYZ,
+        deltat=ts.tt_ut1,
+        a_axis=units.a_axis,
+        tide_system=tide_system
+    )
+    # rotate displacements from cartesian coordinates
+    SE = xr.Dataset()
+    SE['N'] = R[0,0]*dxi['X'] + R[1,0]*dxi['Y'] + R[2,0]*dxi['Z']
+    SE['E'] = R[0,1]*dxi['X'] + R[1,1]*dxi['Y'] + R[2,1]*dxi['Z']
+    SE['R'] = R[0,2]*dxi['X'] + R[1,2]*dxi['Y'] + R[2,2]*dxi['Z']
+    # set attributes for output variables
+    for var in SE.data_vars:
+        SE[var].attrs['units'] = dxi['X'].attrs.get('units', 'meters')
+    # return the solid earth tide displacements for variable(s)
+    return SE[variable]
 
 # PURPOSE: compute body tides following Cartwright and Tayler (1971)
 def _catalog_SET(
         x: np.ndarray, y: np.ndarray, delta_time: np.ndarray,
-        EPSG: str | int = 4326,
-        EPOCH: list | tuple = (2000, 1, 1, 0, 0, 0),
-        TYPE: str | None = 'drift',
-        TIME: str = 'UTC',
-        CATALOG: str = 'CTE1973',
-        TIDE_SYSTEM: str = 'tide_free',
-        EPHEMERIDES: str = 'IERS',
-        INCLUDE_PLANETS: bool = False,
+        crs: str | int = 4326,
+        epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+        type: str | None = 'drift',
+        standard: str = 'UTC',
+        catalog: str = 'CTE1973',
+        tide_system: str = 'tide_free',
+        ephemerides: str = 'IERS',
+        include_planets: bool = False,
+        variable: str | list = 'R',
         **kwargs
     ):
     """
@@ -1587,133 +1411,113 @@ def _catalog_SET(
         y-coordinates in projection EPSG
     delta_time: np.ndarray
         seconds since EPOCH or datetime array
-    EPSG: int, default: 4326 (WGS84 Latitude and Longitude)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
-    EPOCH: tuple, default (2000,1,1,0,0,0)
+    epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    TYPE: str or NoneType, default 'drift'
+    type: str or NoneType, default 'drift'
         Input data type
 
             - ``None``: determined from input variable dimensions
             - ``'drift'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
-    TIME: str, default 'UTC'
-        Time type if need to compute leap seconds to convert to UTC
+    standard: str, default 'UTC'
+        Time standard of input temporal data
 
             - ``'GPS'``: leap seconds needed
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
-    CATALOG: str, default 'CTE1973'
+    catalog: str, default 'CTE1973'
         Name of the tide potential catalog
 
             - ``'CTE1973'``: :cite:t:`Cartwright:1973em`
             - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
             - ``'T1987'``: :cite:t:`Tamura:1987tp`
             - ``'W1990'``: Woodworth updates to ``'CTE1973'``
-    TIDE_SYSTEM: str, default 'tide_free'
+    tide_system: str, default 'tide_free'
         Permanent tide system for the output solid Earth tide
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
-    EPHEMERIDES: str, default 'IERS'
+    ephemerides: str, default 'IERS'
         Method for calculating astronomical mean longitudes
 
             - ``'Cartwright'``: use coefficients from David Cartwright
             - ``'Meeus'``: use coefficients from Meeus Astronomical Algorithms
             - ``'ASTRO5'``: use Meeus Astronomical coefficients from ``ASTRO5``
             - ``'IERS'``: convert from IERS Delaunay arguments
-    INCLUDE_PLANETS: bool, default False
+    include_planets: bool, default False
         Include tide potentials from planetary bodies
+    variable: str | list, default 'R'
+        Output variable(s) to extract from dataset
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
 
     Returns
     -------
-    tide_se: np.ndarray
+    SE: xr.DataArray
         solid earth tide at coordinates and time in meters
     """
 
     # validate input arguments
-    assert TIME.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
-    assert TIDE_SYSTEM.lower() in ('mean_tide', 'tide_free')
-    assert CATALOG in pyTMD.predict._tide_potential_table.keys()
-    assert EPHEMERIDES.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
+    assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
+    assert tide_system.lower() in ('mean_tide', 'tide_free')
+    assert catalog in pyTMD.predict._tide_potential_table.keys()
+    assert ephemerides.lower() in ('cartwright', 'meeus', 'astro5', 'iers')
     # determine input data type based on variable dimensions
-    if not TYPE:
-        TYPE = pyTMD.spatial.data_type(x, y, delta_time)
-    assert TYPE.lower() in ('grid', 'drift', 'time series')
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
-    if (TYPE.lower() == 'grid') and (np.size(x) != np.size(y)):
-        x,y = np.meshgrid(np.copy(x),np.copy(y))
-    elif (TYPE.lower() == 'grid'):
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-
-    # converting x,y from EPSG to latitude/longitude
-    crs1 = pyTMD.crs().from_input(EPSG)
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ('grid', 'drift', 'time series')
+    # transformer for converting to WGS84 Latitude and Longitude
+    crs1 = pyproj.CRS.from_user_input(crs)
     crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
-    lon, lat = transformer.transform(x.flatten(), y.flatten())
+    # convert coordinates to xarray DataArrays
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        longitude, latitude = transformer.transform(x, y)
+    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        lon, lat = transformer.transform(gridx, gridy)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'grid'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('y','x'))
+        latitude = xr.DataArray(lat, dims=('y','x'))
+    elif (type.lower() == 'drift'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('time'))
+        latitude = xr.DataArray(lat, dims=('time'))
+    elif (type.lower() == 'time series'):
+        lon, lat = transformer.transform(x, y)
+        longitude = xr.DataArray(lon, dims=('station'))
+        latitude = xr.DataArray(lat, dims=('station'))
+    # create dataset
+    ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
     # convert delta times or datetimes objects to timescale
-    if (TIME.lower() == 'datetime'):
-        ts = timescale.from_datetime(delta_time.flatten())
+    if (standard.lower() == 'datetime'):
+        ts = timescale.from_datetime(delta_time)
     else:
         ts = timescale.from_deltatime(delta_time,
-            epoch=EPOCH, standard=TIME)
-    # number of time points
-    nt = len(ts)
+            epoch=epoch, standard=standard)
 
-    # calculate radial displacement at time
-    if (TYPE == 'grid'):
-        ny,nx = np.shape(x)
-        tide_se = np.zeros((ny,nx,nt))
-        for i in range(nt):
-            # reshape time to match spatial
-            t = ts.tide[i] + np.ones((ny*nx))
-            deltat = ts.tt_ut1 + np.ones((ny*nx))
-            # calculate body tides
-            SE = pyTMD.predict.body_tide(t, lon, lat, 
-                deltat=deltat,
-                method=EPHEMERIDES,
-                tide_system=TIDE_SYSTEM,
-                catalog=CATALOG,
-                include_planets=INCLUDE_PLANETS,
-                **kwargs)
-            # reshape to output dimensions
-            tide_se[:,:,i] = np.reshape(SE[:,2], (ny,nx))
-    elif (TYPE == 'drift'):
-        # calculate body tides
-        SE = pyTMD.predict.body_tide(ts.tide, lon, lat, 
-            deltat=ts.tt_ut1,
-            method=EPHEMERIDES,
-            tide_system=TIDE_SYSTEM,
-            catalog=CATALOG,
-            include_planets=INCLUDE_PLANETS,
-            **kwargs)
-        # reshape to output dimensions
-        tide_se = SE[:,2].copy()
-    elif (TYPE == 'time series'):
-        nstation = len(x)
-        tide_se = np.zeros((nstation,nt))
-        for s in range(nstation):
-            # calculate body tides
-            SE = pyTMD.predict.body_tide(ts.tide, lon[s], lat[s], 
-                deltat=ts.tt_ut1,
-                method=EPHEMERIDES,
-                tide_system=TIDE_SYSTEM,
-                catalog=CATALOG,
-                include_planets=INCLUDE_PLANETS,
-                **kwargs)
-            # reshape to output dimensions
-            tide_se[s,:] = SE[:,2].copy()
+    # calculate body tides
+    SE = pyTMD.predict.body_tide(ts.tide, ds, 
+        deltat=ts.tt_ut1,
+        method=ephemerides,
+        tide_system=tide_system,
+        catalog=catalog,
+        include_planets=include_planets,
+        **kwargs
+    )
 
-    # return the solid earth tide displacements
-    return tide_se
+    # return the solid earth tide displacements for variable(s)
+    return SE[variable]

@@ -10,7 +10,7 @@ UPDATE HISTORY:
 """
 import pytest
 import numpy as np
-import pyTMD.arguments
+import pyTMD.constituents
 
 def test_love_numbers():
     """
@@ -46,8 +46,8 @@ def test_love_numbers():
     # for each tidal constituent
     for c, v in exp.items():
         # calculate Love numbers
-        omega, = pyTMD.arguments.frequency(c)
-        h2, k2, l2 = pyTMD.arguments._love_numbers(
+        omega, = pyTMD.constituents.frequency(c)
+        h2, k2, l2 = pyTMD.constituents._love_numbers(
             omega, model='1066A')
         # check Love numbers
         assert np.isclose(h2, v[0], atol=15e-4)
@@ -93,8 +93,8 @@ def test_complex_love_numbers():
     # for each tidal constituent
     for c, v in exp.items():
         # calculate Love numbers
-        omega = pyTMD.arguments._frequency(coefficients[c])
-        h2, k2, l2 = pyTMD.arguments._complex_love_numbers(omega)
+        omega = pyTMD.constituents._frequency(coefficients[c])
+        h2, k2, l2 = pyTMD.constituents._complex_love_numbers(omega)
         # check Love numbers
         assert np.isclose(h2, v[0], atol=15e-4)
         assert np.isclose(k2, v[1], atol=15e-4)
@@ -130,14 +130,14 @@ def test_love_number_ratios(model):
     exp['C2']['phi1'] = (1.098, 1.101, 0.979)
     exp['C2']['j1'] = (1.013, 1.013, 0.998)
     # frequency of the o1 tidal constituent
-    omega = pyTMD.arguments.frequency('o1')
+    omega = pyTMD.constituents.frequency('o1')
     # calculate Love numbers for o1
-    ho1, ko1, lo1 = pyTMD.arguments._love_numbers(omega, model=model)
+    ho1, ko1, lo1 = pyTMD.constituents._love_numbers(omega, model=model)
     # for each tidal constituent
     for c, v in exp[model].items():
         # calculate Love numbers
-        omega, = pyTMD.arguments.frequency(c)
-        h2, k2, l2 = pyTMD.arguments._love_numbers(omega, model=model)
+        omega, = pyTMD.constituents.frequency(c)
+        h2, k2, l2 = pyTMD.constituents._love_numbers(omega, model=model)
         # check Love numbers
         assert np.isclose(h2/ho1, v[0], atol=25e-4)
         assert np.isclose(k2/ko1, v[1], atol=25e-4)

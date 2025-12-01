@@ -10,7 +10,7 @@ OS-specific package management systems (e.g. ``apt`` or ``homebrew``),
 ``conda`` or from source:
 
 - `PROJ <https://proj.org/>`_
-- `netCDF <https://www.unidata.ucar.edu/software/netcdf>`_
+- `HDF5 <https://www.hdfgroup.org/>`_
 - `libxml2 <http://xmlsoft.org/>`_
 - `libxslt <http://xmlsoft.org/XSLT/>`_
 

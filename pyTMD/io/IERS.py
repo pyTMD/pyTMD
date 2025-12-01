@@ -1,27 +1,21 @@
 #!/usr/bin/env python
 u"""
 IERS.py
-Written by Tyler Sutterley (08/2024)
+Written by Tyler Sutterley (11/2025)
 
 Reads ocean pole load tide coefficients provided by IERS
 http://maia.usno.navy.mil/conventions/2010/2010_official/chapter7/tn36_c7.pdf
 http://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/icc7.pdf
 
-IERS 0.5x0.5 map of ocean pole tide coefficients:
-ftp://maia.usno.navy.mil/conventions/2010/2010_update/chapter7/additional_info/
-    opoleloadcoefcmcor.txt.gz
-
-OUTPUTS:
-    ur: radial ocean pole tide coefficients
-    un: north ocean pole tide coefficients
-    ue: east ocean pole tide coefficients
-    glon: ocean grid longitude
-    glat: ocean grid latitude
-
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
+    pyproj: Python interface to PROJ library
+        https://pypi.org/project/pyproj/
+        https://pyproj4.github.io/pyproj/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 REFERENCES:
     S. Desai, "Observing the pole tide with satellite altimetry", Journal of
@@ -31,6 +25,7 @@ REFERENCES:
         doi: 10.1007/s00190-015-0848-7
 
 UPDATE HISTORY:
+    Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 08/2024: convert outputs to be in -180:180 longitude convention
         added function to interpolate ocean pole tide values to coordinates
         renamed from ocean_pole_tide to IERS
@@ -55,270 +50,120 @@ import gzip
 import pathlib
 import warnings
 import numpy as np
-import scipy.interpolate
-from pyTMD.utilities import get_data_path
+import xarray as xr
+import pyTMD.utilities
+# suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+# attempt imports
+pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 __all__ = [
-    "extract_coefficients",
-    "read_binary_file",
-    "ocean_pole_tide",
-    "_extend_array",
-    "_extend_matrix",
-    "_shift"
+    "open_dataset",
 ]
 
 # ocean pole tide file from Desai (2002) and IERS conventions
-_ocean_pole_tide_file = get_data_path(['data','opoleloadcoefcmcor.txt.gz'])
+_ocean_pole_tide_file = pyTMD.utilities.get_data_path(
+    ['data','opoleloadcoefcmcor.txt.gz']
+)
 
-# PURPOSE: extract ocean pole tide values from Desai (2002) at coordinates
-def extract_coefficients(
-        lon: np.ndarray, lat: np.ndarray,
+# PURPOSE: read real and imaginary ocean pole tide coefficients
+def open_dataset(
+        input_file: str | pathlib.Path = _ocean_pole_tide_file,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
-    Reads ocean pole tide file from :cite:p:`Desai:2002ev,Desai:2015jr`
-    and spatially interpolates to input coordinates
-
-    Parameters
-    ----------
-    lon: np.ndarray
-        longitude to interpolate
-    lat: np.ndarray
-        latitude to interpolate
-    model_file: str
-        IERS map of ocean pole tide coefficients
-    method: str, default 'spline'
-        Interpolation method
-
-            - ``'spline'``: scipy bivariate spline interpolation
-            - ``'linear'``, ``'nearest'``: scipy regular grid interpolations
-
-    Returns
-    -------
-    ur: np.ndarray
-        radial ocean pole tide coefficients
-    un: np.ndarray
-        north ocean pole tide coefficients
-    ue: np.ndarray
-        east ocean pole tide coefficients
-    """
-    # default keyword arguments
-    kwargs.setdefault('model_file', _ocean_pole_tide_file)
-    kwargs.setdefault('method', 'spline')
-    # number of points
-    npts = len(np.atleast_1d(lat))
-    # read ocean pole tide map from Desai (2002)
-    Umap = {}
-    Umap['R'], Umap['N'], Umap['E'], ilon, ilat = read_binary_file(**kwargs)
-    # interpolate ocean pole tide map from Desai (2002)
-    Uint = {}
-    if (kwargs['method'] == 'spline'):
-        # use scipy bivariate splines to interpolate to output points
-        for key,val in Umap.items():
-            Uint[key] = np.zeros((npts), dtype=np.clongdouble)
-            f1 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-                val[:,::-1].real, kx=1, ky=1)
-            f2 = scipy.interpolate.RectBivariateSpline(ilon, ilat[::-1],
-                val[:,::-1].imag, kx=1, ky=1)
-            Uint[key].real = f1.ev(lon, lat)
-            Uint[key].imag = f2.ev(lon, lat)
-    else:
-        # use scipy regular grid to interpolate values for a given method
-        for key,val in Umap.items():
-            Uint[key] = np.zeros((npts), dtype=np.clongdouble)
-            r1 = scipy.interpolate.RegularGridInterpolator((ilon,ilat[::-1]),
-                val[:,::-1], bounds_error=False, method=kwargs['method'])
-            Uint[key][:] = r1.__call__(np.c_[lon, lat])
-    # return the interpolated values
-    return (Uint['R'], Uint['N'], Uint['E'])
-
-# PURPOSE: read real and imaginary ocean pole tide coefficients
-def read_binary_file(**kwargs):
-    """
-    Read real and imaginary ocean pole tide coefficients from
+    Open Ocean Pole Tide ASCII files from
     :cite:p:`Desai:2002ev,Desai:2015jr`
 
     Parameters
     ----------
-    model_file: str or pathlib.Path
-        IERS map of ocean pole tide coefficients
+    input_file: str or pathlib.Path
+        Ocean pole tide file
+    chunks: int | dict | str | None, default None
+        coerce output to specified chunks
+    crs: str | int | dict, default 4326
+        Coordinate reference system
+    compressed: bool, default False
+        Input file is gzip compressed
 
     Returns
     -------
-    ur: np.ndarray
-        radial ocean pole tide coefficients
-    un: np.ndarray
-        north ocean pole tide coefficients
-    ue: np.ndarray
-        east ocean pole tide coefficients
-    glon: np.ndarray
-        ocean grid longitude
-    glat: np.ndarray
-        ocean grid latitude
+    ds: xarray.Dataset
+        Ocean pole tide data
     """
-    # default keyword arguments
-    kwargs.setdefault('model_file', _ocean_pole_tide_file)
-    # convert input file to tilde-expanded pathlib object
-    input_file = pathlib.Path(kwargs['model_file']).expanduser()
-    # check that ocean pole tide file is accessible
-    if not input_file.exists():
-        raise FileNotFoundError(str(input_file))
-
-    # read GZIP ocean pole tide file
-    with gzip.open(input_file, 'rb') as f:
-        file_contents = f.read().splitlines()
+    # set default keyword arguments
+    kwargs.setdefault('compressed', True)
+    # default coordinate reference system is EPSG:4326 (WGS84)
+    crs = kwargs.get('crs', 4326)
+    # tilde-expand input file
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_file:
+        assert input_file.exists(), f'File not found: {input_file}'
+    # read compressed ocean pole tide file
+    if kwargs['compressed']:
+        # read gzipped ascii file
+        with gzip.open(input_file, 'rb') as f:
+            file_contents = f.read().decode('utf8').splitlines()
+    else:
+        with open(input_file, mode='r', encoding='utf8') as f:
+            file_contents = f.read().splitlines()
 
     # counts the number of lines in the header
     count = 0
-    # Reading over header text
+    # parse over header text
+    parameters = {}
     HEADER = True
     while HEADER:
         # file line at count
         line = file_contents[count]
-        # find --------- within line to set HEADER flag to False when found
-        HEADER = not bool(re.match(rb'---------',line))
+        # detect the end of the header text
+        HEADER = not bool(re.match(r'---------', line))
+        # parse key-value pairs from header
+        key, _, val = line.partition('=')
+        parameters[key.strip().lower()] = val.strip()
         # add 1 to counter
         count += 1
 
     # grid parameters and dimensions
-    dlon,dlat = (0.50,0.50)
-    glon = np.arange(dlon/2.0,360+dlon/2.0,dlon)
-    glat = np.arange(90.0-dlat/2.0,-90.0-dlat/2.0,-dlat)
-    nlon = len(glon)
-    nlat = len(glat)
+    dlon = float(parameters['longitude_step_degrees'])
+    dlat = float(parameters['latitude_step_degrees'])
+    nlon = int(parameters['number_longitude_grid_points'])
+    nlat = int(parameters['number_latitude_grid_points'])
+    # create grid vectors (coerce to -180:180 longitude convention)
+    lon_start = -180.0 + dlon/2.0
+    lat_start = float(parameters['first_latitude_degrees'])
+    lon = lon_start + np.arange(nlon)*dlon
+    lat = lat_start + np.arange(nlat)*dlat
+    # data dictionary
+    var = dict(dims=('y', 'x'), coords={}, data_vars={})
+    var["coords"]["y"] = dict(data=lat.copy(), dims='y')
+    var["coords"]["x"] = dict(data=lon.copy(), dims='x')
     # allocate for output grid maps
-    U = {}
-    U['R'] = np.zeros((nlon,nlat), dtype=np.clongdouble)
-    U['N'] = np.zeros((nlon,nlat), dtype=np.clongdouble)
-    U['E'] = np.zeros((nlon,nlat), dtype=np.clongdouble)
+    for key in ['R','N','E']:
+        var["data_vars"][key] = {}
+        var["data_vars"][key]["dims"] = ('y', 'x')
+        data = np.zeros((nlat, nlon), dtype=np.clongdouble)
+        var["data_vars"][key]["data"] = data
+
     # read lines of file and add to output variables
     for i,line in enumerate(file_contents[count:]):
+        # read line of ocean pole tide file
         ln,lt,urr,uri,unr,uni,uer,uei = np.array(line.split(), dtype='f8')
-        ilon = int(ln/dlon)
-        ilat = int((90.0-lt)/dlat)
-        U['R'][ilon,ilat] = urr + 1j*uri
-        U['N'][ilon,ilat] = unr + 1j*uni
-        U['E'][ilon,ilat] = uer + 1j*uei
-    # shift ocean pole tide grid to -180:180
-    longitudes = np.copy(glon)
-    for key, val in U.items():
-        U[key], glon = _shift(val, longitudes, lon0=180.0,
-            cyclic=360.0, direction='west')
-    # extend matrix for bilinear interpolation
-    glon = _extend_array(glon, dlon)
-    # pad ends of matrix for interpolation
-    for key, val in U.items():
-        U[key] = _extend_matrix(val)
-    # return values
-    return (U['R'], U['N'], U['E'], glon, glat)
-
-# PURPOSE: deprecated function to read ocean pole tide coefficients
-def ocean_pole_tide(input_file: str | pathlib.Path = _ocean_pole_tide_file):
-    warnings.warn("Deprecated. Please use pyTMD.io.IERS instead",
-        DeprecationWarning)
-    # pass the input file to the read_binary_file function
-    return read_binary_file(model_file=input_file)
-
-# PURPOSE: Extend a longitude array
-def _extend_array(input_array: np.ndarray, step_size: float):
-    """
-    Extends a longitude array
-
-    Parameters
-    ----------
-    input_array: np.ndarray
-        array to extend
-    step_size: float
-        step size between elements of array
-
-    Returns
-    -------
-    temp: np.ndarray
-        extended array
-    """
-    n = len(input_array)
-    temp = np.zeros((n+2), dtype=input_array.dtype)
-    # extended array [x-1,x0,...,xN,xN+1]
-    temp[0] = input_array[0] - step_size
-    temp[1:-1] = input_array[:]
-    temp[-1] = input_array[-1] + step_size
-    return temp
-
-# PURPOSE: Extend a global matrix
-def _extend_matrix(input_matrix: np.ndarray):
-    """
-    Extends a global matrix
-
-    Parameters
-    ----------
-    input_matrix: np.ndarray
-        matrix to extend
-
-    Returns
-    -------
-    temp: np.ndarray
-        extended matrix
-    """
-    nx,ny = np.shape(input_matrix)
-    temp = np.zeros((nx+2,ny), dtype=input_matrix.dtype)
-    temp[0,:] = input_matrix[-1,:]
-    temp[1:-1,:] = input_matrix[:,:]
-    temp[-1,:] = input_matrix[0,:]
-    return temp
-
-# PURPOSE: shift a grid east or west
-def _shift(
-        input_matrix: np.ndarray,
-        ilon: np.ndarray,
-        lon0: int | float = 180,
-        cyclic: int | float = 360,
-        direction: str = 'west'
-    ):
-    """
-    Shift global grid east or west to a new base longitude
-
-    Parameters
-    ----------
-    input_matrix: np.ndarray
-        input matrix to shift
-    ilon: np.ndarray
-        longitude of tidal model
-    lon0: int or float, default 180
-        Starting longitude for shifted grid
-    cyclic: int or float, default 360
-        width of periodic domain
-    direction: str, default 'west'
-        Direction to shift grid
-
-            - ``'west'``
-            - ``'east'``
-
-    Returns
-    -------
-    temp: np.ndarray
-        shifted matrix
-    lon: np.ndarray
-        shifted longitude
-    """
-    # find the starting index if cyclic
-    offset = 0 if (np.fabs(ilon[-1]-ilon[0]-cyclic) > 1e-4) else 1
-    i0 = np.argmin(np.fabs(ilon - lon0))
-    # shift longitudinal values
-    lon = np.zeros(ilon.shape, ilon.dtype)
-    lon[0:-i0] = ilon[i0:]
-    lon[-i0:] = ilon[offset: i0+offset]
-    # add or remove the cyclic
-    if (direction == 'east'):
-        lon[-i0:] += cyclic
-    elif (direction == 'west'):
-        lon[0:-i0] -= cyclic
-    # allocate for shifted data
-    if np.ma.isMA(input_matrix):
-        temp = np.ma.zeros(input_matrix.shape,input_matrix.dtype)
-    else:
-        temp = np.zeros(input_matrix.shape, input_matrix.dtype)
-    # shift data values
-    temp[:-i0,:] = input_matrix[i0:, :]
-    temp[-i0:,:] = input_matrix[offset: i0+offset, :]
-    # return the shifted values
-    return (temp, lon)
+        # calculate indices of output grid
+        # coerce to -180:180 longitude convention
+        ilon = int(np.mod(ln - lon_start, 360.0)//dlon) 
+        ilat = int((lt - lat_start)//dlat)
+        # assign ocean pole tide coefficients to output variables
+        var["data_vars"]["R"]["data"][ilat,ilon] = urr + 1j*uri
+        var["data_vars"]["N"]["data"][ilat,ilon] = unr + 1j*uni
+        var["data_vars"]["E"]["data"][ilat,ilon] = uer + 1j*uei
+    # convert to xarray Dataset from the data dictionary
+    ds = xr.Dataset.from_dict(var)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
+    # add attributes
+    ds.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
+    # return xarray dataset
+    return ds
