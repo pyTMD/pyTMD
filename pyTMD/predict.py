@@ -1994,9 +1994,9 @@ def body_tide(
     phase = xr.DataArray(np.zeros_like(MJD),
         dims=dict(time=np.atleast_1d(MJD)))
     # initialize output body tides
-    zeta['N'] = xr.zeros_like(phase*th)
-    zeta['E'] = xr.zeros_like(phase*th)
-    zeta['R'] = xr.zeros_like(phase*th)
+    zeta['N'] = xr.zeros_like(th*phase)
+    zeta['E'] = xr.zeros_like(th*phase)
+    zeta['R'] = xr.zeros_like(th*phase)
     # for each line in the table
     for i, line in enumerate(CTE):
         # spherical harmonic degree
