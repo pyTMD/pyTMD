@@ -114,6 +114,7 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     assert np.all(np.abs(lpet - computed) < eps)
 
 # PURPOSE: test the estimation of long-period equilibrium tides
+@pytest.fixture(scope="module", autouse=False)
 def test_node_tide(directory):
     """
     Test the computation of the equilibrium node tides
