@@ -182,8 +182,8 @@ def open_atlas_grid(
         kwargs['compressed'] = pyTMD.utilities.detect_compression(grid_file)
     # tilde-expand input file
     grid_file = pyTMD.utilities.Path(grid_file).resolve()
-    if grid_file.is_file:
-        assert grid_file.exists(), f'File not found: {grid_file}'
+    if grid_file.is_local() and not grid_file.exists():
+        raise FileNotFoundError(f'File not found: {grid_file}')
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file
@@ -254,8 +254,8 @@ def open_atlas_dataset(
         kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file

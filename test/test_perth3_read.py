@@ -178,7 +178,7 @@ def test_extend_array(directory, CHUNKS):
     # check that longitude values are as expected
     dlon = 1.0/2.0
     lon = np.arange(-dlon, 360 + dlon, dlon)
-    assert np.all(np.isclose(lon, ds.x.values))
+    assert np.allclose(lon, ds.x.values)
 
 # PURPOSE: test the catch in the correction wrapper function
 def test_unlisted_model(directory):

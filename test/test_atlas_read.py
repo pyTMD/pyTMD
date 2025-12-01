@@ -194,4 +194,4 @@ def test_extend_array(directory, CHUNKS):
     # check that longitude values are as expected
     dlon = 1.0/30.0
     lon = np.arange(0, 360 + 2.0*dlon, dlon)
-    assert np.all(np.isclose(lon, ds.x.values))
+    assert np.allclose(lon, ds.x.values)

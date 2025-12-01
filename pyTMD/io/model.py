@@ -242,7 +242,7 @@ class model:
         try:
             self.from_dict(parameters[m])
         except (ValueError, KeyError, AttributeError) as exc:
-            raise ValueError(f"Unlisted tide model {m}")
+            raise ValueError(f"Unlisted tide model {m}") from exc
         # verify model types to extract
         if isinstance(type, str):
             type = (type,)

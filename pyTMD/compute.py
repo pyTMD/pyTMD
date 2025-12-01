@@ -325,8 +325,8 @@ def tide_elevations(
     # check that tide directory is accessible
     if (directory is not None):
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_file and not directory.exists():
-            raise FileNotFoundError("Invalid tide directory")
+        if directory.is_local() and not directory.exists():
+            raise FileNotFoundError("Directory not found")
 
     # validate input arguments
     assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
@@ -523,8 +523,8 @@ def tide_currents(
     # check that tide directory is accessible
     if (directory is not None):
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_file and not directory.exists():
-            raise FileNotFoundError("Invalid tide directory")
+        if directory.is_local() and not directory.exists():
+            raise FileNotFoundError("Directory not found")
 
     # validate input arguments
     assert standard.lower() in ('gps', 'loran', 'tai', 'utc', 'datetime')
@@ -660,8 +660,8 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
     # check that tide directory is accessible
     if (directory is not None):
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_file and not directory.exists():
-            raise FileNotFoundError("Invalid tide directory")
+        if directory.is_local() and not directory.exists():
+            raise FileNotFoundError("Directory not found")
 
     # get parameters for tide model
     if definition_file is not None:

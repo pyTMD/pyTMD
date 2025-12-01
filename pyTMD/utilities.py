@@ -261,7 +261,7 @@ class Path(pathlib.Path):
     def joinpath(self, *args):
         """Join path components to the existing path
         """
-        if self.is_url:
+        if self.is_url():
             return Path('/'.join([self.filename, *args]))
         else:
             return Path(self.filename.joinpath(*args))
@@ -270,11 +270,11 @@ class Path(pathlib.Path):
     def openfile(self):
         """Platform independent file opener
         """
-        if self.is_url:
+        if self.is_url():
             raise RuntimeError('Cannot open URL paths')
-        if (sys.platform == "win32"):
+        if self.is_local() and (sys.platform == "win32"):
             os.startfile(self.filename, "explore")
-        elif (sys.platform == "darwin"):
+        elif  self.is_local() and (sys.platform == "darwin"):
             subprocess.call(["open", self.filename])
         else:
             subprocess.call(["xdg-open", self.filename])
@@ -282,7 +282,7 @@ class Path(pathlib.Path):
     def compressuser(self):
         """Tilde-compress a file to be relative to the home directory
         """
-        if self.is_url:
+        if self.is_url():
             raise RuntimeError('Cannot compress URL paths')
         # attempt to compress filename relative to home directory
         filename = pathlib.Path(self.filename).expanduser().absolute()
@@ -296,7 +296,7 @@ class Path(pathlib.Path):
     def exists(self):
         """Check if the resolved path exists
         """
-        if self.is_url:
+        if self.is_url():
             return is_valid_url(self.filename)
         else:
             return self.filename.expanduser().absolute().exists()
@@ -304,28 +304,38 @@ class Path(pathlib.Path):
     def resolve(self):
         """Resolve the path to an absolute path
         """
-        if self.is_url:
+        if self.is_url():
             return Path('/'.join(url_split(self.filename)))
         else:
             return Path(self.filename.expanduser().absolute())
+
+    def is_file(self):
+        """Boolean flag if path is a local file
+        """
+        return not is_valid_url(self.filename) and \
+            self.filename.expanduser().absolute().is_file()
+
+    def is_dir(self):
+        """Boolean flag if path is a local directory
+        """
+        return not is_valid_url(self.filename) and \
+            self.filename.expanduser().absolute().is_dir()
+
+    def is_local(self):
+        """Boolean flag if path is a local file or directory
+        """
+        return not is_valid_url(self.filename)
+
+    def is_url(self):
+        """Boolean flag if path is a URL
+        """
+        return is_valid_url(self.filename)
 
     @property
     def md5_hash(self):
         """MD5 hash value of the file
         """
         return get_hash(self.filename, algorithm='md5')
-
-    @property
-    def is_file(self):
-        """Boolean flag if path is a local file
-        """
-        return not is_valid_url(self.filename)
-
-    @property
-    def is_url(self):
-        """Boolean flag if path is a URL
-        """
-        return is_valid_url(self.filename)
 
     def __repr__(self):
         """Representation of the ``Path`` object

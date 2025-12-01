@@ -30,7 +30,7 @@ def test_valid_url():
     ]
     for URL in URLS:
         url = pyTMD.utilities.Path(URL)
-        assert url.is_url
+        assert url.is_url()
     # test over some file paths
     PATHS = [
         pathlib.PurePosixPath('/home/user/data/CATS2008/grid_CATS2008'),
@@ -39,4 +39,4 @@ def test_valid_url():
     ]
     for PATH in PATHS:
         path = pyTMD.utilities.Path(PATH).resolve()
-        assert path.is_file
+        assert path.is_local()

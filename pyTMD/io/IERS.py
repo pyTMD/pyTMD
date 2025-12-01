@@ -98,8 +98,8 @@ def open_dataset(
     crs = kwargs.get('crs', 4326)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # read compressed ocean pole tide file
     if kwargs['compressed']:
         # read gzipped ascii file

@@ -88,6 +88,7 @@ from __future__ import annotations
 
 import logging
 import numpy as np
+import xarray as xr
 import pyTMD.astro
 import pyTMD.constituents
 import pyTMD.math
@@ -95,8 +96,6 @@ import pyTMD.interpolate
 import pyTMD.spatial
 from pyTMD.utilities import import_dependency
 import timescale.eop
-# attempt imports
-xr = import_dependency('xarray')
 
 __all__ = [
     "time_series",
@@ -508,12 +507,9 @@ def _infer_semi_diurnal(
     arg = arguments.sel(constituent=constituents)
     # interpolate from major constituents
     if (kwargs['method'].lower() == 'linear'):
-        # interpolate dataarray to input coordinates
+        # linearly interpolate using constituent frequencies
         zmin = pyTMD.interpolate.interp1d(arg.omega.values, omajor, z)
-        # build coordinates for interpolated DataArray
-        coords = {k:v for k, v in z.coords.items() if k != 'constituent'}
-        coords['constituent'] = arg.constituent
-        # convert to DataArray
+        coords = z.coords.assign(dict(constituent=arg.constituent))
         zmin = xr.DataArray(zmin, dims=z.dims, coords=coords)
     elif (kwargs['method'].lower() == 'admittance'):
         # admittance interpolation using Munk-Cartwright approach
@@ -521,14 +517,14 @@ def _infer_semi_diurnal(
         Ainv = xr.DataArray([[3.3133, -4.2538, 1.9405],
             [-3.3133, 4.2538, -0.9405],
             [1.5018, -3.2579, 1.7561]],
-            coords=[cindex, cindex],
-            dims=['constituent', 'dim2'])
-        coef = Ainv.dot(z).rename(dict(dim2='constituent'))
+            coords=[np.arange(3), cindex],
+            dims=['coefficient', 'constituent'])
+        coef = Ainv.dot(z)
         # convert frequency to radians per 48 hours
         # following Munk and Cartwright (1966)
-        f = 2.0*arg.omega*86400.0
+        f = np.exp(2.0*86400.0*arg.omega*1j)
         # calculate interpolated values for constituent
-        zmin = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
+        zmin = coef[0] + coef[1]*f.real + coef[2]*f.imag
     # rescale tide values
     darr = arg.amplitude*zmin
     # sum over tidal constituents
@@ -698,12 +694,9 @@ def _infer_diurnal(
     arg = arguments.sel(constituent=constituents)
     # interpolate from major constituents
     if (kwargs['method'].lower() == 'linear'):
-        # interpolate dataarray to input coordinates
+        # linearly interpolate using constituent frequencies
         zmin = pyTMD.interpolate.interp1d(arg.omega.values, omajor, z)
-        # build coordinates for interpolated DataArray
-        coords = {k:v for k, v in z.coords.items() if k != 'constituent'}
-        coords['constituent'] = arg.constituent
-        # convert to DataArray
+        coords = z.coords.assign(dict(constituent=arg.constituent))
         zmin = xr.DataArray(zmin, dims=z.dims, coords=coords)
     elif (kwargs['method'].lower() == 'admittance'):
         # admittance interpolation using Munk-Cartwright approach
@@ -711,14 +704,14 @@ def _infer_diurnal(
         Ainv = xr.DataArray([[3.1214, -3.8494, 1.728],
             [-3.1727, 3.9559, -0.7832],
             [1.438, -3.0297, 1.5917]],
-            coords=[cindex, cindex],
-            dims=['constituent', 'dim2'])
-        coef = Ainv.dot(z).rename(dict(dim2='constituent'))
+            coords=[np.arange(3), cindex],
+            dims=['coefficient', 'constituent'])
+        coef = Ainv.dot(z)
         # convert frequency to radians per 48 hours
         # following Munk and Cartwright (1966)
-        f = 2.0*arg.omega*86400.0
+        f = np.exp(2.0*86400.0*arg.omega*1j)
         # calculate interpolated values for constituent
-        zmin = coef[0,:] + coef[1,:]*np.cos(f) + coef[2,:]*np.sin(f)
+        zmin = coef[0] + coef[1]*f.real + coef[2]*f.imag
     # rescale tide values
     darr = arg.amplitude*arg.gamma_2*zmin
     # sum over tidal constituents
@@ -879,12 +872,9 @@ def _infer_long_period(
 
     # reduce to selected constituents
     arg = arguments.sel(constituent=constituents)
-    # interpolate dataarray to input coordinates
+    # linearly interpolate using constituent frequencies
     zmin = pyTMD.interpolate.interp1d(arg.omega.values, omajor, z)
-    # build coordinates for interpolated DataArray
-    coords = {k:v for k, v in z.coords.items() if k != 'constituent'}
-    coords['constituent'] = arg.constituent
-    # convert to DataArray
+    coords = z.coords.assign(dict(constituent=arg.constituent))
     zmin = xr.DataArray(zmin, dims=z.dims, coords=coords)
     # rescale tide values
     darr = arg.amplitude*arg.gamma_2*zmin

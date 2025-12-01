@@ -74,11 +74,11 @@ def test_interp1d(extrapolate):
     for i, xi in enumerate(x):
         val = pyTMD.interpolate.interp1d(xi, xp, fp,
             extrapolate=extrapolate)
-        assert np.isclose(exp[i],val).all()
+        assert np.allclose(exp[i],val)
     # run interpolation over all output points
     val = pyTMD.interpolate.interp1d(x, xp, fp,
         extrapolate=extrapolate)
-    assert np.all(np.isclose(exp, val))
+    assert np.allclose(exp, val)
 
 # use max determinant nodes from spherepts
 def test_cartesian(N=324):
@@ -90,9 +90,9 @@ def test_cartesian(N=324):
     lon,lat,r = pyTMD.spatial.to_sphere(x,y,z)
     X,Y,Z = pyTMD.spatial.to_cartesian(lon,lat,a_axis=r,flat=0.0)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(x,X))
-    assert np.all(np.isclose(y,Y))
-    assert np.all(np.isclose(z,Z))
+    assert np.allclose(x,X)
+    assert np.allclose(y,Y)
+    assert np.allclose(z,Z)
 
 # use max determinant nodes from spherepts
 def test_geodetic(N=324):
@@ -113,15 +113,15 @@ def test_geodetic(N=324):
     # fix coordinates to be 0:360
     lon[lon < 0] += 360.0
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(ln,lon))
-    assert np.all(np.isclose(lt,lat))
+    assert np.allclose(ln,lon)
+    assert np.allclose(lt,lat)
     # convert from cartesian to geodetic as arrays
     lon,lat,h = pyTMD.spatial.to_geodetic(X,Y,Z)
     # fix coordinates to be 0:360
     lon[lon < 0] += 360.0
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(ln,lon))
-    assert np.all(np.isclose(lt,lat))
+    assert np.allclose(ln,lon)
+    assert np.allclose(lt,lat)
 
 # PURPOSE: test gap-filling over a 2D grid
 def test_gap_fill(nx=250, ny=250, percent=30, N=100):
@@ -145,7 +145,7 @@ def test_gap_fill(nx=250, ny=250, percent=30, N=100):
     # calculate gap-filled values with inpainting
     test = pyTMD.interpolate.inpaint(xpts, ypts, ZI, N=N)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(val, test, atol=0.01))
+    assert np.allclose(val, test, atol=0.01)
 
 # PURPOSE: test extrapolation over a sphere
 def test_extrapolate(N=324):
@@ -173,7 +173,7 @@ def test_extrapolate(N=324):
     test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
         is_geographic=True)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(val,test,atol=0.1))
+    assert np.allclose(val,test,atol=0.1)
 
 # PURPOSE: test that extrapolation will not occur if invalid
 def test_extrapolation_checks(N=324):

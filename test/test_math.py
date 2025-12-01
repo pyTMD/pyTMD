@@ -95,7 +95,7 @@ def test_legendre(l, x=[-1.0, -0.9, -0.8]):
             [0.00000, -1.24229, -3.24000]
         ])
     # check with expected values
-    assert np.isclose(obs, expected, atol=1e-05).all()
+    assert np.allclose(obs, expected, atol=1e-05)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():
@@ -117,5 +117,5 @@ def test_ellipse_xy():
     Y = -(x - xy[0])*np.sin(phi) + (y - xy[1])*np.cos(phi)
     test = (uminor*X)**2 + (umajor*Y)**2
     validation = (umajor*uminor)**2
-    assert np.isclose(test, validation).all()
+    assert np.allclose(test, validation)
 

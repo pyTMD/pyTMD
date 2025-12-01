@@ -75,8 +75,8 @@ def test_convert_ellipsoid():
     minelev = 100.0*np.min(elev_TPX-elev_WGS84)
     maxelev = 100.0*np.max(elev_TPX-elev_WGS84)
     expelev = [70.000000,71.368200]
-    assert np.isclose([minlat,maxlat],explat).all()
-    assert np.isclose([minelev,maxelev],expelev).all()
+    assert np.allclose([minlat,maxlat],explat)
+    assert np.allclose([minelev,maxelev],expelev)
     # convert back from Topex/Poseidon to WGS84 Ellipsoids
     phi_WGS84,h_WGS84 = pyTMD.spatial.convert_ellipsoid(lat_TPX, elev_TPX,
         atop, ftop, awgs, fwgs, eps=1e-12, itmax=10)
@@ -88,8 +88,8 @@ def test_convert_ellipsoid():
     minelevdel = 100.0*np.min(h_WGS84-elev_WGS84)
     maxelevdel = 100.0*np.max(h_WGS84-elev_WGS84)
     expelevdel = [-1.3287718e-7,1.6830199e-7]
-    assert np.isclose([minlatdel,maxlatdel],explatdel).all()
-    assert np.isclose([minelevdel,maxelevdel],expelevdel,atol=1e-5).all()
+    assert np.allclose([minlatdel,maxlatdel],explatdel)
+    assert np.allclose([minelevdel,maxelevdel],expelevdel,atol=1e-5)
 
 # PURPOSE: verify cartesian to geodetic conversions
 def test_convert_geodetic():
@@ -111,17 +111,17 @@ def test_convert_geodetic():
     ln3, lt3, h3 = pyTMD.spatial.to_geodetic(x, y, z,
         a_axis=a_axis, flat=flat, method='zhu')
     # validate outputs for Moritz iterative method
-    assert np.isclose(longitude, ln1).all()
-    assert np.isclose(latitude, lt1).all()
-    assert np.isclose(height, h1).all()
+    assert np.allclose(longitude, ln1)
+    assert np.allclose(latitude, lt1)
+    assert np.allclose(height, h1)
     # validate outputs for Bowring iterative method
-    assert np.isclose(longitude, ln2).all()
-    assert np.isclose(latitude, lt2).all()
-    assert np.isclose(height, h2).all()
+    assert np.allclose(longitude, ln2)
+    assert np.allclose(latitude, lt2)
+    assert np.allclose(height, h2)
     # validate outputs for Zhu closed-form method
-    assert np.isclose(longitude, ln3).all()
-    assert np.isclose(latitude, lt3).all()
-    assert np.isclose(height, h3).all()
+    assert np.allclose(longitude, ln3)
+    assert np.allclose(latitude, lt3)
+    assert np.allclose(height, h3)
 
 # PURPOSE: test wrap longitudes
 def test_wrap_longitudes():
@@ -132,7 +132,7 @@ def test_wrap_longitudes():
     exp = np.zeros((360))
     exp[:181] = np.arange(181)
     exp[181:] = np.arange(-179,0)
-    assert np.isclose(obs,exp).all()
+    assert np.allclose(obs,exp)
 
 # PURPOSE: test the conversion of degrees to DMS
 def test_degrees_to_DMS():

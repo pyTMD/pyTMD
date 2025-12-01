@@ -40,8 +40,8 @@ def test_arctic_projection():
     # convert projected coordinates from latitude and longitude
     x = (90.0 - i2)*111.7*np.cos(i1/180.0*np.pi)
     y = (90.0 - i2)*111.7*np.sin(i1/180.0*np.pi)
-    assert np.isclose(o1, x).all()
-    assert np.isclose(o2, y).all()
+    assert np.allclose(o1, x)
+    assert np.allclose(o2, y)
     # convert latitude and longitude from projected coordinates
     ln = np.arctan2(y, x)*180.0/np.pi
     lt = 90.0 - np.sqrt(x**2 + y**2)/111.7

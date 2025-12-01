@@ -190,8 +190,8 @@ def open_got_ascii(
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # read the ASCII-format tide elevation file
     if kwargs['compressed']:
         # read gzipped ascii file
@@ -292,8 +292,8 @@ def open_got_netcdf(
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file

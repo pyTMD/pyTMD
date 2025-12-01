@@ -128,7 +128,7 @@ def test_arguments(corrections):
     test = np.dot(fargs, coef)
 
     # validate arguments between methods
-    assert np.isclose(arg, test).all()
+    assert np.allclose(arg, test)
 
 @pytest.mark.parametrize("corrections", ['OTIS', 'GOT'])
 @pytest.mark.parametrize("climate_solar_perigee", [False, True])
@@ -214,7 +214,7 @@ def test_table(corrections, climate_solar_perigee):
         climate_solar_perigee=climate_solar_perigee
     )
     # validate arguments between methods
-    assert np.isclose(coef, test).all()
+    assert np.allclose(coef, test)
 
 @pytest.mark.parametrize("climate_solar_perigee", [False, True])
 def test_climate_solar_perigee(climate_solar_perigee):
@@ -237,7 +237,7 @@ def test_climate_solar_perigee(climate_solar_perigee):
         climate_solar_perigee=climate_solar_perigee
     )
     # validate arguments between methods
-    assert np.isclose(coef, test).all()
+    assert np.allclose(coef, test)
 
 def test_minor():
     """
@@ -288,7 +288,7 @@ def test_minor():
     test = np.dot(fargs, coef)
 
     # validate arguments between methods
-    assert np.isclose(arg, test).all()
+    assert np.allclose(arg, test)
 
 @pytest.mark.parametrize("corrections", ['OTIS', 'FES', 'GOT'])
 @pytest.mark.parametrize("M1", ['Doodson', 'Ray'])
@@ -701,10 +701,10 @@ def test_nodal(corrections, M1):
         # only verify a subset of constituents for each model type
         if c in constituents:
             # verify nodal factors
-            assert np.all(np.isclose(f[:,i], pf[:,i], rtol=1e-2, atol=1e-2))
+            assert np.allclose(f[:,i], pf[:,i], rtol=1e-2, atol=1e-2)
             # verify nodal angles in radians
             urad = u[:,i]*dtr
-            assert np.all(np.isclose(urad, pu[:,i], rtol=1e-2, atol=1e-2))
+            assert np.allclose(urad, pu[:,i], rtol=1e-2, atol=1e-2)
 
 def test_parameters():
     """
@@ -789,4 +789,4 @@ def test_aliasing_period():
     obs = pyTMD.constituents.aliasing_period(['m2','o1'], repeat)
     # expected values in days
     exp = np.array([12.4, 13.0])
-    assert np.isclose(obs/86400.0, exp, atol=0.03).all()
+    assert np.allclose(obs/86400.0, exp, atol=0.03)

@@ -476,8 +476,8 @@ def open_tmd3_dataset(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # read the netCDF4-format tide grid file
     tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # replace constituents array with names
@@ -538,8 +538,8 @@ def open_otis_grid(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # set initial offset (skip 4 bytes)
     offset = 4
     # read data as big endian
@@ -681,8 +681,8 @@ def open_otis_elevation(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # set initial offset
     offset = 0
     # read data as big endian
@@ -795,8 +795,8 @@ def open_otis_transport(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # set initial offset
     offset = 0
     # read data as big endian
@@ -919,8 +919,8 @@ def open_atlas_grid(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # get file information
     file_info = input_file.stat()
     # set initial offset (skip 4 bytes)
@@ -1167,8 +1167,8 @@ def open_atlas_elevation(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # get file information
     file_info = input_file.stat()
     # set initial offset
@@ -1397,8 +1397,8 @@ def open_atlas_transport(
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_file:
-        assert input_file.exists(), f'File not found: {input_file}'
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
     # get file information
     file_info = input_file.stat()
     # set initial offset

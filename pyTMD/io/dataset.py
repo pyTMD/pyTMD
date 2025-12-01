@@ -271,7 +271,7 @@ class Dataset:
         # reduce dataset to constituents and convert to dataarray
         da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent')
         # stack constituents as the last dimension
-        da = da.transpose(*da.dims[1:],da.dims[0])
+        da = da.transpose(*da.dims[1:], da.dims[0])
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
     

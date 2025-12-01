@@ -673,21 +673,21 @@ def nodal_modulation(
         elif c in ('beta1',):
             term1 = 0.226*sinn
             term2 = 1.0 + 0.226*cosn
-        elif c in ('m1',) and (kwargs['M1'] == 'Doodson'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Doodson'):
             # A. T. Doodson's coefficients for M1 tides
             term1 = sinp + 0.2*np.sin(P - N)
             term2 = 2.0*cosp + 0.4*np.cos(P - N)
-        elif c in ('m1',) and (kwargs['M1'] == 'Ray'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Ray'):
             # R. Ray's coefficients for M1 tides (perth3)
             term1 = 0.64*sinp + 0.135*np.sin(P - N)
             term2 = 1.36*cosp + 0.267*np.cos(P - N)
-        elif c in ('m1',) and (kwargs['M1'] == 'Schureman'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Schureman'):
             # Schureman: Table 2, Page 165
             # Schureman: Page 43, Equation 206
             f[:,i] = np.sin(II)*np.power(np.cos(II/2.0),2)/(0.38*Qa)
             u[:,i] = -nu - Qu
             continue
-        elif c in ('m1',) and (kwargs['M1'] == 'perth5'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'perth5'):
             # assumes M1 argument includes p
             term1 = -0.2294*sinn - 0.3594*sin2p - 0.0664*np.sin(2.0*P - N)
             term2 = 1.0 + 0.1722*cosn + 0.3594*cos2p + 0.0664*np.cos(2.0*P - N)

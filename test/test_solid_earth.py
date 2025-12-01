@@ -244,12 +244,12 @@ def test_solid_earth_radial(EPHEMERIDES):
         crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
         tide_system='mean_tide', ephemerides=EPHEMERIDES)
     # as using estimated ephemerides, assert within 1/2 mm
-    assert np.isclose(tide_earth, tide_free, atol=5e-4).all()
+    assert np.allclose(tide_earth, tide_free, atol=5e-4)
     # sign differences with ATLAS product: correction is subtractive
     predicted = -0.06029 + 0.180873*np.sin(latitudes*np.pi/180.0)**2
-    assert np.isclose(tide_expected, tide_mean, atol=5e-4).all()
-    assert np.isclose(-tide_earth_free2mean, predicted, atol=5e-4).all()
-    assert np.isclose(tide_mean-tide_free, predicted, atol=5e-4).all()
+    assert np.allclose(tide_expected, tide_mean, atol=5e-4)
+    assert np.allclose(-tide_earth_free2mean, predicted, atol=5e-4)
+    assert np.allclose(tide_mean-tide_free, predicted, atol=5e-4)
 
 # parameterize method
 @pytest.mark.parametrize("CATALOG", ['CTE1973','T1987'])
@@ -290,8 +290,8 @@ def test_body_tides(CATALOG, METHOD):
         deltat=ts.tt_ut1, tide_system='mean_tide', method=METHOD,
         catalog=CATALOG)
     # since we are using simplified body tides: assert within 2 mm
-    assert np.isclose(tide_earth, tide_free['R'], atol=2e-3).all()
-    assert np.isclose(tide_expected, tide_mean['R'], atol=2e-3).all()
+    assert np.allclose(tide_earth, tide_free['R'], atol=2e-3)
+    assert np.allclose(tide_expected, tide_mean['R'], atol=2e-3)
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         crs=4326, type='drift', standard='datetime', tide_system='tide_free',
@@ -300,5 +300,5 @@ def test_body_tides(CATALOG, METHOD):
         crs=4326, type='drift', standard='datetime', tide_system='mean_tide',
         method='catalog', ephemerides=METHOD, catalog=CATALOG)
     # since we are using simplified body tides: assert within 2 mm
-    assert np.isclose(tide_earth, tide_free, atol=2e-3).all()
-    assert np.isclose(tide_expected, tide_mean, atol=2e-3).all()
+    assert np.allclose(tide_earth, tide_free, atol=2e-3)
+    assert np.allclose(tide_expected, tide_mean, atol=2e-3)

@@ -485,4 +485,4 @@ def test_rotation_matrix():
     Rinv[:,0,2] = -np.sin(theta)
     Rinv[:,2,2] = np.cos(theta)
     # verify that the rotation matrix is the inverse of the original
-    assert np.isclose(np.linalg.inv(R), Rinv).all()
+    assert np.allclose(np.linalg.inv(R), Rinv)
