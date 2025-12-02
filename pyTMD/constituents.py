@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constituent.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (12/2025)
 Calculates constituents parameters and nodal arguments
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
 
@@ -24,6 +24,7 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 12/2025: added m1a and m1b constituents to nodal corrections
     Updated 11/2025: renamed from arguments to constituents
     Updated 09/2025: added spherical harmonic degree to tide potential tables
         added IERS Conventions references for Love number calculations

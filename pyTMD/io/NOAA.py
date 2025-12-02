@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 NOAA.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 Query and parsing functions for NOAA webservices API
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,7 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 12/2025: make dataframe accessor inherit from Dataset
     Updated 11/2025: add accessor for pandas dataframe objects
         added function to reduce prediction stations to active
     Updated 08/2025: replace invalid water level values with NaN
@@ -22,6 +23,7 @@ import traceback
 import numpy as np
 import pyTMD.constituents
 import pyTMD.utilities
+from pyTMD.io.dataset import Dataset
 
 # attempt imports
 pd = pyTMD.utilities.import_dependency('pandas')
@@ -266,12 +268,17 @@ def water_level(
     return df
 
 @pd.api.extensions.register_dataframe_accessor("tmd")
-class DataFrame:
+class DataFrame(Dataset):
     """Accessor for extending an ``pandas.DataFrame`` for tide models
     """
 
     def __init__(self, df):
+        # store the pandas dataframe
         self._df = df
+        # convert to xarray Dataset
+        ds = self.to_dataset()
+        # initialize the parent class
+        super().__init__(ds)
 
     def to_dataset(self):
         """Convert NOAA constituent ``Dataframe`` to an ``xarray.Dataset``
@@ -286,11 +293,8 @@ class DataFrame:
         # convert data series to xarray DataArray
         darr = hc.to_xarray().rename({'constNum': 'constituent'})
         # assign constituent names as coordinates
-        darr = darr.assign_coords({'constituent': self.constituents})
+        darr = darr.assign_coords({'constituent': self._df.constituent.values})
         # convert DataArray to Dataset with constituents as variables
         ds = darr.to_dataset(dim='constituent')
         return ds
 
-    @property
-    def constituents(self):
-        return self._df.constituent.values
