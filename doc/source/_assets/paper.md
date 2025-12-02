@@ -18,19 +18,21 @@ authors:
   - name: Laurie Padman
     orcid: 0000-0003-2010-642X
     equal-contrib: true
-    affiliation: 2
+    affiliation: 3
   - name: Matthew R. Siegfried
     orcid: 0000-0002-0868-4633
     equal-contrib: true
-    affiliation: 3
+    affiliation: 4
 
 affiliations:
- - name: Polar Science Center, Applied Physics Laboratory, University of Washington, United States
+ - name: Polar Science Center, Applied Physics Laboratory, University of Washington, Seattle, WA, USA
    index: 1
- - name: Earth & Space Research, United States
+ - name: Earth & Space Research, Seattle, WA, USA
    index: 2
- - name: Department of Geophysics, Colorado School of Mines, United States
+ - name: Earth & Space Research, Corvallis, OR, USA
    index: 3
+ - name: Hydrologic Sciences & Engineering Program, Department of Geophysics, Colorado School of Mines, Golden, CO, USA
+   index: 4
 
 date: 23 September 2025
 bibliography: pytmd-refs.bib
