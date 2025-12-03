@@ -1,5 +1,6 @@
-"""
-test_perth5_predict.py
+#!/usr/bin/env python
+u"""
+test_perth5_predict.py (12/2025)
 Tests predictions against outputs from the NASA PERTH5 program
 
 PYTHON DEPENDENCIES:
@@ -14,13 +15,13 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 12/2025: added RE14 long-period test
     Updated 11/2025: using new xarray interface for tidal model data
     Written 09/2024
 """
 import pytest
 import pyTMD.io
 import numpy as np
-import xarray as xr
 import timescale.time
 
 # parametrize chunking
