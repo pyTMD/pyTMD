@@ -79,6 +79,7 @@ if on_rtd:
         "Plot-Antarctic-Tide-Range.ipynb",
         "Plot-ATLAS-Compact.ipynb"
     ]
+    nb_output_stderr = "remove-warn"
 else:
     nb_execution_mode = "off"
 
