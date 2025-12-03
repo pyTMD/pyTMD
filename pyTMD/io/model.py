@@ -850,12 +850,12 @@ class model:
         # output dictionary of xarray Datasets
         ds = {}
         # try to read model files
-        for mtype in group:
+        for g in group:
             # skip if model group is unavailable
-            if not hasattr(self, mtype.lower()):
+            if not hasattr(self, g.lower()):
                 continue
             # open xarray Dataset
-            ds[mtype] = self.open_dataset(group=mtype, **kwargs)
+            ds[g] = self.open_dataset(group=g, **kwargs)
         # create xarray DataTree from dictionary
         dtree = xr.DataTree.from_dict(ds)
         # return the model xarray DataTree
