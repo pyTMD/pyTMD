@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 predict.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (11/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -21,7 +21,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
-    Updated 11/2025: add predictor for xarray Datasets
+    Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
         can choose different tide potential catalogs for body tides
         generalize the calculation of body tides for degrees 3+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -62,6 +62,8 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 11/2025: use xarray DataArrays for input coordinates
+        outputs from prediction functions will be also be DataArrays
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: added wrapper for calculating solid earth tides
         using a tide potential catalog following Cartwright and Tayler (1971)
