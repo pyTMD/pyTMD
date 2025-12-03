@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 math.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (11/2025)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 11/2025: legendre now returns both polynomials and derivatives
     Updated 09/2025: added degree 4 to legendre polynomials function
     Updated 08/2025: add asec2rad and masec2rad functions for arcseconds
     Updated 07/2025: add deriv and phase arguments to sph_harm function

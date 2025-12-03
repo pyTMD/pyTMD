@@ -14,6 +14,7 @@ UPDATE HISTORY:
     Updated 11/2025: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for compression and model format
+        create a Path class for handling local and URL paths
     Updated 10/2025: allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale

@@ -16,6 +16,7 @@ UPDATE HISTORY:
         set default data type for interpolation functions as input data type
         generalize vectorized 1D linear interpolation for more cases of fp
         allow iterating over variable with a recursion in interp1d
+        drop prior interpolation functions to prefer xarray internals
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
