@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 constants.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (12/2025)
 Routines for estimating the harmonic constants for ocean tides
 
 REFERENCES:
@@ -23,8 +23,10 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments  
+    predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
+    Updated 12/2025: merge minor constituent inference into main iteration loop
     Updated 11/2025: output as xarray Dataset of complex harmonic constants
     Updated 10/2025: added option to infer minor constituents (post-fit)
     Updated 08/2025: use numpy degree to radian conversions
@@ -152,38 +154,33 @@ def constants(t: float | np.ndarray,
     # take the transpose of the design matrix
     M = np.transpose(M)
 
-    # use a least-squares fit to solve for parameters
-    # can optionally use a bounded-variable least-squares fit
-    if (solver == 'lstsq'):
-        p, res, rnk, s = np.linalg.lstsq(M, ht, rcond=-1)
-    elif solver in ('gelsd', 'gelsy', 'gelss'):
-        p, res, rnk, s = scipy.linalg.lstsq(M, ht,
-            lapack_driver=solver)
-    elif (solver == 'bvls'):
-        p = scipy.optimize.lsq_linear(M, ht,
-            method=solver, bounds=bounds,
-            max_iter=max_iter).x
-
-    # infer minor using a post-fit technique
-    infer_iter = np.maximum(1, infer_iter) if infer_minor else 0  
-    # iterate solutions to improve minor constituent estimates
-    for i in range(infer_iter):
-        # indices for the sine and cosine terms
-        # skip over the polynomial terms
-        isin = 2*np.arange(nc) + order + 2
-        icos = 2*np.arange(nc) + order + 1
-        # complex model amplitudes for major constituents
-        darr = xr.DataArray(p[icos] + 1j*p[isin],
-            coords=dict(constituent=constituents),
-            dims=['constituent'])
-        ds = darr.to_dataset(dim='constituent')
-        # inferred minor constituent time series
-        hminor = pyTMD.predict.infer_minor(t, ds,
-            deltat=deltat, corrections=corrections,
-            minor=minor_constituents)
-        # corrected height (without minor constituents)
-        hcorr = ht - hminor
-        # rerun least-squares fit with minor constituents removed
+    # initial heights for fits
+    hcorr = np.copy(ht)
+    # total number of fit iterations
+    # first iteration: solve for major constituents
+    # all others: remove contribution of minor constituents
+    iterations = np.maximum(2, 1 + infer_iter) if infer_minor else 1
+    # for each solution iteration
+    for i in range(iterations):
+        # remove inferred minor constituents from height time series
+        if (i > 0) and infer_minor:
+            # indices for the sine and cosine terms
+            # skip over the polynomial terms
+            isin = 2*np.arange(nc) + order + 2
+            icos = 2*np.arange(nc) + order + 1
+            # complex model amplitudes for major constituents
+            darr = xr.DataArray(p[icos] + 1j*p[isin],
+                coords=dict(constituent=constituents),
+                dims=['constituent'])
+            ds = darr.to_dataset(dim='constituent')
+            # inferred minor constituent time series
+            hminor = pyTMD.predict.infer_minor(t, ds,
+                deltat=deltat, corrections=corrections,
+                minor=minor_constituents)
+            # corrected height (without minor constituents)
+            hcorr = ht - hminor.values
+        # use a least-squares fit to solve for parameters
+        # can optionally use a bounded-variable least-squares fit
         if (solver == 'lstsq'):
             p, res, rnk, s = np.linalg.lstsq(M, hcorr, rcond=-1)
         elif solver in ('gelsd', 'gelsy', 'gelss'):
