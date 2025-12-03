@@ -74,7 +74,11 @@ def test_interp1d(extrapolate):
     for i, xi in enumerate(x):
         val = pyTMD.interpolate.interp1d(xi, xp, fp,
             extrapolate=extrapolate)
-        assert np.isclose(exp[i],val).all()
+        assert np.allclose(exp[i],val)
+    # run interpolation over all output points
+    val = pyTMD.interpolate.interp1d(x, xp, fp,
+        extrapolate=extrapolate)
+    assert np.allclose(exp, val)
 
 # use max determinant nodes from spherepts
 def test_cartesian(N=324):
@@ -86,9 +90,9 @@ def test_cartesian(N=324):
     lon,lat,r = pyTMD.spatial.to_sphere(x,y,z)
     X,Y,Z = pyTMD.spatial.to_cartesian(lon,lat,a_axis=r,flat=0.0)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(x,X))
-    assert np.all(np.isclose(y,Y))
-    assert np.all(np.isclose(z,Z))
+    assert np.allclose(x,X)
+    assert np.allclose(y,Y)
+    assert np.allclose(z,Z)
 
 # use max determinant nodes from spherepts
 def test_geodetic(N=324):
@@ -109,54 +113,15 @@ def test_geodetic(N=324):
     # fix coordinates to be 0:360
     lon[lon < 0] += 360.0
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(ln,lon))
-    assert np.all(np.isclose(lt,lat))
+    assert np.allclose(ln,lon)
+    assert np.allclose(lt,lat)
     # convert from cartesian to geodetic as arrays
     lon,lat,h = pyTMD.spatial.to_geodetic(X,Y,Z)
     # fix coordinates to be 0:360
     lon[lon < 0] += 360.0
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(ln,lon))
-    assert np.all(np.isclose(lt,lat))
-
-# parameterize interpolation method
-@pytest.mark.parametrize("METHOD", ['spline','linear','bilinear'])
-# PURPOSE: test interpolation routines over a sphere
-def test_interpolate(METHOD, N=324):
-    # read the node file
-    matfile = f'md{N:05d}.mat'
-    xd = scipy.io.loadmat(filepath.joinpath(matfile))
-    x,y,z = (xd['x'][:,0],xd['x'][:,1],xd['x'][:,2])
-    # convert from cartesian to sphere
-    lon,lat,_ = pyTMD.spatial.to_sphere(x,y,z)
-    # compute functional values at nodes
-    val = franke_3d(x,y,z)
-    # calculate output points (standard lat/lon grid)
-    dlon,dlat = (1.0,1.0)
-    LON = np.arange(0,360+dlon,dlon)
-    LAT = np.arange(-90,90+dlat,dlat)
-    ny,nx = (len(LAT),len(LON))
-    gridlon,gridlat = np.meshgrid(LON,LAT)
-    X,Y,Z = pyTMD.spatial.to_cartesian(gridlon,gridlat,
-        a_axis=1.0,flat=0.0)
-    # calculate functional values at output points
-    FI = np.ma.zeros((ny,nx))
-    FI.data[:] = franke_3d(X,Y,Z)
-    FI.mask = np.zeros((ny,nx),dtype=bool)
-    # use interpolation routines to get values
-    if (METHOD == 'bilinear'):
-        # use quick bilinear to interpolate values
-        test = pyTMD.interpolate.bilinear(LON,LAT,FI,lon,lat)
-    elif (METHOD == 'spline'):
-        # use scipy bivariate splines to interpolate values
-        test = pyTMD.interpolate.spline(LON,LAT,FI,lon,lat,kx=1,ky=1)
-    else:
-        # use scipy regular grid to interpolate values
-        test = pyTMD.interpolate.regulargrid(LON,LAT,FI,lon,lat,
-            method=METHOD,bounds_error=False)
-    # verify that coordinates are within tolerance
-    eps = np.finfo(np.float16).eps
-    assert np.all(np.isclose(val,test,atol=eps))
+    assert np.allclose(ln,lon)
+    assert np.allclose(lt,lat)
 
 # PURPOSE: test gap-filling over a 2D grid
 def test_gap_fill(nx=250, ny=250, percent=30, N=100):
@@ -180,7 +145,7 @@ def test_gap_fill(nx=250, ny=250, percent=30, N=100):
     # calculate gap-filled values with inpainting
     test = pyTMD.interpolate.inpaint(xpts, ypts, ZI, N=N)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(val, test, atol=0.01))
+    assert np.allclose(val, test, atol=0.01)
 
 # PURPOSE: test extrapolation over a sphere
 def test_extrapolate(N=324):
@@ -205,9 +170,10 @@ def test_extrapolate(N=324):
     FI.data[:] = franke_3d(X,Y,Z)
     FI.mask = np.zeros((ny,nx),dtype=bool)
     # use nearest neighbors extrapolation to points
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,lon,lat,EPSG='4326')
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
+        is_geographic=True)
     # verify that coordinates are within tolerance
-    assert np.all(np.isclose(val,test,atol=0.1))
+    assert np.allclose(val,test,atol=0.1)
 
 # PURPOSE: test that extrapolation will not occur if invalid
 def test_extrapolation_checks(N=324):
@@ -227,9 +193,10 @@ def test_extrapolation_checks(N=324):
     FI.mask = np.ones((ny,nx),dtype=bool)
     # use nearest neighbors extrapolation to points
     # in case where there are no valid grid points
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,lon,lat,EPSG='4326')
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
+        is_geographic=True)
     assert(np.all(test.mask))
     # use nearest neighbors extrapolation
     # in case where there are no points to be extrapolated
-    test = pyTMD.interpolate.extrapolate(LON,LAT,FI,[],[])
+    test = pyTMD.interpolate.extrapolate(LON, LAT, FI, [], [])
     assert np.logical_not(test)

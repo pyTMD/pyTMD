@@ -57,7 +57,7 @@ def fetch_test_data(
         additional keyword arguments for data provider functions
     """
     # create download directory if it doesn't exist
-    directory = pathlib.Path(directory).expanduser().absolute()
+    directory = pyTMD.utilities.Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
@@ -109,7 +109,7 @@ def from_figshare(
     for f in resp['files']:
         # check if file already exists by matching MD5 checksums
         local_file = directory.joinpath(f['name'])
-        original_md5 = pyTMD.utilities.get_hash(local_file)
+        original_md5 = local_file.md5_hash
         # skip download if checksums match
         if (original_md5 == f['supplied_md5']):
             continue

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 interpolate.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (11/2025)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -13,6 +13,9 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 11/2025: calculate lambda function after nearest-neighbors
+        set default data type for interpolation functions as input data type
+        generalize vectorized 1D linear interpolation for more cases of fp
+        allow iterating over variable with a recursion in interp1d
     Updated 08/2025: added vectorized 1D linear interpolation function
         improve performance of bilinear interpolation and allow extrapolation
         added a penalized least square inpainting function to gap fill data
@@ -26,25 +29,19 @@ from __future__ import annotations
 import numpy as np
 import scipy.fftpack
 import scipy.spatial
-import scipy.interpolate
 import pyTMD.spatial
 
 __all__ = [
     "interp1d",
     "inpaint",
-    "bilinear",
-    "spline",
-    "regulargrid",
     "extrapolate",
-    "_distance"
 ]
 
 # PURPOSE: 1-dimensional linear interpolation on arrays
 def interp1d(
-        x: float,
+        x: float | np.ndarray,
         xp: np.ndarray,
         fp: np.ndarray,
-        extrapolate: str = 'linear',
         **kwargs
     ):
     """
@@ -52,8 +49,8 @@ def interp1d(
 
     Parameters
     ----------
-    x: np.ndarray
-        x-coordinates of the interpolated values
+    x: float | np.ndarray
+        x-coordinate(s) of the interpolated values
     xp: np.ndarray
         x-coordinates of the data points
     fp: np.ndarray
@@ -69,6 +66,18 @@ def interp1d(
     f: np.ndarray
         Interpolated values at x
     """
+    # get extrapolation method
+    extrapolate = kwargs.get('extrapolate', 'linear').lower()
+    if extrapolate not in ('linear', 'nearest'):
+        raise ValueError(f"Invalid extrapolate method: {extrapolate}")
+    # recursion for multiple x values
+    if isinstance(x, np.ndarray) and (x.ndim > 0):
+        # allocate output array
+        f = np.zeros((*fp.shape[:-1], len(x)), dtype=fp.dtype)
+        for i, val in enumerate(x):
+            f[...,i] = interp1d(val, xp, fp, **kwargs)
+        # return the array of interpolated values
+        return f
     # clip coordinates to handle nearest-neighbor extrapolation
     if (extrapolate == 'nearest'):
         x = np.clip(x, a_min=xp.min(), a_max=xp.max())
@@ -80,7 +89,8 @@ def interp1d(
     # fractional distance between points
     d = np.divide(x - xp[j], xp[j+1] - xp[j])
     # calculate interpolated values
-    f = (1.0 - d)*fp[:,j] + d*fp[:,j+1]
+    f = (1.0 - d)*fp[...,j] + d*fp[...,j+1]
+    # return the interpolated values
     return f
 
 def inpaint(
@@ -169,258 +179,6 @@ def inpaint(
     # return the inpainted grid
     return z0
 
-# PURPOSE: bilinear interpolation of input data to output data
-def bilinear(
-        xs: np.ndarray,
-        ys: np.ndarray,
-        zs: np.ndarray,
-        X: np.ndarray,
-        Y: np.ndarray,
-        fill_value: float = np.nan,
-        extrapolate: bool = False,
-        dtype: str | np.dtype = np.float64,
-        **kwargs
-    ):
-    """
-    Bilinear interpolation of input data to output coordinates
-
-    Parameters
-    ----------
-    xs: np.ndarray
-        x-coordinates of tidal model
-    ys: np.ndarray
-        y-coordinates of tidal model
-    zs: np.ndarray
-        tide model data
-    X: np.ndarray
-        output x-coordinates
-    Y: np.ndarray
-        output y-coordinates
-    fill_value: float, default np.nan
-        invalid value
-    extrapolate: bool, default False
-        allow linear extrapolation of points
-    dtype: np.dtype, default np.float64
-        output data type
-
-    Returns
-    -------
-    data: np.ndarray
-        interpolated data
-    """
-    # verify that input data is masked array
-    if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(zs)
-        zs.mask = np.zeros_like(zs, dtype=bool)
-    # interpolate gridded data values to data
-    npts = len(X)
-    # allocate to output interpolated data array
-    data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
-    data.mask = np.ones((npts), dtype=bool)
-    # initially set all data to fill value
-    data.data[:] = data.fill_value
-    # for each point
-    for i in range(npts):
-        # calculating the indices for the original grid
-        ix = np.searchsorted(xs, X[i]) - 1
-        iy = np.searchsorted(ys, Y[i]) - 1
-        # check that all points are within valid bounds
-        bounds = (ix >= 0) & (iy >= 0) & (ix < len(xs)) & (iy < len(ys))
-        if not (extrapolate or bounds):
-            continue
-        # clip to handle extrapolation
-        ix = np.clip(ix, a_min=0, a_max=len(xs) - 2)
-        iy = np.clip(iy, a_min=0, a_max=len(ys) - 2)
-        # corner data values for adjacent grid cells
-        IM = np.ma.zeros((4), fill_value=fill_value, dtype=dtype)
-        IM.mask = np.ones((4), dtype=bool)
-        # corner weight values for adjacent grid cells
-        WM = np.zeros((4))
-        # build data and weight arrays
-        for j,XI,YI in zip([0,1,2,3],[ix,ix+1,ix,ix+1],[iy,iy,iy+1,iy+1]):
-            IM.data[j] = zs.data[YI,XI].astype(dtype)
-            IM.mask[j] = zs.mask[YI,XI]
-            WM[3-j] = np.abs(X[i]-xs[XI])*np.abs(Y[i]-ys[YI])
-        # if on corner value: use exact
-        if (np.isclose(Y[i],ys[iy]) & np.isclose(X[i],xs[ix])):
-            data.data[i] = zs.data[iy,ix].astype(dtype)
-            data.mask[i] = zs.mask[iy,ix]
-        elif (np.isclose(Y[i],ys[iy+1]) & np.isclose(X[i],xs[ix])):
-            data.data[i] = zs.data[iy+1,ix].astype(dtype)
-            data.mask[i] = zs.mask[iy+1,ix]
-        elif (np.isclose(Y[i],ys[iy]) & np.isclose(X[i],xs[ix+1])):
-            data.data[i] = zs.data[iy,ix+1].astype(dtype)
-            data.mask[i] = zs.mask[iy,ix+1]
-        elif (np.isclose(Y[i],ys[iy+1]) & np.isclose(X[i],xs[ix+1])):
-            data.data[i] = zs.data[iy+1,ix+1].astype(dtype)
-            data.mask[i] = zs.mask[iy+1,ix+1]
-        elif np.any(np.isfinite(IM) & (~IM.mask)):
-            # find valid indices for data summation and weight matrix
-            ii, = np.nonzero(np.isfinite(IM) & (~IM.mask))
-            # calculate interpolated value for i
-            data.data[i] = np.sum(WM[ii]*IM[ii])/np.sum(WM[ii])
-            data.mask[i] = np.all(IM.mask[ii])
-    # return interpolated values
-    return data
-
-def spline(
-        xs: np.ndarray,
-        ys: np.ndarray,
-        zs: np.ndarray,
-        X: np.ndarray,
-        Y: np.ndarray,
-        fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
-        reducer=np.ceil,
-        **kwargs
-    ):
-    """
-    `Bivariate spline interpolation
-    <https://docs.scipy.org/doc/scipy/reference/generated/
-    scipy.interpolate.RectBivariateSpline.html>`_
-    of input data to output coordinates
-
-    Parameters
-    ----------
-    xs: np.ndarray
-        x-coordinates of tidal model
-    ys: np.ndarray
-        y-coordinates of tidal model
-    zs: np.ndarray
-        tide model data
-    X: np.ndarray
-        output x-coordinates
-    Y: np.ndarray
-        output y-coordinates
-    fill_value: float or NoneType, default None
-        invalid value
-    dtype: np.dtype, default np.float64
-        output data type
-    reducer: obj, default np.ceil
-        operation for converting mask to boolean
-    kx: int, default 1
-        degree of the bivariate spline in the x-dimension
-    ky: int, default 1
-        degree of the bivariate spline in the y-dimension
-    **kwargs: dict
-        additional arguments for ``scipy.interpolate.RectBivariateSpline``
-
-    Returns
-    -------
-    data: np.ndarray
-        interpolated data
-    """
-    # set default keyword arguments
-    kwargs.setdefault('kx', 1)
-    kwargs.setdefault('ky', 1)
-    # verify that input data is masked array
-    if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(zs)
-        zs.mask = np.zeros_like(zs, dtype=bool)
-    # interpolate gridded data values to data
-    npts = len(X)
-    # allocate to output interpolated data array
-    data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
-    data.mask = np.ones((npts), dtype=bool)
-    # construct splines for input data and mask
-    if np.iscomplexobj(zs):
-        s1 = scipy.interpolate.RectBivariateSpline(xs, ys,
-            zs.data.real.T, **kwargs)
-        s2 = scipy.interpolate.RectBivariateSpline(xs, ys,
-            zs.data.imag.T, **kwargs)
-        s3 = scipy.interpolate.RectBivariateSpline(xs, ys,
-            zs.mask.T, **kwargs)
-        # evaluate the spline at input coordinates
-        data.data.real[:] = s1.ev(X, Y)
-        data.data.imag[:] = s2.ev(X, Y)
-        data.mask[:] = reducer(s3.ev(X, Y)).astype(bool)
-    else:
-        s1 = scipy.interpolate.RectBivariateSpline(xs, ys,
-            zs.data.T, **kwargs)
-        s2 = scipy.interpolate.RectBivariateSpline(xs, ys,
-            zs.mask.T, **kwargs)
-        # evaluate the spline at input coordinates
-        data.data[:] = s1.ev(X, Y).astype(dtype)
-        data.mask[:] = reducer(s2.ev(X, Y)).astype(bool)
-    # return interpolated values
-    return data
-
-def regulargrid(
-        xs: np.ndarray,
-        ys: np.ndarray,
-        zs: np.ndarray,
-        X: np.ndarray,
-        Y: np.ndarray,
-        fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
-        reducer=np.ceil,
-        **kwargs
-    ):
-    """
-    `Regular grid interpolation
-    <https://docs.scipy.org/doc/scipy/reference/generated/
-    scipy.interpolate.RegularGridInterpolator.html>`_
-    of input data to output coordinates
-
-    Parameters
-    ----------
-    xs: np.ndarray
-        x-coordinates of tidal model
-    ys: np.ndarray
-        y-coordinates of tidal model
-    zs: np.ndarray
-        tide model data
-    X: np.ndarray
-        output x-coordinates
-    Y: np.ndarray
-        output y-coordinates
-    fill_value: float or NoneType, default None
-        invalid value
-    dtype: np.dtype, default np.float64
-        output data type
-    reducer: obj, default np.ceil
-        operation for converting mask to boolean
-    bounds_error: bool, default False
-        raise Exception when values are requested outside domain
-    method: str, default 'linear'
-        Method of interpolation
-
-            - ``'linear'``
-            - ``'nearest'``
-            - ``'slinear'``
-            - ``'cubic'``
-            - ``'quintic'``
-    **kwargs: dict
-        additional arguments for ``scipy.interpolate.RegularGridInterpolator``
-
-    Returns
-    -------
-    data: np.ndarray
-        interpolated data
-    """
-    # set default keyword arguments
-    kwargs.setdefault('bounds_error', False)
-    kwargs.setdefault('method', 'linear')
-    # verify that input data is masked array
-    if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(zs)
-        zs.mask = np.zeros_like(zs, dtype=bool)
-    # interpolate gridded data values to data
-    npts = len(X)
-    # allocate to output interpolated data array
-    data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
-    data.mask = np.ones((npts), dtype=bool)
-    # use scipy regular grid to interpolate values for a given method
-    r1 = scipy.interpolate.RegularGridInterpolator((ys, xs),
-        zs.data, fill_value=fill_value, **kwargs)
-    r2 = scipy.interpolate.RegularGridInterpolator((ys, xs),
-        zs.mask, fill_value=1, **kwargs)
-    # evaluate the interpolator at input coordinates
-    data.data[:] = r1.__call__(np.c_[Y, X])
-    data.mask[:] = reducer(r2.__call__(np.c_[Y, X])).astype(bool)
-    # return interpolated values
-    return data
-
 # PURPOSE: Nearest-neighbor extrapolation of valid data to output data
 def extrapolate(
         xs: np.ndarray,
@@ -429,7 +187,6 @@ def extrapolate(
         X: np.ndarray,
         Y: np.ndarray,
         fill_value: float = None,
-        dtype: str | np.dtype = np.float64,
         cutoff: int | float = np.inf,
         is_geographic: bool = True,
         **kwargs
@@ -467,6 +224,13 @@ def extrapolate(
     DATA: np.ndarray
         interpolated data
     """
+    # set default data type
+    dtype = kwargs.get('dtype', zs.dtype)
+    # verify that input data is masked array
+    if not isinstance(zs, np.ma.MaskedArray):
+        zs = np.ma.array(zs, dtype=zs.dtype,
+            fill_value=np.ma.default_fill_value(zs.dtype))
+        zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, 'EPSG') and (kwargs['EPSG'] == '4326'):
         is_geographic = True
@@ -564,28 +328,3 @@ def extrapolate(
         data.mask[ind] = False
     # return extrapolated values
     return data
-
-# PURPOSE: calculate Euclidean distances between points
-def _distance(c1: np.ndarray, c2: np.ndarray):
-    """
-    Calculate Euclidean distances between points
-
-    Parameters
-    ----------
-    c1: np.ndarray
-        first set of coordinates
-    c2: np.ndarray
-        second set of coordinates
-
-    Returns
-    -------
-    c: np.ndarray
-        Euclidean distance
-    """
-    # decompose Euclidean distance: (x-y)^2 = x^2 - 2xy + y^2
-    dx2 = np.sum(c1**2)
-    dxy = np.dot(c1[np.newaxis,:], c2.T)
-    dy2 = np.sum(c2**2, axis=1)
-    # calculate Euclidean distance
-    D, = np.sqrt(dx2 - 2.0*dxy + dy2)
-    return D

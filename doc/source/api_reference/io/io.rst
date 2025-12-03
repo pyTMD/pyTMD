@@ -11,7 +11,6 @@ Input/output functions for reading and writing tidal data
     FES.rst
     GOT.rst
     OTIS.rst
-    constituents.rst
     dataset.rst
     model.rst
     IERS.rst

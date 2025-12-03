@@ -108,7 +108,7 @@ def fetch_gsfc_got(model: str,
     TAR['RE14'] = 'r'
 
     # recursively create directories if non-existent
-    directory = pathlib.Path(directory).expanduser().absolute()
+    directory = pyTMD.utilities.Path(directory).resolve()
     directory.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # build host url for model

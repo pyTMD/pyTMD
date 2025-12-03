@@ -114,7 +114,7 @@ def _EPSG4326():
     return crs
 
 # wrapper function for using custom projections
-def _custom(self, PROJ: int | str):
+def _custom(PROJ: int | str):
     """
     CRS for models in a custom projection
 
@@ -124,7 +124,7 @@ def _custom(self, PROJ: int | str):
         Spatial reference system code for coordinate transformations
     """
     # coordinate reference system information
-    crs = self.from_input(PROJ)
+    crs = pyproj.CRS.from_user_input(PROJ)
     return crs
 
 def main():

@@ -1,47 +1,20 @@
 #!/usr/bin/env python
 u"""
 GOT.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 
-Reads files for Richard Ray's Goddard Ocean Tide (GOT) models and makes
-    initial calculations to run the tide program
-Includes functions to extract tidal harmonic constants out of a tidal
-    model for given locations
-
-INPUTS:
-    ilon: longitude to interpolate
-    ilat: latitude to interpolate
-    model_files: list of model files for each constituent
-
-OPTIONS:
-    method: interpolation method
-        bilinear: quick bilinear interpolation
-        spline: scipy bivariate spline interpolation
-        linear, nearest: scipy regular grid interpolations
-    extrapolate: extrapolate model using nearest-neighbors
-    cutoff: extrapolation cutoff in kilometers
-        set to np.inf to extrapolate for all points
-    compressed: input files are gzip compressed
-    scale: scaling factor for converting to output units
-
-OUTPUTS:
-    amplitude: amplitudes of tidal constituents
-    phase: phases of tidal constituents
-    constituents: list of model constituents
+Reads ascii and netCDF4 files from Richard Ray's Goddard Ocean Tide (GOT) model
+    https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
-    scipy: Scientific Tools for Python
-        https://docs.scipy.org/doc/
-    netCDF4: Python interface to the netCDF C library
-        https://unidata.github.io/netcdf4-python/netCDF4/index.html
-
-PROGRAM DEPENDENCIES:
-    interpolate.py: interpolation routines for spatial data
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 10/2025: simplify ascii read function to use masked_equal
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
@@ -89,491 +62,137 @@ UPDATE HISTORY:
 from __future__ import division, annotations
 
 import re
-import copy
 import gzip
-import uuid
-import logging
 import pathlib
 import datetime
-import warnings
 import numpy as np
+import xarray as xr
 import pyTMD.version
-import pyTMD.interpolate
-import pyTMD.io.constituents
-from pyTMD.utilities import import_dependency
-
+import pyTMD.constituents
+import pyTMD.utilities
 # attempt imports
-netCDF4 = import_dependency('netCDF4')
+dask = pyTMD.utilities.import_dependency('dask')
+dask_available = pyTMD.utilities.dependency_available('dask')
 
 __all__ = [
-    "extract_constants",
-    "read_constants",
-    "interpolate_constants",
-    "read_ascii_file",
-    "read_netcdf_file",
-    "output_netcdf_file",
-    "_extend_array",
-    "_extend_matrix",
-    "_crop",
-    "_shift"
+    'open_mfdataset',
+    'open_got_dataset',
+    'open_got_ascii',
+    'open_got_netcdf',
+    'GOTDataset',
 ]
 
-# PURPOSE: extract harmonic constants from tide models at coordinates
-def extract_constants(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        model_files: str | pathlib.Path | list | None = None,
-        **kwargs
+# PURPOSE: read a list of GOT ASCII or netCDF4 files
+def open_mfdataset(
+        model_files: list[str] | list[pathlib.Path],
+        parallel: bool = False,
+        **kwargs,
     ):
     """
-    Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
-
-    Makes initial calculations to run the tide program
-
-    Spatially interpolates tidal constituents to input coordinates
+    Open multiple GOT model files
 
     Parameters
     ----------
-    ilon: np.ndarray
-        longitude to interpolate
-    ilat: np.ndarray
-        latitude to interpolate
-    model_files: str, list, pathlib.Path or NoneType, default None
-        list of model files for each constituent
-    grid: str, default 'ascii'
-        Tide model file type to read
-
-            - ``'ascii'``: traditional GOT ascii format
-            - ``'netcdf'``: GOT netCDF4 format
-    compressed: bool, default False
-        Input files are gzip compressed
-    crop: bool, default False
-        Crop tide model data to (buffered) bounds
-    bounds: list or NoneType, default None
-        Boundaries for cropping tide model data
-    buffer: int or float, default None
-        Buffer angle for cropping tide model data
-    method: str, default 'spline'
-        Interpolation method
-
-            - ``'bilinear'``: quick bilinear interpolation
-            - ``'spline'``: scipy bivariate spline interpolation
-            - ``'linear'``, ``'nearest'``: scipy regular grid interpolations
-    extrapolate: bool, default False
-        Extrapolate model using nearest-neighbors
-    cutoff: float, default 10.0
-        Extrapolation cutoff in kilometers
-
-        Set to ``np.inf`` to extrapolate for all points
-    scale: float, default 1.0
-        Scaling factor for converting to output units
+    model_files: list of str or pathlib.Path
+        list of OTIS model files
+    parallel: bool, default False
+        Open files in parallel using ``dask.delayed``
+    **kwargs: dict
+        additional keyword arguments for opening GOT files
 
     Returns
     -------
-    amplitude: np.ndarray
-        amplitudes of tidal constituents
-    phase: np.ndarray
-        phases of tidal constituents
-    constituents: np.ndarray
-        list of model constituents
+    ds: xarray.Dataset
+        combined GOT model data
     """
-    # set default keyword arguments
-    kwargs.setdefault('grid', 'ascii')
-    kwargs.setdefault('compressed', False)
-    kwargs.setdefault('crop', False)
-    kwargs.setdefault('bounds', None)
-    kwargs.setdefault('buffer', None)
-    kwargs.setdefault('method', 'spline')
-    kwargs.setdefault('extrapolate', False)
-    kwargs.setdefault('cutoff', 10.0)
-    kwargs.setdefault('scale', 1.0)
-    # raise warnings for deprecated keyword arguments
-    deprecated_keywords = dict(METHOD='method',
-        EXTRAPOLATE='extrapolate',CUTOFF='cutoff',
-        GZIP='compressed',SCALE='scale')
-    for old,new in deprecated_keywords.items():
-        if old in kwargs.keys():
-            warnings.warn(f"""Deprecated keyword argument {old}.
-                Changed to '{new}'""", DeprecationWarning)
-            # set renamed argument to not break workflows
-            kwargs[new] = copy.copy(kwargs[old])
+    # merge multiple granules
+    if parallel and dask_available:
+        opener = dask.delayed(open_got_dataset)
+    else:
+        opener = open_got_dataset
+    # read each file as xarray dataset and append to list
+    d = [opener(f, **kwargs) for f in model_files]
+    # read datasets as dask arrays
+    if parallel and dask_available:
+        d, = dask.compute(d)
+    # merge datasets
+    ds = xr.merge(d, compat='override')
+    # return xarray dataset
+    return ds
 
-    # raise warning if model files are entered as a string or path
-    if isinstance(model_files, (str, pathlib.Path)):
-        warnings.warn("Tide model is entered as a string")
-        model_files = [model_files]
-
-    # adjust dimensions of input coordinates to be iterable
-    ilon = np.atleast_1d(np.copy(ilon))
-    ilat = np.atleast_1d(np.copy(ilat))
-    # default bounds if cropping
-    xmin, xmax = np.min(ilon), np.max(ilon)
-    ymin, ymax = np.min(ilat), np.max(ilat)
-    bounds = kwargs['bounds'] or [xmin, xmax, ymin, ymax]
-    # number of points
-    npts = len(ilon)
-    # number of constituents
-    nc = len(model_files)
-    # list of constituents
-    constituents = []
-
-    # amplitude and phase
-    amplitude = np.ma.zeros((npts,nc))
-    amplitude.mask = np.zeros((npts,nc),dtype=bool)
-    ph = np.ma.zeros((npts,nc))
-    ph.mask = np.zeros((npts,nc),dtype=bool)
-    # read and interpolate each constituent
-    for i,model_file in enumerate(model_files):
-        # check that model file is accessible
-        model_file = pathlib.Path(model_file).expanduser()
-        if not model_file.exists():
-            raise FileNotFoundError(str(model_file))
-        # read constituent from elevation file
-        if (kwargs['grid'] == 'ascii'):
-            hc, lon, lat, cons = read_ascii_file(model_file,
-                compressed=kwargs['compressed'])
-        elif (kwargs['grid'] == 'netcdf'):
-            hc, lon, lat, cons = read_netcdf_file(model_file,
-                compressed=kwargs['compressed'])
-        # append to the list of constituents
-        constituents.append(cons)
-        # grid step size of tide model
-        dlon = np.abs(lon[1] - lon[0])
-        # default buffer if cropping data
-        buffer = kwargs['buffer'] or 4*dlon
-        # crop tide model data to (buffered) bounds
-        # or adjust longitudinal convention to fit tide model
-        if kwargs['crop'] and np.any(bounds):
-            hc, lon, lat = _crop(hc, lon, lat,
-                bounds=bounds,
-                buffer=buffer,
-            )
-        elif (np.min(ilon) < 0.0) & (np.max(lon) > 180.0):
-            # input points convention (-180:180)
-            # tide model convention (0:360)
-            ilon[ilon<0.0] += 360.0
-        elif (np.max(ilon) > 180.0) & (np.min(lon) < 0.0):
-            # input points convention (0:360)
-            # tide model convention (-180:180)
-            ilon[ilon>180.0] -= 360.0
-        # replace original values with extend arrays/matrices
-        if np.isclose(lon[-1] - lon[0], 360.0 - dlon):
-            lon = _extend_array(lon, dlon)
-            hc = _extend_matrix(hc)
-        # interpolate amplitude and phase of the constituent
-        if (kwargs['method'] == 'bilinear'):
-            # replace invalid values with nan
-            hc[hc.mask] = np.nan
-            # use quick bilinear to interpolate values
-            hci = pyTMD.interpolate.bilinear(lon, lat, hc, ilon, ilat,
-                dtype=hc.dtype)
-            # replace nan values with fill_value
-            hci.mask[:] |= np.isnan(hci.data)
-            hci.data[hci.mask] = hci.fill_value
-        elif (kwargs['method'] == 'spline'):
-            # interpolate complex form of the constituent
-            # use scipy splines to interpolate values
-            hci = pyTMD.interpolate.spline(lon, lat, hc, ilon, ilat,
-                dtype=hc.dtype, reducer=np.ceil, kx=1, ky=1)
-            # replace invalid values with fill_value
-            hci.data[hci.mask] = hci.fill_value
-        else:
-            # interpolate complex form of the constituent
-            # use scipy regular grid to interpolate values
-            hci = pyTMD.interpolate.regulargrid(lon, lat, hc, ilon, ilat,
-                dtype=hc.dtype, method=kwargs['method'], reducer=np.ceil,
-                bounds_error=False)
-            # replace invalid values with fill_value
-            hci.mask[:] |= (hci.data == hci.fill_value)
-            hci.data[hci.mask] = hci.fill_value
-        # extrapolate data using nearest-neighbors
-        if kwargs['extrapolate'] and np.any(hci.mask):
-            # find invalid data points
-            inv, = np.nonzero(hci.mask)
-            # replace invalid values with nan
-            hc[hc.mask] = np.nan
-            # extrapolate points within cutoff of valid model points
-            hci[inv] = pyTMD.interpolate.extrapolate(lon, lat, hc,
-                ilon[inv], ilat[inv], dtype=hc.dtype,
-                cutoff=kwargs['cutoff'])
-        # convert amplitude from input units to meters
-        amplitude.data[:,i] = np.abs(hci.data)*kwargs['scale']
-        amplitude.mask[:,i] = np.copy(hci.mask)
-        # phase of the constituent in radians
-        ph.data[:,i] = np.arctan2(-np.imag(hci.data),np.real(hci.data))
-        ph.mask[:,i] = np.copy(hci.mask)
-
-    # convert phase to degrees
-    phase = np.degrees(ph)
-    phase.data[phase.data < 0] += 360.0
-    # replace data for invalid mask values
-    amplitude.data[amplitude.mask] = amplitude.fill_value
-    phase.data[phase.mask] = phase.fill_value
-    # return the interpolated values
-    return (amplitude, phase, constituents)
-
-# PURPOSE: read harmonic constants from tide models
-def read_constants(
-        model_files: str | pathlib.Path | list | None = None,
-        **kwargs
-    ):
-    """
-    Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
-
-    Parameters
-    ----------
-    model_files: str, list, pathlib.Path or NoneType, default None
-        list of model files for each constituent
-    grid: str, default 'ascii'
-        Tide model file type to read
-
-            - ``'ascii'``: traditional GOT ascii format
-            - ``'netcdf'``: GOT netCDF4 format
-    compressed: bool, default False
-        Input files are gzip compressed
-    gap_fill: bool, default False
-        Gap fill missing data in constituents
-    crop: bool, default False
-        Crop tide model data to (buffered) bounds
-    bounds: list or NoneType, default None
-        Boundaries for cropping tide model data
-    buffer: int or float, default 0
-        Buffer angle for cropping tide model data
-
-    Returns
-    -------
-    constituents: obj
-        complex form of tide model constituents
-    """
-    # set default keyword arguments
-    kwargs.setdefault('grid', 'ascii')
-    kwargs.setdefault('compressed', False)
-    kwargs.setdefault('gap_fill', False)
-    kwargs.setdefault('crop', False)
-    kwargs.setdefault('bounds', None)
-    kwargs.setdefault('buffer', 0)
-
-    # raise warning if model files are entered as a string
-    if isinstance(model_files, (str, pathlib.Path)):
-        warnings.warn("Tide model is entered as a string")
-        model_files = [model_files]
-
-    # save output constituents
-    constituents = pyTMD.io.constituents()
-    # read each model constituent
-    for i, model_file in enumerate(model_files):
-        # check that model file is accessible
-        model_file = pathlib.Path(model_file).expanduser()
-        if not model_file.exists():
-            raise FileNotFoundError(str(model_file))
-        # read constituent from elevation file
-        if (kwargs['grid'] == 'ascii'):
-            hc, lon, lat, cons = read_ascii_file(model_file,
-                compressed=kwargs['compressed'])
-        elif (kwargs['grid'] == 'netcdf'):
-            hc, lon, lat, cons = read_netcdf_file(model_file,
-                compressed=kwargs['compressed'])
-        # crop tide model data to (buffered) bounds
-        if kwargs['crop'] and np.any(kwargs['bounds']):
-            hc, lon, lat = _crop(hc, lon, lat,
-                bounds=kwargs['bounds'],
-                buffer=kwargs['buffer'],
-            )
-        # grid step size of tide model
-        dlon = np.abs(lon[1] - lon[0])
-        # replace original values with extend arrays/matrices
-        if np.isclose(lon[-1] - lon[0], 360.0 - dlon):
-            lon = _extend_array(lon, dlon)
-            hc = _extend_matrix(hc)
-        # gap fill missing data in constituent
-        if kwargs['gap_fill']:
-            hc = pyTMD.interpolate.inpaint(lon, lat, hc, **kwargs)
-        # append extended constituent
-        constituents.append(cons, hc)
-        # set model coordinates
-        setattr(constituents, 'longitude', lon)
-        setattr(constituents, 'latitude', lat)
-
-    # return the complex form of the model constituents
-    return constituents
-
-# PURPOSE: interpolate constants from tide models to input coordinates
-def interpolate_constants(
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        constituents,
-        **kwargs
-    ):
-    """
-    Interpolate constants from GOT tidal models to input coordinates
-
-    Makes initial calculations to run the tide program
-
-    Parameters
-    ----------
-    ilon: np.ndarray
-        longitude to interpolate
-    ilat: np.ndarray
-        latitude to interpolate
-    constituents: obj
-        Tide model constituents (complex form)
-    method: str, default 'spline'
-        Interpolation method
-
-            - ``'bilinear'``: quick bilinear interpolation
-            - ``'spline'``: scipy bivariate spline interpolation
-            - ``'linear'``, ``'nearest'``: scipy regular grid interpolations
-    extrapolate: bool, default False
-        Extrapolate model using nearest-neighbors
-    cutoff: float, default 10.0
-        Extrapolation cutoff in kilometers
-
-        Set to ``np.inf`` to extrapolate for all points
-    scale: float, default 1.0
-        Scaling factor for converting to output units
-
-    Returns
-    -------
-    amplitude: np.ndarray
-        amplitudes of tidal constituents
-    phase: np.ndarray
-        phases of tidal constituents
-    """
-    # set default keyword arguments
-    kwargs.setdefault('method', 'spline')
-    kwargs.setdefault('extrapolate', False)
-    kwargs.setdefault('cutoff', 10.0)
-    kwargs.setdefault('scale', 1.0)
-
-    # verify that constituents are valid class instance
-    assert isinstance(constituents, pyTMD.io.constituents)
-    # extract model coordinates
-    lon = np.copy(constituents.longitude)
-    lat = np.copy(constituents.latitude)
-
-    # adjust dimensions of input coordinates to be iterable
-    ilon = np.atleast_1d(np.copy(ilon))
-    ilat = np.atleast_1d(np.copy(ilat))
-    # adjust longitudinal convention of input latitude and longitude
-    # to fit tide model convention
-    if (np.min(ilon) < 0.0) & (np.max(lon) > 180.0):
-        # input points convention (-180:180)
-        # tide model convention (0:360)
-        ilon[ilon<0.0] += 360.0
-    elif (np.max(ilon) > 180.0) & (np.min(lon) < 0.0):
-        # input points convention (0:360)
-        # tide model convention (-180:180)
-        ilon[ilon>180.0] -= 360.0
-    # number of points
-    npts = len(ilon)
-    # number of constituents
-    nc = len(constituents)
-
-    # amplitude and phase
-    amplitude = np.ma.zeros((npts,nc))
-    amplitude.mask = np.zeros((npts,nc),dtype=bool)
-    ph = np.ma.zeros((npts,nc))
-    ph.mask = np.zeros((npts,nc),dtype=bool)
-    # default complex fill value
-    fill_value = np.ma.default_fill_value(np.dtype(complex))
-    # interpolate each constituent
-    for i, c in enumerate(constituents.fields):
-        # get model constituent
-        hc = constituents.get(c)
-        # interpolate amplitude and phase of the constituent
-        if (kwargs['method'] == 'bilinear'):
-            # replace invalid values with nan
-            hc.data[hc.mask] = np.nan
-            # use quick bilinear to interpolate values
-            hci = pyTMD.interpolate.bilinear(lon, lat, hc, ilon, ilat,
-                fill_value=fill_value,
-                dtype=hc.dtype)
-            # replace nan values with fill_value
-            hci.mask[:] |= np.isnan(hci.data)
-            hci.data[hci.mask] = hci.fill_value
-        elif (kwargs['method'] == 'spline'):
-            # replace invalid values with fill value
-            hc.data[hc.mask] = fill_value
-            # interpolate complex form of the constituent
-            # use scipy splines to interpolate values
-            hci = pyTMD.interpolate.spline(lon, lat, hc, ilon, ilat,
-                fill_value=fill_value,
-                dtype=hc.dtype,
-                reducer=np.ceil,
-                kx=1, ky=1)
-            # replace invalid values with fill_value
-            hci.data[hci.mask] = hci.fill_value
-        else:
-            # replace invalid values with fill value
-            hc.data[hc.mask] = fill_value
-            # interpolate complex form of the constituent
-            # use scipy regular grid to interpolate values
-            hci = pyTMD.interpolate.regulargrid(lon, lat, hc, ilon, ilat,
-                fill_value=fill_value,
-                dtype=hc.dtype,
-                method=kwargs['method'],
-                reducer=np.ceil,
-                bounds_error=False)
-            # replace invalid values with fill_value
-            hci.mask[:] |= (hci.data == hci.fill_value)
-            hci.data[hci.mask] = hci.fill_value
-        # extrapolate data using nearest-neighbors
-        if kwargs['extrapolate'] and np.any(hci.mask):
-            # find invalid data points
-            inv, = np.nonzero(hci.mask)
-            # replace invalid values with nan
-            hc.data[hc.mask] = np.nan
-            # extrapolate points within cutoff of valid model points
-            hci[inv] = pyTMD.interpolate.extrapolate(lon, lat, hc,
-                ilon[inv], ilat[inv], dtype=hc.dtype,
-                cutoff=kwargs['cutoff'])
-        # convert amplitude from input units to meters
-        amplitude.data[:,i] = np.abs(hci.data)*kwargs['scale']
-        amplitude.mask[:,i] = np.copy(hci.mask)
-        # phase of the constituent in radians
-        ph.data[:,i] = np.arctan2(-np.imag(hci.data),np.real(hci.data))
-        ph.mask[:,i] = np.copy(hci.mask)
-
-    # convert phase to degrees
-    phase = np.degrees(ph)
-    phase.data[phase.data < 0] += 360.0
-    # replace data for invalid mask values
-    amplitude.data[amplitude.mask] = amplitude.fill_value
-    phase.data[phase.mask] = phase.fill_value
-    # return the interpolated values
-    return (amplitude, phase)
-
-# PURPOSE: read GOT model grid files
-def read_ascii_file(
+# PURPOSE: reads a GOT ASCII or netCDF4 file
+def open_got_dataset(
         input_file: str | pathlib.Path,
         **kwargs
     ):
     """
-    Read Richard Ray's Goddard Ocean Tide (GOT) model file
+    Open GOT-formatted model files
+
+    Parameters
+    ----------
+    input_file: str or pathlib.Path
+        input transport file
+    format: str, default 'netcdf'
+        Model format
+
+            - ``'ascii'``: traditional GOT ascii format
+            - ``'netcdf'``: GOT netCDF4 format
+    **kwargs: dict
+        additional keyword arguments for opening GOT files
+    
+    Returns
+    -------
+    ds: xarray.Dataset
+        GOT tide model data
+    """
+    # detect file format if not provided
+    if kwargs.get('format', None) is None:
+        kwargs['format'] = pyTMD.utilities.detect_format(input_file)
+    # detect if file is compressed if not provided
+    if kwargs.get('compressed', None) is None:
+        kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
+    # read constituent from elevation file
+    if kwargs['format'] == 'ascii':
+        # GOT ascii constituent files
+        ds = open_got_ascii(input_file, **kwargs)
+    elif kwargs['format'] == 'netcdf':
+        # GOT netCDF4 constituent files
+        ds = open_got_netcdf(input_file, **kwargs)
+    else:
+        raise ValueError(f"Unrecognized file format: {kwargs['format']}") 
+    # return dataset
+    return ds
+
+# PURPOSE: read GOT ASCII files
+def open_got_ascii(
+        input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
+        **kwargs
+    ):
+    """
+    Open GOT-formatted ASCII files
 
     Parameters
     ----------
     input_file: str or pathlib.Path
         Model file
+    chunks: int, dict, str, or None, default None
+        coerce output to specified chunks
     compressed: bool, default False
         Input file is gzip compressed
 
     Returns
     -------
-    hc: np.ndarray
-        complex form of tidal constituent oscillation
-    lon: np.ndarray
-        longitude of tidal model
-    lat: np.ndarray
-        latitude of tidal model
-    cons: str
-        tidal constituent ID
+    ds: xarray.Dataset
+        GOT tide model data
     """
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser()
-    # read input tide model file
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
+    # read the ASCII-format tide elevation file
     if kwargs['compressed']:
         # read gzipped ascii file
         with gzip.open(input_file, 'rb') as f:
@@ -582,348 +201,189 @@ def read_ascii_file(
         with open(input_file, mode="r", encoding='utf8') as f:
             file_contents = f.read().splitlines()
     # parse header text
-    cons = pyTMD.io.constituents.parse(file_contents[0])
-    nlat,nlon = np.array(file_contents[2].split(), dtype=int)
+    # constituent identifier
+    cons = pyTMD.constituents._parse_name(file_contents[0])
+    # get units
+    units = re.findall(r'\((\w+m)\)', file_contents[0], re.IGNORECASE)
+    # grid dimensions
+    nlat, nlon = np.array(file_contents[2].split(), dtype=int)
     # longitude range
     ilat = np.array(file_contents[3].split(), dtype=np.float64)
     # latitude range
     ilon = np.array(file_contents[4].split(), dtype=np.float64)
     # mask fill value
-    fill_value = np.array(file_contents[5].split(), dtype=np.float32)
-    # create output variables
-    lat = np.linspace(ilat[0],ilat[1],nlat)
-    lon = np.linspace(ilon[0],ilon[1],nlon)
-    amp = np.zeros((nlat,nlon), dtype=np.float32)
-    ph = np.zeros((nlat,nlon), dtype=np.float32)
+    masked_values = file_contents[5].split()
+    fill_value = np.array(masked_values[0], dtype=np.float32)
+    # number of columns in ascii file
+    ncol = 11
+    # create latitude and longitude arrays
+    lat = np.linspace(ilat[0], ilat[1], nlat)
+    lon = np.linspace(ilon[0], ilon[1], nlon)
+    # data dictionary
+    var = dict(dims=('y', 'x'), coords={}, data_vars={})
+    var["coords"]["y"] = dict(data=lat.copy(), dims='y')
+    var["coords"]["x"] = dict(data=lon.copy(), dims='x')
+    # input amplitude and phase
+    amp = np.zeros((nlat, nlon), dtype=np.float32)
+    ph = np.zeros((nlat, nlon), dtype=np.float32)
     # starting lines to fill amplitude and phase variables
     l1 = 7
-    l2 = 14 + int(nlon//11)*nlat + nlat
+    l2 = 14 + int(nlon//ncol)*nlat + nlat
     # for each latitude
     for i in range(nlat):
-        for j in range(nlon//11):
-            j1 = j*11
-            amp[i,j1:j1+11] = np.array(file_contents[l1].split())
-            ph[i,j1:j1+11] = np.array(file_contents[l2].split())
+        for j in range(nlon//ncol):
+            j1 = j*ncol
+            # amplitude and phase are on two separate rows
+            amp[i,j1:j1+ncol] = np.array(file_contents[l1].split())
+            ph[i,j1:j1+ncol] = np.array(file_contents[l2].split())
             l1 += 1
             l2 += 1
-        # add last tidal variables
-        j1 = (j+1)*11; j2 = nlon % 11
+        # add last row of tidal variables
+        j1 = (j+1)*ncol
+        j2 = nlon % ncol
+        # amplitude and phase are on two separate rows
         amp[i,j1:j1+j2] = np.array(file_contents[l1].split())
         ph[i,j1:j1+j2] = np.array(file_contents[l2].split())
         l1 += 1
         l2 += 1
     # convert to masked arrays
-    amp = np.ma.masked_equal(amp, fill_value[0])
-    ph = np.ma.masked_equal(ph, fill_value[0])
-    # calculate complex form of constituent oscillation
-    hc = amp*np.exp(-1j*ph*np.pi/180.0)
-    # return output variables
-    return (hc, lon, lat, cons)
+    amp = np.ma.masked_equal(amp, fill_value)
+    ph = np.ma.masked_equal(ph, fill_value)
+    # store the data variables
+    var["data_vars"][cons] = {}
+    var["data_vars"][cons]["dims"] = ('y', 'x')
+    var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
+    # convert to xarray Dataset from the data dictionary
+    ds = xr.Dataset.from_dict(var)
+    # coerce to specified chunks
+    if chunks is not None:
+        ds = ds.chunk(chunks)
+    # add attributes
+    ds.attrs['group'] = 'z'
+    if units:
+        ds[cons].attrs['units'] = units[0].lower()
+    # return xarray dataset
+    return ds
 
-# PURPOSE: read GOT netCDF4 tide model files
-def read_netcdf_file(
+# PURPOSE: read GOT netCDF4 files
+def open_got_netcdf(
         input_file: str | pathlib.Path,
+        chunks: int | dict | str | None = None,
         **kwargs
     ):
     """
-    Read Richard Ray's Goddard Ocean Tide (GOT) netCDF4 model file
+    Open GOT-formatted netCDF4 files
 
     Parameters
     ----------
     input_file: str or pathlib.Path
         model file
+    chunks: int, dict, str, or None, default None
+        variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
         Input file is gzip compressed
 
     Returns
     -------
-    hc: np.ndarray
-        complex form of tidal constituent oscillation
-    lon: np.ndarray
-        longitude of tidal model
-    lat: np.ndarray
-        latitude of tidal model
-    cons: str
-        tidal constituent ID
+    ds: xarray.Dataset
+        GOT tide model data
     """
     # set default keyword arguments
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
-    input_file = pathlib.Path(input_file).expanduser()
-    # read the netcdf format tide elevation file
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if input_file.is_local() and not input_file.exists():
+        raise FileNotFoundError(f'File not found: {input_file}')
+    # read the netCDF4-format tide elevation file
     if kwargs['compressed']:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, 'rb')
-        fileID = netCDF4.Dataset(uuid.uuid4().hex, 'r', memory=f.read())
+        tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
-        fileID = netCDF4.Dataset(input_file, 'r')
-    # variable dimensions
-    lon = fileID.variables['longitude'][:]
-    lat = fileID.variables['latitude'][:]
-    # get amplitude and phase components
-    amp = fileID.variables['amplitude'][:]
-    ph = fileID.variables['phase'][:]
+        tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # extract constituent from attribute
-    cons = pyTMD.io.constituents.parse(fileID.Constituent)
-    # close the file
-    fileID.close()
-    f.close() if kwargs['compressed'] else None
+    cons = pyTMD.constituents._parse_name(tmp.attrs['Constituent'])
+    # create output xarray dataset for file
+    ds = xr.Dataset()
+    # assign coordinates
+    ds.coords['x'] = tmp.longitude
+    ds.coords['y'] = tmp.latitude
     # calculate complex form of constituent oscillation
-    mask = (amp.data == amp.fill_value) | \
-        (ph.data == ph.fill_value) | \
-        np.isnan(amp.data) | np.isnan(ph.data)
-    hc = np.ma.array(amp*np.exp(-1j*ph*np.pi/180.0), mask=mask,
-        fill_value=np.ma.default_fill_value(np.dtype(complex)))
-    # return output variables
-    return (hc, lon, lat, cons)
+    ds[cons] = tmp.amplitude*np.exp(-1j*tmp.phase*np.pi/180.0)
+    # rename coordinates
+    mapping_coords = dict(lon='x', lat='y')
+    ds = ds.rename(mapping_coords)
+    # add attributes
+    ds.attrs['group'] = 'z'
+    ds[cons].attrs['units'] = tmp['amplitude'].attrs.get('units')
+    # return xarray dataset
+    return ds
 
-# PURPOSE: output tidal constituent file in GOT netCDF format
-def output_netcdf_file(
-        FILE: str | pathlib.Path,
-        hc: np.ndarray,
-        lon: np.ndarray,
-        lat: np.ndarray,
-        constituent: str
-    ):
+# PURPOSE: GOT utilities for xarray Datasets
+@xr.register_dataset_accessor('got')
+class GOTDataset:
+    """Accessor for extending an ``xarray.Dataset`` for GOT tidal models
     """
-    Writes tidal constituents to netCDF4 files in GOT format
+    def __init__(self, ds):
+        self._ds = ds
 
-    Parameters
-    ----------
-    FILE: str or pathlib.Path
-        output GOT model file name
-    hc: np.ndarray
-        Eulerian form of tidal constituent
-    lon: np.ndarray
-        longitude coordinates
-    lat: np.ndarray
-        latitude coordinates
-    constituent: str
-        tidal constituent ID
-    """
-    # tilde-expand output file
-    FILE = pathlib.Path(FILE).expanduser()
-    # opening NetCDF file for writing
-    fileID = netCDF4.Dataset(FILE, 'w', format="NETCDF4")
-    # define the NetCDF dimensions
-    fileID.createDimension('longitude', len(lon))
-    fileID.createDimension('latitude', len(lat))
-    # calculate amplitude and phase
-    amp = np.abs(hc)
-    ph = 180.0*np.arctan2(-np.imag(hc), np.real(hc))/np.pi
-    ph.data[ph.data < 0] += 360.0
-    # update masks and fill values
-    amp.mask = np.copy(hc.mask)
-    amp.data[amp.mask] = amp.fill_value
-    ph.mask = np.copy(hc.mask)
-    ph.data[ph.mask] = ph.fill_value
-    # defining the NetCDF variables
-    nc = {}
-    nc['longitude'] = fileID.createVariable('longitude', lon.dtype,
-        ('longitude',))
-    nc['latitude'] = fileID.createVariable('latitude', lat.dtype,
-        ('latitude',))
-    nc['amplitude'] = fileID.createVariable('amplitude', amp.dtype,
-        ('latitude','longitude',), fill_value=amp.fill_value, zlib=True)
-    nc['phase'] = fileID.createVariable('phase', ph.dtype,
-        ('latitude','longitude',), fill_value=ph.fill_value, zlib=True)
-    # filling the NetCDF variables
-    nc['longitude'][:] = lon[:]
-    nc['latitude'][:] = lat[:]
-    nc['amplitude'][:] = amp[:]
-    nc['phase'][:] = ph[:]
-    # set variable attributes for coordinates
-    nc['longitude'].setncattr('units', 'degrees_east')
-    nc['longitude'].setncattr('long_name', 'longitude')
-    nc['latitude'].setncattr('units', 'degrees_north')
-    nc['latitude'].setncattr('long_name', 'latitude')
-    # set variable attributes
-    nc['amplitude'].setncattr('units', 'cm')
-    nc['amplitude'].setncattr('long_name', 'Tide amplitude')
-    nc['phase'].setncattr('units', 'degrees')
-    nc['phase'].setncattr('long_name', 'Greenwich tide phase lag')
-    # add global attributes
-    fileID.title = 'GOT tide file'
-    fileID.authors = 'Richard Ray'
-    fileID.institution = 'NASA Goddard Space Flight Center'
-    # add attribute for tidal constituent ID
-    fileID.Constituent = constituent.upper()
-    # add attribute for date created
-    fileID.date_created = datetime.datetime.now().isoformat()
-    # add attributes for software information
-    fileID.software_reference = pyTMD.version.project_name
-    fileID.software_version = pyTMD.version.full_version
-    # Output NetCDF structure information
-    logging.info(str(FILE))
-    logging.info(list(fileID.variables.keys()))
-    # Closing the NetCDF file
-    fileID.close()
+    # PURPOSE: output tidal constituent file in GOT netCDF format
+    def to_netcdf(self,
+            path: str | pathlib.Path,
+            mode: str = 'w',
+            encoding: dict = {"zlib": True, "complevel": 9},
+            **kwargs
+        ):
+        """
+        Writes tidal constituents to netCDF4 files in GOT format
 
-# PURPOSE: Extend a longitude array
-def _extend_array(input_array: np.ndarray, step_size: float):
-    """
-    Extends a longitude array
-
-    Parameters
-    ----------
-    input_array: np.ndarray
-        array to extend
-    step_size: float
-        step size between elements of array
-
-    Returns
-    -------
-    temp: np.ndarray
-        extended array
-    """
-    n = len(input_array)
-    temp = np.zeros((n+3), dtype=input_array.dtype)
-    # extended array [x-1,x0,...,xN,xN+1,xN+2]
-    temp[0] = input_array[0] - step_size
-    temp[1:-2] = input_array[:]
-    temp[-2] = input_array[-1] + step_size
-    temp[-1] = input_array[-1] + 2.0*step_size
-    return temp
-
-# PURPOSE: Extend a global matrix
-def _extend_matrix(input_matrix: np.ndarray):
-    """
-    Extends a global matrix
-
-    Parameters
-    ----------
-    input_matrix: np.ndarray
-        matrix to extend
-
-    Returns
-    -------
-    temp: np.ndarray
-        extended matrix
-    """
-    ny, nx = np.shape(input_matrix)
-    # allocate for extended matrix
-    if np.ma.isMA(input_matrix):
-        temp = np.ma.zeros((ny,nx+3), dtype=input_matrix.dtype)
-    else:
-        temp = np.zeros((ny,nx+3), dtype=input_matrix.dtype)
-    # extend matrix
-    temp[:,0] = input_matrix[:,-1]
-    temp[:,1:-2] = input_matrix[:,:]
-    temp[:,-2] = input_matrix[:,0]
-    temp[:,-1] = input_matrix[:,1]
-    return temp
-
-# PURPOSE: crop tide model data to bounds
-def _crop(
-        input_matrix: np.ndarray,
-        ilon: np.ndarray,
-        ilat: np.ndarray,
-        bounds: list | tuple,
-        buffer: int | float = 0
-    ):
-    """
-    Crop tide model data to bounds
-
-    Parameters
-    ----------
-    input_matrix: np.ndarray
-        matrix to crop
-    ilon: np.ndarray
-        longitude of tidal model
-    ilat: np.ndarray
-        latitude of tidal model
-    bounds: list, tuple
-        bounding box: ``[xmin, xmax, ymin, ymax]``
-    buffer: int or float, default 0
-        buffer to add to bounds for cropping
-
-    Returns
-    -------
-    temp: np.ndarray
-        cropped matrix
-    lon: np.ndarray
-        cropped longitude
-    lat: np.ndarray
-        cropped latitude
-    """
-    # adjust longitudinal convention of tide model
-    if (np.min(bounds[:2]) < 0.0) & (np.max(ilon) > 180.0):
-        input_matrix, ilon = _shift(input_matrix, ilon,
-            lon0=180.0, cyclic=360.0, direction='west')
-    elif (np.max(bounds[:2]) > 180.0) & (np.min(ilon) < 0.0):
-        input_matrix, ilon = _shift(input_matrix, ilon,
-            lon0=0.0, cyclic=360.0, direction='east')
-    # unpack bounds and buffer
-    xmin = bounds[0] - buffer
-    xmax = bounds[1] + buffer
-    ymin = bounds[2] - buffer
-    ymax = bounds[3] + buffer
-    # find indices for cropping
-    yind = np.flatnonzero((ilat >= ymin) & (ilat <= ymax))
-    xind = np.flatnonzero((ilon >= xmin) & (ilon <= xmax))
-    # slices for cropping axes
-    rows = slice(yind[0], yind[-1]+1)
-    cols = slice(xind[0], xind[-1]+1)
-    # crop matrix
-    temp = input_matrix[rows, cols]
-    lon = ilon[cols]
-    lat = ilat[rows]
-    # return cropped data
-    return (temp, lon, lat)
-
-# PURPOSE: shift a grid east or west
-def _shift(
-        input_matrix: np.ndarray,
-        ilon: np.ndarray,
-        lon0: int | float = 180,
-        cyclic: int | float = 360,
-        direction: str = 'west'
-    ):
-    """
-    Shift global grid east or west to a new base longitude
-
-    Parameters
-    ----------
-    input_matrix: np.ndarray
-        input matrix to shift
-    ilon: np.ndarray
-        longitude of tidal model
-    lon0: int or float, default 180
-        Starting longitude for shifted grid
-    cyclic: int or float, default 360
-        width of periodic domain
-    direction: str, default 'west'
-        Direction to shift grid
-
-            - ``'west'``
-            - ``'east'``
-
-    Returns
-    -------
-    temp: np.ndarray
-        shifted matrix
-    lon: np.ndarray
-        shifted longitude
-    """
-    # find the starting index if cyclic
-    offset = 0 if (np.fabs(ilon[-1]-ilon[0]-cyclic) > 1e-4) else 1
-    i0 = np.argmin(np.fabs(ilon - lon0))
-    # shift longitudinal values
-    lon = np.zeros(ilon.shape, ilon.dtype)
-    lon[0:-i0] = ilon[i0:]
-    lon[-i0:] = ilon[offset: i0+offset]
-    # add or remove the cyclic
-    if (direction == 'east'):
-        lon[-i0:] += cyclic
-    elif (direction == 'west'):
-        lon[0:-i0] -= cyclic
-    # allocate for shifted data
-    if np.ma.isMA(input_matrix):
-        temp = np.ma.zeros(input_matrix.shape,input_matrix.dtype)
-    else:
-        temp = np.zeros(input_matrix.shape, input_matrix.dtype)
-    # shift data values
-    temp[:,:-i0] = input_matrix[:,i0:]
-    temp[:,-i0:] = input_matrix[:,offset: i0+offset]
-    # return the shifted values
-    return (temp, lon)
+        Parameters
+        ----------
+        path: str | pathlib.Path
+            output directory for netCDF4 files
+        mode: str, default 'w'
+            netCDF4 file mode
+        encoding: dict, default {"zlib": True, "complevel": 9}
+            netCDF4 variable compression settings
+        **kwargs: dict
+            additional keyword arguments for xarray netCDF4 writer
+        """
+        # tilde-expand output path
+        path = pyTMD.utilities.Path(path).resolve()
+        # set default encoding
+        kwargs.setdefault('encoding', dict(amplitude=encoding, phase=encoding))
+        # coordinate remapping
+        mapping_coords = dict(x='longitude', y='latitude')
+        attrs = dict(longitude={}, latitude={})
+        attrs['longitude'] = dict(units='degrees_east', long_name='longitude')
+        attrs['latitude'] = dict(units='degrees_north', long_name='latitude')
+        # get longitude and latitude arrays
+        # for each variable
+        for v in self._ds.data_vars.keys():
+            ds = xr.Dataset()
+            # calculate amplitude and phase
+            ds['amplitude'] = self._ds[v].tmd.amplitude
+            ds['phase'] = self._ds[v].tmd.phase
+            ds['amplitude'].attrs['units'] = self._ds[v].attrs.get('units','')
+            ds['phase'].attrs['units'] = 'degrees'
+            ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
+            ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'
+            # define and fill constituent ID
+            ds['Constituent'] = v.upper().ljust(4).encode('utf8')
+            ds['Constituent'].attrs['_Encoding'] = 'utf8'
+            ds['Constituent'].attrs['long_name'] = 'tidal constituent'
+            # remap coordinates to GOT convention
+            ds = ds.rename(mapping_coords)
+            # update variable attributes
+            for att_name, att_val in attrs.items():
+                ds[att_name].attrs.update(att_val)
+            # add global attributes
+            ds.attrs['title'] = 'GOT tidal constituent data'
+            ds.attrs['authors'] = 'Richard Ray'
+            ds.attrs['institution'] = 'NASA Goddard Space Flight Center'
+            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
+            ds.attrs['software_reference'] = pyTMD.version.project_name
+            ds.attrs['software_version'] = pyTMD.version.full_version
+            # write GOT netCDF4 file
+            FILE = path.joinpath(f"{v}.nc")
+            ds.to_netcdf(FILE, mode=mode, **kwargs)

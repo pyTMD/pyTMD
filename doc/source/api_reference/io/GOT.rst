@@ -4,9 +4,8 @@ GOT
 
 - Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
 
-  * ascii format
-  * netcdf format
-- Spatially interpolates tidal constituents to input coordinates
+   * ``GOT-ascii``
+   * ``GOT-netcdf``
 
 Calling Sequence
 ----------------
@@ -14,29 +13,19 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    amp,ph,c = pyTMD.io.GOT.extract_constants(ilon, ilat, model_files,
-       method='spline')
+    ds = pyTMD.io.GOT.open_mfdataset(model_files, group='z', format=format)
 
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/GOT.py
 
-.. autofunction:: pyTMD.io.GOT.extract_constants
+.. autofunction:: pyTMD.io.GOT.open_mfdataset
 
-.. autofunction:: pyTMD.io.GOT.read_constants
+.. autofunction:: pyTMD.io.GOT.open_got_dataset
 
-.. autofunction:: pyTMD.io.GOT.interpolate_constants
+.. autofunction:: pyTMD.io.GOT.open_got_ascii
 
-.. autofunction:: pyTMD.io.GOT.read_ascii_file
+.. autofunction:: pyTMD.io.GOT.open_got_netcdf
 
-.. autofunction:: pyTMD.io.GOT.read_netcdf_file
-
-.. autofunction:: pyTMD.io.GOT.output_netcdf_file
-
-.. autofunction:: pyTMD.io.GOT._extend_array
-
-.. autofunction:: pyTMD.io.GOT._extend_matrix
-
-.. autofunction:: pyTMD.io.GOT._crop
-
-.. autofunction:: pyTMD.io.GOT._shift
+.. autoclass:: pyTMD.io.GOT.GOTDataset
+   :members:

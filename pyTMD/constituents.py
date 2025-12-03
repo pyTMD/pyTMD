@@ -1,24 +1,9 @@
 #!/usr/bin/env python
 u"""
-arguments.py
-Written by Tyler Sutterley (09/2025)
-Calculates the nodal corrections for tidal constituents
+constituent.py
+Written by Tyler Sutterley (12/2025)
+Calculates constituents parameters and nodal arguments
 Modification of ARGUMENTS fortran subroutine by Richard Ray 03/1999
-
-CALLING SEQUENCE:
-    pu, pf, G = arguments(MJD, constituents)
-
-INPUTS:
-    MJD: Modified Julian Day of input date
-    constituents: tidal constituent IDs
-
-OUTPUTS:
-    pu, pf: nodal corrections for the constituents
-    G: phase correction in degrees
-
-OPTIONS:
-    deltat: time correction for converting to Ephemeris Time (days)
-    corrections: use nodal corrections from OTIS, FES or GOT models
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -39,6 +24,8 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 12/2025: added m1a and m1b constituents to nodal corrections
+    Updated 11/2025: renamed from arguments to constituents
     Updated 09/2025: added spherical harmonic degree to tide potential tables
         added IERS Conventions references for Love number calculations
     Updated 08/2025: add Cartwright and Tayler table with radiational tides
@@ -126,6 +113,7 @@ __all__ = [
     "_love_numbers",
     "_complex_love_numbers",
     "_parse_tide_potential_table",
+    "_parse_name",
     "_to_constituent_id",
     "_to_doodson_number",
     "_to_extended_doodson",
@@ -513,7 +501,7 @@ def doodson_number(
     return numbers
 
 def nodal(*args, **kwargs):
-    warnings.warn("Deprecated. Please use pyTMD.arguments.nodal_modulation instead",
+    warnings.warn("Deprecated. Please use pyTMD.constituents.nodal_modulation instead",
         DeprecationWarning)
     return nodal_modulation(*args, **kwargs)
 
@@ -686,21 +674,21 @@ def nodal_modulation(
         elif c in ('beta1',):
             term1 = 0.226*sinn
             term2 = 1.0 + 0.226*cosn
-        elif c in ('m1',) and (kwargs['M1'] == 'Doodson'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Doodson'):
             # A. T. Doodson's coefficients for M1 tides
             term1 = sinp + 0.2*np.sin(P - N)
             term2 = 2.0*cosp + 0.4*np.cos(P - N)
-        elif c in ('m1',) and (kwargs['M1'] == 'Ray'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Ray'):
             # R. Ray's coefficients for M1 tides (perth3)
             term1 = 0.64*sinp + 0.135*np.sin(P - N)
             term2 = 1.36*cosp + 0.267*np.cos(P - N)
-        elif c in ('m1',) and (kwargs['M1'] == 'Schureman'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'Schureman'):
             # Schureman: Table 2, Page 165
             # Schureman: Page 43, Equation 206
             f[:,i] = np.sin(II)*np.power(np.cos(II/2.0),2)/(0.38*Qa)
             u[:,i] = -nu - Qu
             continue
-        elif c in ('m1',) and (kwargs['M1'] == 'perth5'):
+        elif c in ('m1','m1a','m1b') and (kwargs['M1'] == 'perth5'):
             # assumes M1 argument includes p
             term1 = -0.2294*sinn - 0.3594*sin2p - 0.0664*np.sin(2.0*P - N)
             term2 = 1.0 + 0.1722*cosn + 0.3594*cos2p + 0.0664*np.cos(2.0*P - N)
@@ -2111,6 +2099,91 @@ def _parse_tide_potential_table(
         CTE[i] = np.array(tuple(line.split()[:total_columns]), dtype=dtype)
     # return the table values
     return CTE
+
+def _parse_name(constituent: str) -> str:
+    """
+    Parses for tidal constituents using regular expressions and
+    remapping of known cases
+
+    Parameters
+    ----------
+    constituent: str
+        Text containing the name of a tidal constituent
+    """
+    # list of tidal constituents (not all are included in tidal program)
+    # include negative look-behind and look-ahead for complex cases
+    cindex = ['z0','node','sa','ssa','sta','msqm','mtm',
+        r'mf(?![a|b|n])',r'mm(?![un])',r'msf(?![a|b])',r'mt(?![m|ide])',
+        '2q1','alpha1','beta1','chi1','j1','psi1','phi1','pi1','sigma1',
+        'rho1','tau1','theta1','oo1','so1','ups1','q1','s1',
+        r'(?<!rh)o1(?!n)',r'm1(?![a|b])',r'(?<![al|oo|])p1',r'k1(?!n)',
+        '2sm2','alpha2','beta2','delta2','eps2','gamma2','k2','lambda2',
+        'm2a','m2b','mks2','mns2','mu2','r2',
+        r'(?<![ms])2n2',r'(?<![b|z])eta2',r'(?<!de)l2(?![a|b])',
+        r'(?<![ga|la])m2(?![a|b|n])',r'(?<![mmu|ms])n2',r'(?<![ms])nu2',
+        r'(?<![mn|mk|mnu|ep])s2(?![0|r|m])',r'(?<![be])t2',
+        'm3','mk3','mk4','mn4','ms4','s3','m4','n4','s4',
+        's5','m6','s6','s7','s8','m8',
+    ]
+    # compile regular expression
+    # adding GOT prime nomenclature for 3rd degree constituents
+    rx = re.compile(
+        r'(?<![\d|j|k|l|m|n|o|p|q|r|s|t|u])(?<![|\(|\)])(' + 
+        r'|'.join(cindex) + r')(?![|\(|\)])(?![\d])(?![+|-])(\')?',
+        re.IGNORECASE
+    )
+    # check if tide model is a simple regex case
+    if rx.search(constituent):
+        return "".join(rx.findall(constituent)[0]).lower()
+    # regular expression pattern for finding constituent names
+    # include negative look-behind and look-ahead for complex cases
+    patterns = (r'node|alpha|beta|chi|delta|eps|eta|gamma|lambda|muo|mu|'
+        r'nu|pi|psi|phi|rho\d|sigma|tau|theta|ups|zeta|e3|f\d|jk|jo|jp|'
+        r'jq|j|kb|kjq|kj|kmsn|km|kn|ko|kpq|kp|kq|kso|ks|k\d|lb|'
+        r'(?<!de)l\d|ma(?![sk])|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|'
+        r'mks|mk|mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|'
+        r'mnu|mn|mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|'
+        r'msm|msnk|msnu|msn|mso|msp|msqm|mst|ms(?!q)|mtm|mt(?![m|ide])|'
+        r'(?<![2s|l|la|ga])m[1-9]|na|nb|nkms|nkm|nkp|nks|nk|'
+        r'nmks|nmk|nmls|nm|no|np|nq|nsk|nso|ns|(?<!m)n\d|(?<!l)oa|ob|ok|'
+        r'ojm|oj|omg|om(?![0|ega])|ook|oop|oo\d|opk|opq|op|oq|os|'
+        r'(?<![rh|o|s|tpx])o\d|pjrho|pk|pmn|pm|po|pqo|(?<![al|e])p\d|qj|'
+        r'qk|qms|qm|qp|qs|q\d|rp|r\d|(?<!s)sa|sf|skm|skn|(?<![ma])sk|'
+        r'sl(?!ev)|smk|smn|sm|snk|snmk|snm|snu|sn|so|sp|(?<!m)sq|ssa|sta|'
+        r'st(?!a)|(?<![ep|fe|m|mn|mk])s\d|ta|tk|(?<![curren|be])t\d|z\d')
+    # full regular expression pattern for extracting complex and compound
+    # constituents with GOT prime nomenclature for 3rd degree terms
+    cases = re.compile(r'(\d+)?(\(\w+\))?(\+|\-|\')?(node|alpha|beta|chi|'
+        r'delta|eps|eta|gamma|lambda|muo|mu|nu|pi|psi|phi|rho|sigma|tau|'
+        r'theta|ups|zeta|e|f|jk|jo|jp|jq|j|kb|kjq|kj|kmsn|km|kn|ko|kpq|'
+        r'kp|kq|kso|ks|k|lb|l|ma|mb|mfa|mfb|mfn|mf|mkj|mkl|mknu|mkn|mkp|'
+        r'mks|mk|mlns|mls|ml|mmun|mm|mnks|mnk|mnls|mnm|mno|mnp|mns|mnus|'
+        r'mnu|mn|mop|moq|mo|mpq|mp|mq|mr|msfa|msfb|msf|mskn|msko|msk|msl|'
+        r'msm|msnk|msnu|msn|mso|msp|msqm|mst|ms|mtm|mt|m|na|nb|nkms|nkm|'
+        r'nkp|nks|nk|nmks|nmk|nmls|nm|no|np|nq|nsk|nso|ns|n|oa|ob|ok|ojm|'
+        r'oj|omg|om|ook|oop|oo|opk|opq|op|oq|os|o|pjrho|pk|pmn|pm|po|pqo|p|'
+        r'qj|qk|qms|qm|qp|qs|q|rp|r|sa|sf|skm|skn|sk|sl|smk|smn|sm|snk|'
+        r'snmk|snm|snu|sn|so|sp|sq|ssa|sta|st|s|ta|tk|t|z)?(\d+)?(\(\w+\))?'
+        r'(\d+)?(\+\+|\+|\-\-|\-|a|b|k|m|nk|ns|n|r|s)?(\d+)?(\')?',
+        re.IGNORECASE)
+    # check if tide model is a regex case for compound tides
+    if re.search(patterns, constituent, re.IGNORECASE):
+        return "".join(cases.findall(constituent)[0]).lower()
+    # known cases for remapping from different naming conventions
+    mapping = [('2n','2n2'), ('alp1', 'alpha1'), ('alp2', 'alpha2'),
+        ('bet1', 'beta1'), ('bet2', 'beta2'), ('del2', 'delta2'),
+        ('e2','eps2'), ('ep2','eps2'), ('gam2', 'gamma2'),
+        ('la2','lambda2'), ('lam2','lambda2'), ('lm2','lambda2'),
+        ('msq', 'msqm'), ('omega0', 'node'), ('om0', 'node'),
+        ('rho', 'rho1'), ('sig1','sigma1'),
+        ('the', 'theta1'), ('the1', 'theta1')]
+    # iterate over known remapped cases
+    for m in mapping:
+        # check if tide model is a remapped case
+        if m[0] in constituent.lower():
+            return m[1]
+    # raise a value error if not found
+    raise ValueError(f'Constituent not found in {constituent}')
 
 def _to_constituent_id(coef: list | np.ndarray, **kwargs):
     """

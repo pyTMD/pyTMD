@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 utilities.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (11/2025)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,9 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 11/2025: added string check to determine if is a valid URL
+        added function to check if a dependency is available
+        added detection functions for compression and model format
     Updated 10/2025: allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
     Updated 07/2025: removed (now) unused functions that were moved to timescale
@@ -71,13 +74,13 @@ import subprocess
 import lxml.etree
 import platformdirs
 import calendar, time
-import dateutil.parser
 if sys.version_info[0] == 2:
     from urllib import quote_plus
     from cookielib import CookieJar
+    from urlparse import urlparse
     import urllib2
 else:
-    from urllib.parse import quote_plus
+    from urllib.parse import quote_plus, urlparse
     from http.cookiejar import CookieJar
     import urllib.request as urllib2
 
@@ -85,8 +88,12 @@ __all__ = [
     "get_data_path",
     "get_cache_path",
     "import_dependency",
-    "file_opener",
-    "compressuser",
+    "dependency_available",
+    "is_valid_url",
+    "Path",
+    "reify",
+    "detect_format",
+    "detect_compression",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -123,7 +130,7 @@ def get_data_path(relpath: list | str | pathlib.Path):
     """
     # current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
-    filepath = pathlib.Path(filename).absolute().parent
+    filepath = Path(filename).absolute().parent
     if isinstance(relpath, list):
         # use *splat operator to extract from list
         return filepath.joinpath(*relpath)
@@ -153,7 +160,7 @@ def get_cache_path(
         filepath = filepath.joinpath(*relpath)
     elif isinstance(relpath, (str, pathlib.Path)):
         filepath = filepath.joinpath(relpath)
-    return filepath
+    return Path(filepath)
 
 def import_dependency(
         name: str,
@@ -196,6 +203,150 @@ def import_dependency(
     # return the module
     return module
 
+def dependency_available(name: str, minversion: str | None = None):
+    """
+    Checks whether a module is installed without importing it
+
+    Adapted from ``xarray.namedarray.utils.module_available``
+
+    Parameters
+    ----------
+    name: str
+        Module name
+    minversion : str, optional
+        Minimum version of the module
+
+    Returns
+    -------
+    available : bool
+        Whether the module is installed
+    """
+    # check if module is available
+    if importlib.util.find_spec(name) is None:
+        return False
+    # check if the version is greater than the minimum required
+    if minversion is not None:
+        version = importlib.metadata.version(name)
+        return (version >= minversion)
+    # return if both checks are passed
+    return True
+
+def is_valid_url(url: str) -> bool:
+    """
+    Checks if a string is a valid URL
+
+    Parameters
+    ----------
+    url: str
+        URL to check
+    """
+    try:
+        result = urlparse(str(url))
+        return all([result.scheme, result.netloc])
+    except AttributeError:
+        return False
+
+class Path(pathlib.Path):
+    """``Pathlib.Path`` subclass with additional methods and properties
+    """
+
+    def __init__(self, filename: str | pathlib.Path, *args, **kwargs):
+        if is_valid_url(filename):
+            self.filename = str(filename)
+            self._raw_paths = list(url_split(self.filename))
+        else:
+            super().__init__(filename)
+            self.filename = pathlib.Path(filename, *args, **kwargs)
+
+    def joinpath(self, *args):
+        """Join path components to the existing path
+        """
+        if self.is_url():
+            return Path('/'.join([self.filename, *args]))
+        else:
+            return Path(self.filename.joinpath(*args))
+
+    # PURPOSE: platform independent file opener
+    def openfile(self):
+        """Platform independent file opener
+        """
+        if self.is_url():
+            raise RuntimeError('Cannot open URL paths')
+        if self.is_local() and (sys.platform == "win32"):
+            os.startfile(self.filename, "explore")
+        elif  self.is_local() and (sys.platform == "darwin"):
+            subprocess.call(["open", self.filename])
+        else:
+            subprocess.call(["xdg-open", self.filename])
+
+    def compressuser(self):
+        """Tilde-compress a file to be relative to the home directory
+        """
+        if self.is_url():
+            raise RuntimeError('Cannot compress URL paths')
+        # attempt to compress filename relative to home directory
+        filename = pathlib.Path(self.filename).expanduser().absolute()
+        try:
+            relative_to = filename.relative_to(pathlib.Path().home())
+        except (ValueError, AttributeError) as exc:
+            return self.filename
+        else:
+            return Path('~').joinpath(relative_to)
+        
+    def exists(self):
+        """Check if the resolved path exists
+        """
+        if self.is_url():
+            return is_valid_url(self.filename)
+        else:
+            return self.filename.expanduser().absolute().exists()
+        
+    def resolve(self):
+        """Resolve the path to an absolute path
+        """
+        if self.is_url():
+            return Path('/'.join(url_split(self.filename)))
+        else:
+            return Path(self.filename.expanduser().absolute())
+
+    def is_file(self):
+        """Boolean flag if path is a local file
+        """
+        return not is_valid_url(self.filename) and \
+            self.filename.expanduser().absolute().is_file()
+
+    def is_dir(self):
+        """Boolean flag if path is a local directory
+        """
+        return not is_valid_url(self.filename) and \
+            self.filename.expanduser().absolute().is_dir()
+
+    def is_local(self):
+        """Boolean flag if path is a local file or directory
+        """
+        return not is_valid_url(self.filename)
+
+    def is_url(self):
+        """Boolean flag if path is a URL
+        """
+        return is_valid_url(self.filename)
+
+    @property
+    def md5_hash(self):
+        """MD5 hash value of the file
+        """
+        return get_hash(self.filename, algorithm='md5')
+
+    def __repr__(self):
+        """Representation of the ``Path`` object
+        """
+        return str(self.filename)
+
+    def __str__(self):
+        """String representation of the ``Path`` object
+        """
+        return str(self.filename)
+
 class reify(object):
     """Class decorator that puts the result of the method it
     decorates into the instance"""
@@ -211,41 +362,49 @@ class reify(object):
         setattr(inst, self.wrapped.__name__, val)
         return val
 
-# PURPOSE: platform independent file opener
-def file_opener(filename: str | pathlib.Path):
+def detect_format(filename: str | pathlib.Path) -> str:
     """
-    Platform independent file opener
+    Detect tide file format based on file extension
 
     Parameters
     ----------
     filename: str or pathlib.Path
-        path to file
-    """
-    filename = pathlib.Path(filename).expanduser()
-    if (sys.platform == "win32"):
-        os.startfile(filename, "explore")
-    elif (sys.platform == "darwin"):
-        subprocess.call(["open", filename])
-    else:
-        subprocess.call(["xdg-open", filename])
+        model file
 
-def compressuser(filename: str | pathlib.Path):
+    Returns
+    -------
+    format: str
+        Model format
+
+            - ``'ascii'``: ascii format
+            - ``'netcdf'``: netCDF4 format
     """
-    Tilde-compresses a file to be relative to the home directory
+    filename = Path(filename    ).resolve()
+    if re.search(r'(\.asc|\.d)(\.gz)?$', filename.name, re.IGNORECASE):
+        # FES or GOT ascii formats
+        return 'ascii'
+    elif re.search(r'\.nc(\.gz)?$', filename.name, re.IGNORECASE):
+        # FES or GOT netCDF4 formats
+        return 'netcdf'
+    else:
+        raise ValueError(f'Unrecognized FES file format: {filename}')
+
+def detect_compression(filename: str | pathlib.Path) -> bool:
+    """
+    Detect if file is compressed based on file extension
 
     Parameters
     ----------
     filename: str or pathlib.Path
-        input filename to compress
+        model file
+
+    Returns
+    -------
+    compressed: bool
+        Input file is gzip compressed
     """
-    filename = pathlib.Path(filename).expanduser().absolute()
-    # attempt to compress filename relative to home directory
-    try:
-        relative_to = filename.relative_to(pathlib.Path().home())
-    except (ValueError, AttributeError) as exc:
-        return filename
-    else:
-        return pathlib.Path('~').joinpath(relative_to)
+    filename = Path(filename).resolve()
+    return bool(re.search(r'\.gz$', filename.name, re.IGNORECASE))
 
 # PURPOSE: get the hash value of a file
 def get_hash(
@@ -416,13 +575,6 @@ def get_unix_time(
         pass
     else:
         return calendar.timegm(parsed_time)
-    # try parsing with dateutil
-    try:
-        parsed_time = dateutil.parser.parse(time_string.rstrip())
-    except (TypeError, ValueError):
-        return None
-    else:
-        return parsed_time.timestamp()
 
 # PURPOSE: rounds a number to an even number less than or equal to original
 def even(value: float):

@@ -35,18 +35,18 @@ def test_mean_longitudes():
     s1, h1, p1, N1, PP1 = pyTMD.astro.mean_longitudes(MJD, method='Meeus')
     # Meeus methods as implemented in ASTRO5
     s2, h2, p2, N2, PP2 = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
-    assert np.isclose(s1, s2).all()
-    assert np.isclose(h1, h2).all()
-    assert np.isclose(p1, p2).all()
-    assert np.isclose(N1, N2).all()
-    assert np.isclose(PP1, PP2).all()
+    assert np.allclose(s1, s2)
+    assert np.allclose(h1, h2)
+    assert np.allclose(p1, p2)
+    assert np.allclose(N1, N2)
+    assert np.allclose(PP1, PP2)
     # converted from Delaunay arguments in IERS
     s3, h3, p3, N3, PP3 = pyTMD.astro.mean_longitudes(MJD, method='IERS')
-    assert np.isclose(s1, s3).all()
-    assert np.isclose(h1, h3).all()
-    assert np.isclose(p1, p3).all()
-    assert np.isclose(N1, N3).all()
-    assert np.isclose(PP1, PP3).all()
+    assert np.allclose(s1, s3)
+    assert np.allclose(h1, h3)
+    assert np.allclose(p1, p3)
+    assert np.allclose(N1, N3)
+    assert np.allclose(PP1, PP3)
 
 def test_phase_angles():
     """Test that longitudes and phase angles match between functions
@@ -100,10 +100,10 @@ def test_schureman_arguments():
     h_expected = np.array([4.89022967, 4.88647091])
     p_expected = np.array([5.83611763, 1.45381785])
     n_expected = np.array([4.52313201, 2.18290001])
-    assert np.isclose(s*dtr, s_expected).all()
-    assert np.isclose(h*dtr, h_expected).all()
-    assert np.isclose(p*dtr, p_expected).all()
-    assert np.isclose(n*dtr, n_expected).all()
+    assert np.allclose(s*dtr, s_expected)
+    assert np.allclose(h*dtr, h_expected)
+    assert np.allclose(p*dtr, p_expected)
+    assert np.allclose(n*dtr, n_expected)
     # calculate Schureman arguments
     # convert mean longitudes to radians
     II, xi, nu, Qa, Qu, Ra, Ru, nu_prime, nu_sec = \
@@ -115,13 +115,13 @@ def test_schureman_arguments():
     nu_expected = np.array([-0.22723534, 0.20721813])
     nu_p_expected = np.array([-0.15525636, 0.13805659])
     nu_s_expected = np.array([-0.15460551, 0.13225844])
-    assert np.isclose(II, II_expected, atol=1e-5).all()
-    assert np.isclose(xi, xi_expected, atol=1e-5).all()
-    assert np.isclose(nu, nu_expected, atol=1e-5).all()
-    assert np.isclose(Ra, Ra_expected, atol=1e-5).all()
-    assert np.isclose(Ru, Ru_expected, atol=1e-5).all()
-    assert np.isclose(nu_prime, nu_p_expected, atol=1e-5).all()
-    assert np.isclose(nu_sec, nu_s_expected, atol=1e-5).all()
+    assert np.allclose(II, II_expected, atol=1e-5)
+    assert np.allclose(xi, xi_expected, atol=1e-5)
+    assert np.allclose(nu, nu_expected, atol=1e-5)
+    assert np.allclose(Ra, Ra_expected, atol=1e-5)
+    assert np.allclose(Ru, Ru_expected, atol=1e-5)
+    assert np.allclose(nu_prime, nu_p_expected, atol=1e-5)
+    assert np.allclose(nu_sec, nu_s_expected, atol=1e-5)
 
 def test_precession_matrix():
     """Test that the precession matrix matches expected outputs
@@ -135,7 +135,7 @@ def test_precession_matrix():
         [ 7.76914871e-04, -7.04519640e-07,  9.99999698e-01]
     ])
     P = pyTMD.astro._precession_matrix(T)
-    assert np.isclose(expected, P[:,:,0]).all()
+    assert np.allclose(expected, P[:,:,0])
 
 def test_nutation_matrix():
     """Test that the nutation matrix matches expected outputs
@@ -153,7 +153,7 @@ def test_nutation_matrix():
     # estimate the nutation in longitude and obliquity
     dpsi, deps = pyTMD.astro._nutation_angles(T)
     N = pyTMD.astro._nutation_matrix(epsilon, epsilon + deps, dpsi)
-    assert np.isclose(expected, N[:,:,0]).all()
+    assert np.allclose(expected, N[:,:,0])
 
 def test_frame_bias_matrix():
     """Test that the frame bias matrix matches expected outputs
@@ -164,7 +164,7 @@ def test_frame_bias_matrix():
         [-8.05614894e-08, -3.30604145e-08,  1.00000000e+00]
     ])
     B = pyTMD.astro._frame_bias_matrix()
-    assert np.isclose(expected, B).all()
+    assert np.allclose(expected, B)
 
 def test_icrs_rotation_matrix():
     """Test that the ICRS rotation matrix matches expected outputs
@@ -178,7 +178,7 @@ def test_icrs_rotation_matrix():
         [ 7.93772440e-04,  3.56878819e-05,  9.99999684e-01]
     ])
     M = pyTMD.astro._icrs_rotation_matrix(T, include_polar_motion=False)
-    assert np.isclose(expected, M[:,:,0], atol=1e-7).all()
+    assert np.allclose(expected, M[:,:,0], atol=1e-7)
 
 def test_mean_obliquity():
     """Test that the mean obliquity values matches expected outputs
@@ -199,9 +199,9 @@ def test_solar_ecef():
     x2, y2, z2 = pyTMD.astro.solar_ecef(MJD, ephemerides='JPL')
     r2 = np.sqrt(x2**2 + y2**2 + z2**2)
     # test distances
-    assert np.isclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=1e9).all()
+    assert np.allclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=1e9)
     # test absolute distance
-    assert np.isclose(r1, r2, atol=1e9).all()
+    assert np.allclose(r1, r2, atol=1e9)
 
 def test_lunar_ecef():
     """Test lunar ECEF coordinates with ephemeride predictions
@@ -214,9 +214,9 @@ def test_lunar_ecef():
     x2, y2, z2 = pyTMD.astro.lunar_ecef(MJD, ephemerides='JPL')
     r2 = np.sqrt(x2**2 + y2**2 + z2**2)
     # test distances
-    assert np.isclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=5e6).all()
+    assert np.allclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=5e6)
     # test absolute distance
-    assert np.isclose(r1, r2, atol=5e6).all()
+    assert np.allclose(r1, r2, atol=5e6)
 
 def test_earth_rotation_angle():
     """Test that the Earth rotation angle (ERA) matches expected outputs
@@ -225,7 +225,7 @@ def test_earth_rotation_angle():
     ts = timescale.time.Timescale(MJD=55414.0)
     # expected earth rotation angle as fraction of a turn
     expected = 0.8730204642501604
-    assert np.isclose(360.0*expected, ts.era).all()
+    assert np.allclose(360.0*expected, ts.era)
 
 def test_greenwich():
     """Test approximations of Greenwich Hour Angle in degrees
@@ -246,7 +246,7 @@ def test_sidereal():
     ts = timescale.time.Timescale(MJD=55414.0)
     # expected side real time in hours
     expected = 20.96154017401333
-    assert np.isclose(expected, 24.0*ts.st).all()
+    assert np.allclose(expected, 24.0*ts.st)
 
 def test_epochs():
     """Test that the epoch conversions match expected outputs

@@ -1,5 +1,6 @@
 import numpy as np
 import pyTMD.math
+import xarray as xr
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
@@ -9,8 +10,8 @@ lat = np.arange(-90 + dlat/2.0, 90 + dlat/2.0, dlat)
 lon = np.arange(0 + dlon/2.0, 360 + dlon/2.0, dlon)
 gridlon, gridlat = np.meshgrid(lon, lat)
 # colatitude and longitude in radians
-theta = np.radians(90.0 - gridlat)
-phi = np.radians(gridlon)
+theta = xr.DataArray(np.radians(90.0 - gridlat), dims=('y','x'))
+phi = xr.DataArray(np.radians(gridlon), dims=('y','x'))
 
 # minimum and maximum degree of spherical harmonics
 lmin, lmax = (3, 4)
@@ -27,8 +28,8 @@ for n, l in enumerate(range(lmin, lmax+1)):
         # setup subplot
         i = n*ncols + tau + 1
         ax = fig.add_subplot(nrows, ncols, i, projection=projection)
-        # compute spherical harmonics
-        Y_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau).reshape(theta.shape)
+        # calculate spherical harmonics (and derivatives w.r.t. colatitude)
+        Y_lm, dY_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau)
         # plot the surface
         ax.pcolormesh(lon, lat, Y_lm.real,
             transform=ccrs.PlateCarree(),

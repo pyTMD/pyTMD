@@ -1,8 +1,14 @@
-xarray Integration
-==================
+Cloud Data Access
+=================
 
 .. important::
   Running these example recipes requires an `aws installation <../getting_started/Install.html>`_ to include the optional dependencies.
+
+Access a model hosted on s3
+###########################
+
+.. include:: ./netCDF4-from-s3.py
+    :literal:
 
 Save model to a zarr store
 ##########################
@@ -13,7 +19,7 @@ Save model to a zarr store
 Predict tides from model hosted on s3
 #####################################
 
-.. include:: ./xarray-predict.py
+.. include:: ./zarr-predict.py
     :literal:
 
 Use s3fs to setup a zarr store 

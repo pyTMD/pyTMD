@@ -1,101 +1,17 @@
 {
-    "current": {
-        "FES2014": {
-            "format": "FES-netcdf",
-            "model_file": {
-                "u": [
-                    "fes2014/eastward_velocity/2n2.nc",
-                    "fes2014/eastward_velocity/eps2.nc",
-                    "fes2014/eastward_velocity/j1.nc",
-                    "fes2014/eastward_velocity/k1.nc",
-                    "fes2014/eastward_velocity/k2.nc",
-                    "fes2014/eastward_velocity/l2.nc",
-                    "fes2014/eastward_velocity/la2.nc",
-                    "fes2014/eastward_velocity/m2.nc",
-                    "fes2014/eastward_velocity/m3.nc",
-                    "fes2014/eastward_velocity/m4.nc",
-                    "fes2014/eastward_velocity/m6.nc",
-                    "fes2014/eastward_velocity/m8.nc",
-                    "fes2014/eastward_velocity/mf.nc",
-                    "fes2014/eastward_velocity/mks2.nc",
-                    "fes2014/eastward_velocity/mm.nc",
-                    "fes2014/eastward_velocity/mn4.nc",
-                    "fes2014/eastward_velocity/ms4.nc",
-                    "fes2014/eastward_velocity/msf.nc",
-                    "fes2014/eastward_velocity/msqm.nc",
-                    "fes2014/eastward_velocity/mtm.nc",
-                    "fes2014/eastward_velocity/mu2.nc",
-                    "fes2014/eastward_velocity/n2.nc",
-                    "fes2014/eastward_velocity/n4.nc",
-                    "fes2014/eastward_velocity/nu2.nc",
-                    "fes2014/eastward_velocity/o1.nc",
-                    "fes2014/eastward_velocity/p1.nc",
-                    "fes2014/eastward_velocity/q1.nc",
-                    "fes2014/eastward_velocity/r2.nc",
-                    "fes2014/eastward_velocity/s1.nc",
-                    "fes2014/eastward_velocity/s2.nc",
-                    "fes2014/eastward_velocity/s4.nc",
-                    "fes2014/eastward_velocity/sa.nc",
-                    "fes2014/eastward_velocity/ssa.nc",
-                    "fes2014/eastward_velocity/t2.nc"
-                ],
-                "v": [
-                    "fes2014/northward_velocity/2n2.nc",
-                    "fes2014/northward_velocity/eps2.nc",
-                    "fes2014/northward_velocity/j1.nc",
-                    "fes2014/northward_velocity/k1.nc",
-                    "fes2014/northward_velocity/k2.nc",
-                    "fes2014/northward_velocity/l2.nc",
-                    "fes2014/northward_velocity/la2.nc",
-                    "fes2014/northward_velocity/m2.nc",
-                    "fes2014/northward_velocity/m3.nc",
-                    "fes2014/northward_velocity/m4.nc",
-                    "fes2014/northward_velocity/m6.nc",
-                    "fes2014/northward_velocity/m8.nc",
-                    "fes2014/northward_velocity/mf.nc",
-                    "fes2014/northward_velocity/mks2.nc",
-                    "fes2014/northward_velocity/mm.nc",
-                    "fes2014/northward_velocity/mn4.nc",
-                    "fes2014/northward_velocity/ms4.nc",
-                    "fes2014/northward_velocity/msf.nc",
-                    "fes2014/northward_velocity/msqm.nc",
-                    "fes2014/northward_velocity/mtm.nc",
-                    "fes2014/northward_velocity/mu2.nc",
-                    "fes2014/northward_velocity/n2.nc",
-                    "fes2014/northward_velocity/n4.nc",
-                    "fes2014/northward_velocity/nu2.nc",
-                    "fes2014/northward_velocity/o1.nc",
-                    "fes2014/northward_velocity/p1.nc",
-                    "fes2014/northward_velocity/q1.nc",
-                    "fes2014/northward_velocity/r2.nc",
-                    "fes2014/northward_velocity/s1.nc",
-                    "fes2014/northward_velocity/s2.nc",
-                    "fes2014/northward_velocity/s4.nc",
-                    "fes2014/northward_velocity/sa.nc",
-                    "fes2014/northward_velocity/ssa.nc",
-                    "fes2014/northward_velocity/t2.nc"
-                ]
-            },
-            "name": "FES2014",
-            "reference": "https://www.aviso.altimetry.fr/en/data/productsauxiliary-products/global-tide-fes.html",
-            "scale": 1.0,
-            "type": [
-                "u",
-                "v"
-            ],
-            "version": "FES2014",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
-        }
-    },
-    "elevation": {
-        "FES2012": {
-            "format": "FES-netcdf",
+    "FES2012": {
+        "format": "FES-netcdf",
+        "name": "FES2012",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
+        },
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2012",
+        "z": {
             "model_file": [
                 "fes2012/data/T2_FES2012_SLEV.nc",
                 "fes2012/data/MSf_FES2012_SLEV.nc",
@@ -130,22 +46,103 @@
                 "fes2012/data/M8_FES2012_SLEV.nc",
                 "fes2012/data/Nu2_FES2012_SLEV.nc"
             ],
-            "name": "FES2012",
-            "type": "z",
-            "version": "FES2012",
-            "variable": "tide_ocean",
-            "scale": 0.01,
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014": {
+        "format": "FES-netcdf",
+        "name": "FES2014",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/productsauxiliary-products/global-tide-fes.html",
+        "u": {
+            "model_file": [
+                "fes2014/eastward_velocity/2n2.nc",
+                "fes2014/eastward_velocity/eps2.nc",
+                "fes2014/eastward_velocity/j1.nc",
+                "fes2014/eastward_velocity/k1.nc",
+                "fes2014/eastward_velocity/k2.nc",
+                "fes2014/eastward_velocity/l2.nc",
+                "fes2014/eastward_velocity/la2.nc",
+                "fes2014/eastward_velocity/m2.nc",
+                "fes2014/eastward_velocity/m3.nc",
+                "fes2014/eastward_velocity/m4.nc",
+                "fes2014/eastward_velocity/m6.nc",
+                "fes2014/eastward_velocity/m8.nc",
+                "fes2014/eastward_velocity/mf.nc",
+                "fes2014/eastward_velocity/mks2.nc",
+                "fes2014/eastward_velocity/mm.nc",
+                "fes2014/eastward_velocity/mn4.nc",
+                "fes2014/eastward_velocity/ms4.nc",
+                "fes2014/eastward_velocity/msf.nc",
+                "fes2014/eastward_velocity/msqm.nc",
+                "fes2014/eastward_velocity/mtm.nc",
+                "fes2014/eastward_velocity/mu2.nc",
+                "fes2014/eastward_velocity/n2.nc",
+                "fes2014/eastward_velocity/n4.nc",
+                "fes2014/eastward_velocity/nu2.nc",
+                "fes2014/eastward_velocity/o1.nc",
+                "fes2014/eastward_velocity/p1.nc",
+                "fes2014/eastward_velocity/q1.nc",
+                "fes2014/eastward_velocity/r2.nc",
+                "fes2014/eastward_velocity/s1.nc",
+                "fes2014/eastward_velocity/s2.nc",
+                "fes2014/eastward_velocity/s4.nc",
+                "fes2014/eastward_velocity/sa.nc",
+                "fes2014/eastward_velocity/ssa.nc",
+                "fes2014/eastward_velocity/t2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "zonal_tidal_current"
+        },
+        "v": {
+            "model_file": [
+                "fes2014/northward_velocity/2n2.nc",
+                "fes2014/northward_velocity/eps2.nc",
+                "fes2014/northward_velocity/j1.nc",
+                "fes2014/northward_velocity/k1.nc",
+                "fes2014/northward_velocity/k2.nc",
+                "fes2014/northward_velocity/l2.nc",
+                "fes2014/northward_velocity/la2.nc",
+                "fes2014/northward_velocity/m2.nc",
+                "fes2014/northward_velocity/m3.nc",
+                "fes2014/northward_velocity/m4.nc",
+                "fes2014/northward_velocity/m6.nc",
+                "fes2014/northward_velocity/m8.nc",
+                "fes2014/northward_velocity/mf.nc",
+                "fes2014/northward_velocity/mks2.nc",
+                "fes2014/northward_velocity/mm.nc",
+                "fes2014/northward_velocity/mn4.nc",
+                "fes2014/northward_velocity/ms4.nc",
+                "fes2014/northward_velocity/msf.nc",
+                "fes2014/northward_velocity/msqm.nc",
+                "fes2014/northward_velocity/mtm.nc",
+                "fes2014/northward_velocity/mu2.nc",
+                "fes2014/northward_velocity/n2.nc",
+                "fes2014/northward_velocity/n4.nc",
+                "fes2014/northward_velocity/nu2.nc",
+                "fes2014/northward_velocity/o1.nc",
+                "fes2014/northward_velocity/p1.nc",
+                "fes2014/northward_velocity/q1.nc",
+                "fes2014/northward_velocity/r2.nc",
+                "fes2014/northward_velocity/s1.nc",
+                "fes2014/northward_velocity/s2.nc",
+                "fes2014/northward_velocity/s4.nc",
+                "fes2014/northward_velocity/sa.nc",
+                "fes2014/northward_velocity/ssa.nc",
+                "fes2014/northward_velocity/t2.nc"
+            ],
+            "units": "cm/s",
+            "variable": "meridional_tidal_current"
+        },
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/ocean_tide/2n2.nc",
                 "fes2014/ocean_tide/eps2.nc",
@@ -182,22 +179,23 @@
                 "fes2014/ocean_tide/ssa.nc",
                 "fes2014/ocean_tide/t2.nc"
             ],
-            "name": "FES2014",
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2014",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014_extrapolated": {
+        "format": "FES-netcdf",
+        "name": "FES2014",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014_extrapolated": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/ocean_tide_extrapolated/2n2.nc",
                 "fes2014/ocean_tide_extrapolated/eps2.nc",
@@ -234,22 +232,23 @@
                 "fes2014/ocean_tide_extrapolated/ssa.nc",
                 "fes2014/ocean_tide_extrapolated/t2.nc"
             ],
-            "name": "FES2014",
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2014",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2014_load": {
+        "format": "FES-netcdf",
+        "name": "FES2014_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2014_load": {
-            "format": "FES-netcdf",
+        "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
+        "version": "FES2014",
+        "z": {
             "model_file": [
                 "fes2014/load_tide/2n2.nc",
                 "fes2014/load_tide/eps2.nc",
@@ -286,22 +285,23 @@
                 "fes2014/load_tide/ssa.nc",
                 "fes2014/load_tide/t2.nc"
             ],
-            "name": "FES2014_load",
-            "reference": "https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "FES2014",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_load"
+        }
+    },
+    "FES2022": {
+        "format": "FES-netcdf",
+        "name": "FES2022",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/ocean_tide_20241025/2n2_fes2022.nc",
                 "fes2022b/ocean_tide_20241025/eps2_fes2022.nc",
@@ -338,22 +338,23 @@
                 "fes2022b/ocean_tide_20241025/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_20241025/t2_fes2022.nc"
             ],
-            "name": "FES2022",
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2022",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2022_extrapolated": {
+        "format": "FES-netcdf",
+        "name": "FES2022",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022_extrapolated": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/ocean_tide_extrapolated/2n2_fes2022.nc",
                 "fes2022b/ocean_tide_extrapolated/eps2_fes2022.nc",
@@ -390,22 +391,23 @@
                 "fes2022b/ocean_tide_extrapolated/ssa_fes2022.nc",
                 "fes2022b/ocean_tide_extrapolated/t2_fes2022.nc"
             ],
-            "name": "FES2022",
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_ocean",
-            "version": "FES2022",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_ocean"
+        }
+    },
+    "FES2022_load": {
+        "format": "FES-netcdf",
+        "name": "FES2022_load",
+        "projection": {
+            "datum": "WGS84",
+            "ellps": "WGS84",
+            "lon_wrap": 180,
+            "proj": "longlat",
+            "type": "crs"
         },
-        "FES2022_load": {
-            "format": "FES-netcdf",
+        "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+        "version": "FES2022",
+        "z": {
             "model_file": [
                 "fes2022b/load_tide/2n2_fes2022.nc",
                 "fes2022b/load_tide/eps2_fes2022.nc",
@@ -442,19 +444,8 @@
                 "fes2022b/load_tide/ssa_fes2022.nc",
                 "fes2022b/load_tide/t2_fes2022.nc"
             ],
-            "name": "FES2022_load",
-            "reference": "https://doi.org/10.24400/527896/A01-2024.004",
-            "scale": 0.01,
-            "type": "z",
-            "variable": "tide_load",
-            "version": "FES2022",
-            "projection": {
-                "proj": "longlat",
-                "ellps": "WGS84",
-                "datum": "WGS84",
-                "lon_wrap": 180,
-                "type": "crs"
-            }
+            "units": "cm",
+            "variable": "tide_load"
         }
     }
 }

@@ -1,5 +1,5 @@
 import numpy as np
-import pyTMD.arguments
+import pyTMD.constituents
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
@@ -26,8 +26,8 @@ frange.append([0.80, 1.15])
 frange.append([1.75, 2.10])
 
 # parse the tide potential table
-CTE = pyTMD.arguments._parse_tide_potential_table(
-    pyTMD.arguments._cte1973_table)
+CTE = pyTMD.constituents._parse_tide_potential_table(
+    pyTMD.constituents._cte1973_table)
 # for each spectral line
 for i, line in enumerate(CTE):
     # spherical harmonic degree
@@ -47,7 +47,7 @@ for i, line in enumerate(CTE):
     # determine constituent phase using equilibrium arguments
     arguments = np.array([TAU, S, H, P, N, PP, K], dtype=np.float64)
     # calculate the angular frequency
-    omega = pyTMD.arguments._frequency(arguments, method='ASTRO5')
+    omega = pyTMD.constituents._frequency(arguments, method='ASTRO5')
     # skip z0 (permanent tide)
     if (omega == 0.0):
         continue
@@ -56,7 +56,7 @@ for i, line in enumerate(CTE):
     # amplitude in cm
     amp = 100.0*np.abs(line['Hs1'])
     # get the constituent ID based on the first 6 arguments
-    cons = pyTMD.arguments._to_constituent_id(arguments,
+    cons = pyTMD.constituents._to_constituent_id(arguments,
         arguments=6, raise_error=False)
     # plot amplitudes and color if in the major constituents list
     ax1.semilogy([f, f], [0.0, amp], color='0.4', zorder=1)

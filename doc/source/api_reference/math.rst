@@ -4,14 +4,6 @@ math
 
 - Special functions of mathematical physics
 
-Calling Sequence
-----------------
-
-.. code-block:: python
-
-    import pyTMD.math
-    P = pyTMD.math.legendre(2, x, m=0)
-
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
@@ -29,7 +21,5 @@ Calling Sequence
 .. autofunction:: pyTMD.math.aliasing
 
 .. autofunction:: pyTMD.math.legendre
-
-.. autofunction:: pyTMD.math.assoc_legendre
 
 .. autofunction:: pyTMD.math.sph_harm

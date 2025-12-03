@@ -24,6 +24,7 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import numpy as np
+import xarray as xr
 from scipy.special import factorial
 
 __all__ = [
@@ -34,7 +35,6 @@ __all__ = [
     "rotate",
     "aliasing",
     "legendre",
-    "assoc_legendre",
     "sph_harm"
 ]
 
@@ -168,7 +168,6 @@ def legendre(
         l: int,
         x: np.ndarray,
         m: int = 0,
-        deriv: bool = False
     ):
     """
     Computes associated Legendre functions and their first-derivatives
@@ -185,122 +184,79 @@ def legendre(
         Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
     m: int, default 0
         order of the Legendre polynomials (0 to ``l``)
-    deriv: bool, default False
-        return the first derivative with respect to ``theta``
 
     Returns
     -------
     Plm: np.ndarray
         Legendre polynomials of degree ``l`` and order ``m``
+    dPlm: np.ndarray
+        first derivative of Legendre polynomials with respect to ``theta``
     """
+    # maximum degree and order
+    lmax = 4
     # verify values are integers
     l = np.int64(l)
     m = np.int64(m)
     # assert values
-    assert (l >= 0) and (l <= 4), 'Degree must be between 0 and 4'
+    assert (l >= 0) and (l <= lmax), f'Degree must be between 0 and {lmax}'
     assert (m >= 0) and (m <= l), 'Order must be between 0 and l'
-    # verify dimensions
-    singular_values = (np.ndim(x) == 0)
-    x = np.atleast_1d(x).flatten()
+    # verify x is array
+    if isinstance(x, list):
+        x = np.atleast_1d(x)
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
-    # size of the x array
-    nx = len(x)
-    # complete matrix of associated legendre functions
-    # up to degree and order 4
-    Plm = np.zeros((5, 5, nx), dtype=np.float64)
     # since tides only use low-degree harmonics:
     # functions are hard coded rather than using a recursion relation
-    if deriv:
-        # calculate first derivatives with respect to theta
-        Plm[1, 0, :] = -u
-        Plm[1, 1, :] = x
-        Plm[2, 0, :] = -3.0*u*x
-        Plm[2, 1, :] = 3.0*(1.0 - 2.0*u**2)
-        Plm[2, 2, :] = 6.0*u*x
-        Plm[3, 0, :] = u*(1.5 - 7.5*x**2)
-        Plm[3, 1, :] = -1.5*x*(10.0*u**2 - 5.0*x**2 + 1.0)
-        Plm[3, 2, :] = 15.0*u*(3.0*x**2 - 1.0)
-        Plm[3, 3, :] = 45.0*x*u**2
-        Plm[4, 0, :] = -2.5*(7.0*x**2 - 3.0)*u*x
-        Plm[4, 1, :] = 2.5*(28.0*x**4 - 27.0*x**2 + 3.0)
-        Plm[4, 2, :] = (105*x**2 - 105*u**2 - 15.0)*u*x
-        Plm[4, 3, :] = (420.0*x**3 - 105.0)*u**2
-        Plm[4, 4, :] = 420.0*x*u**3
-    else:
-        # calculate Legendre polynomials
-        Plm[0, 0, :] = 1.0
-        Plm[1, 0, :] = x
-        Plm[1, 1, :] = u
-        Plm[2, 0, :] = 0.5*(3.0*x**2 - 1.0)
-        Plm[2, 1, :] = 3.0*x*u
-        Plm[2, 2, :] = 3.0*u**2
-        Plm[3, 0, :] = 0.5*(5.0*x**2 - 3.0)*x
-        Plm[3, 1, :] = 1.5*(5.0*x**2 - 1.0)*u
-        Plm[3, 2, :] = 15.0*x*u**2
-        Plm[3, 3, :] = 15.0*u**3
-        Plm[4, 0, :] = 0.125*(35.0*x**4 - 30.0*x**2 + 3.0)
-        Plm[4, 1, :] = 2.5*(7.0*x**2 - 3.0)*u*x
-        Plm[4, 2, :] = 7.5*(7.0*x**2 - 1.0)*u**2
-        Plm[4, 3, :] = 105.0*x*u**3
-        Plm[4, 4, :] = 105.0*u**4
-    # return values
-    if singular_values:
-        return np.power(-1.0, m)*Plm[l, m, 0]
-    else:
-        return np.power(-1.0, m)*Plm[l, m, :]
-
-def assoc_legendre(lmax, x):
-    """
-    Computes fully-normalized associated Legendre Polynomials using a
-    standard forward-column method :cite:p:`Colombo:1981vh`
-    :cite:p:`HofmannWellenhof:2006hy`
-
-    Parameters
-    ----------
-    lmax: int
-        maximum degree and order of Legendre polynomials
-    x: np.ndarray
-        elements ranging from -1 to 1
-
-        Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
-
-    Returns
-    -------
-    Plm: np.ndarray
-        fully-normalized Legendre polynomials
-    """
-    # verify values are integers
-    lmax = np.int64(lmax)
-    # verify dimensions
-    singular_values = (np.ndim(x) == 0)
-    x = np.atleast_1d(x).flatten()
-    # if x is the cos of colatitude, u is the sine
-    u = np.sqrt(1.0 - x**2)
-    # size of the x array
-    nx = len(x)
-    # allocate for associated legendre functions
-    Plm = np.zeros((lmax+1,lmax+1,nx))
-    # initial polynomials for the recursion
-    Plm[0,0,:] = 1.0
-    Plm[1,0,:] = np.sqrt(3.0)*x
-    Plm[1,1,:] = np.sqrt(3.0)*u
-    for l in range(2, lmax+1):
-        # normalization factor
-        norm = np.sqrt(2.0*l+1.0)
-        for m in range(0, l):
-            # zonal and tesseral terms (non-sectorial)
-            a = np.sqrt((2.0*l-1.0)/((l-m)*(l+m)))
-            b = np.sqrt((l+m-1.0)*(l-m-1.0)/((l-m)*(l+m)*(2.0*l-3.0)))
-            Plm[l,m,:] = a*norm*x*Plm[l-1,m,:] - b*norm*Plm[l-2,m,:]
-        # sectorial terms: serve as seed values for the recursion
-        # starting with P00 and P11 (outside the loop)
-        Plm[l,l,:] = u*norm*np.sqrt(1.0/(2.0*l))*Plm[l-1,l-1,:]
-    # return values
-    if singular_values:
-        return Plm[:, :, 0]
-    else:
-        return Plm
+    if (l == 0) and (m == 0):
+        Plm = 1.0
+        dPlm = 0.0
+    elif (l == 1) and (m == 0):
+        Plm = x
+        dPlm = -u
+    elif (l == 1) and (m == 1):
+        Plm = u
+        dPlm = x
+    elif (l == 2) and (m == 0):
+        Plm = 0.5*(3.0*x**2 - 1.0)
+        dPlm = -3.0*u*x
+    elif (l == 2) and (m == 1):
+        Plm = 3.0*x*u
+        dPlm = 3.0*(1.0 - 2.0*u**2)
+    elif (l == 2) and (m == 2):
+        Plm = 3.0*u**2
+        dPlm = 6.0*u*x
+    elif (l == 3) and (m == 0):
+        Plm = 0.5*(5.0*x**2 - 3.0)*x
+        dPlm = u*(1.5 - 7.5*x**2)
+    elif (l == 3) and (m == 1):
+        Plm = 1.5*(5.0*x**2 - 1.0)*u
+        dPlm = -1.5*x*(10.0*u**2 - 5.0*x**2 + 1.0)
+    elif (l == 3) and (m == 2):
+        Plm = 15.0*x*u**2
+        dPlm = 15.0*u*(3.0*x**2 - 1.0)
+    elif (l == 3) and (m == 3):
+        Plm = 15.0*u**3
+        dPlm = 45.0*x*u**2
+    elif (l == 4) and (m == 0):
+        Plm = 0.125*(35.0*x**4 - 30.0*x**2 + 3.0)
+        dPlm = -2.5*(7.0*x**2 - 3.0)*u*x
+    elif (l == 4) and (m == 1):
+        Plm = 2.5*(7.0*x**2 - 3.0)*u*x
+        dPlm = 2.5*(28.0*x**4 - 27.0*x**2 + 3.0)
+    elif (l == 4) and (m == 2):
+        Plm = 7.5*(7.0*x**2 - 1.0)*u**2
+        dPlm = (105*x**2 - 105*u**2 - 15.0)*u*x
+    elif (l == 4) and (m == 3):
+        Plm = 105.0*x*u**3
+        dPlm = (420.0*x**3 - 105.0)*u**2
+    elif (l == 4) and (m == 4):
+        Plm = 105.0*u**4
+        dPlm = 420.0*x*u**3
+    # apply Condon-Shortley phase
+    Plm *= np.power(-1.0, m)
+    dPlm *= np.power(-1.0, m)
+    # return the associated legendre functions
+    return Plm, dPlm
 
 def sph_harm(
         l: int,
@@ -308,7 +264,6 @@ def sph_harm(
         phi: np.ndarray,
         m: int = 0,
         phase: float = 0.0,
-        deriv: bool = False
     ):
     """
     Computes the spherical harmonics for a particular degree
@@ -326,35 +281,21 @@ def sph_harm(
         order of the spherical harmonics (0 to ``l``)
     phase: float, default 0.0
         phase shift in radians
-    deriv: bool, default False
-        return the first derivative with respect to ``theta``
 
     Returns
     -------
     Ylm: np.ndarray
         complex spherical harmonics of degree ``l`` and order ``m``
+    dYlm: np.ndarray
+        first derivative of spherical harmonics with respect to ``theta``
     """
-    # verify dimensions
-    singular_values = (np.ndim(theta) == 0) and (np.ndim(phase) == 0)
-    theta = np.atleast_1d(theta).flatten()
-    # flatten longitude if it is an array
-    if (np.ndim(phi) != 0):
-        phi = np.atleast_1d(phi).flatten()
-        # assert dimensions
-        assert len(theta) == len(phi), \
-            'coordinates must have the same dimensions'
-    # flatten phase if it is an array
-    if (np.ndim(phase) != 0):
-        phase = np.atleast_1d(phase).flatten()
-    # normalize associated Legendre functions
-    # following Munk and Cartwright (1966) equation A5
+    # calculate associated Legendre functions and derivatives
+    Plm, dPlm = legendre(l, np.cos(theta), m=m)
+    # normalization from Munk and Cartwright (1966) equation A5
     norm = np.sqrt(factorial(l - m)/factorial(l + m))
-    Plm = norm*legendre(l, np.cos(theta), m=m, deriv=deriv)
-    # spherical harmonics of degree l and order m
+    # normalized spherical harmonics of degree l and order m
     dfactor = np.sqrt((2.0*l + 1.0)/(4.0*np.pi))
-    Ylm = dfactor*Plm*np.exp(1j*m*phi + 1j*phase)
+    Ylm = dfactor*norm*Plm*np.exp(1j*m*phi + 1j*phase)
+    dYlm = dfactor*norm*dPlm*np.exp(1j*m*phi + 1j*phase)
     # return values
-    if singular_values:
-        return Ylm[0]
-    else:
-        return Ylm
+    return Ylm, dYlm

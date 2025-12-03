@@ -4,12 +4,10 @@ OTIS
 
 - Reads OTIS format tidal solutions provided by Oregon State University and ESR
 
-  * multi-constituent binary
-  * ATLAS-compact binary
-  * single-constituent binary
-  * TMD3 consolidated netCDF4
-- Spatially interpolates tidal constituents to input coordinates
-- Writes OTIS-format tide files
+   * multi-constituent ``OTIS`` binary 
+   * ``ATLAS-compact`` binary
+   * single-constituent ``OTIS`` binary
+   * ``TMD3`` consolidated netCDF4
 
 Calling Sequence
 ----------------
@@ -17,63 +15,43 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    amp,ph,D,c = pyTMD.io.OTIS.extract_constants(ilon, ilat, grid_file, model_file, EPSG,
-        type='z',
-        method='spline',
-        grid='OTIS')
+    ds = pyTMD.io.OTIS.open_dataset(model_file, grid_file, group='z', format='OTIS')
 
 `Source code`__
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/io/OTIS.py
 
-.. autofunction:: pyTMD.io.OTIS.extract_constants
+.. autofunction:: pyTMD.io.OTIS.open_dataset
 
-.. autofunction:: pyTMD.io.OTIS.read_constants
+.. autofunction:: pyTMD.io.OTIS.open_mfdataset
 
-.. autofunction:: pyTMD.io.OTIS.interpolate_constants
+.. autofunction:: pyTMD.io.OTIS.open_otis_dataset
+
+.. autofunction:: pyTMD.io.OTIS.open_atlas_dataset
+
+.. autofunction:: pyTMD.io.OTIS.open_tmd3_dataset
+
+.. autofunction:: pyTMD.io.OTIS.open_otis_grid
+
+.. autofunction:: pyTMD.io.OTIS.open_otis_elevation
+
+.. autofunction:: pyTMD.io.OTIS.open_otis_transport
+
+.. autofunction:: pyTMD.io.OTIS.open_atlas_grid
+
+.. autofunction:: pyTMD.io.OTIS.open_atlas_elevation
+
+.. autofunction:: pyTMD.io.OTIS.open_atlas_transport
 
 .. autofunction:: pyTMD.io.OTIS.read_raw_binary
 
-.. autofunction:: pyTMD.io.OTIS.read_otis_grid
+.. autofunction:: pyTMD.io.OTIS.write_raw_binary
 
-.. autofunction:: pyTMD.io.OTIS.read_atlas_grid
+.. autoclass:: pyTMD.io.OTIS.OTISDataset
+   :members:
 
-.. autofunction:: pyTMD.io.OTIS.read_netcdf_grid
+.. autoclass:: pyTMD.io.OTIS.OTISDataTree
+   :members:
 
-.. autofunction:: pyTMD.io.OTIS.read_constituents
-
-.. autofunction:: pyTMD.io.OTIS.read_otis_elevation
-
-.. autofunction:: pyTMD.io.OTIS.read_atlas_elevation
-
-.. autofunction:: pyTMD.io.OTIS.read_otis_transport
-
-.. autofunction:: pyTMD.io.OTIS.read_atlas_transport
-
-.. autofunction:: pyTMD.io.OTIS.create_atlas_mask
-
-.. autofunction:: pyTMD.io.OTIS.interpolate_atlas_model
-
-.. autofunction:: pyTMD.io.OTIS.combine_atlas_model
-
-.. autofunction:: pyTMD.io.OTIS.read_netcdf_file
-
-.. autofunction:: pyTMD.io.OTIS.output_otis_grid
-
-.. autofunction:: pyTMD.io.OTIS.output_otis_elevation
-
-.. autofunction:: pyTMD.io.OTIS.output_otis_transport
-
-.. autofunction:: pyTMD.io.OTIS._extend_array
-
-.. autofunction:: pyTMD.io.OTIS._extend_matrix
-
-.. autofunction:: pyTMD.io.OTIS._crop
-
-.. autofunction:: pyTMD.io.OTIS._shift
-
-.. autofunction:: pyTMD.io.OTIS._mask_nodes
-
-.. autofunction:: pyTMD.io.OTIS._interpolate_mask
-
-.. autofunction:: pyTMD.io.OTIS._interpolate_zeta
+.. autoclass:: pyTMD.io.OTIS.ATLASDataset
+   :members:

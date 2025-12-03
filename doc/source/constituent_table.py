@@ -2,7 +2,7 @@
 """
 import pathlib
 import numpy as np
-import pyTMD.arguments
+import pyTMD.constituents
 
 # documentation directory
 directory = pathlib.Path(__file__).parent
@@ -49,9 +49,9 @@ cons['eta2'] = ('\u03B72', '')
 cons['m3'] = ('m3', 'Principal lunar terdiurnal')
 
 # tide potential table with updated values
-table = pyTMD.arguments._cte1973_table
+table = pyTMD.constituents._cte1973_table
 # read the table
-CTE = pyTMD.arguments._parse_tide_potential_table(table)
+CTE = pyTMD.constituents._parse_tide_potential_table(table)
 
 # create constituents table
 models_table = directory.joinpath('_assets', 'constituents.csv')
@@ -59,10 +59,10 @@ fid = models_table.open(mode='w', encoding='utf8')
 # write to csv
 print('Constituent,Doodson Number,Frequency (cpd),Description', file=fid)
 for c,params in cons.items():
-    DO = pyTMD.arguments.doodson_number(c).astype(str).zfill(7)
+    DO = pyTMD.constituents.doodson_number(c).astype(str).zfill(7)
     i, = np.nonzero(CTE['DO'] == DO)
     amp = 100.0*np.abs(CTE['Hs1'][i])
-    omega, = pyTMD.arguments.frequency(c)
+    omega, = pyTMD.constituents.frequency(c)
     freq = 86400.0*omega/(2.0*np.pi)
     period = 1.0/freq
     print(f'{params[0]},{DO},{freq:0.8f},{params[1]}', file=fid)
