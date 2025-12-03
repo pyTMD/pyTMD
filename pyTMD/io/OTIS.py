@@ -212,7 +212,7 @@ def open_dataset(
             - ``'ATLAS'``
             - ``'OTIS'``
             - ``'TMD3'``
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -229,8 +229,8 @@ def open_dataset(
         tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('type', 'z')
-    mtype = kwargs.get('type').lower()
+    kwargs.setdefault('group', 'z')
+    group = kwargs.get('group').lower()
     # open file(s) as xarray dataset
     if (format == 'OTIS'):
         # OTIS (single or multi-file)
@@ -250,18 +250,18 @@ def open_dataset(
     # add attributes
     ds.attrs['format'] = format
     # convert transports to currents if necessary
-    if kwargs['type'] in ('u','v'):
+    if kwargs['group'] in ('u','v'):
         # convert transports to currents and update attributes
         for c in ds.tmd.constituents:
             ds[c] /= ds['bathymetry']
-            ds[c].attrs.update(_attributes[mtype]['current'])
+            ds[c].attrs.update(_attributes[group]['current'])
     # return xarray dataset
     return ds
 
 # PURPOSE: read a list of model files
 def open_mfdataset(
         model_files: list[str] | list[pathlib.Path],
-        type: str = 'z',
+        group: str = 'z',
         **kwargs
     ):
     """
@@ -271,7 +271,7 @@ def open_mfdataset(
     ----------
     model_files: list of str or pathlib.Path
         list of OTIS model files
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -293,38 +293,38 @@ def open_mfdataset(
     kwargs.setdefault('parallel', False)
     parallel = kwargs.get('parallel') and dask_available
     # read each file as xarray dataset and append to list
-    if (type == 'z') and parallel:
+    if (group == 'z') and parallel:
         # elevations
         opener = dask.delayed(open_otis_elevation)
         d, = dask.compute([opener(f, **kwargs) for f in model_files])
-    elif type == 'z':
+    elif group == 'z':
         # elevations
         d = [open_otis_elevation(f, **kwargs) for f in model_files]
-    elif type in ('u','U') and parallel:
+    elif group in ('u','U') and parallel:
         # transports are returned as (u,v)
         opener = dask.delayed(open_otis_transport)
         d, = dask.compute([opener(f, **kwargs)[0] for f in model_files])
-    elif type in ('u','U'):
+    elif group in ('u','U'):
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[0] for f in model_files]
-    elif type in ('v','V') and parallel:
+    elif group in ('v','V') and parallel:
         # transports are returned as (u,v)
         opener = dask.delayed(open_otis_transport)
         d, = dask.compute([opener(f, **kwargs)[1] for f in model_files])
-    elif type in ('v','V'):
+    elif group in ('v','V'):
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[1] for f in model_files]
     # merge datasets
     ds = xr.merge(d, compat='override')
     # add attributes
-    ds.attrs['type'] = type.upper() if type in ('u','v') else type
+    ds.attrs['group'] = group.upper() if group in ('u','v') else group
     # return xarray dataset
     return ds
 
 def open_otis_dataset(
         model_file: str | list | pathlib.Path,
         grid_file: str | pathlib.Path,
-        type: str | None = 'z',
+        group: str | None = 'z',
         **kwargs
     ):
     """
@@ -336,7 +336,7 @@ def open_otis_dataset(
         input model file(s)
     grid_file: str, pathlib.Path
         input model grid file
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -363,27 +363,27 @@ def open_otis_dataset(
     # open model file(s)
     if isinstance(model_file, list):
         # multi-file datasets
-        ds2 = open_mfdataset(model_file, type=type, **kwargs)
-    elif (type == 'z'):
+        ds2 = open_mfdataset(model_file, group=group, **kwargs)
+    elif (group == 'z'):
         # elevations
         ds2 = open_otis_elevation(model_file, **kwargs)
-    elif type in ('u', 'U'):
+    elif group in ('u', 'U'):
         # transports are returned as (u,v)
         ds2 = open_otis_transport(model_file, **kwargs)[0]
-    elif type in ('v', 'V'):
+    elif group in ('v', 'V'):
         # transports are returned as (u,v)
         ds2 = open_otis_transport(model_file, **kwargs)[1]
     # merge datasets
-    ds = ds1.otis.merge(ds2, type=type)
+    ds = ds1.otis.merge(ds2, group=group)
     # add attributes
-    ds.attrs['type'] = type.upper() if type in ('u','v') else type
+    ds.attrs['group'] = group.upper() if group in ('u','v') else group
     # return xarray dataset
     return ds
 
 def open_atlas_dataset(
         model_file: str | pathlib.Path,
         grid_file: str | pathlib.Path,
-        type: str | None = 'z',
+        group: str | None = 'z',
         chunks: int | dict | str | None = None,
         use_mmap : bool = False,
         **kwargs
@@ -397,7 +397,7 @@ def open_atlas_dataset(
         input model file
     grid_file: str, pathlib.Path
         input model grid file
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -425,29 +425,29 @@ def open_atlas_dataset(
     # add attributes
     ds1.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
     # open model file(s)
-    if (type == 'z'):
+    if (group == 'z'):
         # elevations are returned as (z, localz)
         dsh, dth = open_atlas_elevation(model_file, use_mmap=use_mmap)
         ds2 = dsh.compact.combine_local(dth, chunks=chunks)
-    elif type in ('u', 'U'):
+    elif group in ('u', 'U'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
         ds2 = dsu.compact.combine_local(dtu, chunks=chunks)
-    elif type in ('v', 'V'):
+    elif group in ('v', 'V'):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
         ds2 = dsv.compact.combine_local(dtv, chunks=chunks)
     # merge datasets
     ds = xr.merge([ds1, ds2], compat='override')
     # add attributes
-    ds.attrs['type'] = type.upper() if type in ('u','v') else type
+    ds.attrs['group'] = group.upper() if group in ('u','v') else group
     # return xarray dataset
     return ds
 
 # PURPOSE: read TMD3 netCDF4 files
 def open_tmd3_dataset(
         input_file: str | pathlib.Path,
-        type: str | None = 'z',
+        group: str | None = 'z',
         chunks: int | dict | str | None = None,
         **kwargs
     ):
@@ -458,7 +458,7 @@ def open_tmd3_dataset(
     ----------
     input_file: str or pathlib.Path
         input TMD3 netCDF4 file
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -488,14 +488,14 @@ def open_tmd3_dataset(
     # flip y orientation to be monotonically increasing
     tmp = tmp.reindex(y=tmp.y[::-1])
     # convert imaginary component to negative to match convention
-    # get units attributes for model type
-    if (type == 'z'):
+    # get units attributes for model group
+    if (group == 'z'):
         ds = (tmp['hRe'] + -1j*tmp['hIm']).to_dataset(dim='constituents')
         units = tmp['hRe'].attrs.get('units')
-    elif type in ('U','u'):
+    elif group in ('U','u'):
         ds = (tmp['URe'] + -1j*tmp['UIm']).to_dataset(dim='constituents')
         units = tmp['URe'].attrs.get('units')
-    elif type in ('V','v'):
+    elif group in ('V','v'):
         ds = (tmp['VRe'] + -1j*tmp['VIm']).to_dataset(dim='constituents')
         units = tmp['VRe'].attrs.get('units')
     # read water column thickness, mask and flexure
@@ -508,7 +508,7 @@ def open_tmd3_dataset(
     for con in ds.data_vars:
         ds[con].attrs['units'] = units
     ds.attrs['crs'] = pyproj.CRS.from_user_input(spatial_proj4).to_dict()
-    ds.attrs['type'] = type.upper() if type in ('u','v') else type
+    ds.attrs['group'] = group.upper() if group in ('u','v') else group
     # return xarray dataset
     return ds
 
@@ -1775,7 +1775,7 @@ class OTISDataset:
         self._ds = ds
 
     # PURPOSE: interpolate grid variables to u and v nodes
-    def merge(self, ds, type: str = 'z'):
+    def merge(self, ds, group: str = 'z'):
         """
         Interpolate grid variables from zeta nodes to u and v nodes
 
@@ -1783,7 +1783,7 @@ class OTISDataset:
         ----------
         ds: xarray.Dataset
             OTIS tide model data
-        type: str, default 'z'
+        group: str, default 'z'
             Tidal variable of input dataset
 
                 - ``'z'``: heights
@@ -1794,7 +1794,7 @@ class OTISDataset:
         """
         # wrap mask if global
         mode = 'wrap' if self.is_global else 'edge'
-        if type in ('u', 'U'):
+        if group in ('u', 'U'):
             # calculate Dataset on u grids
             # pad and roll the mask and bathymetry
             tmp = self._ds.pad(x=(1, 0), mode=mode).rolling(x=2)
@@ -1805,7 +1805,7 @@ class OTISDataset:
             ds['bathymetry'] = ds['mask']*bathymetry.values
             for field in ['mask', 'bathymetry']:
                 ds[field].attrs.update(_attributes['u'][field])
-        elif type in ('v', 'V'):
+        elif group in ('v', 'V'):
             # calculate Dataset on v grids
             # pad and roll the mask and bathymetry
             tmp = self._ds.pad(y=(1, 0), mode='edge').rolling(y=2)

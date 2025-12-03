@@ -121,11 +121,10 @@ def test_node_tide(directory):
     # model parameters for GOT4.7
     m = pyTMD.io.model(directory).from_database('GOT4.7')
     # open dataset
-    ds = m.open_dataset(type='z', chunks='auto')
+    ds = m.open_dataset(group='z', chunks='auto')
     # append node equilibrium tide to dataset
     ds = ds.tmd.node_equilibrium()
     ds = ds.tmd.subset('node')
-    # create a test dataset for data type
     # number of data points
     n_time = 20
     delta_time = np.random.randint(0,31557600,size=n_time)

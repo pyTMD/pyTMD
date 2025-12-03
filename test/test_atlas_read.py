@@ -56,12 +56,11 @@ filepath = pathlib.Path(filename).absolute().parent
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
 def test_read_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', group='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2','s2','k1','o1'])
     # open dataset
-    ds = m.open_dataset(type='z', chunks='auto')
-
+    ds = m.open_dataset(group='z', chunks='auto')
     # read validation dataset (m2, s2, k1, o1)
     names = ('Lat', 'Lon', 'm2_amp', 'm2_ph', 's2_amp', 's2_ph',
         'k1_amp', 'k1_ph', 'o1_amp', 'o1_ph')
@@ -105,12 +104,11 @@ def test_read_TPXO9_v2(directory, CROP):
 # PURPOSE: Tests that interpolated results are comparable to OTPSnc program
 def test_verify_TPXO9_v2(directory, CROP):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', group='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2','s2','k1','o1'])
     # open dataset
-    ds = m.open_dataset(type='z', chunks='auto')
-
+    ds = m.open_dataset(group='z', chunks='auto')
     # compile numerical expression operator
     rx = re.compile(r'[-+]?(?:(?:\d+\.\d+\.\d+)|(?:\d+\:\d+\:\d+)'
         r'|(?:\d*\.\d+)|(?:\d+\.?))')
@@ -184,11 +182,11 @@ def test_definition_file(MODEL):
 # PURPOSE: test extend function
 def test_extend_array(directory, CHUNKS):
     # model parameters for TPXO9-atlas-v2
-    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', type='z')
+    m = pyTMD.io.model(directory).from_database('TPXO9-atlas-v2-nc', group='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2'])
     # open dataset
-    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    ds = m.open_dataset(group='z', chunks=CHUNKS)
     # pad in longitudinal direction
     ds = ds.tmd.pad()
     # check that longitude values are as expected

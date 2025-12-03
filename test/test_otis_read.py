@@ -102,9 +102,9 @@ class Test_CATS2008:
         # model parameters for CATS2008
         model = pyTMD.io.model(directory).from_database('CATS2008')
         # iterate over type: heights versus currents
-        for TYPE in ['z', 'U', 'V']:
+        for group in ['z', 'U', 'V']:
             # path to tide model files
-            modelpath = model[TYPE].grid_file.parent
+            modelpath = model[group].grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
             CFname = directory.joinpath('Model_CATS2008')
@@ -150,7 +150,7 @@ class Test_CATS2008:
             # MODE: OB time series
             validation,_ = octave.tmd_tide_pred_plus(str(CFname), SDtime,
                 station_lat, station_lon,
-                TYPE, nout=2)
+                group, nout=2)
             
             # create dataframe for validation data
             df = pd.DataFrame(data=validation, index=SDtime, columns=shortname)
@@ -163,7 +163,7 @@ class Test_CATS2008:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{group}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -173,7 +173,7 @@ class Test_CATS2008:
         # model parameters for CATS2008
         model = pyTMD.io.model(directory).from_database('CATS2008')
         modelpath = model['u'].grid_file.parent
-        TYPES = ['U','V']
+        GROUPS = ['U','V']
 
         # compute validation data from Matlab TMD program using octave
         # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
@@ -222,14 +222,14 @@ class Test_CATS2008:
         # save complex amplitude for each current
         hc = {}
         # iterate over zonal and meridional currents
-        for TYPE in TYPES:
+        for group in GROUPS:
             # extract tidal harmonic constants out of a tidal model
             amp,ph,D,cons = octave.tmd_extract_HC(str(CFname),
-                station_lat, station_lon, TYPE, nout=4)
+                station_lat, station_lon, group, nout=4)
             # calculate complex phase in radians for Euler's
             cph = -1j*ph*np.pi/180.0
             # calculate constituent oscillation for station
-            hc[TYPE] = amp*np.exp(cph)
+            hc[group] = amp*np.exp(cph)
 
         # compute tidal ellipse parameters for TMD matlab program
         umajor,uminor,uincl,uphase = octave.TideEl(hc['U'],hc['V'],nout=4)
@@ -273,7 +273,7 @@ class Test_CATS2008:
         # model parameters for CATS2008
         model = pyTMD.io.model(self.directory).from_database('CATS2008')
         # open model dataset
-        ds = model.open_dataset(type='z', use_mmap=use_mmap)
+        ds = model.open_dataset(group='z', use_mmap=use_mmap)
         # convert dataset to cm
         ds = ds.tmd.to_units('cm')
 
@@ -363,15 +363,15 @@ class Test_CATS2008:
         # test RMS differences
         assert np.all(rms <= RMS)
 
-    # parameterize type: heights versus currents
+    # parameterize if using memory mapping
     @pytest.mark.parametrize("use_mmap", [False, True])
     # PURPOSE: Tests that interpolated results are comparable to Matlab program
     def test_verify_CATS2008(self, use_mmap):
         # model parameters for CATS2008
         model = pyTMD.io.model(self.directory).from_database('CATS2008')
         # open datatree for model
-        TYPES = ['z','U','V']
-        dtree = model.open_datatree(type=TYPES, use_mmap=use_mmap)
+        GROUPS = ['z','U','V']
+        dtree = model.open_datatree(group=GROUPS, use_mmap=use_mmap)
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
@@ -425,13 +425,13 @@ class Test_CATS2008:
         # will verify differences between model outputs are within tolerance
         eps = np.finfo(np.float16).eps
 
-        # for each type of data (z, u, v)
-        for TYPE, ds in local.items():
+        # for each group of data (z, u, v)
+        for group, ds in local.items():
             # convert to dataset
             ds = ds.to_dataset()
             # read validation data from Matlab TMD program
             # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-            validation_file = f'TMDv2.5_CATS2008_{TYPE}.csv.gz'
+            validation_file = f'TMDv2.5_CATS2008_{group}.csv.gz'
             df = pd.read_csv(filepath.joinpath(validation_file))
             # calculate daily results for a time period
             # convert time to days since 1992-01-01T00:00:00
@@ -460,8 +460,8 @@ class Test_CATS2008:
         # model parameters for CATS2008
         model = pyTMD.io.model(self.directory).from_database('CATS2008')
         # open datatree for model
-        TYPES = ['U','V']
-        dtree = model.open_datatree(type=TYPES, use_mmap=use_mmap)
+        GROUPS = ['U','V']
+        dtree = model.open_datatree(group=GROUPS, use_mmap=use_mmap)
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
@@ -564,7 +564,7 @@ class Test_CATS2008:
         # get model parameters
         model = pyTMD.io.model(self.directory).from_database('CATS2008')
         # open dataset
-        ds = model.open_dataset(type='z')
+        ds = model.open_dataset(group='z')
 
         # calculate a forecast every minute
         minutes = np.arange(366*1440)
@@ -669,10 +669,10 @@ class Test_AOTIM5_2018:
         octave.warning('off', 'all')
         # model parameters for AOTIM-5-2018
         model = pyTMD.io.model(directory).from_database('AOTIM-5-2018')
-        # iterate over type: heights versus currents
-        for TYPE in ['z', 'U', 'V']:
+        # iterate over groups: heights versus currents
+        for group in ['z', 'U', 'V']:
             # path to tide model files
-            modelpath = model[TYPE].grid_file.parent
+            modelpath = model[group].grid_file.parent
             octave.addpath(str(modelpath))
             # input control file for model
             CFname = directory.joinpath('Model_Arc5km2018')
@@ -704,7 +704,7 @@ class Test_AOTIM5_2018:
             # run Matlab TMD program with octave
             # MODE: OB time series
             validation,_ = octave.tmd_tide_pred_plus(str(CFname), SDtime,
-                station_lat, station_lon, TYPE, nout=2)
+                station_lat, station_lon, group, nout=2)
 
             # create dataframe for validation data
             df = pd.DataFrame(data=validation, index=SDtime, columns=shortname)
@@ -716,7 +716,7 @@ class Test_AOTIM5_2018:
                 df[s].attrs['longitude'] = station_lon[i]
 
             # save to (gzipped) csv
-            output_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz')
+            output_file = filepath.joinpath(f'TMDv2.5_Arc5km2018_{group}.csv.gz')
             with gzip.open(output_file, 'wb') as f:
                 df.to_csv(f, index_label='time')
 
@@ -726,8 +726,8 @@ class Test_AOTIM5_2018:
         # model parameters for AOTIM-5-2018
         model = pyTMD.io.model(self.directory).from_database('AOTIM-5-2018')
         # open datatree for model
-        TYPES = ['z','U','V']
-        dtree = model.open_datatree(type=TYPES, use_mmap=use_mmap)
+        GROUPS = ['z','U','V']
+        dtree = model.open_datatree(group=GROUPS, use_mmap=use_mmap)
 
         # open Arctic Tidal Current Atlas list of records
         ATLAS = self.directory.joinpath('List_of_records.txt')
@@ -765,14 +765,14 @@ class Test_AOTIM5_2018:
         valid_stations=[i for i,s in enumerate(shortname)
             if s not in invalid_list]
         
-        # for each type of data (z, u, v)
-        for TYPE, ds in local.items():
+        # for each group of data (z, u, v)
+        for group, ds in local.items():
             # convert to dataset
             ds = ds.to_dataset()
 
             # read validation data from Matlab TMD program
             # https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
-            validation_file = f'TMDv2.5_Arc5km2018_{TYPE}.csv.gz'
+            validation_file = f'TMDv2.5_Arc5km2018_{group}.csv.gz'
             df = pd.read_csv(filepath.joinpath(validation_file))
             # calculate daily results for a time period
             # convert time to days since 1992-01-01T00:00:00

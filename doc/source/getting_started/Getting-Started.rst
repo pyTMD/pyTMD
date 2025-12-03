@@ -93,7 +93,7 @@ The JSON definition files follow a similar structure as the main ``pyTMD`` datab
 The JSON format directly maps the parameter names with their values stored in the appropriate data type (strings, lists, numbers, booleans, etc).
 While still human readable, the JSON format is both interoperable and more easily machine readable.
 
-Each definition file should have ``name``, ``format`` and ``type`` parameters.
+Each definition file should have ``name`` and ``format`` parameters as well as the parameters for the data groups (``z``, ``u``, ``v``).
 Each model type may also require specific sets of parameters for the individual model reader.
 For models with multiple constituent files, the files can be found using a ``glob`` string to search a directory.
 

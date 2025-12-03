@@ -63,14 +63,14 @@ def test_check_FES2014(directory):
 # PURPOSE: Tests that interpolated results are comparable to FES program
 def test_verify_FES2014(directory, CROP):
     # model parameters for FES2014
-    m = pyTMD.io.model(directory).from_database('FES2014', type='z')
+    m = pyTMD.io.model(directory).from_database('FES2014', group='z')
     # constituent files included in test
     c = ['2n2','k1','k2','m2','m4','mf','mm','msqm','mtm','n2','o1',
         'p1','q1','s1','s2']
     # reduce to constituents for test
     m.reduce_constituents(c)
     # open dataset
-    ds = m.open_dataset(type='z', chunks='auto', use_default_units=False)
+    ds = m.open_dataset(group='z', chunks='auto', use_default_units=False)
 
     # read validation dataset
     # extract time (Modified Julian Days), latitude, longitude, and tide data
@@ -138,11 +138,11 @@ def test_definition_file(MODEL):
 # PURPOSE: test extend function
 def test_extend_array(directory, CHUNKS):
     # model parameters for FES2014
-    m = pyTMD.io.model(directory).from_database('FES2014', type='z')
+    m = pyTMD.io.model(directory).from_database('FES2014', group='z')
     # reduce to constituents for test
     m.reduce_constituents(['m2'])
     # open dataset
-    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    ds = m.open_dataset(group='z', chunks=CHUNKS)
     # pad in longitudinal direction
     ds = ds.tmd.pad()
     # check that longitude values are as expected

@@ -234,9 +234,9 @@ class DataTree:
             # add attributes to each variable
             dsu[c].attrs['units'] = dmajor[c].attrs.get('units', '')
             dsv[c].attrs['units'] = dmajor[c].attrs.get('units', '')
-            if (dmajor[c].tmd.type == 'current'):
+            if (dmajor[c].tmd.group == 'current'):
                 ukey, vkey = 'u', 'v'
-            elif (dmajor[c].tmd.type == 'transport'):
+            elif (dmajor[c].tmd.group == 'transport'):
                 ukey, vkey = 'U', 'V'
         # create output datatree
         dtree = xr.DataTree()
@@ -753,7 +753,7 @@ class DataArray:
             scaling factor to apply
         """
         # convert to default units
-        default_units = _default_units.get(self.type, self.units)
+        default_units = _default_units.get(self.group, self.units)
         da = self.to_units(default_units, value=value)
         return da
 
@@ -770,8 +770,8 @@ class DataArray:
         return 1.0*self.units
 
     @property
-    def type(self):
-        """Variable type of the ``DataArray``
+    def group(self):
+        """Variable group of the ``DataArray``
         """
         if self.units.is_compatible_with('m'):
             return 'elevation'
@@ -780,4 +780,4 @@ class DataArray:
         elif self.units.is_compatible_with('m^2/s'):
             return 'transport'
         else:
-            raise ValueError(f'Unknown unit type: {self.units}')
+            raise ValueError(f'Unknown unit group: {self.units}')

@@ -64,7 +64,7 @@ def test_verify_GOT47(directory, CROP):
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','s1']
     m.reduce_constituents(constituents)
     # open dataset
-    ds = m.open_dataset(type='z', chunks='auto', use_default_units=False)
+    ds = m.open_dataset(group='z', chunks='auto', use_default_units=False)
 
     # read validation dataset
     with gzip.open(filepath.joinpath('perth_output_got4.7.gz'),'r') as fid:
@@ -172,7 +172,7 @@ def test_extend_array(directory, CHUNKS):
     # reduce to constituents for test
     m.reduce_constituents(['m2'])
     # open dataset
-    ds = m.open_dataset(type='z', chunks=CHUNKS)
+    ds = m.open_dataset(group='z', chunks=CHUNKS)
     # pad in longitudinal direction
     ds = ds.tmd.pad()
     # check that longitude values are as expected

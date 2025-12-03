@@ -10,7 +10,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    ds = pyTMD.io.ATLAS.open_dataset(model_files, grid_file, type='z')
+    ds = pyTMD.io.ATLAS.open_dataset(model_files, grid_file, group='z')
 
 `Source code`__
 

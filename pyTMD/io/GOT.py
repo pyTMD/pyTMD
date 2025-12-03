@@ -259,7 +259,7 @@ def open_got_ascii(
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes
-    ds.attrs['type'] = 'z'
+    ds.attrs['group'] = 'z'
     if units:
         ds[cons].attrs['units'] = units[0].lower()
     # return xarray dataset
@@ -314,7 +314,7 @@ def open_got_netcdf(
     mapping_coords = dict(lon='x', lat='y')
     ds = ds.rename(mapping_coords)
     # add attributes
-    ds.attrs['type'] = 'z'
+    ds.attrs['group'] = 'z'
     ds[cons].attrs['units'] = tmp['amplitude'].attrs.get('units')
     # return xarray dataset
     return ds

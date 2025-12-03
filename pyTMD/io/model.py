@@ -221,7 +221,7 @@ class model:
 
     def from_database(self,
             m: str,
-            type: tuple = ('z', 'u', 'v')
+            group: tuple = ('z', 'u', 'v')
         ):
         """
         Create a model object from known tidal models
@@ -230,7 +230,7 @@ class model:
         ----------
         m: str
             model name
-        type: tuple, default ('z', 'u', 'v')
+        group: tuple, default ('z', 'u', 'v')
             List of model types to extract
         """
         # set working data directory if unset
@@ -244,20 +244,20 @@ class model:
         except (ValueError, KeyError, AttributeError) as exc:
             raise ValueError(f"Unlisted tide model {m}") from exc
         # verify model types to extract
-        if isinstance(type, str):
-            type = (type,)
+        if isinstance(group, str):
+            group = (group,)
         # verify paths
-        for mtype in type:
-            # verify model type is valid
-            mtype = mtype.lower()
-            # skip if model type is unavailable
-            if not hasattr(self, mtype):
+        for g in group:
+            # verify model group is valid
+            g = g.lower()
+            # skip if model group is unavailable
+            if not hasattr(self, g):
                 continue
             # validate paths: grid file for OTIS, ATLAS models
-            if hasattr(self[mtype], 'grid_file'):
-                self[mtype].grid_file = self.pathfinder(self[mtype].grid_file)
+            if hasattr(self[g], 'grid_file'):
+                self[g].grid_file = self.pathfinder(self[g].grid_file)
             # validate paths: model constituent files
-            self[mtype].model_file = self.pathfinder(self[mtype].model_file)
+            self[g].model_file = self.pathfinder(self[g].model_file)
         # return the model parameters
         self.validate_format()
         # set dictionary of parameters
@@ -342,7 +342,7 @@ class model:
     @property
     def corrections(self) -> str:
         """
-        Returns the corrections type for the model
+        Returns the corrections group for the model
         """
         part1, _, part2 = self.format.partition('-')
         if self.format in ('GOT-ascii', ):
@@ -367,14 +367,14 @@ class model:
     def multifile(self) -> bool:
         """Returns if the model uses individual files for constituents
         """
-        # try to find a valid mode type
-        for mtype in ('z', 'u', 'v'):
-            # verify case of model type
-            mtype = mtype.lower()
-            # skip if model type is unavailable
-            if not hasattr(self, mtype):
+        # try to find a valid mode group
+        for g in ('z', 'u', 'v'):
+            # verify case of model group
+            g = g.lower()
+            # skip if model group is unavailable
+            if not hasattr(self, g):
                 continue
-            return isinstance(self[mtype].model_file, list)
+            return isinstance(self[g].model_file, list)
 
     @property
     def crs(self):
@@ -603,43 +603,43 @@ class model:
         # verify parameters for each model format
         if temp.format in ('OTIS','ATLAS-compact','ATLAS-netcdf',):
             # extract model files
-            for mtype in ('z', 'u', 'v'):
-                # check that model type is available
-                if not hasattr(temp, mtype):
+            for g in ('z', 'u', 'v'):
+                # check that model group is available
+                if not hasattr(temp, g):
                     continue
-                assert temp[mtype].grid_file
+                assert temp[g].grid_file
                 # check if grid file is relative or absolute
                 if (temp.directory is not None):
-                    temp[mtype].grid_file = \
-                        temp.directory.joinpath(temp[mtype].grid_file)
+                    temp[g].grid_file = \
+                        temp.directory.joinpath(temp[g].grid_file)
                 else:
-                    temp[mtype].grid_file = \
-                        pyTMD.utilities.Path(temp[mtype].grid_file)
+                    temp[g].grid_file = \
+                        pyTMD.utilities.Path(temp[g].grid_file)
         # extract model files
-        for mtype in ('z', 'u', 'v'):
-            # check that model type is available
-            if not hasattr(temp, mtype):
+        for g in ('z', 'u', 'v'):
+            # check that model group is available
+            if not hasattr(temp, g):
                 continue
-            # get model files for model type
+            # get model files for model group
             if (temp.directory is not None):
                 # use glob strings to find files in directory
-                glob_string = copy.copy(temp[mtype].model_file)
+                glob_string = copy.copy(temp[g].model_file)
                 # search singular glob string or iterable glob strings
                 if isinstance(glob_string, str):
                     # singular glob string
-                    temp[mtype].model_file = list(temp.directory.glob(glob_string))
+                    temp[g].model_file = list(temp.directory.glob(glob_string))
                 elif isinstance(glob_string, Iterable):
                     # iterable glob strings
-                    temp[mtype].model_file = []
+                    temp[g].model_file = []
                     for p in glob_string:
-                        temp[mtype].model_file.extend(temp.directory.glob(p))
-            elif isinstance(temp[mtype].model_file, list):
+                        temp[g].model_file.extend(temp.directory.glob(p))
+            elif isinstance(temp[g].model_file, list):
                 # resolve paths to model files
-                temp[mtype].model_file = [pyTMD.utilities.Path(f) for f in
-                    temp[mtype].model_file]
+                temp[g].model_file = [pyTMD.utilities.Path(f) for f in
+                    temp[g].model_file]
             else:
                 # fully defined single file case
-                temp[mtype].model_file = pyTMD.utilities.Path(temp[mtype].model_file)
+                temp[g].model_file = pyTMD.utilities.Path(temp[g].model_file)
         # verify that projection attribute exists for projected models
         if temp.format in ('OTIS','ATLAS-compact','TMD3'):
             assert temp.projection
@@ -683,7 +683,7 @@ class model:
         return d
 
     def parse_constituents(self,
-            type: str = 'z',
+            group: str = 'z',
             **kwargs
         ) -> list:
         """
@@ -691,18 +691,18 @@ class model:
 
         Parameters
         ----------
-        type: str, default 'z'
-            Model type
+        group: str, default 'z'
+            Model group
         """
-        if isinstance(self[type].model_file, (str, pathlib.Path)):
+        if isinstance(self[group].model_file, (str, pathlib.Path)):
             # single file case
             self.constituents = [
-                self.parse_file(self[type].model_file, **kwargs)
+                self.parse_file(self[group].model_file, **kwargs)
             ]
-        elif isinstance(self[type].model_file, list):
+        elif isinstance(self[group].model_file, list):
             # multiple file case
             self.constituents = [
-                self.parse_file(f, **kwargs) for f in self[type].model_file
+                self.parse_file(f, **kwargs) for f in self[group].model_file
             ]
         # return the model parameters
         return self
@@ -744,7 +744,7 @@ class model:
 
     def reduce_constituents(self,
             constituents: str | list,
-            type: str = 'z'
+            group: str = 'z'
         ):
         """
         Reduce model files to a subset of constituents
@@ -753,8 +753,8 @@ class model:
         ----------
         constituents: str or list
             List of constituents names
-        type: str, default 'z'
-            Model type
+        group: str, default 'z'
+            Model group
         """
         # if no constituents are specified, return self
         if constituents is None:
@@ -764,19 +764,19 @@ class model:
             constituents = [constituents]
         # parse constituents from model files
         try:
-            self.parse_constituents(type=type, raise_error=True)
+            self.parse_constituents(group=group, raise_error=True)
         except ValueError as exc:
             return None   
         # only run for multiple files
-        if isinstance(self[type].model_file, list):
+        if isinstance(self[group].model_file, list):
             # multiple file case
             # filter model files to constituents
-            self[type].model_file = [
-                self[type].model_file[self.constituents.index(c)]
+            self[group].model_file = [
+                self[group].model_file[self.constituents.index(c)]
                 for c in constituents if (c in self.constituents)
             ]
         # update list of constituents
-        self.parse_constituents(type=type)
+        self.parse_constituents(group=group)
         # return self
         return self
 
@@ -785,28 +785,28 @@ class model:
         from pyTMD.io import OTIS, ATLAS, GOT, FES
         # import tide model functions
         # set default keyword arguments
-        kwargs.setdefault('type', 'z')
+        kwargs.setdefault('group', 'z')
         kwargs.setdefault('use_default_units', True)
         kwargs.setdefault('append_node', False)
         kwargs.setdefault('compressed', self.compressed)
         kwargs.setdefault('constituents', None)
-        # model type
-        mtype = kwargs['type'].lower()
-        assert mtype in ('z', 'u', 'v'), f"Invalid model type {mtype}"
+        # model group
+        group = kwargs['group'].lower()
+        assert group in ('z', 'u', 'v'), f"Invalid model group {group}"
         # extract model file
-        model_file = self[mtype].get('model_file')
+        model_file = self[group].get('model_file')
         # reduce constituents if specified
         self.reduce_constituents(kwargs['constituents'])
         if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
             # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
             ds = OTIS.open_dataset(model_file, 
-                grid_file=self[mtype].get('grid_file'),
+                grid_file=self[group].get('grid_file'),
                 format=self.file_format,
                 crs=self.crs, **kwargs)
         elif self.format in ('ATLAS-netcdf',):
             # open ATLAS netCDF4 files as xarray Dataset
             ds = ATLAS.open_dataset(model_file, 
-                grid_file=self[mtype].get('grid_file'),
+                grid_file=self[group].get('grid_file'),
                 format=self.file_format, **kwargs)
         elif self.format in ('GOT-ascii', 'GOT-netcdf'):
             # open GOT ASCII/netCDF4 files as xarray Dataset
@@ -828,7 +828,7 @@ class model:
         c = ds.tmd.constituents
         # set units attribute if not already set
         # (uses value defined in the model database)
-        ds[c].attrs['units'] = ds[c].attrs.get('units', self[mtype].units)
+        ds[c].attrs['units'] = ds[c].attrs.get('units', self[group].units)
         # convert to default units
         if kwargs['use_default_units']:
             ds = ds.tmd.to_default_units()
@@ -836,7 +836,7 @@ class model:
         return ds
 
     def open_datatree(self,
-            type: tuple = ('z', 'u', 'v'),
+            group: tuple = ('z', 'u', 'v'),
             **kwargs
         ):
         """
@@ -844,18 +844,18 @@ class model:
 
         Parameters
         ----------
-        type: tuple, default ('z', 'u', 'v')
+        group: tuple, default ('z', 'u', 'v')
             List of model types to extract
         """
         # output dictionary of xarray Datasets
         ds = {}
         # try to read model files
-        for mtype in type:
-            # skip if model type is unavailable
+        for mtype in group:
+            # skip if model group is unavailable
             if not hasattr(self, mtype.lower()):
                 continue
             # open xarray Dataset
-            ds[mtype] = self.open_dataset(type=mtype, **kwargs)
+            ds[mtype] = self.open_dataset(group=mtype, **kwargs)
         # create xarray DataTree from dictionary
         dtree = xr.DataTree.from_dict(ds)
         # return the model xarray DataTree

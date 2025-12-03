@@ -15,7 +15,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    ds = pyTMD.io.OTIS.open_dataset(model_file, grid_file, format='OTIS', type='z')
+    ds = pyTMD.io.OTIS.open_dataset(model_file, grid_file, group='z', format='OTIS')
 
 `Source code`__
 

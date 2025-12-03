@@ -50,7 +50,7 @@ def test_definition_FES():
     # read definition file
     definition_file = 'model_FES2014.json'
     m = pyTMD.io.model().from_file(filepath.joinpath(definition_file))
-    m.parse_constituents(type='z')
+    m.parse_constituents(group='z')
     # model files and constituents
     model_files = ['fes2014/ocean_tide/2n2.nc.gz',
         'fes2014/ocean_tide/eps2.nc.gz', 'fes2014/ocean_tide/j1.nc.gz',
@@ -95,7 +95,7 @@ def test_definition_FES_glob():
     # read model definition file
     definition_file = 'model_FES2014.json'
     m = pyTMD.io.model().from_file(filepath.joinpath(definition_file))
-    m.parse_constituents(type='z')
+    m.parse_constituents(group='z')
     # model files
     model_files = ['fes2014/ocean_tide/2n2.nc.gz',
         'fes2014/ocean_tide/eps2.nc.gz', 'fes2014/ocean_tide/j1.nc.gz',
@@ -133,7 +133,7 @@ def test_definition_FES_glob():
     fid.seek(0)
     # use model definition file as input
     model = pyTMD.io.model(directory=filepath).from_file(fid)
-    model.parse_constituents(type='z')
+    model.parse_constituents(group='z')
     for attr in attrs:
         assert getattr(model,attr) == getattr(m,attr)
     # verify that the model files and constituents match
@@ -353,7 +353,7 @@ def test_definition_FES_currents_glob():
     # check validity of parsed constituents
     parsed_constituents = \
         [pyTMD.io.model.parse_file(f) for f in model_files['u']]
-    model.parse_constituents(type='u')
+    model.parse_constituents(group='u')
     for c in parsed_constituents:
         assert c in model.constituents
     # close the glob definition file
@@ -668,8 +668,8 @@ def test_definition_TPXO9_currents_glob():
 def test_parse_FES_elevation(MODEL):
     """Tests the parsing of FES-type elevation model files
     """
-    m = pyTMD.io.model(verify=False).from_database(MODEL, type='z')
-    m.parse_constituents(type='z')
+    m = pyTMD.io.model(verify=False).from_database(MODEL, group='z')
+    m.parse_constituents(group='z')
     constituents = [pyTMD.io.model.parse_file(f) for f in m['z'].model_file]
     assert (m.constituents == constituents)
 
@@ -680,11 +680,11 @@ def test_parse_FES_currents(MODEL):
     """Tests the parsing of FES-type current model files
     """
     # test ocean current constituents
-    m = pyTMD.io.model(verify=False).from_database(MODEL, type=['u','v'])
-    m.parse_constituents(type='u')
+    m = pyTMD.io.model(verify=False).from_database(MODEL, group=['u','v'])
+    m.parse_constituents(group='u')
     constituents = [pyTMD.io.model.parse_file(f) for f in m['u'].model_file]
     assert (m.constituents == constituents)
-    m.parse_constituents(type='v')
+    m.parse_constituents(group='v')
     constituents = [pyTMD.io.model.parse_file(f) for f in m['v'].model_file]
     assert (m.constituents == constituents)
 
@@ -701,7 +701,7 @@ def test_parse_bathymetry(FILE):
 def test_parse_GOT_elevation(MODEL):
     """Tests the parsing of GOT-type elevation model files
     """
-    m = pyTMD.io.model(verify=False).from_database(MODEL, type='z')
+    m = pyTMD.io.model(verify=False).from_database(MODEL, group='z')
     m.constituents = [pyTMD.io.model.parse_file(f) for f in m['z'].model_file]
     # constituents for long-period and short-period tides
     if MODEL in ('RE14',):
@@ -721,8 +721,8 @@ def test_parse_GOT_elevation(MODEL):
 def test_parse_TPXO9_elevation(MODEL):
     """Tests the parsing of ATLAS-type elevation model files
     """
-    m = pyTMD.io.model(verify=False).from_database(MODEL, type='z')
-    m.parse_constituents(type='z')
+    m = pyTMD.io.model(verify=False).from_database(MODEL, group='z')
+    m.parse_constituents(group='z')
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2','m4']
     assert all(c in m.constituents for c in constituents)
     # test additional constituents found in newer models
@@ -741,8 +741,8 @@ current_models = set(pyTMD.io.model.ATLAS()) & \
 def test_parse_TPXO9_currents(MODEL):
     """Tests the parsing of ATLAS-type current model files
     """
-    m = pyTMD.io.model(verify=False).from_database(MODEL, type=['u','v'])
-    m.parse_constituents(type='u')
+    m = pyTMD.io.model(verify=False).from_database(MODEL, group=['u','v'])
+    m.parse_constituents(group='u')
     constituents = ['q1','o1','p1','k1','n2','m2','s2','k2',
         'm4','ms4','mn4','2n2']
     assert all(c in m.constituents for c in constituents)

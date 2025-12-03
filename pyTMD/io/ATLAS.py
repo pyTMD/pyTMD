@@ -95,12 +95,12 @@ def open_dataset(model_files: list[str] | list[pathlib.Path],
         ATLAS tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('type', 'z')
+    kwargs.setdefault('group', 'z')
     # read ATLAS grid and model files
     ds1 = open_atlas_grid(grid_file, **kwargs)
     ds2 = open_mfdataset(model_files, **kwargs)
     # convert transports to currents if necessary
-    if kwargs['type'] in ('u','v'):
+    if kwargs['group'] in ('u','v'):
         # convert transports to currents and update attributes
         for c in ds2.tmd.constituents:
             ds2[c] /= ds1['bathymetry']
@@ -151,7 +151,7 @@ def open_mfdataset(
 
 def open_atlas_grid(
         grid_file: str | pathlib.Path,
-        type: str = 'z',
+        group: str = 'z',
         **kwargs
     ):
     """
@@ -161,7 +161,7 @@ def open_atlas_grid(
     ----------
     grid_file: str or pathlib.Path
         ATLAS model grid file
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -191,18 +191,18 @@ def open_atlas_grid(
         tmp = xr.open_dataset(f, mask_and_scale=True)
     else:
         tmp = xr.open_dataset(grid_file, mask_and_scale=True)
-    # read bathymetry and coordinates for variable type
-    if (type == 'z'):
+    # read bathymetry and coordinates for variable group
+    if (group == 'z'):
         # get bathymetry at nodes
         ds = tmp['hz'].T.to_dataset(name='bathymetry')
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
-    elif type in ('U','u'):
+    elif group in ('U','u'):
         # get bathymetry at nodes
         ds = tmp['hu'].T.to_dataset(name='bathymetry')
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
-    elif type in ('V','v'):
+    elif group in ('V','v'):
         # get bathymetry at nodes
         ds = tmp['hv'].T.to_dataset(name='bathymetry')
         ds.coords['x'] = tmp['lon_v']
@@ -212,7 +212,7 @@ def open_atlas_grid(
     # swap dimension names
     ds = ds.swap_dims(dict(nx='x', ny='y'))
     # add attributes
-    ds.attrs['type'] = type
+    ds.attrs['group'] = group
     ds.attrs['format'] = 'ATLAS'
     # return xarray dataset
     return ds
@@ -220,7 +220,7 @@ def open_atlas_grid(
 # PURPOSE: reads ATLAS netCDF4 files
 def open_atlas_dataset(
         input_file: str | pathlib.Path,
-        type: str = 'z',
+        group: str = 'z',
         chunks: int | dict | str | None = None,
         **kwargs
     ):
@@ -231,7 +231,7 @@ def open_atlas_dataset(
     ----------
     input_file: str or pathlib.Path
         input ATLAS file
-    type: str, default 'z'
+    group: str, default 'z'
         Tidal variable to read
 
             - ``'z'``: heights
@@ -265,17 +265,17 @@ def open_atlas_dataset(
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # constituent name
     con = tmp['con'].values.astype('|S').tobytes().decode('utf-8').strip()
-    if (type == 'z'):
+    if (group == 'z'):
         ds = (tmp['hRe'].T + 1j*tmp['hIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_z']
         ds.coords['y'] = tmp['lat_z']
         ds[con].attrs['units'] = tmp['hRe'].attrs.get('units')
-    elif type in ('U','u'):
+    elif group in ('U','u'):
         ds = (tmp['uRe'].T + 1j*tmp['uIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_u']
         ds.coords['y'] = tmp['lat_u']
         ds[con].attrs['units'] = tmp['uRe'].attrs.get('units')
-    elif type in ('V','v'):
+    elif group in ('V','v'):
         ds = (tmp['vRe'].T + 1j*tmp['vIm'].T).to_dataset(name=con)
         ds.coords['x'] = tmp['lon_v']
         ds.coords['y'] = tmp['lat_v']
@@ -284,7 +284,7 @@ def open_atlas_dataset(
     ds = ds.swap_dims(dict(nx='x', ny='y'))
     # add attributes
     ds.attrs['format'] = 'ATLAS'
-    ds.attrs['type'] = type.upper() if type in ('u','v') else type
+    ds.attrs['group'] = group.upper() if group in ('u','v') else group
     # return xarray dataset
     return ds
 
@@ -321,11 +321,11 @@ class ATLASDataset:
         """
         # tilde-expand output file
         path = pyTMD.utilities.Path(path).resolve()
-        # set variable names for type
-        type = self._ds.attrs['type'].lower()
-        depth_key = f'h{type}'
-        lon_key = f'lon_{type}'
-        lat_key = f'lat_{type}'
+        # set variable names for group
+        group = self._ds.attrs['group'].lower()
+        depth_key = f'h{group}'
+        lon_key = f'lon_{group}'
+        lat_key = f'lat_{group}'
         # set default encoding
         kwargs.setdefault('encoding', {depth_key: encoding})
         # coordinate remapping
@@ -333,12 +333,12 @@ class ATLASDataset:
         attrs = {lon_key: {}, lat_key: {}, depth_key: {}}
         # set variable attributes
         attrs[lon_key]['units'] = 'degrees_east'
-        attrs[lon_key]['long_name'] = f'longitude of {type.upper()} nodes'
+        attrs[lon_key]['long_name'] = f'longitude of {group.upper()} nodes'
         attrs[lat_key]['units'] = 'degrees_north'
-        attrs[lat_key]['long_name'] = f'latitude of {type.upper()} nodes'
+        attrs[lat_key]['long_name'] = f'latitude of {group.upper()} nodes'
         units = self._ds['bathymetry'].attrs.get('units', 'meters')
         attrs[depth_key]['units'] = units
-        attrs[depth_key]['long_name'] = f'Bathymetry at {type.upper()} nodes'
+        attrs[depth_key]['long_name'] = f'Bathymetry at {group.upper()} nodes'
         attrs[depth_key]['field'] = 'bath, scalar'
         # create output xarray dataset
         ds = xr.Dataset()
@@ -347,7 +347,7 @@ class ATLASDataset:
         ds = ds.rename(mapping_coords)
         # add global attributes
         ds.attrs['title'] = 'ATLAS bathymetry data'
-        ds.attrs['type'] = 'OTIS grid file'
+        ds.attrs['group'] = 'OTIS grid file'
         ds.attrs['date_created'] = datetime.datetime.now().isoformat()
         ds.attrs['software_reference'] = pyTMD.version.project_name
         ds.attrs['software_version'] = pyTMD.version.full_version
@@ -381,10 +381,10 @@ class ATLASDataset:
         # tilde-expand output directory
         path = pyTMD.utilities.Path(path).resolve()
         # set variable names 
-        type = self._ds.attrs['type'].lower()
-        type_key = dict(z='h', u='U', v='V')[type]
-        lon_key = f'lon_{type}'
-        lat_key = f'lat_{type}'
+        group = self._ds.attrs['group'].lower()
+        type_key = dict(z='h', u='U', v='V')[group]
+        lon_key = f'lon_{group}'
+        lat_key = f'lat_{group}'
         # set default encoding
         default_encoding = {f'{type_key}{c}': encoding for c in ('Re','Im')}
         kwargs.setdefault('encoding', default_encoding)
@@ -393,17 +393,17 @@ class ATLASDataset:
         attrs = {lon_key: {}, lat_key: {}}
         # set variable attributes
         attrs[lon_key]['units'] = 'degrees_east'
-        attrs[lon_key]['long_name'] = f'longitude of {type.upper()} nodes'
+        attrs[lon_key]['long_name'] = f'longitude of {group.upper()} nodes'
         attrs[lat_key]['units'] = 'degrees_north'
-        attrs[lat_key]['long_name'] = f'latitude of {type.upper()} nodes'
+        attrs[lat_key]['long_name'] = f'latitude of {group.upper()} nodes'
         # build variable attributes for real and imaginary components
         for key, val in dict(Re='Real part', Im='Imag part').items():
             # variable units and long_name attributes
-            if (type == 'z'):
+            if (group == 'z'):
                 long_name = f'Tidal elevation complex amplitude, {val}'
-            elif (type == 'u'):
+            elif (group == 'u'):
                 long_name = f'Tidal WE transport complex amplitude, {val}'
-            elif (type == 'v'):
+            elif (group == 'v'):
                 long_name = f'Tidal SN transport complex amplitude, {val}'
             # variable field description
             fields = []
@@ -428,12 +428,12 @@ class ATLASDataset:
                 ds[att_name].attrs.update(att_val)
             ds[att_name].attrs['units'] = self._ds[v].attrs['units']
             # add global attributes
-            if type == 'z':
+            if group == 'z':
                 ds.attrs['title'] = 'ATLAS tidal elevation file'
-                ds.attrs['type'] = 'OTIS elevation file'
-            elif type in ('u', 'v'):
+                ds.attrs['group'] = 'OTIS elevation file'
+            elif group in ('u', 'v'):
                 ds.attrs['title'] = 'ATLAS tidal SN and WE transports file'
-                ds.attrs['type'] = 'OTIS transport file'
+                ds.attrs['group'] = 'OTIS transport file'
             ds.attrs['date_created'] = datetime.datetime.now().isoformat()
             ds.attrs['software_reference'] = pyTMD.version.project_name
             ds.attrs['software_version'] = pyTMD.version.full_version
@@ -472,19 +472,19 @@ class ATLASDataTree:
         grid_file = pyTMD.utilities.Path(grid_file).resolve()
         # set default output directory
         directory = grid_file.parent if directory is None else directory
-        # for each model type
-        for type in ('z', 'u', 'v'):
-            # get xarray dataset for type
-            ds = self._dtree[type].to_dataset()
-            # write in append mode to add type to same grid and directory
+        # for each model group
+        for group in ('z', 'u', 'v'):
+            # get xarray dataset for group
+            ds = self._dtree[group].to_dataset()
+            # write in append mode to add group to same grid and directory
             # output grid file
             ds.atlasnc.to_grid(grid_file,
-                type=type,
+                group=group,
                 mode='a',
                 **kwargs)
             # output constituent files
             ds.atlasnc.to_netcdf(directory,
-                type=type,
+                group=group,
                 mode='a',
                 **kwargs
             )

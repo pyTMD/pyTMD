@@ -254,7 +254,7 @@ def open_fes_ascii(
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes
-    ds.attrs['type'] = kwargs['type']
+    ds.attrs['group'] = kwargs['group']
     # return xarray dataset
     return ds
 
@@ -271,7 +271,7 @@ def open_fes_netcdf(
     ----------
     input_file: str or pathlib.Path
         model file
-    type: str or NoneType, default None
+    group: str or NoneType, default None
         Tidal variable to read
 
             - ``'z'``: heights
@@ -288,7 +288,7 @@ def open_fes_netcdf(
         FES tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('type', 'z')
+    kwargs.setdefault('group', 'z')
     kwargs.setdefault('compressed', False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
@@ -320,8 +320,8 @@ def open_fes_netcdf(
         mapping_amp = dict(z='AMPL', u='UAMP', v='VAMP')
         mapping_ph = dict(z='PHAS', u='UPHA', v='VPHA')
     # amplitude and phase variable names
-    amp_key = mapping_amp[kwargs['type']]
-    phase_key = mapping_ph[kwargs['type']]
+    amp_key = mapping_amp[kwargs['group']]
+    phase_key = mapping_ph[kwargs['group']]
     # mask where amplitude or phase are zero
     valid_values = (tmp[amp_key] != 0) & (tmp[phase_key] != 0)
     amplitude = tmp[amp_key].where(valid_values, drop=False)
@@ -333,7 +333,7 @@ def open_fes_netcdf(
     # rename coordinates
     ds = ds.rename(mapping_coords)
     # add attributes
-    ds.attrs['type'] = kwargs['type']
+    ds.attrs['group'] = kwargs['group']
     ds[cons].attrs['units'] = tmp[amp_key].attrs.get('units', '')
     # return xarray dataset
     return ds
@@ -369,14 +369,14 @@ class FESDataset:
         """
         # tilde-expand output path
         path = pyTMD.utilities.Path(path).resolve()
-        # set variable names and units for type
-        if (self._ds.attrs['type'] == 'z'):
+        # set variable names and units for group
+        if (self._ds.attrs['group'] == 'z'):
             amp_key = 'amplitude'
             phase_key = 'phase'
-        elif (self._ds.attrs['type'] == 'u'):
+        elif (self._ds.attrs['group'] == 'u'):
             amp_key = 'Ua'
             phase_key = 'Ug'
-        elif (self._ds.attrs['type'] == 'v'):
+        elif (self._ds.attrs['group'] == 'v'):
             amp_key = 'Va'
             phase_key = 'Vg'
         # set default encoding

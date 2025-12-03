@@ -13,7 +13,7 @@ Calling Sequence
 .. code-block:: python
 
     import pyTMD.io
-    ds = pyTMD.io.FES.open_mfdataset(model_files, type='z', format=format)
+    ds = pyTMD.io.FES.open_mfdataset(model_files, group='z', format=format)
 
 `Source code`__
 
