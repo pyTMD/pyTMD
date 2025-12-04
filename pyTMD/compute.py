@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 compute.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -62,6 +62,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 12/2025: use coords functions to convert x and y to DataArrays
     Updated 11/2025: use xarray DataArrays for input coordinates
         outputs from prediction functions will be also be DataArrays
     Updated 10/2025: change default directory for tide models to cache
@@ -356,25 +357,7 @@ def tide_elevations(
     assert type.lower() in ('grid', 'drift', 'time series')
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        X, Y = ds.tmd.transform(x, y, crs=crs)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        mx, my = ds.tmd.transform(gridx, gridy, crs=crs)
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('time'))
-        Y = xr.DataArray(my, dims=('time'))
-    elif (type.lower() == 'time series'):
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('station'))
-        Y = xr.DataArray(my, dims=('station'))
+    X, Y = ds.tmd.coords_as(x, y, type=type, crs=crs)
 
     # crop tide model dataset to bounds
     if crop and bounds is None:
@@ -549,25 +532,7 @@ def tide_currents(
     assert type.lower() in ('grid', 'drift', 'time series')
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        X, Y = dtree.tmd.transform(x, y, crs=crs)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        mx, my = dtree.tmd.transform(gridx, gridy, crs=crs)
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        mx, my = dtree.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        mx, my = dtree.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('time'))
-        Y = xr.DataArray(my, dims=('time'))
-    elif (type.lower() == 'time series'):
-        mx, my = dtree.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('station'))
-        Y = xr.DataArray(my, dims=('station'))
+    X, Y = dtree.tmd.coords_as(x, y, type=type, crs=crs)
 
     # crop tide model datatree to bounds
     if crop and bounds is None:
@@ -677,34 +642,11 @@ def tide_masks(x: np.ndarray, y: np.ndarray,
     # open model as dataset
     ds = m.open_dataset(group='z')
     
-    # reform coordinate dimensions for input grids
-    # or verify coordinate dimension shapes
+    # determine input data type based on variable dimensions
     assert type.lower() in ('grid', 'drift', 'time series')
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        # converting x,y to model coordinates
-        X, Y = ds.tmd.transform(x, y, crs=crs)
-    if (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        # convert to meshgrid
-        gridx, gridy = np.meshgrid(x, y)
-        # converting x,y to model coordinates
-        mx, my = ds.tmd.transform(gridx, gridy, crs=crs)
-        # convert to xarray DataArrays
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        # converting x,y to model coordinates
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        # convert to xarray DataArrays
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('time'))
-        Y = xr.DataArray(my, dims=('time'))
-    elif (type.lower() == 'time series'):
-        mx, my = ds.tmd.transform(x, y, crs=crs)
-        X = xr.DataArray(mx, dims=('station'))
-        Y = xr.DataArray(my, dims=('station'))
+    # convert coordinates to xarray DataArrays
+    # in coordinate reference system of model
+    X, Y = ds.tmd.coords_as(x, y, type=type, crs=crs)
         
     # interpolate model mask to grid points
     local = ds.tmd.interp(X, Y, method=method)
@@ -766,30 +708,10 @@ def LPET_elevations(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ('grid', 'drift', 'time series')
-    # transformer for converting to WGS84 Latitude and Longitude
-    crs1 = pyproj.CRS.from_user_input(crs)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     # convert coordinates to xarray DataArrays
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        longitude, latitude = transformer.transform(x, y)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        lon, lat = transformer.transform(gridx, gridy)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('time'))
-        latitude = xr.DataArray(lat, dims=('time'))
-    elif (type.lower() == 'time series'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('station'))
-        latitude = xr.DataArray(lat, dims=('station'))
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(x, y, type=type,
+        source_crs=crs, target_crs=4326)
     # create dataset
     ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
@@ -882,30 +804,10 @@ def LPT_displacements(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ('grid', 'drift', 'time series')
-    # transformer for converting to WGS84 Latitude and Longitude
-    crs1 = pyproj.CRS.from_user_input(crs)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     # convert coordinates to xarray DataArrays
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        longitude, latitude = transformer.transform(x, y)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        lon, lat = transformer.transform(gridx, gridy)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('time'))
-        latitude = xr.DataArray(lat, dims=('time'))
-    elif (type.lower() == 'time series'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('station'))
-        latitude = xr.DataArray(lat, dims=('station'))
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(x, y, type=type,
+        source_crs=crs, target_crs=4326)
     # create dataset
     ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
@@ -1059,30 +961,10 @@ def OPT_displacements(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ('grid', 'drift', 'time series')
-    # transformer for converting to WGS84 Latitude and Longitude
-    crs1 = pyproj.CRS.from_user_input(crs)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     # convert coordinates to xarray DataArrays
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        longitude, latitude = transformer.transform(x, y)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        lon, lat = transformer.transform(gridx, gridy)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('time'))
-        latitude = xr.DataArray(lat, dims=('time'))
-    elif (type.lower() == 'time series'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('station'))
-        latitude = xr.DataArray(lat, dims=('station'))
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(x, y, type=type,
+        source_crs=crs, target_crs=4326)
     # create dataset
     ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
@@ -1281,30 +1163,10 @@ def _ephemeride_SET(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ('grid', 'drift', 'time series')
-    # transformer for converting to WGS84 Latitude and Longitude
-    crs1 = pyproj.CRS.from_user_input(crs)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     # convert coordinates to xarray DataArrays
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        longitude, latitude = transformer.transform(x, y)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        lon, lat = transformer.transform(gridx, gridy)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('time'))
-        latitude = xr.DataArray(lat, dims=('time'))
-    elif (type.lower() == 'time series'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('station'))
-        latitude = xr.DataArray(lat, dims=('station'))
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(x, y, type=type,
+        source_crs=crs, target_crs=4326)
     # create dataset
     ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 
@@ -1475,30 +1337,10 @@ def _catalog_SET(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ('grid', 'drift', 'time series')
-    # transformer for converting to WGS84 Latitude and Longitude
-    crs1 = pyproj.CRS.from_user_input(crs)
-    crs2 = pyproj.CRS.from_epsg(4326)
-    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     # convert coordinates to xarray DataArrays
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        longitude, latitude = transformer.transform(x, y)
-    elif (type.lower() == 'grid') and (np.size(x) != np.size(y)):
-        gridx, gridy = np.meshgrid(x, y)
-        lon, lat = transformer.transform(gridx, gridy)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'grid'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('y','x'))
-        latitude = xr.DataArray(lat, dims=('y','x'))
-    elif (type.lower() == 'drift'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('time'))
-        latitude = xr.DataArray(lat, dims=('time'))
-    elif (type.lower() == 'time series'):
-        lon, lat = transformer.transform(x, y)
-        longitude = xr.DataArray(lon, dims=('station'))
-        latitude = xr.DataArray(lat, dims=('station'))
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(x, y, type=type,
+        source_crs=crs, target_crs=4326)
     # create dataset
     ds = xr.Dataset(coords={'x': longitude, 'y': latitude})
 

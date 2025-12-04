@@ -156,6 +156,8 @@ def constants(t: float | np.ndarray,
 
     # initial heights for fits
     hcorr = np.copy(ht)
+    # parameter array
+    p = np.zeros(M.shape[1])
     # total number of fit iterations
     # first iteration: solve for major constituents
     # all others: remove contribution of minor constituents
@@ -182,12 +184,12 @@ def constants(t: float | np.ndarray,
         # use a least-squares fit to solve for parameters
         # can optionally use a bounded-variable least-squares fit
         if (solver == 'lstsq'):
-            p, res, rnk, s = np.linalg.lstsq(M, hcorr, rcond=-1)
+            p[:], res, rnk, s = np.linalg.lstsq(M, hcorr, rcond=-1)
         elif solver in ('gelsd', 'gelsy', 'gelss'):
-            p, res, rnk, s = scipy.linalg.lstsq(M, hcorr,
+            p[:], res, rnk, s = scipy.linalg.lstsq(M, hcorr,
                 lapack_driver=solver)
         elif (solver == 'bvls'):
-            p = scipy.optimize.lsq_linear(M, hcorr,
+            p[:] = scipy.optimize.lsq_linear(M, hcorr,
                 method=solver, bounds=bounds,
                 max_iter=max_iter).x
 

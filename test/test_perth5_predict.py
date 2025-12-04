@@ -38,7 +38,7 @@ def test_verify_GOT55(CHUNKS):
     # convert time from MJD to timescale object
     ts = timescale.time.Timescale(MJD=MJD)
     # transform coordinates to model grid
-    X, Y = ds.tmd.transform(lon, lat, crs=4326)
+    X, Y = ds.tmd.transform_as(lon, lat, crs=4326)
     # extract amplitude and phase from tide model
     local = ds.tmd.interp(X, Y)
     # check constituent values
@@ -87,7 +87,7 @@ def test_RE14_long_period(CHUNKS):
     # convert time from MJD to timescale object
     ts = timescale.time.Timescale(MJD=MJD)
     # transform coordinates to model grid
-    X, Y = ds.tmd.transform(lon, lat, crs=4326)
+    X, Y = ds.tmd.transform_as(lon, lat, crs=4326)
     # interpolate model to points
     local = ds.tmd.interp(X, Y)
     # check constituent values
@@ -133,7 +133,7 @@ def test_FES2014_long_period():
     # convert time from MJD to timescale object
     ts = timescale.time.Timescale(MJD=MJD)
     # transform coordinates to model grid
-    X, Y = ds.tmd.transform(lon, lat, crs=4326)
+    X, Y = ds.tmd.transform_as(lon, lat, crs=4326)
     # interpolate model to points
     local = ds.tmd.interp(X, Y)
     # check constituent values
@@ -166,7 +166,7 @@ def test_infer_minor(METHOD):
     # convert time from MJD to timescale object
     ts = timescale.time.Timescale(MJD=MJD)
     # transform coordinates to model grid
-    X, Y = ds.tmd.transform(lon, lat, crs=4326)
+    X, Y = ds.tmd.transform_as(lon, lat, crs=4326)
     # interpolate model to points
     local = ds.tmd.interp(X, Y)
     # expected results
