@@ -45,12 +45,14 @@ jobs:
         repository: EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         path: TMD_Matlab_Toolbox
         ref: master
-    - name: Test with pytest
+    - name: Fetch test data
       run: |
         # install the package in editable mode
         pip install --no-deps --editable .
-        # download test data and run tests
+        # download test data
         pixi run fetch
+    - name: Test with pytest
+      run: |
         pixi run test "--cov=./ --cov-report=xml"
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5

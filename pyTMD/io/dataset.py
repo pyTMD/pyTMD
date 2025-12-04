@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 u"""
 dataset.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 12/2025: add coords functions to transform coordinates
     Updated 11/2025: get crs directly using pyproj.CRS.from_user_input
         set variable name to constituent for to_dataarray method
         added is_global property for models covering a global domain
@@ -40,7 +41,9 @@ pint = import_dependency('pint')
 __all__ = [
     'DataTree',
     'Dataset',
-    'DataArray'
+    'DataArray',
+    '_transform',
+    '_coords'
 ]
 
 # pint unit registry
@@ -59,6 +62,42 @@ class DataTree:
     def __init__(self, dtree):
         # initialize DataTree
         self._dtree = dtree
+
+    def coords_as(self, 
+            x: np.ndarray,
+            y: np.ndarray,
+            crs: str | int | dict = 4326,
+            **kwargs
+        ):
+        """
+        Transform coordinates into DataArrays in the DataTree
+        coordinate reference system
+        
+        Parameters
+        ----------
+        x: np.ndarray
+            Input x-coordinates
+        y: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+
+        Returns
+        -------
+        X: xarray.DataArray
+            Transformed x-coordinates
+        Y: xarray.DataArray
+            Transformed y-coordinates
+        """
+        # convert coordinate reference system to that of the datatree
+        # and format as xarray DataArray with appropriate dimensions
+        X, Y = _coords(x, y,
+            source_crs=crs,
+            target_crs=self.crs,
+            **kwargs
+        )
+        # return the transformed coordinates
+        return X, Y
 
     def crop(self, *args, **kwargs):
         """
@@ -124,15 +163,15 @@ class DataTree:
         # return the datatree
         return dtree
 
-    def transform(self, i1, i2, crs=4326, **kwargs):
+    def transform_as(self, x, y, crs=4326, **kwargs):
         """
         Transform coordinates to/from the datatree coordinate reference system
 
         Parameters
         ----------
-        i1: np.ndarray
+        x: np.ndarray
             Input x-coordinates
-        i2: np.ndarray
+        y: np.ndarray
             Input y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of input coordinates
@@ -140,25 +179,23 @@ class DataTree:
             Direction of transformation
 
             - ``'FORWARD'``: from input crs to model crs
-            - ``'BACKWARD'``: from model crs to input crs
+            - ``'INVERSE'``: from model crs to input crs
         
         Returns
         -------
-        o1: np.ndarray
+        X: np.ndarray
             Transformed x-coordinates
-        o2: np.ndarray
+        Y: np.ndarray
             Transformed y-coordinates
         """
-        # set the direction of the transformation
-        kwargs.setdefault('direction', 'FORWARD')
-        # get the coordinate reference system and transform
-        source_crs = pyproj.CRS.from_user_input(crs)
-        transformer = pyproj.Transformer.from_crs(
-            source_crs, self.crs, always_xy=True)
-        # convert coordinate reference system
-        o1, o2 = transformer.transform(i1, i2, **kwargs)
+        # convert coordinate reference system to that of the datatree
+        X, Y = _transform(x, y,
+            source_crs=crs,
+            target_crs=self.crs,
+            **kwargs
+        )
         # return the transformed coordinates
-        return (o1, o2)
+        return (X, Y)
     
     def to_ellipse(self, **kwargs):
         """
@@ -275,6 +312,42 @@ class Dataset:
         da = da.assign_coords(constituent=kwargs['constituents'])
         return da
     
+    def coords_as(self, 
+            x: np.ndarray,
+            y: np.ndarray,
+            crs: str | int | dict = 4326,
+            **kwargs
+        ):
+        """
+        Transform coordinates into DataArrays in the Dataset
+        coordinate reference system
+        
+        Parameters
+        ----------
+        x: np.ndarray
+            Input x-coordinates
+        y: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+
+        Returns
+        -------
+        X: xarray.DataArray
+            Transformed x-coordinates
+        Y: xarray.DataArray
+            Transformed y-coordinates
+        """
+        # convert coordinate reference system to that of the dataset
+        # and format as xarray DataArray with appropriate dimensions
+        X, Y = _coords(x, y,
+            source_crs=crs,
+            target_crs=self.crs,
+            **kwargs
+        )
+        # return the transformed coordinates
+        return X, Y
+
     def crop(self,
             bounds: list | tuple,
             buffer: int | float = 0
@@ -457,7 +530,11 @@ class Dataset:
         else:
             x, y = ds.x.values, ds.y.values
         # transform model coordinates to lat/lon coordinates
-        lon, lat = self.transform(x, y, crs=4326, direction='INVERSE')
+        lon, lat = _transform(x, y,
+            source_crs=self.crs,
+            target_crs=4326,
+            direction='FORWARD'
+        )
         # colatitude in radians
         th = np.radians(90.0 - lat)
         # 2nd degree Legendre polynomials
@@ -540,9 +617,9 @@ class Dataset:
         else:
             return ds[c]
 
-    def transform(self,
-            i1: np.ndarray,
-            i2: np.ndarray,
+    def transform_as(self,
+            x: np.ndarray,
+            y: np.ndarray,
             crs: str | int | dict = 4326,
             **kwargs
         ):
@@ -551,9 +628,9 @@ class Dataset:
 
         Parameters
         ----------
-        i1: np.ndarray
+        x: np.ndarray
             Input x-coordinates
-        i2: np.ndarray
+        y: np.ndarray
             Input y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of input coordinates
@@ -565,22 +642,19 @@ class Dataset:
 
         Returns
         -------
-        o1: np.ndarray
+        X: np.ndarray
             Transformed x-coordinates
-        o2: np.ndarray
+        Y: np.ndarray
             Transformed y-coordinates
         """
-        # set the direction of the transformation
-        kwargs.setdefault('direction', 'FORWARD')
-        assert kwargs['direction'] in ('FORWARD','INVERSE','IDENT')
-        # get the coordinate reference system and transform
-        source_crs = pyproj.CRS.from_user_input(crs)
-        transformer = pyproj.Transformer.from_crs(
-            source_crs, self.crs, always_xy=True)
-        # convert coordinate reference system
-        o1, o2 = transformer.transform(i1, i2, **kwargs)
+        # convert coordinate reference system to that of the dataset
+        X, Y = _transform(x, y,
+            source_crs=crs,
+            target_crs=self.crs,
+            **kwargs
+        )
         # return the transformed coordinates
-        return (o1, o2)
+        return (X, Y)
 
     def to_units(self, units: str, value: float = 1.0):
         """Convert ``Dataset`` to specified tide units
@@ -781,3 +855,132 @@ class DataArray:
             return 'transport'
         else:
             raise ValueError(f'Unknown unit group: {self.units}')
+
+def _transform(
+        i1: np.ndarray,
+        i2: np.ndarray,
+        source_crs: str | int | dict = 4326,
+        target_crs: str | int | dict = None,
+        **kwargs
+    ):
+    """
+    Transform coordinates to/from the dataset coordinate reference system
+
+    Parameters
+    ----------
+    i1: np.ndarray
+        Input x-coordinates
+    i2: np.ndarray
+        Input y-coordinates
+    source_crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+        Coordinate reference system of input coordinates
+    target_crs: str, int, or dict, default None
+        Coordinate reference system of output coordinates
+    direction: str, default 'FORWARD'
+        Direction of transformation
+
+        - ``'FORWARD'``: from input crs to model crs
+        - ``'INVERSE'``: from model crs to input crs
+
+    Returns
+    -------
+    o1: np.ndarray
+        Transformed x-coordinates
+    o2: np.ndarray
+        Transformed y-coordinates
+    """
+    # set the direction of the transformation
+    kwargs.setdefault('direction', 'FORWARD')
+    assert kwargs['direction'] in ('FORWARD','INVERSE','IDENT')
+    # get the coordinate reference system and transform
+    source_crs = pyproj.CRS.from_user_input(source_crs)
+    transformer = pyproj.Transformer.from_crs(
+        source_crs, target_crs, always_xy=True)
+    # convert coordinate reference system
+    o1, o2 = transformer.transform(i1, i2, **kwargs)
+    # return the transformed coordinates
+    return (o1, o2)
+
+def _coords(
+        x: np.ndarray,
+        y: np.ndarray,
+        source_crs: str | int | dict = 4326,
+        target_crs: str | int | dict = None,
+        **kwargs
+    ):
+    """
+    Transform coordinates into DataArrays in a new
+    coordinate reference system
+    
+    Parameters
+    ----------
+    x: np.ndarray
+        Input x-coordinates
+    y: np.ndarray
+        Input y-coordinates
+    source_crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+        Coordinate reference system of input coordinates
+    target_crs: str, int, or dict, default None
+        Coordinate reference system of output coordinates
+    type: str or None, default None
+        Coordinate data type
+
+        If not provided: must specify ``time`` parameter to auto-detect
+
+        - ``None``: determined from input variable dimensions
+        - ``'drift'``: drift buoys or satellite/airborne altimetry
+        - ``'grid'``: spatial grids or images
+        - ``'time series'``: time series at a single point
+    time: np.ndarray or None, default None
+        Time variable for determining coordinate data type
+
+    Returns
+    -------
+    X: xarray.DataArray
+        Transformed x-coordinates
+    Y: xarray.DataArray
+        Transformed y-coordinates
+    """
+    from pyTMD.spatial import data_type
+    # set default keyword arguments
+    kwargs.setdefault('type', None)
+    kwargs.setdefault('time', None)
+    # determine coordinate data type if possible
+    if kwargs['type'] is None:
+        # must provide time variable to determine data type
+        assert kwargs['time'] is not None, \
+            'Must provide time parameter when type is not specified'
+        coord_type = data_type(x, y, np.ravel(kwargs['time']))
+    else:
+        # use provided coordinate data type
+        # and verify that it is lowercase
+        coord_type = kwargs.get('type').lower()
+    # convert coordinates to a new coordinate reference system
+    if (coord_type == 'grid') and (np.size(x) != np.size(y)):
+        gridx, gridy = np.meshgrid(x, y)
+        mx, my = _transform(gridx, gridy,
+            source_crs=source_crs,
+            target_crs=target_crs,
+            direction='FORWARD')
+    else:
+        mx, my = _transform(x, y,
+            source_crs=source_crs,
+            target_crs=target_crs,
+            direction='FORWARD')
+    # convert to xarray DataArray with appropriate dimensions
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        X = xr.DataArray(mx)
+        Y = xr.DataArray(my)
+    elif (coord_type == 'grid'):
+        X = xr.DataArray(mx, dims=('y','x'))
+        Y = xr.DataArray(my, dims=('y','x'))
+    elif (coord_type == 'drift'):
+        X = xr.DataArray(mx, dims=('time'))
+        Y = xr.DataArray(my, dims=('time'))
+    elif (coord_type == 'time series'):
+        X = xr.DataArray(mx, dims=('station'))
+        Y = xr.DataArray(my, dims=('station'))
+    else:
+        raise ValueError(f'Unknown coordinate data type: {coord_type}')
+    # return the transformed coordinates
+    return (X, Y)

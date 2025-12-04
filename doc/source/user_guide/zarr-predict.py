@@ -25,11 +25,8 @@ ds = xr.open_zarr(store, group='z', zarr_format=3)
 df = pd.read_parquet('pytmd-test.parquet')
 ts = timescale.from_deltatime(df.time, epoch=(2018,1,1), standard='GPS')
 
-# convert points to crs of model
-x, y = ds.tmd.transform(df.x, df.y, crs=3031)
-# create xarray DataArrays for coordinates
-x = xr.DataArray(x, dims='time')
-y = xr.DataArray(y, dims='time')
+# create xarray DataArrays for coordinates in crs of model
+x, y = ds.tmd.coords_as(df.x, df.y, type='drift', crs=3031)
 # interpolate to points
 local = ds.tmd.interp(x, y, method='linear')
 

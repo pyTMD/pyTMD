@@ -323,10 +323,8 @@ class Test_CATS2008:
         station_z = station_amp*np.exp(-1j*station_ph*np.pi/180.0)
 
         # convert data to coordinate reference system of model
-        X, Y = ds.tmd.transform(station_lon, station_lat, crs=4326)
-        # convert to data arrays
-        X = xr.DataArray(X, dims=('station'))
-        Y = xr.DataArray(Y, dims=('station'))
+        X, Y = ds.tmd.coords_as(station_lon, station_lat,
+            type='time series', crs=4326)
         # extract amplitude and phase from tide model
         local = ds.tmd.interp(X, Y, extrapolate=True)
 
@@ -405,10 +403,8 @@ class Test_CATS2008:
             station_lat[s] = np.float64(lat)
 
         # convert data to coordinate reference system of model
-        X, Y = dtree.tmd.transform(station_lon, station_lat, crs=4326)
-        # convert to data arrays
-        X = xr.DataArray(X, dims=('station'))
-        Y = xr.DataArray(Y, dims=('station'))
+        X, Y = dtree.tmd.coords_as(station_lon, station_lat,
+            type='time series', crs=4326)
         # extract amplitude and phase from tide model
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
@@ -516,10 +512,8 @@ class Test_CATS2008:
         nc = int(df.shape[0]//4)
 
         # convert data to coordinate reference system of model
-        X, Y = dtree.tmd.transform(station_lon, station_lat, crs=4326)
-        # convert to data arrays
-        X = xr.DataArray(X, dims=('station'))
-        Y = xr.DataArray(Y, dims=('station'))
+        X, Y = dtree.tmd.coords_as(station_lon, station_lat,
+            type='time series', crs=4326)
         # extract amplitude and phase from tide model
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
@@ -576,7 +570,7 @@ class Test_CATS2008:
         # interpolate constants to a coordinate
         LAT, LON = (-76.0, -40.0)
         # convert data to coordinate reference system of model
-        X, Y = ds.tmd.transform(LON, LAT, crs=4326)
+        X, Y = ds.tmd.transform_as(LON, LAT, crs=4326)
         # extract amplitude and phase from tide model
         local = ds.tmd.interp(X, Y, extrapolate=True)
         # model constituents
@@ -749,10 +743,8 @@ class Test_AOTIM5_2018:
             station_lon[s] = np.float64(line_contents[11])
 
         # convert data to coordinate reference system of model
-        X, Y = dtree.tmd.transform(station_lon, station_lat, crs=4326)
-        # convert to data arrays
-        X = xr.DataArray(X, dims=('station'))
-        Y = xr.DataArray(Y, dims=('station'))
+        X, Y = dtree.tmd.coords_as(station_lon, station_lat,
+            type='time series', crs=4326)
         # extract amplitude and phase from tide model
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
