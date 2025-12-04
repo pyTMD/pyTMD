@@ -179,7 +179,7 @@ class DataTree:
             Direction of transformation
 
             - ``'FORWARD'``: from input crs to model crs
-            - ``'BACKWARD'``: from model crs to input crs
+            - ``'INVERSE'``: from model crs to input crs
         
         Returns
         -------
@@ -531,9 +531,9 @@ class Dataset:
             x, y = ds.x.values, ds.y.values
         # transform model coordinates to lat/lon coordinates
         lon, lat = _transform(x, y,
-            source_crs=4326,
-            target_crs=self.crs,
-            direction='INVERSE'
+            source_crs=self.crs,
+            target_crs=4326,
+            direction='FORWARD'
         )
         # colatitude in radians
         th = np.radians(90.0 - lat)
@@ -922,6 +922,17 @@ def _coords(
         Coordinate reference system of input coordinates
     target_crs: str, int, or dict, default None
         Coordinate reference system of output coordinates
+    type: str or None, default None
+        Coordinate data type
+
+        If not provided: must specify ``time`` parameter to auto-detect
+
+        - ``None``: determined from input variable dimensions
+        - ``'drift'``: drift buoys or satellite/airborne altimetry
+        - ``'grid'``: spatial grids or images
+        - ``'time series'``: time series at a single point
+    time: np.ndarray or None, default None
+        Time variable for determining coordinate data type
 
     Returns
     -------
@@ -937,47 +948,39 @@ def _coords(
     # determine coordinate data type if possible
     if kwargs['type'] is None:
         # must provide time variable to determine data type
-        assert kwargs['time'] is not None
+        assert kwargs['time'] is not None, \
+            'Must provide time parameter when type is not specified'
         coord_type = data_type(x, y, np.ravel(kwargs['time']))
     else:
         # use provided coordinate data type
         # and verify that it is lowercase
         coord_type = kwargs.get('type').lower()
-    # convert coordinates to xarray DataArrays
-    # in coordinate reference system of model
-    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
-        X, Y = _transform(x, y,
-            source_crs=source_crs,
-            target_crs=target_crs,
-            direction='FORWARD')
-    elif (coord_type == 'grid') and (np.size(x) != np.size(y)):
+    # convert coordinates to a new coordinate reference system
+    if (coord_type == 'grid') and (np.size(x) != np.size(y)):
         gridx, gridy = np.meshgrid(x, y)
         mx, my = _transform(gridx, gridy,
             source_crs=source_crs,
             target_crs=target_crs,
             direction='FORWARD')
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (coord_type == 'grid'):
+    else:
         mx, my = _transform(x, y,
             source_crs=source_crs,
             target_crs=target_crs,
             direction='FORWARD')
+    # convert to xarray DataArray with appropriate dimensions
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        X = xr.DataArray(mx)
+        Y = xr.DataArray(my)
+    elif (coord_type == 'grid'):
         X = xr.DataArray(mx, dims=('y','x'))
         Y = xr.DataArray(my, dims=('y','x'))
     elif (coord_type == 'drift'):
-        mx, my = _transform(x, y,
-            source_crs=source_crs,
-            target_crs=target_crs,
-            direction='FORWARD')
         X = xr.DataArray(mx, dims=('time'))
         Y = xr.DataArray(my, dims=('time'))
     elif (coord_type == 'time series'):
-        mx, my = _transform(x, y,
-            source_crs=source_crs,
-            target_crs=target_crs,
-            direction='FORWARD')
         X = xr.DataArray(mx, dims=('station'))
         Y = xr.DataArray(my, dims=('station'))
+    else:
+        raise ValueError(f'Unknown coordinate data type: {coord_type}')
     # return the transformed coordinates
     return (X, Y)

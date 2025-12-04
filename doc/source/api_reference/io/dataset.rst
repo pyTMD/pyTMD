@@ -19,3 +19,7 @@ General Attributes and Methods
 
 .. autoclass:: pyTMD.io.DataArray
    :members:
+
+.. autofunction:: pyTMD.io.dataset._transform
+
+.. autofunction:: pyTMD.io.dataset._coords

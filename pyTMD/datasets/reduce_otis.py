@@ -129,7 +129,7 @@ def reduce_otis(MODEL: str,
 
     # convert bounds to model coordinates
     # bounds is in the form [xmin,xmax,ymin,ymax]
-    x, y = dsg.tmd.transform(bounds[:2], bounds[2:], crs=projection)
+    x, y = dsg.tmd.transform_as(bounds[:2], bounds[2:], crs=projection)
     # merge bathymetry and elevation datasets
     ds = xr.merge([dsg, dsz], compat='override')
     # crop datasets and create new datatree
