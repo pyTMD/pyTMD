@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 astro.py
 Written by Tyler Sutterley (10/2025)
 Astronomical and nutation routines
@@ -29,7 +29,7 @@ UPDATE HISTORY:
         use flexible case for mean longitude method strings
         use numpy power function over using pow for consistency
     Updated 03/2025: changed argument for method calculating mean longitudes
-        split ICRS rotation matrix from the ITRS function 
+        split ICRS rotation matrix from the ITRS function
         added function to correct for aberration effects
         added function to calculate equation of time
     Updated 11/2024: moved three generic mathematical functions to math.py
@@ -62,6 +62,7 @@ UPDATE HISTORY:
     Rewritten in Matlab by Lana Erofeeva 2003
     Written by Richard Ray 12/1990
 """
+
 from __future__ import annotations
 
 import logging
@@ -75,19 +76,20 @@ from pyTMD.math import (
     normalize_angle,
     asec2rad,
     masec2rad,
-    rotate
+    rotate,
 )
 from pyTMD.utilities import (
     get_data_path,
     get_cache_path,
     import_dependency,
     dependency_available,
-    from_jpl_ssd
+    from_jpl_ssd,
 )
+
 # attempt imports
-jplephem = import_dependency('jplephem')
-jplephem.spk = import_dependency('jplephem.spk')
-jplephem_available = dependency_available('jplephem')
+jplephem = import_dependency("jplephem")
+jplephem.spk = import_dependency("jplephem.spk")
+jplephem_available = dependency_available("jplephem")
 
 __all__ = [
     "mean_longitudes",
@@ -119,7 +121,7 @@ __all__ = [
 ]
 
 # default JPL Spacecraft and Planet ephemerides kernel
-_default_kernel = get_cache_path('de440s.bsp')
+_default_kernel = get_cache_path("de440s.bsp")
 
 # number of days between the Julian day epoch and MJD
 _jd_mjd = 2400000.5
@@ -130,11 +132,9 @@ _jd_j2000 = _jd_mjd + _mjd_j2000
 # Julian century
 _century = 36525.0
 
+
 # PURPOSE: compute the basic astronomical mean longitudes
-def mean_longitudes(
-        MJD: np.ndarray,
-        **kwargs
-    ):
+def mean_longitudes(MJD: np.ndarray, **kwargs):
     r"""
     Computes the basic astronomical mean longitudes: :math:`S`, :math:`H`,
     :math:`P`, :math:`N` and :math:`P_s` :cite:p:`Meeus:1991vh,Simon:1994vo`
@@ -167,57 +167,82 @@ def mean_longitudes(
         longitude of solar perigee (degrees)
     """
     # set default keyword arguments
-    kwargs.setdefault('method', 'Cartwright')
+    kwargs.setdefault("method", "Cartwright")
     # check for deprecated method
-    if kwargs.get('MEEUS'):
+    if kwargs.get("MEEUS"):
         warnings.warn("Deprecated argument", DeprecationWarning)
-        kwargs['method'] = 'Meeus'
-    elif kwargs.get('ASTRO5'):
+        kwargs["method"] = "Meeus"
+    elif kwargs.get("ASTRO5"):
         warnings.warn("Deprecated argument", DeprecationWarning)
-        kwargs['method'] = 'ASTRO5'
+        kwargs["method"] = "ASTRO5"
     # compute the mean longitudes
-    if (kwargs['method'].title() == 'Meeus'):
+    if kwargs["method"].title() == "Meeus":
         # convert from MJD to days relative to 2000-01-01T12:00:00
         T = MJD - _mjd_j2000
         # mean longitude of moon
-        lunar_longitude = np.array([218.3164591, 13.17639647754579,
-            -9.9454632e-13, 3.8086292e-20, -8.6184958e-27])
+        lunar_longitude = np.array(
+            [
+                218.3164591,
+                13.17639647754579,
+                -9.9454632e-13,
+                3.8086292e-20,
+                -8.6184958e-27,
+            ]
+        )
         S = polynomial_sum(lunar_longitude, T)
         # mean longitude of sun
-        solar_longitude = np.array([280.46645, 0.985647360164271,
-            2.2727347e-13])
+        solar_longitude = np.array(
+            [280.46645, 0.985647360164271, 2.2727347e-13]
+        )
         H = polynomial_sum(solar_longitude, T)
         # mean longitude of lunar perigee
-        lunar_perigee = np.array([83.3532430, 0.11140352391786447,
-            -7.7385418e-12, -2.5636086e-19, 2.95738836e-26])
+        lunar_perigee = np.array(
+            [
+                83.3532430,
+                0.11140352391786447,
+                -7.7385418e-12,
+                -2.5636086e-19,
+                2.95738836e-26,
+            ]
+        )
         P = polynomial_sum(lunar_perigee, T)
         # mean longitude of ascending lunar node
-        lunar_node = np.array([125.0445550, -0.052953762762491446,
-            1.55628359e-12, 4.390675353e-20, -9.26940435e-27])
+        lunar_node = np.array(
+            [
+                125.0445550,
+                -0.052953762762491446,
+                1.55628359e-12,
+                4.390675353e-20,
+                -9.26940435e-27,
+            ]
+        )
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
-        Ps = 282.94 + (1.7192 * T)/_century
-    elif (kwargs['method'].upper() == 'ASTRO5'):
+        Ps = 282.94 + (1.7192 * T) / _century
+    elif kwargs["method"].upper() == "ASTRO5":
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
-        T = (MJD - _mjd_j2000)/_century
+        T = (MJD - _mjd_j2000) / _century
         # mean longitude of moon (p. 338)
-        lunar_longitude = np.array([218.3164477, 481267.88123421, -1.5786e-3,
-             1.855835e-6, -1.53388e-8])
+        lunar_longitude = np.array(
+            [218.3164477, 481267.88123421, -1.5786e-3, 1.855835e-6, -1.53388e-8]
+        )
         S = polynomial_sum(lunar_longitude, T)
         # mean longitude of sun (p. 338)
-        lunar_elongation = np.array([297.8501921, 445267.1114034, -1.8819e-3,
-             1.83195e-6, -8.8445e-9])
-        H = polynomial_sum(lunar_longitude-lunar_elongation, T)
+        lunar_elongation = np.array(
+            [297.8501921, 445267.1114034, -1.8819e-3, 1.83195e-6, -8.8445e-9]
+        )
+        H = polynomial_sum(lunar_longitude - lunar_elongation, T)
         # mean longitude of lunar perigee (p. 343)
-        lunar_perigee = np.array([83.3532465, 4069.0137287, -1.032e-2,
-            -1.249172e-5])
+        lunar_perigee = np.array(
+            [83.3532465, 4069.0137287, -1.032e-2, -1.249172e-5]
+        )
         P = polynomial_sum(lunar_perigee, T)
         # mean longitude of ascending lunar node (p. 144)
         lunar_node = np.array([125.04452, -1934.136261, 2.0708e-3, 2.22222e-6])
         N = polynomial_sum(lunar_node, T)
         # mean longitude of solar perigee (Simon et al., 1994)
         Ps = 282.94 + 1.7192 * T
-    elif (kwargs['method'].upper() == 'IERS'):
+    elif kwargs["method"].upper() == "IERS":
         # compute the Delaunay arguments (IERS conventions)
         l, lp, F, D, omega = delaunay_arguments(MJD)
         # convert to Doodson arguments in degrees
@@ -255,6 +280,7 @@ def mean_longitudes(
     # return as tuple
     return (S, H, P, N, Ps)
 
+
 # PURPOSE: compute the mean longitudes of the 5 closest planets
 def planetary_longitudes(MJD: np.ndarray):
     r"""
@@ -280,7 +306,7 @@ def planetary_longitudes(MJD: np.ndarray):
         mean longitude of Saturn (degrees)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000)/_century
+    T = (MJD - _mjd_j2000) / _century
     # mean longitudes of Mercury
     mercury_longitude = np.array([252.250906, 149474.0722491, 3.035e-4, 1.8e-8])
     LMe = polynomial_sum(mercury_longitude, T)
@@ -305,15 +331,16 @@ def planetary_longitudes(MJD: np.ndarray):
     # return as tuple
     return (LMe, LVe, LMa, LJu, LSa)
 
+
 # PURPOSE: computes the phase angles of astronomical means
 def doodson_arguments(
-        MJD: np.ndarray,
-        equinox: bool = False,
-        apply_correction: bool = True,
-    ):
+    MJD: np.ndarray,
+    equinox: bool = False,
+    apply_correction: bool = True,
+):
     r"""
     Computes astronomical phase angles for the six Doodson
-    Arguments: :math:`\tau`, :math:`S`, :math:`H`, :math:`P`, 
+    Arguments: :math:`\tau`, :math:`S`, :math:`H`, :math:`P`,
     :math:`N'`, and :math:`P_s` :cite:p:`Doodson:1921kt,Meeus:1991vh`
 
     Follows IERS conventions for the Doodson arguments :cite:p:`Petit:2010tp`
@@ -343,13 +370,14 @@ def doodson_arguments(
         mean longitude of solar perigee (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000)/_century
+    T = (MJD - _mjd_j2000) / _century
     # hour of the day
-    hour = np.mod(MJD, 1)*24.0
+    hour = np.mod(MJD, 1) * 24.0
     # calculate Doodson phase angles
     # mean longitude of moon (degrees)
-    lunar_longitude = np.array([218.3164477, 481267.88123421,
-        -1.5786e-3, 1.855835e-6, -1.53388e-8])
+    lunar_longitude = np.array(
+        [218.3164477, 481267.88123421, -1.5786e-3, 1.855835e-6, -1.53388e-8]
+    )
     S = polynomial_sum(lunar_longitude, T)
     # mean lunar time (degrees)
     if equinox:
@@ -357,34 +385,40 @@ def doodson_arguments(
         ts = timescale.time.Timescale(MJD=MJD)
         # use Greenwich Mean Sidereal Time (GMST) from the
         # Equinox method converted to degrees
-        TAU = 360.0*ts.st + 180.0 - S
+        TAU = 360.0 * ts.st + 180.0 - S
     else:
-        lambda_coefficients = np.array([280.4606184,
-            36000.7700536, 3.8793e-4, -2.58e-8])
+        lambda_coefficients = np.array(
+            [280.4606184, 36000.7700536, 3.8793e-4, -2.58e-8]
+        )
         LAMBDA = polynomial_sum(lambda_coefficients, T)
-        TAU = (hour*15.0) - S + LAMBDA
+        TAU = (hour * 15.0) - S + LAMBDA
     # calculate correction for mean lunar longitude (degrees)
     if apply_correction:
-        lunar_correction = np.array([0.0, 1.396971278,
-            3.08889e-4, 2.1e-8, 7.0e-9])
+        lunar_correction = np.array(
+            [0.0, 1.396971278, 3.08889e-4, 2.1e-8, 7.0e-9]
+        )
         PR = polynomial_sum(lunar_correction, T)
         S += PR
     # mean longitude of sun (degrees)
-    solar_longitude = np.array([280.46645, 36000.7697489,
-        3.0322222e-4, 2.0e-8, -6.54e-9])
+    solar_longitude = np.array(
+        [280.46645, 36000.7697489, 3.0322222e-4, 2.0e-8, -6.54e-9]
+    )
     H = polynomial_sum(solar_longitude, T)
     # mean longitude of lunar perigee (degrees)
-    lunar_perigee =np.array([83.3532465, 4069.0137287,
-        -1.032172222e-2, -1.24991e-5, 5.263e-8])
+    lunar_perigee = np.array(
+        [83.3532465, 4069.0137287, -1.032172222e-2, -1.24991e-5, 5.263e-8]
+    )
     P = polynomial_sum(lunar_perigee, T)
     # negative of the mean longitude of the ascending node
     # of the moon (degrees)
-    lunar_node = np.array([234.95544499, 1934.13626197,
-        -2.07561111e-3, -2.13944e-6, 1.65e-8])
+    lunar_node = np.array(
+        [234.95544499, 1934.13626197, -2.07561111e-3, -2.13944e-6, 1.65e-8]
+    )
     Np = polynomial_sum(lunar_node, T)
     # mean longitude of solar perigee (degrees)
-    solar_perigee = np.array([282.93734098, 1.71945766667,
-        4.5688889e-4, -1.778e-8, -3.34e-9])
+    solar_perigee = np.array(
+        [282.93734098, 1.71945766667, 4.5688889e-4, -1.778e-8, -3.34e-9]
+    )
     Ps = polynomial_sum(solar_perigee, T)
     # take the modulus of each and convert to radians
     S = np.radians(normalize_angle(S))
@@ -395,6 +429,7 @@ def doodson_arguments(
     Ps = np.radians(normalize_angle(Ps))
     # return as tuple
     return (TAU, S, H, P, Np, Ps)
+
 
 def delaunay_arguments(MJD: np.ndarray):
     r"""
@@ -422,29 +457,34 @@ def delaunay_arguments(MJD: np.ndarray):
         mean longitude of ascending lunar node (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000)/_century
+    T = (MJD - _mjd_j2000) / _century
     # 360 degrees
     circle = 1296000
     # mean anomaly of the moon (arcseconds)
-    lunar_anomaly = np.array([485868.249036, 1717915923.2178,
-        31.8792, 0.051635, -2.447e-04])
+    lunar_anomaly = np.array(
+        [485868.249036, 1717915923.2178, 31.8792, 0.051635, -2.447e-04]
+    )
     l = polynomial_sum(lunar_anomaly, T)
     # mean anomaly of the sun (arcseconds)
-    solar_anomaly = np.array([1287104.79305,  129596581.0481,
-        -0.5532, 1.36e-4, -1.149e-05])
+    solar_anomaly = np.array(
+        [1287104.79305, 129596581.0481, -0.5532, 1.36e-4, -1.149e-05]
+    )
     lp = polynomial_sum(solar_anomaly, T)
     # mean argument of the moon (arcseconds)
     # (angular distance from the ascending node)
-    lunar_argument = np.array([335779.526232, 1739527262.8478,
-        -12.7512, -1.037e-3, 4.17e-6])
+    lunar_argument = np.array(
+        [335779.526232, 1739527262.8478, -12.7512, -1.037e-3, 4.17e-6]
+    )
     F = polynomial_sum(lunar_argument, T)
     # mean elongation of the moon from the sun (arcseconds)
-    lunisolar_elongation = np.array([1072260.70369, 1602961601.2090,
-        -6.3706, 6.593e-3, -3.169e-05])
+    lunisolar_elongation = np.array(
+        [1072260.70369, 1602961601.2090, -6.3706, 6.593e-3, -3.169e-05]
+    )
     D = polynomial_sum(lunisolar_elongation, T)
     # mean longitude of the ascending node of the moon (arcseconds)
-    lunar_node = np.array([450160.398036, -6962890.5431,
-        7.4722, 7.702e-3, -5.939e-05])
+    lunar_node = np.array(
+        [450160.398036, -6962890.5431, 7.4722, 7.702e-3, -5.939e-05]
+    )
     N = polynomial_sum(lunar_node, T)
     # take the modulus of each and convert to radians
     l = asec2rad(normalize_angle(l, circle=circle))
@@ -455,16 +495,14 @@ def delaunay_arguments(MJD: np.ndarray):
     # return as tuple
     return (l, lp, F, D, N)
 
-def schureman_arguments(
-        P: np.ndarray,
-        N: np.ndarray
-    ):
+
+def schureman_arguments(P: np.ndarray, N: np.ndarray):
     r"""
     Computes additional phase angles :math:`I`, :math:`\xi`, :math:`\nu`,
     :math:`R`, :math:`R_a`, :math:`\nu'`, and :math:`\nu''` from
     :cite:t:`Schureman:1958ty`
 
-    See the explanation of symbols in appendix of :cite:t:`Schureman:1958ty` 
+    See the explanation of symbols in appendix of :cite:t:`Schureman:1958ty`
 
     Parameters
     ----------
@@ -497,42 +535,43 @@ def schureman_arguments(
     # additional astronomical terms for FES models
     # inclination of the moon's orbit to Earth's equator
     # Schureman (page 156)
-    I = np.arccos(0.913694997 - 0.035692561*np.cos(N))
+    I = np.arccos(0.913694997 - 0.035692561 * np.cos(N))
     # longitude in the moon's orbit of lunar intersection
-    at1 = np.arctan(1.01883*np.tan(N/2.0))
-    at2 = np.arctan(0.64412*np.tan(N/2.0))
+    at1 = np.arctan(1.01883 * np.tan(N / 2.0))
+    at2 = np.arctan(0.64412 * np.tan(N / 2.0))
     xi = -at1 - at2 + N
     xi = np.arctan2(np.sin(xi), np.cos(xi))
     # right ascension of lunar intersection
     nu = at1 - at2
     # mean longitude of lunar perigee reckoned from the lunar intersection
     # Schureman (page 41)
-    p = (P - xi)
+    p = P - xi
     # Schureman (page 42) equation 202
-    Q = np.arctan((5.0*np.cos(I) - 1.0)*np.tan(p)/(7.0*np.cos(I) + 1.0))
+    Q = np.arctan((5.0 * np.cos(I) - 1.0) * np.tan(p) / (7.0 * np.cos(I) + 1.0))
     # Schureman (page 41) equation 197
-    Qa = np.power(2.31 + 1.435*np.cos(2.0*p), -0.5)
+    Qa = np.power(2.31 + 1.435 * np.cos(2.0 * p), -0.5)
     # Schureman (page 42) equation 204
     Qu = p - Q
     # Schureman (page 44) equation 214
-    P_R = np.sin(2.0*p)
-    Q_R = np.power(np.tan(I/2.0), -2.0)/6.0 - np.cos(2.0*p)
-    Ru = np.arctan(P_R/Q_R)
+    P_R = np.sin(2.0 * p)
+    Q_R = np.power(np.tan(I / 2.0), -2.0) / 6.0 - np.cos(2.0 * p)
+    Ru = np.arctan(P_R / Q_R)
     # Schureman (page 44) equation 213
     # note that Ra is normally used as an inverse (1/Ra)
-    term1 = 12.0*np.power(np.tan(I/2.0), 2.0)*np.cos(2.0*p)
-    term2 = 36.0*np.power(np.tan(I/2.0), 4.0)
+    term1 = 12.0 * np.power(np.tan(I / 2.0), 2.0) * np.cos(2.0 * p)
+    term2 = 36.0 * np.power(np.tan(I / 2.0), 4.0)
     Ra = np.power(1.0 - term1 + term2, -0.5)
     # Schureman (page 45) equation 224
-    P_prime = np.sin(2.0*I)*np.sin(nu)
-    Q_prime = np.sin(2.0*I)*np.cos(nu) + 0.3347
-    nu_p = np.arctan(P_prime/Q_prime)
+    P_prime = np.sin(2.0 * I) * np.sin(nu)
+    Q_prime = np.sin(2.0 * I) * np.cos(nu) + 0.3347
+    nu_p = np.arctan(P_prime / Q_prime)
     # Schureman (page 46) equation 232
-    P_sec = (np.sin(I)**2)*np.sin(2.0*nu)
-    Q_sec = (np.sin(I)**2)*np.cos(2.0*nu) + 0.0727
-    nu_s = 0.5*np.arctan(P_sec/Q_sec)
+    P_sec = (np.sin(I) ** 2) * np.sin(2.0 * nu)
+    Q_sec = (np.sin(I) ** 2) * np.cos(2.0 * nu) + 0.0727
+    nu_s = 0.5 * np.arctan(P_sec / Q_sec)
     # return as tuple
     return (I, xi, nu, Qa, Qu, Ra, Ru, nu_p, nu_s)
+
 
 def mean_obliquity(MJD: np.ndarray):
     """Mean obliquity of the ecliptic
@@ -549,11 +588,13 @@ def mean_obliquity(MJD: np.ndarray):
         mean obliquity of the ecliptic (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000)/_century
+    T = (MJD - _mjd_j2000) / _century
     # mean obliquity of the ecliptic (arcseconds)
-    epsilon0 = np.array([84381.406, -46.836769, -1.831e-4,
-        2.00340e-4, -5.76e-07, -4.34e-08])
+    epsilon0 = np.array(
+        [84381.406, -46.836769, -1.831e-4, 2.00340e-4, -5.76e-07, -4.34e-08]
+    )
     return asec2rad(polynomial_sum(epsilon0, T))
+
 
 def equation_of_time(MJD: np.ndarray):
     """Approximate calculation of the difference between apparent and
@@ -570,28 +611,36 @@ def equation_of_time(MJD: np.ndarray):
         equation of time (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000)/_century
+    T = (MJD - _mjd_j2000) / _century
     # mean longitude of sun (degrees)
-    mean_longitude = np.array([280.46645, 36000.7697489,
-        3.0322222e-4, 2.0e-8, -6.54e-9])
+    mean_longitude = np.array(
+        [280.46645, 36000.7697489, 3.0322222e-4, 2.0e-8, -6.54e-9]
+    )
     H = polynomial_sum(mean_longitude, T)
     # mean anomaly of the sun (degrees)
-    mean_anomaly = np.array([357.5291092, 35999.0502909,
-        -0.0001536, 1.0/24490000.0])
+    mean_anomaly = np.array(
+        [357.5291092, 35999.0502909, -0.0001536, 1.0 / 24490000.0]
+    )
     lp = polynomial_sum(mean_anomaly, T)
     # take the modulus of each
     H = normalize_angle(H)
     lp = normalize_angle(lp)
     # ecliptic longitude of the sun (degrees)
-    lambda_sun = H + 1.915*np.sin(np.radians(lp)) + \
-        0.020*np.sin(2.0*np.radians(lp))
+    lambda_sun = (
+        H
+        + 1.915 * np.sin(np.radians(lp))
+        + 0.020 * np.sin(2.0 * np.radians(lp))
+    )
     # calculate the equation of time (degrees)
-    E = -1.915*np.sin(np.radians(lp)) - \
-        0.020*np.sin(2.0*np.radians(lp)) + \
-        2.466*np.sin(2.0*np.radians(lambda_sun)) - \
-        0.053*np.sin(4.0*np.radians(lambda_sun))
+    E = (
+        -1.915 * np.sin(np.radians(lp))
+        - 0.020 * np.sin(2.0 * np.radians(lp))
+        + 2.466 * np.sin(2.0 * np.radians(lambda_sun))
+        - 0.053 * np.sin(4.0 * np.radians(lambda_sun))
+    )
     # convert to radians
     return np.radians(E)
+
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
 def solar_ecef(MJD: np.ndarray, **kwargs):
@@ -617,12 +666,13 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     X, Y, Z: np.ndarray
         ECEF coordinates of the sun (meters)
     """
-    kwargs.setdefault('ephemerides', 'approximate')
-    if (kwargs['ephemerides'].lower() == 'approximate'):
+    kwargs.setdefault("ephemerides", "approximate")
+    if kwargs["ephemerides"].lower() == "approximate":
         return solar_approximate(MJD, **kwargs)
-    elif (kwargs['ephemerides'].upper() == 'JPL'):
-        assert jplephem_available, 'jplephem is required for JPL ephemerides'
+    elif kwargs["ephemerides"].upper() == "JPL":
+        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return solar_ephemerides(MJD, **kwargs)
+
 
 def solar_approximate(MJD, **kwargs):
     """
@@ -648,25 +698,26 @@ def solar_approximate(MJD, **kwargs):
     solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
     M = np.radians(polynomial_sum(solar_anomaly, ts.T))
     # series expansion for mean anomaly in solar radius (meters)
-    r_sun = 1e9*(149.619 - 2.499*np.cos(M) - 0.021*np.cos(2.0*M))
+    r_sun = 1e9 * (149.619 - 2.499 * np.cos(M) - 0.021 * np.cos(2.0 * M))
     # series expansion for ecliptic longitude of the sun (radians)
-    lambda_sun = Ps + M + asec2rad(6892.0*np.sin(M) + 72.0*np.sin(2.0*M))
+    lambda_sun = Ps + M + asec2rad(6892.0 * np.sin(M) + 72.0 * np.sin(2.0 * M))
     # ecliptic latitude is equal to 0 within 1 arcminute
     # obliquity of the J2000 ecliptic (radians)
     epsilon_j2000 = np.radians(23.43929111)
     # convert to position vectors
-    x = r_sun*np.cos(lambda_sun)
-    y = r_sun*np.sin(lambda_sun)*np.cos(epsilon_j2000)
-    z = r_sun*np.sin(lambda_sun)*np.sin(epsilon_j2000)
+    x = r_sun * np.cos(lambda_sun)
+    y = r_sun * np.sin(lambda_sun) * np.cos(epsilon_j2000)
+    z = r_sun * np.sin(lambda_sun) * np.sin(epsilon_j2000)
     # Greenwich hour angle (radians)
-    rot_z = rotate(np.radians(ts.gha), 'z')
+    rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
     # ignoring polar motion and length-of-day variations
-    X = rot_z[0,0,:]*x + rot_z[0,1,:]*y + rot_z[0,2,:]*z
-    Y = rot_z[1,0,:]*x + rot_z[1,1,:]*y + rot_z[1,2,:]*z
-    Z = rot_z[2,0,:]*x + rot_z[2,1,:]*y + rot_z[2,2,:]*z
+    X = rot_z[0, 0, :] * x + rot_z[0, 1, :] * y + rot_z[0, 2, :] * z
+    Y = rot_z[1, 0, :] * x + rot_z[1, 1, :] * y + rot_z[1, 2, :] * z
+    Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
 def solar_ephemerides(MJD: np.ndarray, **kwargs):
@@ -690,17 +741,17 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
         ECEF coordinates of the sun (meters)
     """
     # set default keyword arguments
-    kwargs.setdefault('kernel', _default_kernel)
-    kwargs.setdefault('include_aberration', False)
+    kwargs.setdefault("kernel", _default_kernel)
+    kwargs.setdefault("include_aberration", False)
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # difference to convert to Barycentric Dynamical Time (TDB)
-    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
+    tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # download kernel file if not currently existing
-    if not pathlib.Path(kwargs['kernel']).exists():
-        from_jpl_ssd(kernel=None, local=kwargs['kernel'])
+    if not pathlib.Path(kwargs["kernel"]).exists():
+        from_jpl_ssd(kernel=None, local=kwargs["kernel"])
     # read JPL ephemerides kernel
-    SPK = jplephem.spk.SPK.open(kwargs['kernel'])
+    SPK = jplephem.spk.SPK.open(kwargs["kernel"])
     # segments for computing position of the sun
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 10 SUN
     SSB_to_Sun = SPK[0, 10]
@@ -714,25 +765,26 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     # compute the position of the sun relative to the Earth
     # Earth_to_Sun = Earth_to_EMB + EMB_to_SSB + SSB_to_Sun
     #              = -EMB_to_Earth - SSB_to_EMB + SSB_to_Sun
-    if kwargs['include_aberration']:
+    if kwargs["include_aberration"]:
         # astronomical unit in kilometers
         AU = 149597870.700
         # position in astronomical units
-        position = (xyz_10 - xyz_399 - xyz_3)/AU
+        position = (xyz_10 - xyz_399 - xyz_3) / AU
         # velocity in astronomical units per day
-        velocity = (vel_399 + vel_3 - vel_10)/AU
+        velocity = (vel_399 + vel_3 - vel_10) / AU
         # correct for aberration and convert to meters
         x, y, z = _correct_aberration(position, velocity)
     else:
         # convert positions from kilometers to meters
-        x, y, z = 1e3*(xyz_10 - xyz_399 - xyz_3)
+        x, y, z = 1e3 * (xyz_10 - xyz_399 - xyz_3)
     # rotate to cartesian (ECEF) coordinates
-    rot_z = itrs((ts.utc - _jd_j2000)/ts.century)
-    X = rot_z[0,0,:]*x + rot_z[0,1,:]*y + rot_z[0,2,:]*z
-    Y = rot_z[1,0,:]*x + rot_z[1,1,:]*y + rot_z[1,2,:]*z
-    Z = rot_z[2,0,:]*x + rot_z[2,1,:]*y + rot_z[2,2,:]*z
+    rot_z = itrs((ts.utc - _jd_j2000) / ts.century)
+    X = rot_z[0, 0, :] * x + rot_z[0, 1, :] * y + rot_z[0, 2, :] * z
+    Y = rot_z[1, 0, :] * x + rot_z[1, 1, :] * y + rot_z[1, 2, :] * z
+    Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
 def lunar_ecef(MJD: np.ndarray, **kwargs):
@@ -758,12 +810,13 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     X, Y, Z: np.ndarray
         ECEF coordinates of the moon (meters)
     """
-    kwargs.setdefault('ephemerides', 'approximate')
-    if (kwargs['ephemerides'].lower() == 'approximate'):
+    kwargs.setdefault("ephemerides", "approximate")
+    if kwargs["ephemerides"].lower() == "approximate":
         return lunar_approximate(MJD, **kwargs)
-    elif (kwargs['ephemerides'].upper() == 'JPL'):
-        assert jplephem_available, 'jplephem is required for JPL ephemerides'
+    elif kwargs["ephemerides"].upper() == "JPL":
+        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return lunar_ephemerides(MJD, **kwargs)
+
 
 def lunar_approximate(MJD, **kwargs):
     """
@@ -784,64 +837,85 @@ def lunar_approximate(MJD, **kwargs):
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # mean longitude of moon (p. 338)
-    lunar_longitude = np.array([218.3164477, 481267.88123421, -1.5786e-3,
-            1.855835e-6, -1.53388e-8])
+    lunar_longitude = np.array(
+        [218.3164477, 481267.88123421, -1.5786e-3, 1.855835e-6, -1.53388e-8]
+    )
     s = np.radians(polynomial_sum(lunar_longitude, ts.T))
     # difference between the mean longitude of sun and moon (p. 338)
-    lunar_elongation = np.array([297.8501921, 445267.1114034, -1.8819e-3,
-            1.83195e-6, -8.8445e-9])
+    lunar_elongation = np.array(
+        [297.8501921, 445267.1114034, -1.8819e-3, 1.83195e-6, -8.8445e-9]
+    )
     D = np.radians(polynomial_sum(lunar_elongation, ts.T))
     # mean longitude of ascending lunar node (p. 144)
     lunar_node = np.array([125.04452, -1934.136261, 2.0708e-3, 2.22222e-6])
     N = np.radians(polynomial_sum(lunar_node, ts.T))
     F = s - N
     # mean anomaly of the sun (radians)
-    M = np.radians((357.5256 + 35999.049*ts.T))
+    M = np.radians((357.5256 + 35999.049 * ts.T))
     # mean anomaly of the moon (radians)
-    l = np.radians((134.96292 + 477198.86753*ts.T))
+    l = np.radians((134.96292 + 477198.86753 * ts.T))
     # series expansion for mean anomaly in moon radius (meters)
-    r_moon = 1e3*(385000.0 - 20905.0*np.cos(l) - 3699.0*np.cos(2.0*D - l) -
-        2956.0*np.cos(2.0*D) - 570.0*np.cos(2.0*l) +
-        246.0*np.cos(2.0*l - 2.0*D) - 205.0*np.cos(M - 2.0*D) -
-        171.0*np.cos(l + 2.0*D) - 152.0*np.cos(l + M - 2.0*D))
+    r_moon = 1e3 * (
+        385000.0
+        - 20905.0 * np.cos(l)
+        - 3699.0 * np.cos(2.0 * D - l)
+        - 2956.0 * np.cos(2.0 * D)
+        - 570.0 * np.cos(2.0 * l)
+        + 246.0 * np.cos(2.0 * l - 2.0 * D)
+        - 205.0 * np.cos(M - 2.0 * D)
+        - 171.0 * np.cos(l + 2.0 * D)
+        - 152.0 * np.cos(l + M - 2.0 * D)
+    )
     # series expansion for ecliptic longitude of the moon (radians)
     lambda_moon = s + asec2rad(
-        22640.0*np.sin(l) + 769.0*np.sin(2.0*l) -
-        4586.0*np.sin(l - 2.0*D) + 2370.0*np.sin(2.0*D) -
-        668.0*np.sin(M) - 412.0*np.sin(2.0*F) -
-        212.0*np.sin(2.0*l - 2.0*D) - 206.0*np.sin(l + M - 2.0*D) +
-        192.0*np.sin(l + 2.0*D) - 165.0*np.sin(M - 2.0*D) -
-        148.0*np.sin(l - M) - 125.0*np.sin(D) -
-        110.0*np.sin(l + M) - 55.0*np.sin(2.0*F - 2.0*D)
+        22640.0 * np.sin(l)
+        + 769.0 * np.sin(2.0 * l)
+        - 4586.0 * np.sin(l - 2.0 * D)
+        + 2370.0 * np.sin(2.0 * D)
+        - 668.0 * np.sin(M)
+        - 412.0 * np.sin(2.0 * F)
+        - 212.0 * np.sin(2.0 * l - 2.0 * D)
+        - 206.0 * np.sin(l + M - 2.0 * D)
+        + 192.0 * np.sin(l + 2.0 * D)
+        - 165.0 * np.sin(M - 2.0 * D)
+        - 148.0 * np.sin(l - M)
+        - 125.0 * np.sin(D)
+        - 110.0 * np.sin(l + M)
+        - 55.0 * np.sin(2.0 * F - 2.0 * D)
     )
     # series expansion for ecliptic latitude of the moon (radians)
-    q = asec2rad(412.0*np.sin(2.0*F) + 541.0*np.sin(M))
-    beta_moon = asec2rad(18520.0*np.sin(F + lambda_moon - s + q) -
-        526.0*np.sin(F - 2*D) + 44.0*np.sin(l + F - 2.0*D) -
-        31.0*np.sin(-l + F - 2.0*D) - 25.0*np.sin(-2.0*l + F) -
-        23.0*np.sin(M + F - 2.0*D) + 21.0*np.sin(-l + F) +
-        11.0*np.sin(-M + F - 2.0*D)
+    q = asec2rad(412.0 * np.sin(2.0 * F) + 541.0 * np.sin(M))
+    beta_moon = asec2rad(
+        18520.0 * np.sin(F + lambda_moon - s + q)
+        - 526.0 * np.sin(F - 2 * D)
+        + 44.0 * np.sin(l + F - 2.0 * D)
+        - 31.0 * np.sin(-l + F - 2.0 * D)
+        - 25.0 * np.sin(-2.0 * l + F)
+        - 23.0 * np.sin(M + F - 2.0 * D)
+        + 21.0 * np.sin(-l + F)
+        + 11.0 * np.sin(-M + F - 2.0 * D)
     )
     # convert to position vectors
-    x = r_moon*np.cos(lambda_moon)*np.cos(beta_moon)
-    y = r_moon*np.sin(lambda_moon)*np.cos(beta_moon)
-    z = r_moon*np.sin(beta_moon)
+    x = r_moon * np.cos(lambda_moon) * np.cos(beta_moon)
+    y = r_moon * np.sin(lambda_moon) * np.cos(beta_moon)
+    z = r_moon * np.sin(beta_moon)
     # obliquity of the J2000 ecliptic (radians)
     epsilon_j2000 = np.radians(23.43929111)
     # rotate by ecliptic
-    rot_x = rotate(-epsilon_j2000, 'x')
-    u = rot_x[0,0,:]*x + rot_x[0,1,:]*y + rot_x[0,2,:]*z
-    v = rot_x[1,0,:]*x + rot_x[1,1,:]*y + rot_x[1,2,:]*z
-    w = rot_x[2,0,:]*x + rot_x[2,1,:]*y + rot_x[2,2,:]*z
+    rot_x = rotate(-epsilon_j2000, "x")
+    u = rot_x[0, 0, :] * x + rot_x[0, 1, :] * y + rot_x[0, 2, :] * z
+    v = rot_x[1, 0, :] * x + rot_x[1, 1, :] * y + rot_x[1, 2, :] * z
+    w = rot_x[2, 0, :] * x + rot_x[2, 1, :] * y + rot_x[2, 2, :] * z
     # Greenwich hour angle (radians)
-    rot_z = rotate(np.radians(ts.gha), 'z')
+    rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
     # ignoring polar motion and length-of-day variations
-    X = rot_z[0,0,:]*u + rot_z[0,1,:]*v + rot_z[0,2,:]*w
-    Y = rot_z[1,0,:]*u + rot_z[1,1,:]*v + rot_z[1,2,:]*w
-    Z = rot_z[2,0,:]*u + rot_z[2,1,:]*v + rot_z[2,2,:]*w
+    X = rot_z[0, 0, :] * u + rot_z[0, 1, :] * v + rot_z[0, 2, :] * w
+    Y = rot_z[1, 0, :] * u + rot_z[1, 1, :] * v + rot_z[1, 2, :] * w
+    Z = rot_z[2, 0, :] * u + rot_z[2, 1, :] * v + rot_z[2, 2, :] * w
     # return the ECEF coordinates
     return (X, Y, Z)
+
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
 def lunar_ephemerides(MJD: np.ndarray, **kwargs):
@@ -865,17 +939,17 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
         ECEF coordinates of the moon (meters)
     """
     # set default keyword arguments
-    kwargs.setdefault('kernel', _default_kernel)
-    kwargs.setdefault('include_aberration', False)
+    kwargs.setdefault("kernel", _default_kernel)
+    kwargs.setdefault("include_aberration", False)
     # download kernel file if not currently existing
-    if not pathlib.Path(kwargs['kernel']).exists():
-        from_jpl_ssd(kernel=None, local=kwargs['kernel'])
+    if not pathlib.Path(kwargs["kernel"]).exists():
+        from_jpl_ssd(kernel=None, local=kwargs["kernel"])
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # difference to convert to Barycentric Dynamical Time (TDB)
-    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
+    tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # read JPL ephemerides kernel
-    SPK = jplephem.spk.SPK.open(kwargs['kernel'])
+    SPK = jplephem.spk.SPK.open(kwargs["kernel"])
     # segments for computing position of the moon
     # segment 0 SOLAR SYSTEM BARYCENTER -> segment 3 EARTH BARYCENTER
     SSB_to_EMB = SPK[0, 3]
@@ -889,26 +963,27 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     # compute the position of the moon relative to the Earth
     # Earth_to_Moon = Earth_to_EMB + EMB_to_Moon
     #               = -EMB_to_Earth + EMB_to_Moon
-    if kwargs['include_aberration']:
+    if kwargs["include_aberration"]:
         # astronomical unit in kilometers
         AU = 149597870.700
         # position in astronomical units
-        position = (xyz_301 - xyz_399)/AU
+        position = (xyz_301 - xyz_399) / AU
         # velocity in astronomical units per day
-        velocity = (vel_3 + vel_399 - vel_301)/AU
+        velocity = (vel_3 + vel_399 - vel_301) / AU
         # correct for aberration and convert to meters
         x, y, z = _correct_aberration(position, velocity)
     else:
         # convert positions from kilometers to meters
-        x, y, z = 1e3*(xyz_301 - xyz_399)
+        x, y, z = 1e3 * (xyz_301 - xyz_399)
     # rotate to cartesian (ECEF) coordinates
     # use UTC time as input to itrs rotation function
-    rot_z = itrs((ts.utc - _jd_j2000)/ts.century)
-    X = rot_z[0,0,:]*x + rot_z[0,1,:]*y + rot_z[0,2,:]*z
-    Y = rot_z[1,0,:]*x + rot_z[1,1,:]*y + rot_z[1,2,:]*z
-    Z = rot_z[2,0,:]*x + rot_z[2,1,:]*y + rot_z[2,2,:]*z
+    rot_z = itrs((ts.utc - _jd_j2000) / ts.century)
+    X = rot_z[0, 0, :] * x + rot_z[0, 1, :] * y + rot_z[0, 2, :] * z
+    Y = rot_z[1, 0, :] * x + rot_z[1, 1, :] * y + rot_z[1, 2, :] * z
+    Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
 
 def gast(T: float | np.ndarray):
     """Greenwich Apparent Sidereal Time (GAST)
@@ -920,7 +995,7 @@ def gast(T: float | np.ndarray):
         Centuries since 2000-01-01T12:00:00
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
-    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # convert dynamical time to modified Julian days
     MJD = ts.tt - _jd_mjd
     # estimate the mean obliquity
@@ -929,13 +1004,11 @@ def gast(T: float | np.ndarray):
     dpsi, deps = _nutation_angles(T)
     # traditional equation of the equinoxes
     c = _eqeq_complement(T)
-    eqeq = dpsi*np.cos(epsilon + deps) + c
-    return np.mod(ts.st + eqeq/24.0, 1.0)
+    eqeq = dpsi * np.cos(epsilon + deps) + c
+    return np.mod(ts.st + eqeq / 24.0, 1.0)
 
-def itrs(
-        T: float | np.ndarray,
-        include_polar_motion: bool = True
-    ):
+
+def itrs(T: float | np.ndarray, include_polar_motion: bool = True):
     """
     International Terrestrial Reference System (ITRS)
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
@@ -953,16 +1026,15 @@ def itrs(
         Include polar motion in the rotation matrix
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
-    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # get the rotation matrix for transforming from ICRS to ITRS
-    M = _icrs_rotation_matrix(T,
-        include_polar_motion=include_polar_motion
-    )
+    M = _icrs_rotation_matrix(T, include_polar_motion=include_polar_motion)
     # compute Greenwich Apparent Sidereal Time
-    GAST = rotate(ts.tau*gast(T), 'z')
-    R = np.einsum('ijt...,jkt->ikt...', GAST, M)
+    GAST = rotate(ts.tau * gast(T), "z")
+    R = np.einsum("ijt...,jkt->ikt...", GAST, M)
     # return the combined rotation matrix
     return R
+
 
 def _eqeq_complement(T: float | np.ndarray):
     """
@@ -978,67 +1050,105 @@ def _eqeq_complement(T: float | np.ndarray):
         Centuries since 2000-01-01T12:00:00
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
-    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # get the fundamental arguments in radians
     fa = np.zeros((14, len(ts)))
     # mean anomaly of the moon (arcseconds)
-    lunar_anomaly = np.array([485868.249036, 715923.2178,
-        31.8792, 0.051635, -2.447e-04])
-    fa[0,:] = asec2rad(polynomial_sum(lunar_anomaly, ts.T)) + \
-        ts.tau*np.mod(1325.0*ts.T, 1.0)
+    lunar_anomaly = np.array(
+        [485868.249036, 715923.2178, 31.8792, 0.051635, -2.447e-04]
+    )
+    fa[0, :] = asec2rad(polynomial_sum(lunar_anomaly, ts.T)) + ts.tau * np.mod(
+        1325.0 * ts.T, 1.0
+    )
     # mean anomaly of the sun (arcseconds)
-    solar_anomaly = np.array([1287104.79305,  1292581.0481,
-        -0.5532, 1.36e-4, -1.149e-05])
-    fa[1,:] = asec2rad(polynomial_sum(solar_anomaly, ts.T)) + \
-        ts.tau*np.mod(99.0*ts.T, 1.0)
+    solar_anomaly = np.array(
+        [1287104.79305, 1292581.0481, -0.5532, 1.36e-4, -1.149e-05]
+    )
+    fa[1, :] = asec2rad(polynomial_sum(solar_anomaly, ts.T)) + ts.tau * np.mod(
+        99.0 * ts.T, 1.0
+    )
     # mean argument of the moon (arcseconds)
     # (angular distance from the ascending node)
-    lunar_argument = np.array([335779.526232, 295262.8478,
-        -12.7512, -1.037e-3, 4.17e-6])
-    fa[2,:] = asec2rad(polynomial_sum(lunar_argument, ts.T)) + \
-        ts.tau*np.mod(1342.0*ts.T, 1.0)
+    lunar_argument = np.array(
+        [335779.526232, 295262.8478, -12.7512, -1.037e-3, 4.17e-6]
+    )
+    fa[2, :] = asec2rad(polynomial_sum(lunar_argument, ts.T)) + ts.tau * np.mod(
+        1342.0 * ts.T, 1.0
+    )
     # mean elongation of the moon from the sun (arcseconds)
-    lunisolar_elongation = np.array([1072260.70369, 1105601.2090,
-        -6.3706, 6.593e-3, -3.169e-05])
-    fa[3,:] = asec2rad(polynomial_sum(lunisolar_elongation, ts.T)) + \
-        ts.tau*np.mod(1236.0*ts.T, 1.0)
+    lunisolar_elongation = np.array(
+        [1072260.70369, 1105601.2090, -6.3706, 6.593e-3, -3.169e-05]
+    )
+    fa[3, :] = asec2rad(
+        polynomial_sum(lunisolar_elongation, ts.T)
+    ) + ts.tau * np.mod(1236.0 * ts.T, 1.0)
     # mean longitude of the ascending node of the moon (arcseconds)
-    lunar_node = np.array([450160.398036, -482890.5431,
-        7.4722, 7.702e-3, -5.939e-05])
-    fa[4,:] = asec2rad(polynomial_sum(lunar_node, ts.T)) + \
-        ts.tau*np.mod(-5.0*ts.T, 1.0)
+    lunar_node = np.array(
+        [450160.398036, -482890.5431, 7.4722, 7.702e-3, -5.939e-05]
+    )
+    fa[4, :] = asec2rad(polynomial_sum(lunar_node, ts.T)) + ts.tau * np.mod(
+        -5.0 * ts.T, 1.0
+    )
     # additional polynomial terms
-    fa[5,:] = polynomial_sum(np.array([4.402608842, 2608.7903141574]), ts.T)
-    fa[6,:] = polynomial_sum(np.array([3.176146697, 1021.3285546211]), ts.T)
-    fa[7,:] = polynomial_sum(np.array([1.753470314, 628.3075849991]), ts.T)
-    fa[8,:] = polynomial_sum(np.array([6.203480913, 334.0612426700]), ts.T)
-    fa[9,:] = polynomial_sum(np.array([0.599546497, 52.9690962641]), ts.T)
-    fa[10,:] = polynomial_sum(np.array([0.874016757, 21.3299104960]), ts.T)
-    fa[11,:] = polynomial_sum(np.array([5.481293872, 7.4781598567]), ts.T)
-    fa[12,:] = polynomial_sum(np.array([5.311886287, 3.8133035638]), ts.T)
-    fa[13,:] = polynomial_sum(np.array([0, 0.024381750, 0.00000538691]), ts.T)
+    fa[5, :] = polynomial_sum(np.array([4.402608842, 2608.7903141574]), ts.T)
+    fa[6, :] = polynomial_sum(np.array([3.176146697, 1021.3285546211]), ts.T)
+    fa[7, :] = polynomial_sum(np.array([1.753470314, 628.3075849991]), ts.T)
+    fa[8, :] = polynomial_sum(np.array([6.203480913, 334.0612426700]), ts.T)
+    fa[9, :] = polynomial_sum(np.array([0.599546497, 52.9690962641]), ts.T)
+    fa[10, :] = polynomial_sum(np.array([0.874016757, 21.3299104960]), ts.T)
+    fa[11, :] = polynomial_sum(np.array([5.481293872, 7.4781598567]), ts.T)
+    fa[12, :] = polynomial_sum(np.array([5.311886287, 3.8133035638]), ts.T)
+    fa[13, :] = polynomial_sum(np.array([0, 0.024381750, 0.00000538691]), ts.T)
     # parse IERS Greenwich Sidereal Time (GST) table
     j0, j1 = _parse_table_5_2e()
-    n0 = np.c_[j0['l'], j0['lp'], j0['F'], j0['D'], j0['Om'],
-        j0['L_Me'], j0['L_Ve'], j0['L_E'], j0['L_Ma'], j0['L_J'],
-        j0['L_Sa'], j0['L_U'], j0['L_Ne'], j0['p_A']]
-    n1 = np.c_[j1['l'], j1['lp'], j1['F'], j1['D'], j1['Om'],
-        j1['L_Me'], j1['L_Ve'], j1['L_E'], j1['L_Ma'], j1['L_J'],
-        j1['L_Sa'], j1['L_U'], j1['L_Ne'], j1['p_A']]
+    n0 = np.c_[
+        j0["l"],
+        j0["lp"],
+        j0["F"],
+        j0["D"],
+        j0["Om"],
+        j0["L_Me"],
+        j0["L_Ve"],
+        j0["L_E"],
+        j0["L_Ma"],
+        j0["L_J"],
+        j0["L_Sa"],
+        j0["L_U"],
+        j0["L_Ne"],
+        j0["p_A"],
+    ]
+    n1 = np.c_[
+        j1["l"],
+        j1["lp"],
+        j1["F"],
+        j1["D"],
+        j1["Om"],
+        j1["L_Me"],
+        j1["L_Ve"],
+        j1["L_E"],
+        j1["L_Ma"],
+        j1["L_J"],
+        j1["L_Sa"],
+        j1["L_U"],
+        j1["L_Ne"],
+        j1["p_A"],
+    ]
     arg0 = np.dot(n0, np.mod(fa, ts.tau))
     arg1 = np.dot(n1, np.mod(fa, ts.tau))
     # evaluate the complementary terms and convert to radians
-    complement = masec2rad(np.dot(j0['Cs'], np.sin(arg0)) +
-        np.dot(j0['Cc'], np.cos(arg0)) +
-        ts.T*np.dot(j1['Cs'], np.sin(arg1)) +
-        ts.T*np.dot(j1['Cc'], np.cos(arg1)))
+    complement = masec2rad(
+        np.dot(j0["Cs"], np.sin(arg0))
+        + np.dot(j0["Cc"], np.cos(arg0))
+        + ts.T * np.dot(j1["Cs"], np.sin(arg1))
+        + ts.T * np.dot(j1["Cc"], np.cos(arg1))
+    )
     # return the complementary terms
     return complement
 
+
 def _icrs_rotation_matrix(
-        T: float | np.ndarray,
-        include_polar_motion: bool = True
-    ):
+    T: float | np.ndarray, include_polar_motion: bool = True
+):
     """
     Rotation matrix for transforming from the
     International Celestial Reference System (ICRS)
@@ -1053,9 +1163,9 @@ def _icrs_rotation_matrix(
         Include polar motion in the rotation matrix
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
-    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # difference to convert to Barycentric Dynamical Time (TDB)
-    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
+    tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # convert dynamical time to modified Julian days
     MJD = ts.tt + tdb2 - _jd_mjd
     # estimate the mean obliquity
@@ -1070,14 +1180,15 @@ def _icrs_rotation_matrix(
     # M1: precession
     # M2: nutation
     # M3: frame bias
-    M = np.einsum('ijt...,jkt...,kl...->ilt...', M1, M2, M3)
+    M = np.einsum("ijt...,jkt...,kl...->ilt...", M1, M2, M3)
     # add polar motion to the combined rotation matrix
     if include_polar_motion:
         # M4: polar motion
         M4 = _polar_motion_matrix(ts.T)
-        M = np.einsum('ijt...,jkt...->ikt...', M, M4)
+        M = np.einsum("ijt...,jkt...->ikt...", M, M4)
     # return the combined rotation matrix
     return M
+
 
 def _frame_bias_matrix():
     """
@@ -1086,23 +1197,24 @@ def _frame_bias_matrix():
     System (ICRS) :cite:p:`Petit:2010tp,Urban:2013vl`
     """
     # frame bias rotation matrix
-    B = np.zeros((3,3))
-    xi0  = asec2rad(-0.0166170)
+    B = np.zeros((3, 3))
+    xi0 = asec2rad(-0.0166170)
     eta0 = asec2rad(-0.0068192)
-    da0  = asec2rad(-0.01460)
+    da0 = asec2rad(-0.01460)
     # off-diagonal elements of the frame bias matrix
-    B[0,1] = da0
-    B[0,2] = -xi0
-    B[1,0] = -da0
-    B[1,2] = -eta0
-    B[2,0] =  xi0
-    B[2,1] =  eta0
+    B[0, 1] = da0
+    B[0, 2] = -xi0
+    B[1, 0] = -da0
+    B[1, 2] = -eta0
+    B[2, 0] = xi0
+    B[2, 1] = eta0
     # second-order corrections to diagonal elements
-    B[0,0] = 1.0 - 0.5 * (da0**2 + xi0**2)
-    B[1,1] = 1.0 - 0.5 * (da0**2 + eta0**2)
-    B[2,2] = 1.0 - 0.5 * (eta0**2 + xi0**2)
+    B[0, 0] = 1.0 - 0.5 * (da0**2 + xi0**2)
+    B[1, 1] = 1.0 - 0.5 * (da0**2 + eta0**2)
+    B[2, 2] = 1.0 - 0.5 * (eta0**2 + xi0**2)
     # return the rotation matrix
     return B
+
 
 def _nutation_angles(T: float | np.ndarray):
     """
@@ -1122,9 +1234,9 @@ def _nutation_angles(T: float | np.ndarray):
         Obliquity of the ecliptic
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
-    ts = timescale.time.Timescale(MJD=T*_century + _mjd_j2000)
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # difference to convert to Barycentric Dynamical Time (TDB)
-    tdb2 = getattr(ts, 'tdb_tt') if hasattr(ts, 'tdb_tt') else 0.0
+    tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # convert dynamical time to modified Julian days
     MJD = ts.tt + tdb2 - _jd_mjd
     # get the fundamental arguments in radians
@@ -1132,32 +1244,37 @@ def _nutation_angles(T: float | np.ndarray):
     # non-polynomial terms in the equation of the equinoxes
     # parse IERS lunisolar longitude table
     l0, l1 = _parse_table_5_3a()
-    n0 = np.c_[l0['l'], l0['lp'], l0['F'], l0['D'], l0['Om']]
-    n1 = np.c_[l1['l'], l1['lp'], l1['F'], l1['D'], l1['Om']]
+    n0 = np.c_[l0["l"], l0["lp"], l0["F"], l0["D"], l0["Om"]]
+    n1 = np.c_[l1["l"], l1["lp"], l1["F"], l1["D"], l1["Om"]]
     arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
     arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
-    dpsi = np.dot(l0['As'], np.sin(arg0)) + \
-        np.dot(l0['Ac'], np.cos(arg0)) + \
-        ts.T*np.dot(l1['As'], np.sin(arg1)) + \
-        ts.T*np.dot(l1['Ac'], np.cos(arg1))
+    dpsi = (
+        np.dot(l0["As"], np.sin(arg0))
+        + np.dot(l0["Ac"], np.cos(arg0))
+        + ts.T * np.dot(l1["As"], np.sin(arg1))
+        + ts.T * np.dot(l1["Ac"], np.cos(arg1))
+    )
     # parse IERS lunisolar obliquity table
     o0, o1 = _parse_table_5_3b()
-    n0 = np.c_[o0['l'], o0['lp'], o0['F'], o0['D'], o0['Om']]
-    n1 = np.c_[o1['l'], o1['lp'], o1['F'], o1['D'], o1['Om']]
+    n0 = np.c_[o0["l"], o0["lp"], o0["F"], o0["D"], o0["Om"]]
+    n1 = np.c_[o1["l"], o1["lp"], o1["F"], o1["D"], o1["Om"]]
     arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
     arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
-    deps = np.dot(o0['Bs'], np.sin(arg0)) + \
-        np.dot(o0['Bc'], np.cos(arg0)) + \
-        ts.T*np.dot(o1['Bs'], np.sin(arg1)) + \
-        ts.T*np.dot(o1['Bc'], np.cos(arg1))
+    deps = (
+        np.dot(o0["Bs"], np.sin(arg0))
+        + np.dot(o0["Bc"], np.cos(arg0))
+        + ts.T * np.dot(o1["Bs"], np.sin(arg1))
+        + ts.T * np.dot(o1["Bc"], np.cos(arg1))
+    )
     # convert to radians
     return (masec2rad(dpsi), masec2rad(deps))
 
+
 def _nutation_matrix(
-        mean_obliquity: float | np.ndarray,
-        true_obliquity: float | np.ndarray,
-        psi: float | np.ndarray
-    ):
+    mean_obliquity: float | np.ndarray,
+    true_obliquity: float | np.ndarray,
+    psi: float | np.ndarray,
+):
     """
     Nutation rotation matrix
     :cite:p:`Kaplan:1989cf,Petit:2010tp`
@@ -1179,18 +1296,19 @@ def _nutation_matrix(
     costrue = np.cos(true_obliquity)
     sintrue = np.sin(true_obliquity)
     # compute elements of nutation rotation matrix
-    R = np.zeros((3,3,len(np.atleast_1d(psi))))
-    R[0,0,:] = cospsi
-    R[0,1,:] = -sinpsi*cosmean
-    R[0,2,:] = -sinpsi*sinmean
-    R[1,0,:] = sinpsi*costrue
-    R[1,1,:] = cospsi*cosmean*costrue + sinmean*sintrue
-    R[1,2,:] = cospsi*sinmean*costrue - cosmean*sintrue
-    R[2,0,:] = sinpsi*sintrue
-    R[2,1,:] = cospsi*cosmean*sintrue - sinmean*costrue
-    R[2,2,:] = cospsi*sinmean*sintrue + cosmean*costrue
+    R = np.zeros((3, 3, len(np.atleast_1d(psi))))
+    R[0, 0, :] = cospsi
+    R[0, 1, :] = -sinpsi * cosmean
+    R[0, 2, :] = -sinpsi * sinmean
+    R[1, 0, :] = sinpsi * costrue
+    R[1, 1, :] = cospsi * cosmean * costrue + sinmean * sintrue
+    R[1, 2, :] = cospsi * sinmean * costrue - cosmean * sintrue
+    R[2, 0, :] = sinpsi * sintrue
+    R[2, 1, :] = cospsi * cosmean * sintrue - sinmean * costrue
+    R[2, 2, :] = cospsi * sinmean * sintrue + cosmean * costrue
     # return the rotation matrix
     return R
+
 
 def _polar_motion_matrix(T: float | np.ndarray):
     """
@@ -1203,18 +1321,19 @@ def _polar_motion_matrix(T: float | np.ndarray):
         Centuries since 2000-01-01T12:00:00
     """
     # convert to MJD from centuries relative to 2000-01-01T12:00:00
-    MJD = T*_century + _mjd_j2000
+    MJD = T * _century + _mjd_j2000
     # correct longitude origin for Terrestrial Intermediate Origin (TIO)
     # this correction is negligible for most applications
-    sprime = -4.7e-5*T
+    sprime = -4.7e-5 * T
     # calculate the polar motion for the given dates
     px, py = timescale.eop.iers_polar_motion(MJD)
     # calculate the rotation matrices
-    M1 = rotate(asec2rad(py),'x')
-    M2 = rotate(asec2rad(px),'y')
-    M3 = rotate(-asec2rad(sprime),'z')
+    M1 = rotate(asec2rad(py), "x")
+    M2 = rotate(asec2rad(px), "y")
+    M3 = rotate(-asec2rad(sprime), "z")
     # calculate the combined rotation matrix
-    return np.einsum('ij...,jk...,kl...->il...', M1, M2, M3)
+    return np.einsum("ij...,jk...,kl...->il...", M1, M2, M3)
+
 
 def _precession_matrix(T: float | np.ndarray):
     """
@@ -1231,16 +1350,19 @@ def _precession_matrix(T: float | np.ndarray):
     # obliquity of the ecliptic
     epsilon0 = 84381.406
     # lunisolar precession
-    psi0 = np.array([0.0, 5038.481507, -1.0790069,
-        -1.14045e-3, 1.32851e-4, -9.51e-8])
+    psi0 = np.array(
+        [0.0, 5038.481507, -1.0790069, -1.14045e-3, 1.32851e-4, -9.51e-8]
+    )
     psi = asec2rad(polynomial_sum(psi0, T))
     # inclination of moving equator on fixed ecliptic
-    omega0 = np.array([epsilon0, -2.5754e-2, 5.12623e-2,
-        -7.72503e-3, -4.67e-7, 3.337e-7])
+    omega0 = np.array(
+        [epsilon0, -2.5754e-2, 5.12623e-2, -7.72503e-3, -4.67e-7, 3.337e-7]
+    )
     omega = asec2rad(polynomial_sum(omega0, T))
     # planetary precession
-    chi0 = np.array([0.0, 10.556403, -2.3814292,
-        -1.21197e-3, 1.70663e-4, -5.60e-8])
+    chi0 = np.array(
+        [0.0, 10.556403, -2.3814292, -1.21197e-3, 1.70663e-4, -5.60e-8]
+    )
     chi = asec2rad(polynomial_sum(chi0, T))
     # compute trigonometric terms
     coschi = np.cos(chi)
@@ -1252,22 +1374,35 @@ def _precession_matrix(T: float | np.ndarray):
     coseps = np.cos(asec2rad(epsilon0))
     sineps = np.sin(asec2rad(epsilon0))
     # compute elements of precession rotation matrix
-    P = np.zeros((3,3,len(np.atleast_1d(T))))
-    P[0,0,:] = coschi*cospsi - sinpsi*sinchi*cosomega
-    P[0,1,:] = coschi*sinpsi*coseps + \
-        sinchi*cosomega*cospsi*coseps - sineps*sinchi*sinomega
-    P[0,2,:] = coschi*sinpsi*sineps + \
-        sinchi*cosomega*cospsi*sineps + coseps*sinchi*sinomega
-    P[1,0,:] = -sinchi*cospsi - sinpsi*coschi*cosomega
-    P[1,1,:] = -sinchi*sinpsi*coseps + \
-        coschi*cosomega*cospsi*coseps - sineps*coschi*sinomega
-    P[1,2,:] = -sinchi*sinpsi*sineps + \
-        coschi*cosomega*cospsi*sineps + coseps*coschi*sinomega
-    P[2,0,:] = sinpsi*sinomega
-    P[2,1,:] = -sinomega*cospsi*coseps - sineps*cosomega
-    P[2,2,:] = -sinomega*cospsi*sineps + cosomega*coseps
+    P = np.zeros((3, 3, len(np.atleast_1d(T))))
+    P[0, 0, :] = coschi * cospsi - sinpsi * sinchi * cosomega
+    P[0, 1, :] = (
+        coschi * sinpsi * coseps
+        + sinchi * cosomega * cospsi * coseps
+        - sineps * sinchi * sinomega
+    )
+    P[0, 2, :] = (
+        coschi * sinpsi * sineps
+        + sinchi * cosomega * cospsi * sineps
+        + coseps * sinchi * sinomega
+    )
+    P[1, 0, :] = -sinchi * cospsi - sinpsi * coschi * cosomega
+    P[1, 1, :] = (
+        -sinchi * sinpsi * coseps
+        + coschi * cosomega * cospsi * coseps
+        - sineps * coschi * sinomega
+    )
+    P[1, 2, :] = (
+        -sinchi * sinpsi * sineps
+        + coschi * cosomega * cospsi * sineps
+        + coseps * coschi * sinomega
+    )
+    P[2, 0, :] = sinpsi * sinomega
+    P[2, 1, :] = -sinomega * cospsi * coseps - sineps * cosomega
+    P[2, 2, :] = -sinomega * cospsi * sineps + cosomega * coseps
     # return the rotation matrix
     return P
+
 
 def _correct_aberration(position, velocity):
     """
@@ -1290,23 +1425,24 @@ def _correct_aberration(position, velocity):
     # speed of light in AU/day (i.e. one light day)
     c_prime = c * day / AU
     # total distance
-    distance = np.sqrt(np.sum(position*position, axis=0))
+    distance = np.sqrt(np.sum(position * position, axis=0))
     tau = distance / c_prime
     # speed
-    speed = np.sqrt(np.sum(velocity*velocity, axis=0))
+    speed = np.sqrt(np.sum(velocity * velocity, axis=0))
     beta = speed / c_prime
     # Kaplan et al. (1989) eq. 16
     # (use divide function to avoid error if denominator is zero)
-    cosD = np.divide(np.sum(position*velocity, axis=0), distance*speed)
+    cosD = np.divide(np.sum(position * velocity, axis=0), distance * speed)
     # calculate adjustments
     gamma = np.sqrt(1.0 - beta * beta)
     f1 = beta * cosD
     f2 = (1.0 + f1 / (1.0 + gamma)) * tau
     # correct for aberration of light travel time (eq. 17)
-    u = (gamma*position + f2*velocity)/(1.0 + f1)
+    u = (gamma * position + f2 * velocity) / (1.0 + f1)
     # return corrected position converted to meters
     x, y, z = u * AU
     return (x, y, z)
+
 
 def _parse_table_5_2e():
     """Parse table with expressions for Greenwich Sidereal Time
@@ -1314,27 +1450,62 @@ def _parse_table_5_2e():
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
     of :cite:t:`Petit:2010tp`
     """
-    table_5_2e = get_data_path(['data','tab5.2e.txt'])
-    with table_5_2e.open(mode='r', encoding='utf8') as f:
+    table_5_2e = get_data_path(["data", "tab5.2e.txt"])
+    with table_5_2e.open(mode="r", encoding="utf8") as f:
         file_contents = f.readlines()
     # names and formats
-    names = ('i','Cs','Cc','l','lp','F','D','Om','L_Me','L_Ve',
-        'L_E','L_Ma','L_J','L_Sa','L_U','L_Ne','p_A')
-    formats = ('i','f','f','i','i','i','i','i','i',
-        'i','i','i','i','i','i','i','i')
-    dtype = np.dtype({'names':names, 'formats':formats})
+    names = (
+        "i",
+        "Cs",
+        "Cc",
+        "l",
+        "lp",
+        "F",
+        "D",
+        "Om",
+        "L_Me",
+        "L_Ve",
+        "L_E",
+        "L_Ma",
+        "L_J",
+        "L_Sa",
+        "L_U",
+        "L_Ne",
+        "p_A",
+    )
+    formats = (
+        "i",
+        "f",
+        "f",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+    )
+    dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
     n0 = 33
     j0 = np.zeros((n0), dtype=dtype)
-    for i,line in enumerate(file_contents[53:53+n0]):
+    for i, line in enumerate(file_contents[53 : 53 + n0]):
         j0[i] = np.array(tuple(line.split()), dtype=dtype)
     # j = 1 terms
     n1 = 1
     j1 = np.zeros((n1), dtype=dtype)
-    for i,line in enumerate(file_contents[90:90+n1]):
+    for i, line in enumerate(file_contents[90 : 90 + n1]):
         j1[i] = np.array(tuple(line.split()), dtype=dtype)
     # return the table
     return (j0, j1)
+
 
 def _parse_table_5_3a():
     """Parse table with IAU 2000A lunisolar and planetary components
@@ -1342,27 +1513,62 @@ def _parse_table_5_3a():
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
     of :cite:t:`Petit:2010tp`
     """
-    table_5_3a = get_data_path(['data','tab5.3a.txt'])
-    with table_5_3a.open(mode='r', encoding='utf8') as f:
+    table_5_3a = get_data_path(["data", "tab5.3a.txt"])
+    with table_5_3a.open(mode="r", encoding="utf8") as f:
         file_contents = f.readlines()
     # names and formats
-    names = ('i','As','Ac','l','lp','F','D','Om','L_Me','L_Ve',
-        'L_E','L_Ma','L_J','L_Sa','L_U','L_Ne','p_A')
-    formats = ('i','f','f','i','i','i','i','i','i',
-        'i','i','i','i','i','i','i','i')
-    dtype = np.dtype({'names':names, 'formats':formats})
+    names = (
+        "i",
+        "As",
+        "Ac",
+        "l",
+        "lp",
+        "F",
+        "D",
+        "Om",
+        "L_Me",
+        "L_Ve",
+        "L_E",
+        "L_Ma",
+        "L_J",
+        "L_Sa",
+        "L_U",
+        "L_Ne",
+        "p_A",
+    )
+    formats = (
+        "i",
+        "f",
+        "f",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+    )
+    dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
     n0 = 1320
     j0 = np.zeros((n0), dtype=dtype)
-    for i,line in enumerate(file_contents[22:22+n0]):
+    for i, line in enumerate(file_contents[22 : 22 + n0]):
         j0[i] = np.array(tuple(line.split()), dtype=dtype)
     # j = 1 terms
     n1 = 38
     j1 = np.zeros((n1), dtype=dtype)
-    for i,line in enumerate(file_contents[1348:1348+n1]):
+    for i, line in enumerate(file_contents[1348 : 1348 + n1]):
         j1[i] = np.array(tuple(line.split()), dtype=dtype)
     # return the table
     return (j0, j1)
+
 
 def _parse_table_5_3b():
     """Parse table with IAU 2000A lunisolar and planetary components
@@ -1370,24 +1576,58 @@ def _parse_table_5_3b():
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
     of :cite:t:`Petit:2010tp`
     """
-    table_5_3b = get_data_path(['data','tab5.3b.txt'])
-    with table_5_3b.open(mode='r', encoding='utf8') as f:
+    table_5_3b = get_data_path(["data", "tab5.3b.txt"])
+    with table_5_3b.open(mode="r", encoding="utf8") as f:
         file_contents = f.readlines()
     # names and formats
-    names = ('i','Bs','Bc','l','lp','F','D','Om','L_Me','L_Ve',
-        'L_E','L_Ma','L_J','L_Sa','L_U','L_Ne','p_A')
-    formats = ('i','f','f','i','i','i','i','i','i',
-        'i','i','i','i','i','i','i','i')
-    dtype = np.dtype({'names':names, 'formats':formats})
+    names = (
+        "i",
+        "Bs",
+        "Bc",
+        "l",
+        "lp",
+        "F",
+        "D",
+        "Om",
+        "L_Me",
+        "L_Ve",
+        "L_E",
+        "L_Ma",
+        "L_J",
+        "L_Sa",
+        "L_U",
+        "L_Ne",
+        "p_A",
+    )
+    formats = (
+        "i",
+        "f",
+        "f",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+        "i",
+    )
+    dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
     n0 = 1037
     j0 = np.zeros((n0), dtype=dtype)
-    for i,line in enumerate(file_contents[22:22+n0]):
+    for i, line in enumerate(file_contents[22 : 22 + n0]):
         j0[i] = np.array(tuple(line.split()), dtype=dtype)
     # j = 1 terms
     n1 = 19
     j1 = np.zeros((n1), dtype=dtype)
-    for i,line in enumerate(file_contents[1065:1065+n1]):
+    for i, line in enumerate(file_contents[1065 : 1065 + n1]):
         j1[i] = np.array(tuple(line.split()), dtype=dtype)
     # return the table
     return (j0, j1)

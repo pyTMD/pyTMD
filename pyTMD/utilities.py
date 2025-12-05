@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 utilities.py
 Written by Tyler Sutterley (11/2025)
 Download and management utilities for syncing time and auxiliary files
@@ -53,6 +53,7 @@ UPDATE HISTORY:
     Updated 08/2020: add GSFC CDDIS opener, login and download functions
     Written 08/2020
 """
+
 from __future__ import print_function, division, annotations
 
 import sys
@@ -75,6 +76,7 @@ import subprocess
 import lxml.etree
 import platformdirs
 import calendar, time
+
 if sys.version_info[0] == 2:
     from urllib import quote_plus
     from cookielib import CookieJar
@@ -116,8 +118,9 @@ __all__ = [
     "from_json",
     "iers_list",
     "from_jpl_ssd",
-    "uhslc_list"
+    "uhslc_list",
 ]
+
 
 # PURPOSE: get absolute path within a package from a relative path
 def get_data_path(relpath: list | str | pathlib.Path):
@@ -138,11 +141,11 @@ def get_data_path(relpath: list | str | pathlib.Path):
     elif isinstance(relpath, (str, pathlib.Path)):
         return filepath.joinpath(relpath)
 
+
 # PURPOSE: get the path to the user cache directory
 def get_cache_path(
-        relpath: list | str | pathlib.Path | None = None,
-        appname='pytmd'
-    ):
+    relpath: list | str | pathlib.Path | None = None, appname="pytmd"
+):
     """
     Get the path to the user cache directory for an application
 
@@ -154,8 +157,7 @@ def get_cache_path(
         application name
     """
     # get platform-specific cache directory
-    filepath = platformdirs.user_cache_path(appname=appname,
-        ensure_exists=True)
+    filepath = platformdirs.user_cache_path(appname=appname, ensure_exists=True)
     if isinstance(relpath, list):
         # use *splat operator to extract from list
         filepath = filepath.joinpath(*relpath)
@@ -163,11 +165,10 @@ def get_cache_path(
         filepath = filepath.joinpath(relpath)
     return Path(filepath)
 
+
 def import_dependency(
-        name: str,
-        extra: str = "",
-        raise_exception: bool = False
-    ):
+    name: str, extra: str = "", raise_exception: bool = False
+):
     """
     Import an optional dependency
 
@@ -192,7 +193,7 @@ def import_dependency(
     assert isinstance(name, str), msg
     # default error if module cannot be imported
     err = f"Missing optional dependency '{name}'. {extra}"
-    module = type('module', (), {})
+    module = type("module", (), {})
     # try to import the module
     try:
         module = importlib.import_module(name)
@@ -203,6 +204,7 @@ def import_dependency(
             logging.debug(err)
     # return the module
     return module
+
 
 def dependency_available(name: str, minversion: str | None = None):
     """
@@ -228,9 +230,10 @@ def dependency_available(name: str, minversion: str | None = None):
     # check if the version is greater than the minimum required
     if minversion is not None:
         version = importlib.metadata.version(name)
-        return (version >= minversion)
+        return version >= minversion
     # return if both checks are passed
     return True
+
 
 def is_valid_url(url: str) -> bool:
     """
@@ -247,9 +250,9 @@ def is_valid_url(url: str) -> bool:
     except AttributeError:
         return False
 
+
 class Path(pathlib.Path):
-    """``Pathlib.Path`` subclass with additional methods and properties
-    """
+    """``Pathlib.Path`` subclass with additional methods and properties"""
 
     def __init__(self, filename: str | pathlib.Path, *args, **kwargs):
         if is_valid_url(filename):
@@ -260,31 +263,28 @@ class Path(pathlib.Path):
             self.filename = pathlib.Path(filename, *args, **kwargs)
 
     def joinpath(self, *args):
-        """Join path components to the existing path
-        """
+        """Join path components to the existing path"""
         if self.is_url():
-            return Path('/'.join([self.filename, *args]))
+            return Path("/".join([self.filename, *args]))
         else:
             return Path(self.filename.joinpath(*args))
 
     # PURPOSE: platform independent file opener
     def openfile(self):
-        """Platform independent file opener
-        """
+        """Platform independent file opener"""
         if self.is_url():
-            raise RuntimeError('Cannot open URL paths')
+            raise RuntimeError("Cannot open URL paths")
         if self.is_local() and (sys.platform == "win32"):
             os.startfile(self.filename, "explore")
-        elif  self.is_local() and (sys.platform == "darwin"):
+        elif self.is_local() and (sys.platform == "darwin"):
             subprocess.call(["open", self.filename])
         else:
             subprocess.call(["xdg-open", self.filename])
 
     def compressuser(self):
-        """Tilde-compress a file to be relative to the home directory
-        """
+        """Tilde-compress a file to be relative to the home directory"""
         if self.is_url():
-            raise RuntimeError('Cannot compress URL paths')
+            raise RuntimeError("Cannot compress URL paths")
         # attempt to compress filename relative to home directory
         filename = pathlib.Path(self.filename).expanduser().absolute()
         try:
@@ -292,65 +292,62 @@ class Path(pathlib.Path):
         except (ValueError, AttributeError) as exc:
             return self.filename
         else:
-            return Path('~').joinpath(relative_to)
-        
+            return Path("~").joinpath(relative_to)
+
     def exists(self):
-        """Check if the resolved path exists
-        """
+        """Check if the resolved path exists"""
         if self.is_url():
             return is_valid_url(self.filename)
         else:
             return self.filename.expanduser().absolute().exists()
-        
+
     def resolve(self):
-        """Resolve the path to an absolute path
-        """
+        """Resolve the path to an absolute path"""
         if self.is_url():
-            return Path('/'.join(url_split(self.filename)))
+            return Path("/".join(url_split(self.filename)))
         else:
             return Path(self.filename.expanduser().absolute())
 
     def is_file(self):
-        """Boolean flag if path is a local file
-        """
-        return not is_valid_url(self.filename) and \
-            self.filename.expanduser().absolute().is_file()
+        """Boolean flag if path is a local file"""
+        return (
+            not is_valid_url(self.filename)
+            and self.filename.expanduser().absolute().is_file()
+        )
 
     def is_dir(self):
-        """Boolean flag if path is a local directory
-        """
-        return not is_valid_url(self.filename) and \
-            self.filename.expanduser().absolute().is_dir()
+        """Boolean flag if path is a local directory"""
+        return (
+            not is_valid_url(self.filename)
+            and self.filename.expanduser().absolute().is_dir()
+        )
 
     def is_local(self):
-        """Boolean flag if path is a local file or directory
-        """
+        """Boolean flag if path is a local file or directory"""
         return not is_valid_url(self.filename)
 
     def is_url(self):
-        """Boolean flag if path is a URL
-        """
+        """Boolean flag if path is a URL"""
         return is_valid_url(self.filename)
 
     @property
     def md5_hash(self):
-        """MD5 hash value of the file
-        """
-        return get_hash(self.filename, algorithm='md5')
+        """MD5 hash value of the file"""
+        return get_hash(self.filename, algorithm="md5")
 
     def __repr__(self):
-        """Representation of the ``Path`` object
-        """
+        """Representation of the ``Path`` object"""
         return str(self.filename)
 
     def __str__(self):
-        """String representation of the ``Path`` object
-        """
+        """String representation of the ``Path`` object"""
         return str(self.filename)
+
 
 class reify(object):
     """Class decorator that puts the result of the method it
     decorates into the instance"""
+
     def __init__(self, wrapped):
         self.wrapped = wrapped
         self.__name__ = wrapped.__name__
@@ -362,6 +359,7 @@ class reify(object):
         val = self.wrapped(inst)
         setattr(inst, self.wrapped.__name__, val)
         return val
+
 
 def detect_format(filename: str | pathlib.Path) -> str:
     """
@@ -380,15 +378,16 @@ def detect_format(filename: str | pathlib.Path) -> str:
             - ``'ascii'``: ascii format
             - ``'netcdf'``: netCDF4 format
     """
-    filename = Path(filename    ).resolve()
-    if re.search(r'(\.asc|\.d)(\.gz)?$', filename.name, re.IGNORECASE):
+    filename = Path(filename).resolve()
+    if re.search(r"(\.asc|\.d)(\.gz)?$", filename.name, re.IGNORECASE):
         # FES or GOT ascii formats
-        return 'ascii'
-    elif re.search(r'\.nc(\.gz)?$', filename.name, re.IGNORECASE):
+        return "ascii"
+    elif re.search(r"\.nc(\.gz)?$", filename.name, re.IGNORECASE):
         # FES or GOT netCDF4 formats
-        return 'netcdf'
+        return "netcdf"
     else:
-        raise ValueError(f'Unrecognized FES file format: {filename}')
+        raise ValueError(f"Unrecognized FES file format: {filename}")
+
 
 def detect_compression(filename: str | pathlib.Path) -> bool:
     """
@@ -405,13 +404,11 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
         Input file is gzip compressed
     """
     filename = Path(filename).resolve()
-    return bool(re.search(r'\.gz$', filename.name, re.IGNORECASE))
+    return bool(re.search(r"\.gz$", filename.name, re.IGNORECASE))
+
 
 # PURPOSE: get the hash value of a file
-def get_hash(
-        local: str | io.IOBase | pathlib.Path,
-        algorithm: str = 'md5'
-    ):
+def get_hash(local: str | io.IOBase | pathlib.Path, algorithm: str = "md5"):
     """
     Get the hash value from a local file or ``BytesIO`` object
 
@@ -428,28 +425,26 @@ def get_hash(
         if algorithm in hashlib.algorithms_available:
             return hashlib.new(algorithm, local.getvalue()).hexdigest()
         else:
-            raise ValueError(f'Invalid hashing algorithm: {algorithm}')
+            raise ValueError(f"Invalid hashing algorithm: {algorithm}")
     elif isinstance(local, (str, pathlib.Path)):
         # generate checksum hash for local file
         local = pathlib.Path(local).expanduser()
         # if file currently doesn't exist, return empty string
         if not local.exists():
-            return ''
+            return ""
         # open the local_file in binary read mode
-        with local.open(mode='rb') as local_buffer:
+        with local.open(mode="rb") as local_buffer:
             # generate checksum hash for a given type
             if algorithm in hashlib.algorithms_available:
                 return hashlib.new(algorithm, local_buffer.read()).hexdigest()
             else:
-                raise ValueError(f'Invalid hashing algorithm: {algorithm}')
+                raise ValueError(f"Invalid hashing algorithm: {algorithm}")
     else:
-        return ''
+        return ""
+
 
 # PURPOSE: get the git hash value
-def get_git_revision_hash(
-        refname: str = 'HEAD',
-        short: bool = False
-    ):
+def get_git_revision_hash(refname: str = "HEAD", short: bool = False):
     """
     Get the ``git`` hash value for a particular reference
 
@@ -463,27 +458,28 @@ def get_git_revision_hash(
     # get path to .git directory from current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
     basepath = pathlib.Path(filename).absolute().parent.parent
-    gitpath = basepath.joinpath('.git')
+    gitpath = basepath.joinpath(".git")
     # build command
-    cmd = ['git', f'--git-dir={gitpath}', 'rev-parse']
-    cmd.append('--short') if short else None
+    cmd = ["git", f"--git-dir={gitpath}", "rev-parse"]
+    cmd.append("--short") if short else None
     cmd.append(refname)
     # get output
     with warnings.catch_warnings():
-        return str(subprocess.check_output(cmd), encoding='utf8').strip()
+        return str(subprocess.check_output(cmd), encoding="utf8").strip()
+
 
 # PURPOSE: get the current git status
 def get_git_status():
-    """Get the status of a ``git`` repository as a boolean value
-    """
+    """Get the status of a ``git`` repository as a boolean value"""
     # get path to .git directory from current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
     basepath = pathlib.Path(filename).absolute().parent.parent
-    gitpath = basepath.joinpath('.git')
+    gitpath = basepath.joinpath(".git")
     # build command
-    cmd = ['git', f'--git-dir={gitpath}', 'status', '--porcelain']
+    cmd = ["git", f"--git-dir={gitpath}", "status", "--porcelain"]
     with warnings.catch_warnings():
         return bool(subprocess.check_output(cmd))
+
 
 # PURPOSE: recursively split a url path
 def url_split(s: str):
@@ -496,11 +492,12 @@ def url_split(s: str):
         url string
     """
     head, tail = posixpath.split(s)
-    if head in ('http:','https:','ftp:','s3:'):
-        return s,
-    elif head in ('', posixpath.sep):
-        return tail,
+    if head in ("http:", "https:", "ftp:", "s3:"):
+        return (s,)
+    elif head in ("", posixpath.sep):
+        return (tail,)
     return url_split(head) + (tail,)
+
 
 # PURPOSE: convert file lines to arguments
 def convert_arg_line_to_args(arg_line):
@@ -513,10 +510,11 @@ def convert_arg_line_to_args(arg_line):
         line string containing a single argument and/or comments
     """
     # remove commented lines and after argument comments
-    for arg in re.sub(r'\#(.*?)$',r'',arg_line).split():
+    for arg in re.sub(r"\#(.*?)$", r"", arg_line).split():
         if not arg.strip():
             continue
         yield arg
+
 
 # PURPOSE: build a logging instance with a specified name
 def build_logger(name: str, **kwargs):
@@ -537,29 +535,27 @@ def build_logger(name: str, **kwargs):
         specified stream to initialize StreamHandler
     """
     # set default arguments
-    kwargs.setdefault('format', '%(levelname)s:%(name)s:%(message)s')
-    kwargs.setdefault('level', logging.CRITICAL)
-    kwargs.setdefault('propagate',False)
-    kwargs.setdefault('stream',None)
+    kwargs.setdefault("format", "%(levelname)s:%(name)s:%(message)s")
+    kwargs.setdefault("level", logging.CRITICAL)
+    kwargs.setdefault("propagate", False)
+    kwargs.setdefault("stream", None)
     # build logger
     logger = logging.getLogger(name)
-    logger.setLevel(kwargs['level'])
-    logger.propagate = kwargs['propagate']
+    logger.setLevel(kwargs["level"])
+    logger.propagate = kwargs["propagate"]
     # create and add handlers to logger
     if not logger.handlers:
         # create handler for logger
-        handler = logging.StreamHandler(stream=kwargs['stream'])
-        formatter = logging.Formatter(kwargs['format'])
+        handler = logging.StreamHandler(stream=kwargs["stream"])
+        formatter = logging.Formatter(kwargs["format"])
         handler.setFormatter(formatter)
         # add handler to logger
         logger.addHandler(handler)
     return logger
 
+
 # PURPOSE: returns the Unix timestamp value for a formatted date string
-def get_unix_time(
-        time_string: str,
-        format: str = '%Y-%m-%d %H:%M:%S'
-    ):
+def get_unix_time(time_string: str, format: str = "%Y-%m-%d %H:%M:%S"):
     """
     Get the Unix timestamp value for a formatted date string
 
@@ -577,6 +573,7 @@ def get_unix_time(
     else:
         return calendar.timegm(parsed_time)
 
+
 # PURPOSE: rounds a number to an even number less than or equal to original
 def even(value: float):
     """
@@ -587,15 +584,16 @@ def even(value: float):
     value: float
         number to be rounded
     """
-    return 2*int(value//2)
+    return 2 * int(value // 2)
+
 
 # PURPOSE: make a copy of a file with all system information
 def copy(
-        source: str | pathlib.Path,
-        destination: str | pathlib.Path,
-        move: bool = False,
-        **kwargs
-    ):
+    source: str | pathlib.Path,
+    destination: str | pathlib.Path,
+    move: bool = False,
+    **kwargs,
+):
     """
     Copy or move a file with all system information
 
@@ -611,19 +609,18 @@ def copy(
     source = pathlib.Path(source).expanduser().absolute()
     destination = pathlib.Path(destination).expanduser().absolute()
     # log source and destination
-    logging.info(f'{str(source)} -->\n\t{str(destination)}')
+    logging.info(f"{str(source)} -->\n\t{str(destination)}")
     shutil.copyfile(source, destination)
     shutil.copystat(source, destination)
     # remove the original file if moving
     if move:
         source.unlink()
 
+
 # PURPOSE: check ftp connection
 def check_ftp_connection(
-        HOST: str,
-        username: str | None = None,
-        password: str | None = None
-    ):
+    HOST: str, username: str | None = None, password: str | None = None
+):
     """
     Check internet connection with ftp host
 
@@ -642,22 +639,23 @@ def check_ftp_connection(
         f.login(username, password)
         f.voidcmd("NOOP")
     except IOError:
-        raise RuntimeError('Check internet connection')
+        raise RuntimeError("Check internet connection")
     except ftplib.error_perm:
-        raise RuntimeError('Check login credentials')
+        raise RuntimeError("Check login credentials")
     else:
         return True
 
+
 # PURPOSE: list a directory on a ftp host
 def ftp_list(
-        HOST: str | list,
-        username: str | None = None,
-        password: str | None = None,
-        timeout: int | None = None,
-        basename: bool = False,
-        pattern: str | None = None,
-        sort: bool = False
-    ):
+    HOST: str | list,
+    username: str | None = None,
+    password: str | None = None,
+    timeout: int | None = None,
+    basename: bool = False,
+    pattern: str | None = None,
+    sort: bool = False,
+):
     """
     List a directory on a ftp host
 
@@ -690,20 +688,20 @@ def ftp_list(
         HOST = url_split(HOST)
     # try to connect to ftp host
     try:
-        ftp = ftplib.FTP(HOST[0],timeout=timeout)
-    except (socket.gaierror,IOError):
-        raise RuntimeError(f'Unable to connect to {HOST[0]}')
+        ftp = ftplib.FTP(HOST[0], timeout=timeout)
+    except (socket.gaierror, IOError):
+        raise RuntimeError(f"Unable to connect to {HOST[0]}")
     else:
-        ftp.login(username,password)
+        ftp.login(username, password)
         # list remote path
         output = ftp.nlst(posixpath.join(*HOST[1:]))
         # get last modified date of ftp files and convert into unix time
-        mtimes = [None]*len(output)
+        mtimes = [None] * len(output)
         # iterate over each file in the list and get the modification time
-        for i,f in enumerate(output):
+        for i, f in enumerate(output):
             try:
                 # try sending modification time command
-                mdtm = ftp.sendcmd(f'MDTM {f}')
+                mdtm = ftp.sendcmd(f"MDTM {f}")
             except ftplib.error_perm:
                 # directories will return with an error
                 pass
@@ -715,13 +713,13 @@ def ftp_list(
             output = [posixpath.basename(i) for i in output]
         # reduce using regular expression pattern
         if pattern:
-            i = [i for i,f in enumerate(output) if re.search(pattern,f)]
+            i = [i for i, f in enumerate(output) if re.search(pattern, f)]
             # reduce list of listed items and last modified times
             output = [output[indice] for indice in i]
             mtimes = [mtimes[indice] for indice in i]
         # sort the list
         if sort:
-            i = [i for i,j in sorted(enumerate(output), key=lambda i: i[1])]
+            i = [i for i, j in sorted(enumerate(output), key=lambda i: i[1])]
             # sort list of listed items and last modified times
             output = [output[indice] for indice in i]
             mtimes = [mtimes[indice] for indice in i]
@@ -730,19 +728,20 @@ def ftp_list(
         # return the list of items and last modified times
         return (output, mtimes)
 
+
 # PURPOSE: download a file from a ftp host
 def from_ftp(
-        HOST: str | list,
-        username: str | None = None,
-        password: str | None = None,
-        timeout: int | None = None,
-        local: str | pathlib.Path | None = None,
-        hash: str = '',
-        chunk: int = 8192,
-        verbose: bool = False,
-        fid=sys.stdout,
-        mode: oct = 0o775
-    ):
+    HOST: str | list,
+    username: str | None = None,
+    password: str | None = None,
+    timeout: int | None = None,
+    local: str | pathlib.Path | None = None,
+    hash: str = "",
+    chunk: int = 8192,
+    verbose: bool = False,
+    fid=sys.stdout,
+    mode: oct = 0o775,
+):
     """
     Download a file from a ftp host
 
@@ -784,23 +783,24 @@ def from_ftp(
     try:
         # try to connect to ftp host
         ftp = ftplib.FTP(HOST[0], timeout=timeout)
-    except (socket.gaierror,IOError):
-        raise RuntimeError(f'Unable to connect to {HOST[0]}')
+    except (socket.gaierror, IOError):
+        raise RuntimeError(f"Unable to connect to {HOST[0]}")
     else:
-        ftp.login(username,password)
+        ftp.login(username, password)
         # remote path
         ftp_remote_path = posixpath.join(*HOST[1:])
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
-        ftp.retrbinary(f'RETR {ftp_remote_path}',
-            remote_buffer.write, blocksize=chunk)
+        ftp.retrbinary(
+            f"RETR {ftp_remote_path}", remote_buffer.write, blocksize=chunk
+        )
         remote_buffer.seek(0)
         # save file basename with bytesIO object
         remote_buffer.filename = HOST[-1]
         # generate checksum hash for remote file
         remote_hash = hashlib.md5(remote_buffer.getvalue()).hexdigest()
         # get last modified date of remote file and convert into unix time
-        mdtm = ftp.sendcmd(f'MDTM {ftp_remote_path}')
+        mdtm = ftp.sendcmd(f"MDTM {ftp_remote_path}")
         remote_mtime = get_unix_time(mdtm[4:], format="%Y%m%d%H%M%S")
         # compare checksums
         if local and (hash != remote_hash):
@@ -810,10 +810,10 @@ def from_ftp(
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
             args = (posixpath.join(*HOST), str(local))
-            logging.info('{0} -->\n\t{1}'.format(*args))
+            logging.info("{0} -->\n\t{1}".format(*args))
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
-            with local.open(mode='wb') as f:
+            with local.open(mode="wb") as f:
                 shutil.copyfileobj(remote_buffer, f, chunk)
             # change the permissions mode
             local.chmod(mode)
@@ -825,25 +825,25 @@ def from_ftp(
         remote_buffer.seek(0)
         return remote_buffer
 
+
 def _create_default_ssl_context() -> ssl.SSLContext:
-    """Creates the default SSL context
-    """
+    """Creates the default SSL context"""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     _set_ssl_context_options(context)
     context.options |= ssl.OP_NO_COMPRESSION
     return context
 
+
 def _create_ssl_context_no_verify() -> ssl.SSLContext:
-    """Creates an SSL context for unverified connections
-    """
+    """Creates an SSL context for unverified connections"""
     context = _create_default_ssl_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
     return context
 
+
 def _set_ssl_context_options(context: ssl.SSLContext) -> None:
-    """Sets the default options for the SSL context
-    """
+    """Sets the default options for the SSL context"""
     if sys.version_info >= (3, 10) or ssl.OPENSSL_VERSION_INFO >= (1, 1, 0, 7):
         context.minimum_version = ssl.TLSVersion.TLSv1_2
     else:
@@ -852,14 +852,16 @@ def _set_ssl_context_options(context: ssl.SSLContext) -> None:
         context.options |= ssl.OP_NO_TLSv1
         context.options |= ssl.OP_NO_TLSv1_1
 
+
 # default ssl context
 _default_ssl_context = _create_ssl_context_no_verify()
 
+
 # PURPOSE: check internet connection
 def check_connection(
-        HOST: str,
-        context: ssl.SSLContext = _default_ssl_context,
-    ):
+    HOST: str,
+    context: ssl.SSLContext = _default_ssl_context,
+):
     """
     Check internet connection with http host
 
@@ -878,21 +880,22 @@ def check_connection(
         raise RuntimeError(exc.reason) from exc
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        raise RuntimeError('Check internet connection') from exc
+        raise RuntimeError("Check internet connection") from exc
     else:
         return True
 
+
 # PURPOSE: list a directory on an Apache http Server
 def http_list(
-        HOST: str | list,
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        parser = lxml.etree.HTMLParser(),
-        format: str = '%Y-%m-%d %H:%M',
-        pattern: str = '',
-        sort: bool = False,
-        **kwargs
-    ):
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    parser=lxml.etree.HTMLParser(),
+    format: str = "%Y-%m-%d %H:%M",
+    pattern: str = "",
+    sort: bool = False,
+    **kwargs,
+):
     """
     List a directory on an Apache http Server
 
@@ -933,43 +936,46 @@ def http_list(
         raise RuntimeError(exc.reason) from exc
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = 'List error from {0}'.format(posixpath.join(*HOST))
+        msg = "List error from {0}".format(posixpath.join(*HOST))
         raise Exception(msg) from exc
     else:
         # read and parse request for files (column names and modified times)
         tree = lxml.etree.parse(response, parser)
-        colnames = tree.xpath('//tr/td[not(@*)]//a/@href')
+        colnames = tree.xpath("//tr/td[not(@*)]//a/@href")
         # get the Unix timestamp value for a modification time
-        collastmod = [get_unix_time(i,format=format)
-            for i in tree.xpath('//tr/td[@align="right"][1]/text()')]
+        collastmod = [
+            get_unix_time(i, format=format)
+            for i in tree.xpath('//tr/td[@align="right"][1]/text()')
+        ]
         # reduce using regular expression pattern
         if pattern:
-            i = [i for i,f in enumerate(colnames) if re.search(pattern, f)]
+            i = [i for i, f in enumerate(colnames) if re.search(pattern, f)]
             # reduce list of column names and last modified times
             colnames = [colnames[indice] for indice in i]
             collastmod = [collastmod[indice] for indice in i]
         # sort the list
         if sort:
-            i = [i for i,j in sorted(enumerate(colnames), key=lambda i: i[1])]
+            i = [i for i, j in sorted(enumerate(colnames), key=lambda i: i[1])]
             # sort list of column names and last modified times
             colnames = [colnames[indice] for indice in i]
             collastmod = [collastmod[indice] for indice in i]
         # return the list of column names and last modified times
         return (colnames, collastmod)
 
+
 # PURPOSE: download a file from a http host
 def from_http(
-        HOST: str | list,
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        local: str | pathlib.Path | None = None,
-        hash: str = '',
-        chunk: int = 16384,
-        verbose: bool = False,
-        fid = sys.stdout,
-        mode: oct = 0o775,
-        **kwargs
-    ):
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    local: str | pathlib.Path | None = None,
+    hash: str = "",
+    chunk: int = 16384,
+    verbose: bool = False,
+    fid=sys.stdout,
+    mode: oct = 0o775,
+    **kwargs,
+):
     """
     Download a file from a http host
 
@@ -1011,7 +1017,7 @@ def from_http(
         request = urllib2.Request(posixpath.join(*HOST), **kwargs)
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except:
-        raise Exception('Download error from {0}'.format(posixpath.join(*HOST)))
+        raise Exception("Download error from {0}".format(posixpath.join(*HOST)))
     else:
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
@@ -1029,10 +1035,10 @@ def from_http(
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
             args = (posixpath.join(*HOST), str(local))
-            logging.info('{0} -->\n\t{1}'.format(*args))
+            logging.info("{0} -->\n\t{1}".format(*args))
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
-            with local.open(mode='wb') as f:
+            with local.open(mode="wb") as f:
                 shutil.copyfileobj(remote_buffer, f, chunk)
             # change the permissions mode
             local.chmod(mode)
@@ -1040,12 +1046,13 @@ def from_http(
         remote_buffer.seek(0)
         return remote_buffer
 
+
 # PURPOSE: load a JSON response from a http host
 def from_json(
-        HOST: str | list,
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context
-    ) -> dict:
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+) -> dict:
     """
     Load a JSON response from a http host
 
@@ -1065,26 +1072,27 @@ def from_json(
     try:
         # Create and submit request for JSON response
         request = urllib2.Request(posixpath.join(*HOST))
-        request.add_header('Accept', 'application/json')
+        request.add_header("Accept", "application/json")
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
         raise RuntimeError(exc.reason) from exc
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = 'Load error from {0}'.format(posixpath.join(*HOST))
+        msg = "Load error from {0}".format(posixpath.join(*HOST))
         raise Exception(msg) from exc
     else:
         # load JSON response
         return json.loads(response.read())
 
+
 # PURPOSE: list a directory on IERS https Server
 def iers_list(
-        HOST: str | list,
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        parser = lxml.etree.HTMLParser()
-    ):
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    parser=lxml.etree.HTMLParser(),
+):
     """
     List a directory on IERS Bulletin-A https server
 
@@ -1119,29 +1127,32 @@ def iers_list(
         raise RuntimeError(exc.reason) from exc
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = 'List error from {0}'.format(posixpath.join(*HOST))
+        msg = "List error from {0}".format(posixpath.join(*HOST))
         raise Exception(msg) from exc
     else:
         # read and parse request for files (column names and modified times)
         tree = lxml.etree.parse(response, parser)
         colnames = tree.xpath('//tr/td[@class="$tdclass"][4]//a/@href')
         # get the Unix timestamp value for a modification time
-        collastmod = [get_unix_time(i,format='%Y-%m-%d')
-            for i in tree.xpath('//tr/td[@class="$tdclass"][2]/span/text()')]
+        collastmod = [
+            get_unix_time(i, format="%Y-%m-%d")
+            for i in tree.xpath('//tr/td[@class="$tdclass"][2]/span/text()')
+        ]
         # sort list of column names and last modified times in reverse order
         # return the list of column names and last modified times
         return (colnames[::-1], collastmod[::-1])
 
+
 def from_jpl_ssd(
-        kernel='de440s.bsp',
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        local: str | pathlib.Path | None = None,
-        hash: str = '',
-        chunk: int = 16384,
-        verbose: bool = False,
-        mode: oct = 0o775
-    ):
+    kernel="de440s.bsp",
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    local: str | pathlib.Path | None = None,
+    hash: str = "",
+    chunk: int = 16384,
+    verbose: bool = False,
+    mode: oct = 0o775,
+):
     """
     Download `planetary ephemeride kernels`__ from the JPL Solar
     System Dynamics server
@@ -1166,7 +1177,7 @@ def from_jpl_ssd(
         permissions mode of output local file
     """
     # determine which kernel file to download
-    if (local is None):
+    if local is None:
         # local path to kernel file
         local = get_cache_path(kernel)
     elif (kernel is None) and (local is not None):
@@ -1174,21 +1185,30 @@ def from_jpl_ssd(
         local = pathlib.Path(local).expanduser().absolute()
         kernel = local.name
     # remote host path to kernel file
-    HOST = ['https://ssd.jpl.nasa.gov','ftp','eph','planets','bsp',kernel]
+    HOST = ["https://ssd.jpl.nasa.gov", "ftp", "eph", "planets", "bsp", kernel]
     # get kernel file from remote host
-    logging.info('Downloading JPL Planetary Ephemeride Kernel File')
-    from_http(HOST, timeout=timeout, context=context, local=local,
-        hash=hash, chunk=chunk, verbose=verbose, mode=mode)
+    logging.info("Downloading JPL Planetary Ephemeride Kernel File")
+    from_http(
+        HOST,
+        timeout=timeout,
+        context=context,
+        local=local,
+        hash=hash,
+        chunk=chunk,
+        verbose=verbose,
+        mode=mode,
+    )
+
 
 # PURPOSE: list a directory on the University of Hawaii SLC Server
 def uhslc_list(
-        HOST: str | list,
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        parser = lxml.etree.HTMLParser(),
-        pattern: str = '',
-        sort: bool = False
-    ):
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    parser=lxml.etree.HTMLParser(),
+    pattern: str = "",
+    sort: bool = False,
+):
     """
     List a directory from the University of Hawaii Sea Level Center
 
@@ -1225,20 +1245,20 @@ def uhslc_list(
         raise RuntimeError(exc.reason) from exc
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = 'List error from {0}'.format(posixpath.join(*HOST))
+        msg = "List error from {0}".format(posixpath.join(*HOST))
         raise Exception(msg) from exc
     else:
         # read and parse request for files
         tree = lxml.etree.parse(response, parser)
-        colnames = tree.xpath('//a/text()')
+        colnames = tree.xpath("//a/text()")
         # reduce using regular expression pattern
         if pattern:
-            i = [i for i,f in enumerate(colnames) if re.search(pattern, f)]
+            i = [i for i, f in enumerate(colnames) if re.search(pattern, f)]
             # reduce list of column names
             colnames = [colnames[indice] for indice in i]
         # sort the list
         if sort:
-            i = [i for i,j in sorted(enumerate(colnames), key=lambda i: i[1])]
+            i = [i for i, j in sorted(enumerate(colnames), key=lambda i: i[1])]
             # sort list of column names
             colnames = [colnames[indice] for indice in i]
         # return the list of column names

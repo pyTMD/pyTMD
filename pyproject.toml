@@ -117,11 +117,26 @@ exclude = [
     "test",
 ]
 
+[tool.ruff.lint]
+select = [
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # ruff-specific
+    "RUF",
+]
+
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
 [tool.ruff.format]
-quote-style = "single"
 indent-style = "space"
 line-ending = "auto"
 docstring-code-format = false

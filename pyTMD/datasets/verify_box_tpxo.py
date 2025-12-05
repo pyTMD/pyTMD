@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 verify_box_tpxo.py
 Written by Tyler Sutterley (11/2025)
 Verifies downloaded TPXO9-atlas global tide models from the box file
@@ -41,6 +41,7 @@ UPDATE HISTORY:
     Updated 07/2021: can use prefix files to define command line arguments
     Written 03/2021
 """
+
 from __future__ import print_function
 
 import os
@@ -55,12 +56,11 @@ import pyTMD.utilities
 # default data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
 
+
 # PURPOSE: create an opener for box with a supplied user access token
 def build_opener(
-        token,
-        context=pyTMD.utilities._default_ssl_context,
-        redirect=True
-    ):
+    token, context=pyTMD.utilities._default_ssl_context, redirect=True
+):
     """
     Build ``urllib`` opener for box with supplied user access token
 
@@ -90,68 +90,75 @@ def build_opener(
     pyTMD.utilities.urllib2.install_opener(opener)
     return opener
 
-# PURPOSE: verify downloaded TPXO9-atlas files with box server
-def verify_box_tpxo(model, folder_id,
-        directory: str | pathlib.Path | None = _default_directory,
-        currents=False,
-        mode=None
-    ):
 
+# PURPOSE: verify downloaded TPXO9-atlas files with box server
+def verify_box_tpxo(
+    model,
+    folder_id,
+    directory: str | pathlib.Path | None = _default_directory,
+    currents=False,
+    mode=None,
+):
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # check if local directory exists and recursively create if not
     m = pyTMD.io.model(directory=directory).from_database(model)
-    localpath = m['z'].model_file[0].parent
+    localpath = m["z"].model_file[0].parent
     # create output directory if non-existent
     localpath.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # regular expression pattern for files of interest
     regex_patterns = []
-    regex_patterns.append('grid')
-    regex_patterns.append('h')
+    regex_patterns.append("grid")
+    regex_patterns.append("h")
     # append currents
     if currents:
-        regex_patterns.append('u')
+        regex_patterns.append("u")
     # build regular expression object
-    rx = re.compile(r'^({0})'.format(r'|'.join(regex_patterns)), re.VERBOSE)
+    rx = re.compile(r"^({0})".format(r"|".join(regex_patterns)), re.VERBOSE)
 
     # box api url
-    HOST = posixpath.join('https://api.box.com', '2.0')
+    HOST = posixpath.join("https://api.box.com", "2.0")
     # get folder contents
-    folder_url = posixpath.join(HOST, 'folders', folder_id, 'items')
+    folder_url = posixpath.join(HOST, "folders", folder_id, "items")
     request = pyTMD.utilities.urllib2.Request(folder_url)
     response = pyTMD.utilities.urllib2.urlopen(request)
     folder_contents = json.loads(response.read())
     # find files of interest
-    file_entries = [entry for entry in folder_contents['entries'] if
-        (entry['type'] == 'file') and rx.match(entry['name'])]
+    file_entries = [
+        entry
+        for entry in folder_contents["entries"]
+        if (entry["type"] == "file") and rx.match(entry["name"])
+    ]
     # for each file in the folder
     for entry in file_entries:
         # have insufficient permissions for downloading content
-        file_url = posixpath.join(HOST,'files',entry['id'])
+        file_url = posixpath.join(HOST, "files", entry["id"])
         # print remote path
-        logger.info(f'{file_url} -->')
+        logger.info(f"{file_url} -->")
         # get last modified time for file
         request = pyTMD.utilities.urllib2.Request(file_url)
         response = pyTMD.utilities.urllib2.urlopen(request)
         file_contents = json.loads(response.read())
-        modified_at = file_contents['modified_at']
-        remote_mtime = pyTMD.utilities.get_unix_time(modified_at,
-            format='%Y-%m-%dT%H:%M:%S%z')
+        modified_at = file_contents["modified_at"]
+        remote_mtime = pyTMD.utilities.get_unix_time(
+            modified_at, format="%Y-%m-%dT%H:%M:%S%z"
+        )
         # print file information
-        local = localpath.joinpath(entry['name'])
-        logger.info(f'\t{str(local)}')
+        local = localpath.joinpath(entry["name"])
+        logger.info(f"\t{str(local)}")
         # compare checksums to validate download
-        sha1 = pyTMD.utilities.get_hash(local, algorithm='sha1')
-        if (sha1 != entry['sha1']):
-            logger.critical(f'Remote checksum: {entry["sha1"]}')
-            logger.critical(f'Local checksum: {sha1}')
-            raise Exception('Checksum verification failed')
+        sha1 = pyTMD.utilities.get_hash(local, algorithm="sha1")
+        if sha1 != entry["sha1"]:
+            logger.critical(f"Remote checksum: {entry['sha1']}")
+            logger.critical(f"Local checksum: {sha1}")
+            raise Exception("Checksum verification failed")
         # keep remote modification time of file and local access time
         os.utime(local, (local.stat().st_atime, remote_mtime))
         # change the permissions mode of the local file
         local.chmod(mode=mode)
+
 
 # PURPOSE: create argument parser
 def arguments():
@@ -159,53 +166,76 @@ def arguments():
         description="""Verifies downloaded TPXO9-atlas global
             tide models from the box file sharing service
             """,
-        fromfile_prefix_chars="@"
+        fromfile_prefix_chars="@",
     )
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory
-    parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_directory,
-        help='Working data directory')
+    parser.add_argument(
+        "--directory",
+        "-D",
+        type=pathlib.Path,
+        default=_default_directory,
+        help="Working data directory",
+    )
     # box user access token
-    parser.add_argument('--token','-t',
-        type=str, default='',
-        help='User access token for box API')
+    parser.add_argument(
+        "--token",
+        "-t",
+        type=str,
+        default="",
+        help="User access token for box API",
+    )
     # box folder id
-    parser.add_argument('--folder','-F',
-        type=str, default='',
-        help='box folder id for model')
+    parser.add_argument(
+        "--folder", "-F", type=str, default="", help="box folder id for model"
+    )
     # TPXO9-atlas tide models
-    parser.add_argument('--tide','-T',
-        type=str, default='TPXO9-atlas-v5',
-        help='TPXO9-atlas tide model to verify')
+    parser.add_argument(
+        "--tide",
+        "-T",
+        type=str,
+        default="TPXO9-atlas-v5",
+        help="TPXO9-atlas tide model to verify",
+    )
     # download tidal currents
-    parser.add_argument('--currents',
-        default=False, action='store_true',
-        help='Verify tide model current outputs')
+    parser.add_argument(
+        "--currents",
+        default=False,
+        action="store_true",
+        help="Verify tide model current outputs",
+    )
     # permissions mode of the local directories and files (number in octal)
-    parser.add_argument('--mode','-M',
-        type=lambda x: int(x,base=8), default=0o775,
-        help='Permission mode of directories and files downloaded')
+    parser.add_argument(
+        "--mode",
+        "-M",
+        type=lambda x: int(x, base=8),
+        default=0o775,
+        help="Permission mode of directories and files downloaded",
+    )
     # return the parser
     return parser
+
 
 # This is the main part of the program that calls the individual functions
 def main():
     # Read the system arguments listed after the program
     parser = arguments()
-    args,_ = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     # build an opener for accessing box folders
     opener = build_opener(args.token)
     # check internet connection before attempting to run program
-    if pyTMD.utilities.check_connection('https://app.box.com/'):
-        verify_box_tpxo(args.tide, args.folder,
+    if pyTMD.utilities.check_connection("https://app.box.com/"):
+        verify_box_tpxo(
+            args.tide,
+            args.folder,
             directory=args.directory,
             currents=args.currents,
-            mode=args.mode
+            mode=args.mode,
         )
 
+
 # run main program
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

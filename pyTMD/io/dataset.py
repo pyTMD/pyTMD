@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 dataset.py
 Written by Tyler Sutterley (12/2025)
 An xarray.Dataset extension for tidal model data
@@ -27,52 +27,47 @@ UPDATE HISTORY:
         when converting to an xarray DataArray
     Written 08/2025
 """
+
+import pint
+import pyproj
 import warnings
 import numpy as np
 import xarray as xr
-from pyTMD.utilities import import_dependency
+
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# attempt imports
-pyproj = import_dependency('pyproj')
-pint = import_dependency('pint')
-
-__all__ = [
-    'DataTree',
-    'Dataset',
-    'DataArray',
-    '_transform',
-    '_coords'
-]
+__all__ = ["DataTree", "Dataset", "DataArray", "_transform", "_coords"]
 
 # pint unit registry
 __ureg__ = pint.UnitRegistry()
 # default units for pyTMD outputs
 _default_units = {
-    'elevation': 'm',
-    'current': 'cm/s',
-    'transport': 'm^2/s',
+    "elevation": "m",
+    "current": "cm/s",
+    "transport": "m^2/s",
 }
 
-@xr.register_datatree_accessor('tmd')
+
+@xr.register_datatree_accessor("tmd")
 class DataTree:
-    """Accessor for extending an ``xarray.DataTree`` for tidal model data
-    """
+    """Accessor for extending an ``xarray.DataTree`` for tidal model data"""
+
     def __init__(self, dtree):
         # initialize DataTree
         self._dtree = dtree
 
-    def coords_as(self, 
-            x: np.ndarray,
-            y: np.ndarray,
-            crs: str | int | dict = 4326,
-            **kwargs
-        ):
+    def coords_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
         """
         Transform coordinates into DataArrays in the DataTree
         coordinate reference system
-        
+
         Parameters
         ----------
         x: np.ndarray
@@ -91,11 +86,7 @@ class DataTree:
         """
         # convert coordinate reference system to that of the datatree
         # and format as xarray DataArray with appropriate dimensions
-        X, Y = _coords(x, y,
-            source_crs=crs,
-            target_crs=self.crs,
-            **kwargs
-        )
+        X, Y = _coords(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
         # return the transformed coordinates
         return X, Y
 
@@ -128,7 +119,7 @@ class DataTree:
     def interp(self, x, y, **kwargs):
         """
         Interpolate ``DataTree`` to input coordinates
-        
+
         Parameters
         ----------
         x: np.ndarray
@@ -180,7 +171,7 @@ class DataTree:
 
             - ``'FORWARD'``: from input crs to model crs
             - ``'INVERSE'``: from model crs to input crs
-        
+
         Returns
         -------
         X: np.ndarray
@@ -189,14 +180,10 @@ class DataTree:
             Transformed y-coordinates
         """
         # convert coordinate reference system to that of the datatree
-        X, Y = _transform(x, y,
-            source_crs=crs,
-            target_crs=self.crs,
-            **kwargs
-        )
+        X, Y = _transform(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
         # return the transformed coordinates
         return (X, Y)
-    
+
     def to_ellipse(self, **kwargs):
         """
         Expresses tidal currents in terms of four ellipse parameters
@@ -204,12 +191,17 @@ class DataTree:
         - ``major``: amplitude of the semi-major axis
         - ``minor``: amplitude of the semi-minor axis
         - ``incl``: angle of inclination of the northern semi-major axis
-        - ``phase``: phase lag of the current behind the tidal potential  
+        - ``phase``: phase lag of the current behind the tidal potential
         """
         from pyTMD.ellipse import ellipse
+
         # get u and v components from datatree
-        dsu = (self._dtree.get('u',None) or self._dtree.get('U',None)).to_dataset()
-        dsv = (self._dtree.get('v',None) or self._dtree.get('V',None)).to_dataset()
+        dsu = (
+            self._dtree.get("u", None) or self._dtree.get("U", None)
+        ).to_dataset()
+        dsv = (
+            self._dtree.get("v", None) or self._dtree.get("V", None)
+        ).to_dataset()
         # calculate ellipse parameters for each constituent
         dmajor = xr.Dataset()
         dminor = xr.Dataset()
@@ -218,8 +210,10 @@ class DataTree:
         # for each constituent in the u-component
         for c in dsu.tmd.constituents:
             # assert units between datasets are the same
-            if (dsu[c].attrs.get('units','') != dsv[c].attrs.get('units','')):
-                raise ValueError(f'Incompatible units for {c} in u and v datasets')
+            if dsu[c].attrs.get("units", "") != dsv[c].attrs.get("units", ""):
+                raise ValueError(
+                    f"Incompatible units for {c} in u and v datasets"
+                )
             # calculate ellipse parameters
             major, minor, incl, phase = ellipse(dsu[c].values, dsv[c].values)
             # create xarray DataArray for ellipse parameters
@@ -228,20 +222,20 @@ class DataTree:
             dincl[c] = xr.DataArray(incl, dims=dsu[c].dims, coords=dsu.coords)
             dphase[c] = xr.DataArray(phase, dims=dsu[c].dims, coords=dsu.coords)
             # add attributes to each variable
-            dmajor[c].attrs['units'] = dsu[c].attrs.get('units', '')
-            dminor[c].attrs['units'] = dsu[c].attrs.get('units', '')
-            dincl[c].attrs['units'] = 'degrees'
-            dphase[c].attrs['units'] = 'degrees'
+            dmajor[c].attrs["units"] = dsu[c].attrs.get("units", "")
+            dminor[c].attrs["units"] = dsu[c].attrs.get("units", "")
+            dincl[c].attrs["units"] = "degrees"
+            dphase[c].attrs["units"] = "degrees"
         # create output datatree
         dtree = xr.DataTree()
         # add datasets to output datatree
-        dtree['major'] = dmajor
-        dtree['minor'] = dminor
-        dtree['incl'] = dincl
-        dtree['phase'] = dphase
+        dtree["major"] = dmajor
+        dtree["minor"] = dminor
+        dtree["incl"] = dincl
+        dtree["phase"] = dphase
         # return datatree
         return dtree
-    
+
     def from_ellipse(self, **kwargs):
         """
         Calculates tidal currents from the four ellipse parameters
@@ -249,32 +243,37 @@ class DataTree:
         - ``major``: amplitude of the semi-major axis
         - ``minor``: amplitude of the semi-minor axis
         - ``incl``: angle of inclination of the northern semi-major axis
-        - ``phase``: phase lag of the current behind the tidal potential  
+        - ``phase``: phase lag of the current behind the tidal potential
         """
         from pyTMD.ellipse import inverse
+
         # get ellipse parameters from datatree
-        dmajor = self._dtree['major'].to_dataset()
-        dminor = self._dtree['minor'].to_dataset()
-        dincl = self._dtree['incl'].to_dataset()
-        dphase = self._dtree['phase'].to_dataset()
+        dmajor = self._dtree["major"].to_dataset()
+        dminor = self._dtree["minor"].to_dataset()
+        dincl = self._dtree["incl"].to_dataset()
+        dphase = self._dtree["phase"].to_dataset()
         # calculate currents for each constituent
         dsu = xr.Dataset()
         dsv = xr.Dataset()
         # for each constituent in the major parameter
         for c in dmajor.tmd.constituents:
             # calculate ellipse parameters
-            u, v = inverse(dmajor[c].values, dminor[c].values,
-                dincl[c].values, dphase[c].values)
+            u, v = inverse(
+                dmajor[c].values,
+                dminor[c].values,
+                dincl[c].values,
+                dphase[c].values,
+            )
             # create xarray DataArray for ellipse parameters
             dsu[c] = xr.DataArray(u, dims=dmajor[c].dims, coords=dmajor.coords)
             dsv[c] = xr.DataArray(v, dims=dmajor[c].dims, coords=dmajor.coords)
             # add attributes to each variable
-            dsu[c].attrs['units'] = dmajor[c].attrs.get('units', '')
-            dsv[c].attrs['units'] = dmajor[c].attrs.get('units', '')
-            if (dmajor[c].tmd.group == 'current'):
-                ukey, vkey = 'u', 'v'
-            elif (dmajor[c].tmd.group == 'transport'):
-                ukey, vkey = 'U', 'V'
+            dsu[c].attrs["units"] = dmajor[c].attrs.get("units", "")
+            dsv[c].attrs["units"] = dmajor[c].attrs.get("units", "")
+            if dmajor[c].tmd.group == "current":
+                ukey, vkey = "u", "v"
+            elif dmajor[c].tmd.group == "transport":
+                ukey, vkey = "U", "V"
         # create output datatree
         dtree = xr.DataTree()
         # add datasets to output datatree
@@ -285,17 +284,17 @@ class DataTree:
 
     @property
     def crs(self):
-        """Coordinate reference system of the ``DataTree``
-        """
+        """Coordinate reference system of the ``DataTree``"""
         # inherit CRS from one of the datasets
         for key, ds in self._dtree.items():
             ds = ds.to_dataset()
             return ds.tmd.crs
 
-@xr.register_dataset_accessor('tmd')
+
+@xr.register_dataset_accessor("tmd")
 class Dataset:
-    """Accessor for extending an ``xarray.Dataset`` for tidal model data
-    """
+    """Accessor for extending an ``xarray.Dataset`` for tidal model data"""
+
     def __init__(self, ds):
         # initialize Dataset
         self._ds = ds
@@ -304,24 +303,25 @@ class Dataset:
         """
         Converts ``Dataset`` to a ``DataArray`` with constituents as a dimension
         """
-        kwargs.setdefault('constituents', self.constituents)
+        kwargs.setdefault("constituents", self.constituents)
         # reduce dataset to constituents and convert to dataarray
-        da = self._ds[kwargs['constituents']].to_dataarray(dim='constituent')
+        da = self._ds[kwargs["constituents"]].to_dataarray(dim="constituent")
         # stack constituents as the last dimension
         da = da.transpose(*da.dims[1:], da.dims[0])
-        da = da.assign_coords(constituent=kwargs['constituents'])
+        da = da.assign_coords(constituent=kwargs["constituents"])
         return da
-    
-    def coords_as(self, 
-            x: np.ndarray,
-            y: np.ndarray,
-            crs: str | int | dict = 4326,
-            **kwargs
-        ):
+
+    def coords_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
         """
         Transform coordinates into DataArrays in the Dataset
         coordinate reference system
-        
+
         Parameters
         ----------
         x: np.ndarray
@@ -340,18 +340,11 @@ class Dataset:
         """
         # convert coordinate reference system to that of the dataset
         # and format as xarray DataArray with appropriate dimensions
-        X, Y = _coords(x, y,
-            source_crs=crs,
-            target_crs=self.crs,
-            **kwargs
-        )
+        X, Y = _coords(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
         # return the transformed coordinates
         return X, Y
 
-    def crop(self,
-            bounds: list | tuple,
-            buffer: int | float = 0
-        ):
+    def crop(self, bounds: list | tuple, buffer: int | float = 0):
         """
         Crop ``Dataset`` to input bounding box
 
@@ -363,13 +356,13 @@ class Dataset:
             buffer to add to bounds for cropping
         """
         # number of points to pad for global grids
-        n = int(180//(self._x[1] - self._x[0]))
+        n = int(180 // (self._x[1] - self._x[0]))
         # pad global grids along x-dimension (if necessary)
-        lon_wrap = self.crs.to_dict().get('lon_wrap', 0)
+        lon_wrap = self.crs.to_dict().get("lon_wrap", 0)
         if self.is_global and (lon_wrap == 180) and (np.min(bounds[:2]) < 0):
-            ds = self.pad(n=(n,0))
+            ds = self.pad(n=(n, 0))
         elif self.is_global and (lon_wrap == 0) and (np.max(bounds[:2]) > 180):
-            ds = self.pad(n=(0,n))
+            ds = self.pad(n=(0, n))
         else:
             ds = self._ds.copy()
         # unpack bounds and buffer
@@ -378,8 +371,10 @@ class Dataset:
         ymin = bounds[2] - buffer
         ymax = bounds[3] + buffer
         # crop dataset to bounding box
-        ds = ds.where((ds.x >= xmin) & (ds.x <= xmax) &
-            (ds.y >= ymin) & (ds.y <= ymax), drop=True)
+        ds = ds.where(
+            (ds.x >= xmin) & (ds.x <= xmax) & (ds.y >= ymin) & (ds.y <= ymax),
+            drop=True,
+        )
         # return the cropped dataset
         return ds
 
@@ -400,6 +395,7 @@ class Dataset:
             predicted tides
         """
         from pyTMD.predict import infer_minor
+
         # infer minor tides at times
         darr = infer_minor(t, self._ds, **kwargs)
         # return the inferred tides
@@ -421,25 +417,21 @@ class Dataset:
         """
         # import inpaint function
         from pyTMD.interpolate import inpaint
+
         # create copy of dataset
         ds = self._ds.copy()
         # inpaint each variable in the dataset
         for v in ds.data_vars.keys():
-            ds[v].values = inpaint(self._x, self._y,
-                self._ds[v].values, **kwargs
+            ds[v].values = inpaint(
+                self._x, self._y, self._ds[v].values, **kwargs
             )
         # return the dataset
         return ds
 
-    def interp(self, 
-            x: np.ndarray,
-            y: np.ndarray, 
-            method='linear',
-            **kwargs
-        ):
+    def interp(self, x: np.ndarray, y: np.ndarray, method="linear", **kwargs):
         """
         Interpolate ``Dataset`` to input coordinates
-        
+
         Parameters
         ----------
         x: np.ndarray
@@ -454,7 +446,7 @@ class Dataset:
             Maximum distance for extrapolation
         **kwargs: dict
             Additional keyword arguments for reading the dataset
-            
+
         Returns
         -------
         ds: xarray.Dataset
@@ -462,9 +454,10 @@ class Dataset:
         """
         # import extrapolate function
         from pyTMD.interpolate import extrapolate
+
         # set default keyword arguments
-        kwargs.setdefault('extrapolate', False)
-        kwargs.setdefault('cutoff', np.inf)
+        kwargs.setdefault("extrapolate", False)
+        kwargs.setdefault("cutoff", np.inf)
         # pad global grids along x-dimension (if necessary)
         if self.is_global:
             self._ds = self.pad(n=1)
@@ -484,31 +477,38 @@ class Dataset:
         # interpolate dataset
         ds = self._ds.interp(x=x, y=y, method=method)
         # extrapolate missing values using nearest-neighbors
-        if kwargs['extrapolate']:
+        if kwargs["extrapolate"]:
             for v in ds.data_vars.keys():
                 # check for missing values
                 invalid = ds[v].isnull()
                 if not invalid.any():
                     # no missing values
                     continue
-                elif (ds[v].ndim == 0):
+                elif ds[v].ndim == 0:
                     # single point extrapolation
-                    ds[v].values, = extrapolate(
-                        self._x, self._y, self._ds[v].values, x, y,
+                    (ds[v].values,) = extrapolate(
+                        self._x,
+                        self._y,
+                        self._ds[v].values,
+                        x,
+                        y,
                         is_geographic=self.crs.is_geographic,
-                        **kwargs
+                        **kwargs,
                     )
                 else:
                     # only extrapolate invalid points
                     ds[v].values[invalid] = extrapolate(
-                        self._x, self._y, self._ds[v].values,
-                        x.values[invalid], y.values[invalid],
+                        self._x,
+                        self._y,
+                        self._ds[v].values,
+                        x.values[invalid],
+                        y.values[invalid],
                         is_geographic=self.crs.is_geographic,
-                        **kwargs
+                        **kwargs,
                     )
         # return xarray dataset
         return ds
-    
+
     def node_equilibrium(self):
         """
         Compute the equilibrium amplitude and phase of the 18.6 year
@@ -517,12 +517,12 @@ class Dataset:
         # copy dataset
         ds = self._ds.copy()
         # Cartwright and Edden potential amplitude
-        amajor = 0.027929 # node
+        amajor = 0.027929  # node
         # Love numbers for long-period tides (Wahr, 1981)
         k2 = 0.299
         h2 = 0.606
         # tilt factor: response with respect to the solid earth
-        gamma_2 = (1.0 + k2 - h2)
+        gamma_2 = 1.0 + k2 - h2
         # check dimensions
         if (ds.x.ndim == 1) and (ds.y.ndim == 1):
             # 2D grid of coordinates
@@ -530,21 +530,19 @@ class Dataset:
         else:
             x, y = ds.x.values, ds.y.values
         # transform model coordinates to lat/lon coordinates
-        lon, lat = _transform(x, y,
-            source_crs=self.crs,
-            target_crs=4326,
-            direction='FORWARD'
+        lon, lat = _transform(
+            x, y, source_crs=self.crs, target_crs=4326, direction="FORWARD"
         )
         # colatitude in radians
         th = np.radians(90.0 - lat)
         # 2nd degree Legendre polynomials
-        P20 = 0.5*(3.0*np.cos(th)**2 - 1.0)
+        P20 = 0.5 * (3.0 * np.cos(th) ** 2 - 1.0)
         # normalization for spherical harmonics
-        dfactor = np.sqrt((4.0 + 1.0)/(4.0*np.pi))
+        dfactor = np.sqrt((4.0 + 1.0) / (4.0 * np.pi))
         # calculate equilibrium node constants
-        hc = dfactor*P20*gamma_2*amajor*np.exp(-1j*np.pi)
-        ds['node'] = xr.DataArray(hc, dims=ds.dims, coords=ds.coords)
-        ds['node'].attrs['units'] = 'm'
+        hc = dfactor * P20 * gamma_2 * amajor * np.exp(-1j * np.pi)
+        ds["node"] = xr.DataArray(hc, dims=ds.dims, coords=ds.coords)
+        ds["node"].attrs["units"] = "m"
         # return xarray dataset
         return ds
 
@@ -563,7 +561,7 @@ class Dataset:
             padded xarray Dataset
         """
         # (possibly) unchunk x-coordinates and pad to wrap at meridian
-        x = xr.DataArray(self._x, dims='x').pad(
+        x = xr.DataArray(self._x, dims="x").pad(
             x=n, mode="reflect", reflect_type="odd"
         )
         # pad dataset and re-assign x-coordinates
@@ -574,7 +572,7 @@ class Dataset:
             ds = ds.chunk(chunks)
         # return the dataset
         return ds
-    
+
     def predict(self, t: float | np.ndarray, **kwargs):
         """
         Predict tides from ``Dataset`` at times
@@ -592,6 +590,7 @@ class Dataset:
             predicted tides
         """
         from pyTMD.predict import time_series
+
         # predict tides at times
         darr = time_series(t, self._ds, **kwargs)
         # return the predicted tides
@@ -617,12 +616,13 @@ class Dataset:
         else:
             return ds[c]
 
-    def transform_as(self,
-            x: np.ndarray,
-            y: np.ndarray,
-            crs: str | int | dict = 4326,
-            **kwargs
-        ):
+    def transform_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
         """
         Transform coordinates to/from the dataset coordinate reference system
 
@@ -648,11 +648,7 @@ class Dataset:
             Transformed y-coordinates
         """
         # convert coordinate reference system to that of the dataset
-        X, Y = _transform(x, y,
-            source_crs=crs,
-            target_crs=self.crs,
-            **kwargs
-        )
+        X, Y = _transform(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
         # return the transformed coordinates
         return (X, Y)
 
@@ -675,8 +671,7 @@ class Dataset:
         return ds
 
     def to_base_units(self):
-        """Convert ``Dataset`` to base units
-        """
+        """Convert ``Dataset`` to base units"""
         # create copy of dataset
         ds = self._ds.copy()
         # convert each constituent in the dataset
@@ -686,8 +681,7 @@ class Dataset:
         return ds
 
     def to_default_units(self):
-        """Convert ``Dataset`` to default tide units
-        """
+        """Convert ``Dataset`` to default tide units"""
         # create copy of dataset
         ds = self._ds.copy()
         # convert each constituent in the dataset
@@ -698,14 +692,14 @@ class Dataset:
 
     @property
     def constituents(self):
-        """List of tidal constituent names in the ``Dataset``
-        """
+        """List of tidal constituent names in the ``Dataset``"""
         # import constituents parser
         from pyTMD.constituents import _parse_name
+
         # output list of tidal constituents
         cons = []
         # parse list of model constituents
-        for i,c in enumerate(self._ds.data_vars.keys()):
+        for i, c in enumerate(self._ds.data_vars.keys()):
             try:
                 cons.append(_parse_name(c))
             except ValueError:
@@ -715,17 +709,15 @@ class Dataset:
 
     @property
     def crs(self):
-        """Coordinate reference system of the ``Dataset``
-        """
+        """Coordinate reference system of the ``Dataset``"""
         # return the CRS of the dataset
         # default is EPSG:4326 (WGS84)
-        CRS = self._ds.attrs.get('crs', 4326)
+        CRS = self._ds.attrs.get("crs", 4326)
         return pyproj.CRS.from_user_input(CRS)
 
     @property
     def is_global(self) -> bool:
-        """Determine if the dataset covers a global domain
-        """
+        """Determine if the dataset covers a global domain"""
         # grid spacing in x-direction
         dx = self._x[1] - self._x[0]
         # check if global grid
@@ -734,27 +726,25 @@ class Dataset:
 
     @property
     def area_of_use(self) -> str | None:
-        """Area of use from the dataset CRS
-        """
+        """Area of use from the dataset CRS"""
         if self.crs.area_of_use is not None:
-            return self.crs.area_of_use.name.replace('.','').lower()
-        
+            return self.crs.area_of_use.name.replace(".", "").lower()
+
     @property
     def _x(self):
-        """x-coordinates of the ``Dataset``
-        """
+        """x-coordinates of the ``Dataset``"""
         return self._ds.x.values
-    
+
     @property
     def _y(self):
-        """y-coordinates of the ``Dataset``
-        """
+        """y-coordinates of the ``Dataset``"""
         return self._ds.y.values
 
-@xr.register_dataarray_accessor('tmd')
+
+@xr.register_dataarray_accessor("tmd")
 class DataArray:
-    """Accessor for extending an ``xarray.DataArray`` for tidal model data
-    """
+    """Accessor for extending an ``xarray.DataArray`` for tidal model data"""
+
     def __init__(self, da):
         # initialize DataArray
         self._da = da
@@ -799,9 +789,9 @@ class DataArray:
             scaling factor to apply
         """
         # convert to specified units
-        conversion = value*self.quantity.to(units)
-        da = self._da*conversion.magnitude
-        da.attrs['units'] = str(conversion.units)
+        conversion = value * self.quantity.to(units)
+        da = self._da * conversion.magnitude
+        da.attrs["units"] = str(conversion.units)
         return da
 
     def to_base_units(self, value=1.0):
@@ -813,9 +803,9 @@ class DataArray:
             scaling factor to apply
         """
         # convert to base units
-        conversion = value*self.quantity.to_base_units()
-        da = self._da*conversion.magnitude
-        da.attrs['units'] = str(conversion.units)
+        conversion = value * self.quantity.to_base_units()
+        da = self._da * conversion.magnitude
+        da.attrs["units"] = str(conversion.units)
         return da
 
     def to_default_units(self, value=1.0):
@@ -833,36 +823,34 @@ class DataArray:
 
     @property
     def units(self):
-        """Units of the ``DataArray``
-        """
-        return __ureg__.parse_units(self._da.attrs.get('units', ''))
-    
+        """Units of the ``DataArray``"""
+        return __ureg__.parse_units(self._da.attrs.get("units", ""))
+
     @property
     def quantity(self):
-        """``Pint`` Quantity of the ``DataArray``
-        """
-        return 1.0*self.units
+        """``Pint`` Quantity of the ``DataArray``"""
+        return 1.0 * self.units
 
     @property
     def group(self):
-        """Variable group of the ``DataArray``
-        """
-        if self.units.is_compatible_with('m'):
-            return 'elevation'
-        elif self.units.is_compatible_with('m/s'):
-            return 'current'
-        elif self.units.is_compatible_with('m^2/s'):
-            return 'transport'
+        """Variable group of the ``DataArray``"""
+        if self.units.is_compatible_with("m"):
+            return "elevation"
+        elif self.units.is_compatible_with("m/s"):
+            return "current"
+        elif self.units.is_compatible_with("m^2/s"):
+            return "transport"
         else:
-            raise ValueError(f'Unknown unit group: {self.units}')
+            raise ValueError(f"Unknown unit group: {self.units}")
+
 
 def _transform(
-        i1: np.ndarray,
-        i2: np.ndarray,
-        source_crs: str | int | dict = 4326,
-        target_crs: str | int | dict = None,
-        **kwargs
-    ):
+    i1: np.ndarray,
+    i2: np.ndarray,
+    source_crs: str | int | dict = 4326,
+    target_crs: str | int | dict = None,
+    **kwargs,
+):
     """
     Transform coordinates to/from the dataset coordinate reference system
 
@@ -890,28 +878,30 @@ def _transform(
         Transformed y-coordinates
     """
     # set the direction of the transformation
-    kwargs.setdefault('direction', 'FORWARD')
-    assert kwargs['direction'] in ('FORWARD','INVERSE','IDENT')
+    kwargs.setdefault("direction", "FORWARD")
+    assert kwargs["direction"] in ("FORWARD", "INVERSE", "IDENT")
     # get the coordinate reference system and transform
     source_crs = pyproj.CRS.from_user_input(source_crs)
     transformer = pyproj.Transformer.from_crs(
-        source_crs, target_crs, always_xy=True)
+        source_crs, target_crs, always_xy=True
+    )
     # convert coordinate reference system
     o1, o2 = transformer.transform(i1, i2, **kwargs)
     # return the transformed coordinates
     return (o1, o2)
 
+
 def _coords(
-        x: np.ndarray,
-        y: np.ndarray,
-        source_crs: str | int | dict = 4326,
-        target_crs: str | int | dict = None,
-        **kwargs
-    ):
+    x: np.ndarray,
+    y: np.ndarray,
+    source_crs: str | int | dict = 4326,
+    target_crs: str | int | dict = None,
+    **kwargs,
+):
     """
     Transform coordinates into DataArrays in a new
     coordinate reference system
-    
+
     Parameters
     ----------
     x: np.ndarray
@@ -942,45 +932,53 @@ def _coords(
         Transformed y-coordinates
     """
     from pyTMD.spatial import data_type
+
     # set default keyword arguments
-    kwargs.setdefault('type', None)
-    kwargs.setdefault('time', None)
+    kwargs.setdefault("type", None)
+    kwargs.setdefault("time", None)
     # determine coordinate data type if possible
-    if kwargs['type'] is None:
+    if kwargs["type"] is None:
         # must provide time variable to determine data type
-        assert kwargs['time'] is not None, \
-            'Must provide time parameter when type is not specified'
-        coord_type = data_type(x, y, np.ravel(kwargs['time']))
+        assert kwargs["time"] is not None, (
+            "Must provide time parameter when type is not specified"
+        )
+        coord_type = data_type(x, y, np.ravel(kwargs["time"]))
     else:
         # use provided coordinate data type
         # and verify that it is lowercase
-        coord_type = kwargs.get('type').lower()
+        coord_type = kwargs.get("type").lower()
     # convert coordinates to a new coordinate reference system
-    if (coord_type == 'grid') and (np.size(x) != np.size(y)):
+    if (coord_type == "grid") and (np.size(x) != np.size(y)):
         gridx, gridy = np.meshgrid(x, y)
-        mx, my = _transform(gridx, gridy,
+        mx, my = _transform(
+            gridx,
+            gridy,
             source_crs=source_crs,
             target_crs=target_crs,
-            direction='FORWARD')
+            direction="FORWARD",
+        )
     else:
-        mx, my = _transform(x, y,
+        mx, my = _transform(
+            x,
+            y,
             source_crs=source_crs,
             target_crs=target_crs,
-            direction='FORWARD')
+            direction="FORWARD",
+        )
     # convert to xarray DataArray with appropriate dimensions
     if (np.ndim(x) == 0) and (np.ndim(y) == 0):
         X = xr.DataArray(mx)
         Y = xr.DataArray(my)
-    elif (coord_type == 'grid'):
-        X = xr.DataArray(mx, dims=('y','x'))
-        Y = xr.DataArray(my, dims=('y','x'))
-    elif (coord_type == 'drift'):
-        X = xr.DataArray(mx, dims=('time'))
-        Y = xr.DataArray(my, dims=('time'))
-    elif (coord_type == 'time series'):
-        X = xr.DataArray(mx, dims=('station'))
-        Y = xr.DataArray(my, dims=('station'))
+    elif coord_type == "grid":
+        X = xr.DataArray(mx, dims=("y", "x"))
+        Y = xr.DataArray(my, dims=("y", "x"))
+    elif coord_type == "drift":
+        X = xr.DataArray(mx, dims=("time"))
+        Y = xr.DataArray(my, dims=("time"))
+    elif coord_type == "time series":
+        X = xr.DataArray(mx, dims=("station"))
+        Y = xr.DataArray(my, dims=("station"))
     else:
-        raise ValueError(f'Unknown coordinate data type: {coord_type}')
+        raise ValueError(f"Unknown coordinate data type: {coord_type}")
     # return the transformed coordinates
     return (X, Y)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 interpolate.py
 Written by Tyler Sutterley (11/2025)
 Interpolators for spatial data
@@ -25,6 +25,7 @@ UPDATE HISTORY:
     Updated 07/2024: changed projection flag in extrapolation to is_geographic
     Written 12/2022
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -38,13 +39,9 @@ __all__ = [
     "extrapolate",
 ]
 
+
 # PURPOSE: 1-dimensional linear interpolation on arrays
-def interp1d(
-        x: float | np.ndarray,
-        xp: np.ndarray,
-        fp: np.ndarray,
-        **kwargs
-    ):
+def interp1d(x: float | np.ndarray, xp: np.ndarray, fp: np.ndarray, **kwargs):
     """
     Vectorized one-dimensional linear interpolation
 
@@ -60,7 +57,7 @@ def interp1d(
         Method of extrapolation
 
             - ``'linear'``
-            - ``'nearest'``    
+            - ``'nearest'``
 
     Returns
     -------
@@ -68,42 +65,43 @@ def interp1d(
         Interpolated values at x
     """
     # get extrapolation method
-    extrapolate = kwargs.get('extrapolate', 'linear').lower()
-    if extrapolate not in ('linear', 'nearest'):
+    extrapolate = kwargs.get("extrapolate", "linear").lower()
+    if extrapolate not in ("linear", "nearest"):
         raise ValueError(f"Invalid extrapolate method: {extrapolate}")
     # recursion for multiple x values
     if isinstance(x, np.ndarray) and (x.ndim > 0):
         # allocate output array
         f = np.zeros((*fp.shape[:-1], len(x)), dtype=fp.dtype)
         for i, val in enumerate(x):
-            f[...,i] = interp1d(val, xp, fp, **kwargs)
+            f[..., i] = interp1d(val, xp, fp, **kwargs)
         # return the array of interpolated values
         return f
     # clip coordinates to handle nearest-neighbor extrapolation
-    if (extrapolate == 'nearest'):
+    if extrapolate == "nearest":
         x = np.clip(x, a_min=xp.min(), a_max=xp.max())
     # find indice where x could be inserted into xp
     j = np.searchsorted(xp, x) - 1
     # clip indices to handle linear extrapolation
-    if (extrapolate == 'linear'):
+    if extrapolate == "linear":
         j = np.clip(j, a_min=0, a_max=len(xp) - 2)
     # fractional distance between points
-    d = np.divide(x - xp[j], xp[j+1] - xp[j])
+    d = np.divide(x - xp[j], xp[j + 1] - xp[j])
     # calculate interpolated values
-    f = (1.0 - d)*fp[...,j] + d*fp[...,j+1]
+    f = (1.0 - d) * fp[..., j] + d * fp[..., j + 1]
     # return the interpolated values
     return f
 
+
 def inpaint(
-        xs: np.ndarray,
-        ys: np.ndarray,
-        zs: np.ndarray,
-        N: int = 0,
-        s0: int = 3,
-        power: int = 2,
-        epsilon: float = 2.0,
-        **kwargs
-    ):
+    xs: np.ndarray,
+    ys: np.ndarray,
+    zs: np.ndarray,
+    N: int = 0,
+    s0: int = 3,
+    power: int = 2,
+    epsilon: float = 2.0,
+    **kwargs,
+):
     """
     Inpaint over missing data in a two-dimensional array using a
     penalized least square method based on discrete cosine transforms
@@ -133,7 +131,7 @@ def inpaint(
         W = np.isfinite(zs)
     # no valid values can be found
     if not np.any(W):
-        raise ValueError('No valid values found')
+        raise ValueError("No valid values found")
 
     # dimensions of input grid
     ny, nx = np.shape(zs)
@@ -152,7 +150,7 @@ def inpaint(
     # copy nearest neighbors
     z0[masked] = zs[W][ii]
     # return nearest neighbors interpolation
-    if (N == 0):
+    if N == 0:
         return z0
 
     # copy data to new array with 0 values for mask
@@ -161,37 +159,40 @@ def inpaint(
 
     # calculate lambda function
     L = np.zeros((ny, nx))
-    L += np.broadcast_to(np.cos(np.pi*np.arange(ny)/ny)[:, None], (ny, nx))
-    L += np.broadcast_to(np.cos(np.pi*np.arange(nx)/nx)[None, :], (ny, nx))
-    LAMBDA = np.power(2.0*(2.0 - L), power)
+    L += np.broadcast_to(np.cos(np.pi * np.arange(ny) / ny)[:, None], (ny, nx))
+    L += np.broadcast_to(np.cos(np.pi * np.arange(nx) / nx)[None, :], (ny, nx))
+    LAMBDA = np.power(2.0 * (2.0 - L), power)
 
     # smoothness parameters
     s = np.logspace(s0, -6, N)
     for i in range(N):
         # calculate discrete cosine transform
-        GAMMA = 1.0/(1.0 + s[i]*LAMBDA)
-        DISCOS = GAMMA*scipy.fftpack.dctn(W*(ZI - z0) + z0, norm='ortho')
+        GAMMA = 1.0 / (1.0 + s[i] * LAMBDA)
+        DISCOS = GAMMA * scipy.fftpack.dctn(W * (ZI - z0) + z0, norm="ortho")
         # update interpolated grid
-        z0 = epsilon*scipy.fftpack.idctn(DISCOS, norm='ortho') + \
-            (1.0 - epsilon)*z0
+        z0 = (
+            epsilon * scipy.fftpack.idctn(DISCOS, norm="ortho")
+            + (1.0 - epsilon) * z0
+        )
 
     # reset original values
     z0[W] = np.copy(zs[W])
     # return the inpainted grid
     return z0
 
+
 # PURPOSE: Nearest-neighbor extrapolation of valid data to output data
 def extrapolate(
-        xs: np.ndarray,
-        ys: np.ndarray,
-        zs: np.ndarray,
-        X: np.ndarray,
-        Y: np.ndarray,
-        fill_value: float = None,
-        cutoff: int | float = np.inf,
-        is_geographic: bool = True,
-        **kwargs
-    ):
+    xs: np.ndarray,
+    ys: np.ndarray,
+    zs: np.ndarray,
+    X: np.ndarray,
+    Y: np.ndarray,
+    fill_value: float = None,
+    cutoff: int | float = np.inf,
+    is_geographic: bool = True,
+    **kwargs,
+):
     """
     Nearest-neighbor (`NN`) extrapolation of valid model data using `kd-trees
     <https://docs.scipy.org/doc/scipy/reference/generated/
@@ -226,14 +227,15 @@ def extrapolate(
         interpolated data
     """
     # set default data type
-    dtype = kwargs.get('dtype', zs.dtype)
+    dtype = kwargs.get("dtype", zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(zs, dtype=zs.dtype,
-            fill_value=np.ma.default_fill_value(zs.dtype))
+        zs = np.ma.array(
+            zs, dtype=zs.dtype, fill_value=np.ma.default_fill_value(zs.dtype)
+        )
         zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
-    if hasattr(kwargs, 'EPSG') and (kwargs['EPSG'] == '4326'):
+    if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
         is_geographic = True
     # verify output dimensions
     X = np.atleast_1d(X)
@@ -241,7 +243,7 @@ def extrapolate(
     # extrapolate valid data values to data
     npts = len(X)
     # return none if no invalid points
-    if (npts == 0):
+    if npts == 0:
         return
 
     # allocate to output extrapolate data array
@@ -264,22 +266,22 @@ def extrapolate(
         a_axis = 6378.137
         # calculate Cartesian coordinates of input grid
         gridx, gridy, gridz = pyTMD.spatial.to_cartesian(
-            gridlon, gridlat, a_axis=a_axis)
+            gridlon, gridlat, a_axis=a_axis
+        )
         # calculate Cartesian coordinates of output coordinates
-        XI, YI, ZI = pyTMD.spatial.to_cartesian(
-            X, Y, a_axis=a_axis)
+        XI, YI, ZI = pyTMD.spatial.to_cartesian(X, Y, a_axis=a_axis)
         # range of output points in cartesian coordinates
         xmin, xmax = (np.min(XI), np.max(XI))
         ymin, ymax = (np.min(YI), np.max(YI))
         zmin, zmax = (np.min(ZI), np.max(ZI))
         # reduce to model points within bounds of input points
         valid_bounds = np.ones_like(zs.mask, dtype=bool)
-        valid_bounds &= (gridx >= (xmin - 2.0*cutoff))
-        valid_bounds &= (gridx <= (xmax + 2.0*cutoff))
-        valid_bounds &= (gridy >= (ymin - 2.0*cutoff))
-        valid_bounds &= (gridy <= (ymax + 2.0*cutoff))
-        valid_bounds &= (gridz >= (zmin - 2.0*cutoff))
-        valid_bounds &= (gridz <= (zmax + 2.0*cutoff))
+        valid_bounds &= gridx >= (xmin - 2.0 * cutoff)
+        valid_bounds &= gridx <= (xmax + 2.0 * cutoff)
+        valid_bounds &= gridy >= (ymin - 2.0 * cutoff)
+        valid_bounds &= gridy <= (ymax + 2.0 * cutoff)
+        valid_bounds &= gridz >= (zmin - 2.0 * cutoff)
+        valid_bounds &= gridz <= (zmax + 2.0 * cutoff)
         # check if there are any valid points within the input bounds
         if not np.any(valid_mask & valid_bounds):
             # return filled masked array
@@ -287,8 +289,9 @@ def extrapolate(
         # find where input grid is valid and close to output points
         indy, indx = np.nonzero(valid_mask & valid_bounds)
         # create KD-tree of valid points
-        tree = scipy.spatial.cKDTree(np.c_[gridx[indy, indx],
-            gridy[indy, indx], gridz[indy, indx]])
+        tree = scipy.spatial.cKDTree(
+            np.c_[gridx[indy, indx], gridy[indy, indx], gridz[indy, indx]]
+        )
         # flattened valid data array
         flattened = zs.data[indy, indx]
         # output coordinates
@@ -302,10 +305,10 @@ def extrapolate(
         ymin, ymax = (np.min(Y), np.max(Y))
         # reduce to model points within bounds of input points
         valid_bounds = np.ones_like(zs.mask, dtype=bool)
-        valid_bounds &= (gridx >= (xmin - 2.0*cutoff))
-        valid_bounds &= (gridx <= (xmax + 2.0*cutoff))
-        valid_bounds &= (gridy >= (ymin - 2.0*cutoff))
-        valid_bounds &= (gridy <= (ymax + 2.0*cutoff))
+        valid_bounds &= gridx >= (xmin - 2.0 * cutoff)
+        valid_bounds &= gridx <= (xmax + 2.0 * cutoff)
+        valid_bounds &= gridy >= (ymin - 2.0 * cutoff)
+        valid_bounds &= gridy <= (ymax + 2.0 * cutoff)
         # check if there are any valid points within the input bounds
         if not np.any(valid_mask & valid_bounds):
             # return filled masked array
@@ -313,8 +316,9 @@ def extrapolate(
         # find where input grid is valid and close to output points
         indy, indx = np.nonzero(valid_mask & valid_bounds)
         # flattened model coordinates
-        tree = scipy.spatial.cKDTree(np.c_[gridx[indy, indx],
-            gridy[indy, indx]])
+        tree = scipy.spatial.cKDTree(
+            np.c_[gridx[indy, indx], gridy[indy, indx]]
+        )
         # flattened valid data array
         flattened = zs.data[indy, indx]
         # output coordinates
@@ -324,7 +328,7 @@ def extrapolate(
     dd, ii = tree.query(points, k=1, distance_upper_bound=cutoff)
     # spatially extrapolate using nearest neighbors
     if np.any(np.isfinite(dd)):
-        ind, = np.nonzero(np.isfinite(dd))
+        (ind,) = np.nonzero(np.isfinite(dd))
         data.data[ind] = flattened[ii[ind]]
         data.mask[ind] = False
     # return extrapolated values

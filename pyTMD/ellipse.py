@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 ellipse.py
 Written by Tyler Sutterley (08/2025)
 Expresses the amplitudes and phases for the u and v components in terms of
@@ -20,15 +20,13 @@ UPDATE HISTORY:
     Updated 04/2022: updated docstrings to numpy documentation format
     Written 07/2020
 """
+
 from __future__ import annotations
 
 import numpy as np
 
-__all__ = [
-    "ellipse",
-    "inverse",
-    "_xy"
-]
+__all__ = ["ellipse", "inverse", "_xy"]
+
 
 def ellipse(u: np.ndarray, v: np.ndarray):
     """
@@ -57,8 +55,8 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     u = np.atleast_1d(u)
     v = np.atleast_1d(v)
     # wp, wm: complex radius of positively and negatively rotating vectors
-    wp = (u + 1j*v)/2.0
-    wm = np.conj(u - 1j*v)/2.0
+    wp = (u + 1j * v) / 2.0
+    wm = np.conj(u - 1j * v) / 2.0
     # ap, am: amplitudes of positively and negatively rotating vectors
     ap = np.abs(wp)
     am = np.abs(wm)
@@ -67,23 +65,21 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     em = np.angle(wm, deg=True)
     # determine the amplitudes of the semimajor and semiminor axes
     # using Foreman's formula
-    major = (ap + am)
-    minor = (ap - am)
+    major = ap + am
+    minor = ap - am
     # determine the inclination and phase using Foreman's formula
-    incl = (em + ep)/2.0
-    phase = (em - ep)/2.0
+    incl = (em + ep) / 2.0
+    phase = (em - ep) / 2.0
     # adjust orientation of ellipse
     k, incl = np.divmod(incl, 180.0)
-    phase = np.mod(phase + 180.0*k, 360.0)
+    phase = np.mod(phase + 180.0 * k, 360.0)
     # return values
     return (major, minor, incl, phase)
 
+
 def inverse(
-        major: np.ndarray,
-        minor: np.ndarray,
-        incl: np.ndarray,
-        phase: np.ndarray
-    ):
+    major: np.ndarray, minor: np.ndarray, incl: np.ndarray, phase: np.ndarray
+):
     """
     Calculates currents `u`, `v` using the four tidal ellipse
     parameters from Foreman's formula :cite:p:`Foreman:1989dt`
@@ -113,26 +109,27 @@ def inverse(
     incl = np.radians(np.atleast_1d(incl))
     phase = np.radians(np.atleast_1d(phase))
     # ep, em: phases of positively and negatively rotating vectors
-    ep = (incl - phase)
-    em = (incl + phase)
+    ep = incl - phase
+    em = incl + phase
     # ap, am: amplitudes of positively and negatively rotating vectors
-    ap = (major + minor)/2.0
-    am = (major - minor)/2.0
+    ap = (major + minor) / 2.0
+    am = (major - minor) / 2.0
     # wp, wm: complex radius of positively and negatively rotating vectors
-    wp = ap * np.exp(1j*ep)
-    wm = am * np.exp(1j*em)
+    wp = ap * np.exp(1j * ep)
+    wm = am * np.exp(1j * em)
     # calculate complex currents
     u = wp + np.conj(wm)
-    v = -1j*(wp - np.conj(wm))
+    v = -1j * (wp - np.conj(wm))
     # return values
     return (u, v)
 
+
 def _xy(
-        major: float | np.ndarray,
-        minor: float | np.ndarray,
-        incl: float | np.ndarray,
-        **kwargs
-    ):
+    major: float | np.ndarray,
+    minor: float | np.ndarray,
+    incl: float | np.ndarray,
+    **kwargs,
+):
     """
     Calculates the x and y coordinates of the tidal ellipse
 
@@ -159,23 +156,27 @@ def _xy(
         y coordinates of the tidal ellipse
     """
     # set default number of points
-    kwargs.setdefault('phase', None)
-    kwargs.setdefault('xy', (0.0, 0.0))
-    kwargs.setdefault('N', 1000)
+    kwargs.setdefault("phase", None)
+    kwargs.setdefault("xy", (0.0, 0.0))
+    kwargs.setdefault("N", 1000)
     # validate inputs
     phi = np.radians(np.atleast_1d(incl))
     # calculate the angle of the ellipse
-    if kwargs['phase'] is not None:
+    if kwargs["phase"] is not None:
         # use the phase lag and inclination
-        th = np.radians(kwargs['phase'] + incl)
+        th = np.radians(kwargs["phase"] + incl)
     else:
         # use a full rotation
-        th = np.linspace(0, 2*np.pi, kwargs['N'])
+        th = np.linspace(0, 2 * np.pi, kwargs["N"])
     # calculate x and y coordinates
-    x = kwargs['xy'][0] + \
-        major*np.cos(th)*np.cos(phi) - \
-        minor*np.sin(th)*np.sin(phi)
-    y = kwargs['xy'][1] + \
-        major*np.cos(th)*np.sin(phi) + \
-        minor*np.sin(th)*np.cos(phi)
+    x = (
+        kwargs["xy"][0]
+        + major * np.cos(th) * np.cos(phi)
+        - minor * np.sin(th) * np.sin(phi)
+    )
+    y = (
+        kwargs["xy"][1]
+        + major * np.cos(th) * np.sin(phi)
+        + minor * np.sin(th) * np.cos(phi)
+    )
     return (x, y)

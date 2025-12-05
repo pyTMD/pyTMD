@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 NOAA.py
 Written by Tyler Sutterley (12/2025)
 Query and parsing functions for NOAA webservices API
@@ -16,6 +16,7 @@ UPDATE HISTORY:
         convert all station names to title case (some are upper)
     Written 07/2025: extracted from Compare NOAA Tides notebook
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,8 +27,8 @@ import pyTMD.utilities
 from pyTMD.io.dataset import Dataset
 
 # attempt imports
-pd = pyTMD.utilities.import_dependency('pandas')
-pandas_available = pyTMD.utilities.dependency_available('pandas')
+pd = pyTMD.utilities.import_dependency("pandas")
+pandas_available = pyTMD.utilities.dependency_available("pandas")
 
 __all__ = [
     "build_query",
@@ -36,46 +37,47 @@ __all__ = [
     "prediction_stations",
     "harmonic_constituents",
     "water_level",
-    "DataFrame"
+    "DataFrame",
 ]
 
 _apis = [
-    'activestations',
-    'currentpredictionstations',
-    'tidepredictionstations',
-    'harmonicconstituents',
-    'waterlevelrawonemin',
-    'waterlevelrawsixmin',
-    'waterlevelverifiedsixmin',
-    'waterlevelverifiedhourly',
-    'waterlevelverifieddaily',
-    'waterlevelverifiedmonthly',
+    "activestations",
+    "currentpredictionstations",
+    "tidepredictionstations",
+    "harmonicconstituents",
+    "waterlevelrawonemin",
+    "waterlevelrawsixmin",
+    "waterlevelverifiedsixmin",
+    "waterlevelverifiedhourly",
+    "waterlevelverifieddaily",
+    "waterlevelverifiedmonthly",
 ]
 
 _xpaths = {
-    'activestations': '//wsdl:station',
-    'currentpredictionstations': '//wsdl:station',
-    'tidepredictionstations': '//wsdl:station',
-    'harmonicconstituents': '//wsdl:item',
-    'waterlevelrawonemin': '//wsdl:item',
-    'waterlevelrawsixmin': '//wsdl:item',
-    'waterlevelverifiedsixmin': '//wsdl:item',
-    'waterlevelverifiedhourly': '//wsdl:item',
-    'waterlevelverifieddaily': '//wsdl:item',
-    'waterlevelverifiedmonthly': '//wsdl:item'
+    "activestations": "//wsdl:station",
+    "currentpredictionstations": "//wsdl:station",
+    "tidepredictionstations": "//wsdl:station",
+    "harmonicconstituents": "//wsdl:item",
+    "waterlevelrawonemin": "//wsdl:item",
+    "waterlevelrawsixmin": "//wsdl:item",
+    "waterlevelverifiedsixmin": "//wsdl:item",
+    "waterlevelverifiedhourly": "//wsdl:item",
+    "waterlevelverifieddaily": "//wsdl:item",
+    "waterlevelverifiedmonthly": "//wsdl:item",
 }
+
 
 def build_query(api, **kwargs):
     """
     Build a query for the NOAA webservices API
-    
+
     Parameters
     ----------
     api: str
         NOAA webservices API endpoint to query
     **kwargs: dict
         Additional query parameters to include in the request
-    
+
     Returns
     -------
     url: str
@@ -84,38 +86,39 @@ def build_query(api, **kwargs):
         A dictionary of namespaces for parsing XML responses
     """
     # NOAA webservices hosts
-    HOST = 'https://tidesandcurrents.noaa.gov/axis/webservices'
-    OPENDAP = 'https://opendap.co-ops.nos.noaa.gov/axis/webservices'
+    HOST = "https://tidesandcurrents.noaa.gov/axis/webservices"
+    OPENDAP = "https://opendap.co-ops.nos.noaa.gov/axis/webservices"
     # NOAA webservices query arguments
-    arguments = '?format=xml'
+    arguments = "?format=xml"
     for key, value in kwargs.items():
-        arguments += f'&{key}={value}'
-    arguments += '&Submit=Submit'
+        arguments += f"&{key}={value}"
+    arguments += "&Submit=Submit"
     # NOAA API query url
-    url = f'{HOST}/{api}/response.jsp{arguments}'
+    url = f"{HOST}/{api}/response.jsp{arguments}"
     # lxml namespaces for parsing
     namespaces = {}
-    namespaces['wsdl'] = f'{OPENDAP}/{api}/wsdl'
+    namespaces["wsdl"] = f"{OPENDAP}/{api}/wsdl"
     return (url, namespaces)
+
 
 def from_xml(url, **kwargs):
     """
     Query the NOAA webservices API and return as a ``DataFrame``
-    
+
     Parameters
     ----------
     url: str
         The complete URL for the API request
     **kwargs: dict
         Additional keyword arguments to pass to ``pandas.read_xml``
-    
+
     Returns
     -------
     df: pandas.DataFrame
         The ``DataFrame`` containing the parsed XML data
     """
     # query the NOAA webservices API
-    assert pandas_available, 'pandas is required for accessing NOAA webservices'
+    assert pandas_available, "pandas is required for accessing NOAA webservices"
     try:
         logging.debug(url)
         df = pd.read_xml(url, **kwargs)
@@ -125,13 +128,11 @@ def from_xml(url, **kwargs):
     else:
         return df
 
-def active_stations(
-        api: str = 'activestations',
-        **kwargs
-    ):
+
+def active_stations(api: str = "activestations", **kwargs):
     """
     Retrieve a list of active tide stations
-    
+
     Parameters
     ----------
     api: str
@@ -149,26 +150,25 @@ def active_stations(
     url, namespaces = build_query(api, **kwargs)
     df = from_xml(url, xpath=xpath, namespaces=namespaces)
     # rename columns for consistency
-    df = df.rename(columns={'name':'ID', 'ID':'name'})
+    df = df.rename(columns={"name": "ID", "ID": "name"})
     # convert station names to title case
-    df['name'] = df['name'].str.title()
+    df["name"] = df["name"].str.title()
     # convert station IDs to strings
-    df['ID'] = df['ID'].astype(str)
+    df["ID"] = df["ID"].astype(str)
     # set the index to the station name
-    df = df.set_index('name')
+    df = df.set_index("name")
     # sort the index and drop metadata column
-    df = df.sort_index().drop(columns=['metadata','parameter'])
+    df = df.sort_index().drop(columns=["metadata", "parameter"])
     # return the dataframe
     return df
 
+
 def prediction_stations(
-        api: str = 'tidepredictionstations',
-        active_only: bool = True,
-        **kwargs
-    ):
+    api: str = "tidepredictionstations", active_only: bool = True, **kwargs
+):
     """
     Retrieve a list of tide prediction stations
-    
+
     Parameters
     ----------
     api: str
@@ -188,23 +188,21 @@ def prediction_stations(
     url, namespaces = build_query(api, **kwargs)
     df = from_xml(url, xpath=xpath, namespaces=namespaces)
     # convert station names to title case
-    df['name'] = df['name'].str.title()
+    df["name"] = df["name"].str.title()
     # convert station IDs to strings
-    df['ID'] = df['ID'].astype(str)
+    df["ID"] = df["ID"].astype(str)
     # set the index to the station name
-    df = df.set_index('name')
+    df = df.set_index("name")
     # sort the index and drop metadata column
-    df = df.sort_index().drop(columns=['metadata'])
+    df = df.sort_index().drop(columns=["metadata"])
     # reduce list to active stations only
     if active_only:
         df = df[df.ID.isin(active_stations().ID)]
     # return the dataframe
     return df
 
-def harmonic_constituents(
-        api: str = 'harmonicconstituents',
-        **kwargs
-    ):
+
+def harmonic_constituents(api: str = "harmonicconstituents", **kwargs):
     """
     Retrieve a list of harmonic constituents for a specified station
 
@@ -221,23 +219,21 @@ def harmonic_constituents(
         ``DataFrame`` containing the harmonic constituent information
     """
     # set default query parameters
-    kwargs.setdefault('unit', 0)
-    kwargs.setdefault('timeZone', 0)
+    kwargs.setdefault("unit", 0)
+    kwargs.setdefault("timeZone", 0)
     # get list of harmonic constituents
     xpath = _xpaths[api]
     url, namespaces = build_query(api, **kwargs)
     df = from_xml(url, xpath=xpath, namespaces=namespaces)
     # set the index to the constituent number
-    df = df.set_index('constNum')
+    df = df.set_index("constNum")
     # parse harmonic constituents
-    df['constituent'] = df['name'].apply(pyTMD.constituents._parse_name)
+    df["constituent"] = df["name"].apply(pyTMD.constituents._parse_name)
     # return the dataframe
     return df
 
-def water_level(
-        api: str = 'waterlevelrawsixmin',
-        **kwargs
-    ):
+
+def water_level(api: str = "waterlevelrawsixmin", **kwargs):
     """
     Retrieve water level data for a specified station and date range
 
@@ -254,23 +250,24 @@ def water_level(
         ``DataFrame`` containing the water level data
     """
     # set default query parameters
-    kwargs.setdefault('unit', 0)
-    kwargs.setdefault('timeZone', 0)
-    kwargs.setdefault('datum', 'MSL')
+    kwargs.setdefault("unit", 0)
+    kwargs.setdefault("timeZone", 0)
+    kwargs.setdefault("datum", "MSL")
     # get water levels for station and date range
     xpath = _xpaths[api]
     url, namespaces = build_query(api, **kwargs)
-    df = from_xml(url, xpath=xpath, namespaces=namespaces,
-        parse_dates=['timeStamp'])
+    df = from_xml(
+        url, xpath=xpath, namespaces=namespaces, parse_dates=["timeStamp"]
+    )
     # replace invalid water level values with NaN
     df = df.replace(to_replace=[-999], value=np.nan)
     # return the dataframe
     return df
 
+
 @pd.api.extensions.register_dataframe_accessor("tmd")
 class DataFrame(Dataset):
-    """Accessor for extending an ``pandas.DataFrame`` for tide models
-    """
+    """Accessor for extending an ``pandas.DataFrame`` for tide models"""
 
     def __init__(self, df):
         # store the pandas dataframe
@@ -289,12 +286,11 @@ class DataFrame(Dataset):
             Tide constituent dataset
         """
         # complex constituent oscillation(s)
-        hc = self._df.amplitude*np.exp(-1j*np.radians(self._df.phase))
+        hc = self._df.amplitude * np.exp(-1j * np.radians(self._df.phase))
         # convert data series to xarray DataArray
-        darr = hc.to_xarray().rename({'constNum': 'constituent'})
+        darr = hc.to_xarray().rename({"constNum": "constituent"})
         # assign constituent names as coordinates
-        darr = darr.assign_coords({'constituent': self._df.constituent.values})
+        darr = darr.assign_coords({"constituent": self._df.constituent.values})
         # convert DataArray to Dataset with constituents as variables
-        ds = darr.to_dataset(dim='constituent')
+        ds = darr.to_dataset(dim="constituent")
         return ds
-

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 fetch_test_data.py
 Written by Tyler Sutterley (09/2025)
 Download files necessary to run the test suite
@@ -24,6 +24,7 @@ UPDATE HISTORY:
     Updated 10/2025: change default directory for tide models to cache
     Written 10/2025
 """
+
 import ssl
 import json
 import shutil
@@ -38,12 +39,13 @@ _default_directory = pyTMD.utilities.get_cache_path()
 # default ssl context
 _default_ssl_context = pyTMD.utilities._default_ssl_context
 
+
 def fetch_test_data(
-        directory: str | pathlib.Path = _default_directory,
-        provider: str = 'figshare',
-        mode: oct = 0o775,
-        **kwargs
-    ):
+    directory: str | pathlib.Path = _default_directory,
+    provider: str = "figshare",
+    mode: oct = 0o775,
+    **kwargs,
+):
     """
     Download files necessary to run the test suite
 
@@ -61,22 +63,23 @@ def fetch_test_data(
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
-    if (provider == 'figshare'):
+    if provider == "figshare":
         from_figshare(directory=directory, logger=logger, **kwargs)
     else:
-        raise ValueError(f'Unknown data provider: {provider}')
+        raise ValueError(f"Unknown data provider: {provider}")
+
 
 # PURPOSE: download data files from figshare
 def from_figshare(
-        directory: str | pathlib.Path = _default_directory,
-        article: str = '30260326',
-        timeout: int | None = None,
-        context: ssl.SSLContext = _default_ssl_context,
-        chunk: int | None = 16384,
-        logger: logging.Logger | None = None,
-        mode: oct = 0o775,
-        **kwargs
-    ):
+    directory: str | pathlib.Path = _default_directory,
+    article: str = "30260326",
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    chunk: int | None = 16384,
+    logger: logging.Logger | None = None,
+    mode: oct = 0o775,
+    **kwargs,
+):
     """
     Download files necessary to run the test suite from figshare
 
@@ -100,31 +103,31 @@ def from_figshare(
         permissions mode of output local file
     """
     # figshare host for articles
-    HOST = ['https://api.figshare.com', 'v2', 'articles', article]
+    HOST = ["https://api.figshare.com", "v2", "articles", article]
     # Create and submit request
-    response = pyTMD.utilities.from_http(HOST,
-        timeout=timeout, context=context)
+    response = pyTMD.utilities.from_http(HOST, timeout=timeout, context=context)
     resp = json.loads(response.read())
     # for each file in the JSON response
-    for f in resp['files']:
+    for f in resp["files"]:
         # check if file already exists by matching MD5 checksums
-        local_file = directory.joinpath(f['name'])
+        local_file = directory.joinpath(f["name"])
         original_md5 = local_file.md5_hash
         # skip download if checksums match
-        if (original_md5 == f['supplied_md5']):
+        if original_md5 == f["supplied_md5"]:
             continue
         # output file information
         logger.info(f["download_url"])
         # get remote file as a byte-stream
-        remote_buffer = pyTMD.utilities.from_http(f['download_url'],
-            timeout=timeout, context=context)
+        remote_buffer = pyTMD.utilities.from_http(
+            f["download_url"], timeout=timeout, context=context
+        )
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(remote_buffer)
         # raise exception if checksums do not match
-        if (computed_md5 != f['supplied_md5']):
-            raise Exception(f'Checksum mismatch: {f["download_url"]}')
+        if computed_md5 != f["supplied_md5"]:
+            raise Exception(f"Checksum mismatch: {f['download_url']}")
         # download file or extract files from zip
-        if (pathlib.Path(f['name']).suffix == '.zip'):
+        if pathlib.Path(f["name"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
@@ -134,54 +137,74 @@ def from_figshare(
                     local_file.chmod(mode=mode)
         else:
             # write the file to the local directory
-            with local_file.open(mode='wb') as f:
+            with local_file.open(mode="wb") as f:
                 shutil.copyfileobj(remote_buffer, f, chunk)
             # change the permissions mode
             local_file.chmod(mode=mode)
+
 
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
         description="""Download models for running the test suite
             """,
-        fromfile_prefix_chars="@"
+        fromfile_prefix_chars="@",
     )
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
     # working data directory for location of tide models
-    parser.add_argument('--directory','-D',
-        type=pathlib.Path, default=_default_directory,
-        help='Working data directory')
+    parser.add_argument(
+        "--directory",
+        "-D",
+        type=pathlib.Path,
+        default=_default_directory,
+        help="Working data directory",
+    )
     # download provider
-    parser.add_argument('--provider','-P',
-        metavar='PROVIDER', type=str, default='figshare',
-        choices=('figshare',),
-        help='Data provider')
+    parser.add_argument(
+        "--provider",
+        "-P",
+        metavar="PROVIDER",
+        type=str,
+        default="figshare",
+        choices=("figshare",),
+        help="Data provider",
+    )
     # connection timeout
-    parser.add_argument('--timeout','-t',
-        type=int, default=3600,
-        help='Timeout in seconds for blocking operations')
+    parser.add_argument(
+        "--timeout",
+        "-t",
+        type=int,
+        default=3600,
+        help="Timeout in seconds for blocking operations",
+    )
     # permissions mode of the local directories and files (number in octal)
-    parser.add_argument('--mode','-M',
-        type=lambda x: int(x,base=8), default=0o775,
-        help='Permissions mode of the files downloaded')
+    parser.add_argument(
+        "--mode",
+        "-M",
+        type=lambda x: int(x, base=8),
+        default=0o775,
+        help="Permissions mode of the files downloaded",
+    )
     # return the parser
     return parser
+
 
 # This is the main part of the program that calls the individual functions
 def main():
     # Read the system arguments listed after the program
     parser = arguments()
-    args,_ = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     # fetch test data
     fetch_test_data(
         directory=args.directory,
         provider=args.provider,
         timeout=args.timeout,
-        mode=args.mode
+        mode=args.mode,
     )
 
+
 # run main program
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

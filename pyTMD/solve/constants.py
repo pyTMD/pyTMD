@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 constants.py
 Written by Tyler Sutterley (12/2025)
 Routines for estimating the harmonic constants for ocean tides
@@ -11,7 +11,7 @@ REFERENCES:
         "Versatile Harmonic Tidal Analysis: Improvements and Applications",
         Journal of Atmospheric and Oceanic Technology, (2009).
     R. D. Ray, "A global ocean tide model from TOPEX/POSEIDON altimetry:
-        GOT99.2", NASA Technical Memorandum 209478, (1999).   
+        GOT99.2", NASA Technical Memorandum 209478, (1999).
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -22,7 +22,7 @@ PYTHON DEPENDENCIES:
 
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
-    constituents.py: calculates constituent parameters and nodal arguments  
+    constituents.py: calculates constituent parameters and nodal arguments
     predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
@@ -47,26 +47,26 @@ import scipy.optimize
 import pyTMD.constituents
 import pyTMD.predict
 
-__all__ = [
-    'constants'
-]
+__all__ = ["constants"]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
 
-def constants(t: float | np.ndarray,
-        ht: np.ndarray,
-        constituents: str | list | np.ndarray,
-        deltat: float | np.ndarray = 0.0,
-        corrections: str = 'OTIS',
-        solver: str = 'lstsq',
-        order: int = 0,
-        infer_minor: bool = False,
-        minor_constituents: list = [],
-        bounds: tuple = (-np.inf, np.inf),
-        max_iter: int | None = None,
-        infer_iter: int = 1
-    ):
+
+def constants(
+    t: float | np.ndarray,
+    ht: np.ndarray,
+    constituents: str | list | np.ndarray,
+    deltat: float | np.ndarray = 0.0,
+    corrections: str = "OTIS",
+    solver: str = "lstsq",
+    order: int = 0,
+    infer_minor: bool = False,
+    minor_constituents: list = [],
+    bounds: tuple = (-np.inf, np.inf),
+    max_iter: int | None = None,
+    infer_iter: int = 1,
+):
     """
     Estimate the harmonic constants for a time series
     :cite:p:`Egbert:2002ge,Foreman:2009bg,Ray:1999vm`
@@ -117,40 +117,42 @@ def constants(t: float | np.ndarray,
     ht = np.ravel(ht)
     # reduce height and time variables to finite values
     if not np.isfinite(ht).all():
-        valid, = np.nonzero(np.isfinite(t) & np.isfinite(ht))
+        (valid,) = np.nonzero(np.isfinite(t) & np.isfinite(ht))
         t = t[valid]
         ht = ht[valid]
     # check that there are enough values for a time series fit
     nt = len(t)
     nc = len(constituents)
-    if (nt <= 2*nc):
-        raise ValueError('Not enough values for fit')
+    if nt <= 2 * nc:
+        raise ValueError("Not enough values for fit")
     # check that the number of time values matches the number of height values
-    if (nt != len(ht)):
-        raise ValueError('Dimension mismatch between input variables')
+    if nt != len(ht):
+        raise ValueError("Dimension mismatch between input variables")
 
     # load the nodal corrections
     # convert time to Modified Julian Days (MJD)
-    pu, pf, G = pyTMD.constituents.arguments(t + _mjd_tide, constituents,
-        deltat=deltat, corrections=corrections)
+    pu, pf, G = pyTMD.constituents.arguments(
+        t + _mjd_tide, constituents, deltat=deltat, corrections=corrections
+    )
 
     # create design matrix
     M = []
     # build polynomial functions for design matrix
-    for o in range(order+1):
+    for o in range(order + 1):
         # add polynomial term
         M.append(np.power(t, o))
     # add constituent terms
-    for k,c in enumerate(constituents):
-        if corrections in ('OTIS', 'ATLAS', 'TMD3', 'netcdf'):
-            amp, ph, omega, alpha, species = \
+    for k, c in enumerate(constituents):
+        if corrections in ("OTIS", "ATLAS", "TMD3", "netcdf"):
+            amp, ph, omega, alpha, species = (
                 pyTMD.constituents._constituent_parameters(c)
-            th = omega*t*86400.0 + ph + pu[:,k]
+            )
+            th = omega * t * 86400.0 + ph + pu[:, k]
         else:
-            th = np.radians(G[:,k]) + pu[:,k]
+            th = np.radians(G[:, k]) + pu[:, k]
         # add constituent to design matrix
-        M.append(pf[:,k]*np.cos(th))
-        M.append(-pf[:,k]*np.sin(th))
+        M.append(pf[:, k] * np.cos(th))
+        M.append(-pf[:, k] * np.sin(th))
     # take the transpose of the design matrix
     M = np.transpose(M)
 
@@ -168,39 +170,46 @@ def constants(t: float | np.ndarray,
         if (i > 0) and infer_minor:
             # indices for the sine and cosine terms
             # skip over the polynomial terms
-            isin = 2*np.arange(nc) + order + 2
-            icos = 2*np.arange(nc) + order + 1
+            isin = 2 * np.arange(nc) + order + 2
+            icos = 2 * np.arange(nc) + order + 1
             # complex model amplitudes for major constituents
-            darr = xr.DataArray(p[icos] + 1j*p[isin],
+            darr = xr.DataArray(
+                p[icos] + 1j * p[isin],
                 coords=dict(constituent=constituents),
-                dims=['constituent'])
-            ds = darr.to_dataset(dim='constituent')
+                dims=["constituent"],
+            )
+            ds = darr.to_dataset(dim="constituent")
             # inferred minor constituent time series
-            hminor = pyTMD.predict.infer_minor(t, ds,
-                deltat=deltat, corrections=corrections,
-                minor=minor_constituents)
+            hminor = pyTMD.predict.infer_minor(
+                t,
+                ds,
+                deltat=deltat,
+                corrections=corrections,
+                minor=minor_constituents,
+            )
             # corrected height (without minor constituents)
             hcorr = ht - hminor.values
         # use a least-squares fit to solve for parameters
         # can optionally use a bounded-variable least-squares fit
-        if (solver == 'lstsq'):
+        if solver == "lstsq":
             p[:], res, rnk, s = np.linalg.lstsq(M, hcorr, rcond=-1)
-        elif solver in ('gelsd', 'gelsy', 'gelss'):
-            p[:], res, rnk, s = scipy.linalg.lstsq(M, hcorr,
-                lapack_driver=solver)
-        elif (solver == 'bvls'):
-            p[:] = scipy.optimize.lsq_linear(M, hcorr,
-                method=solver, bounds=bounds,
-                max_iter=max_iter).x
+        elif solver in ("gelsd", "gelsy", "gelss"):
+            p[:], res, rnk, s = scipy.linalg.lstsq(
+                M, hcorr, lapack_driver=solver
+            )
+        elif solver == "bvls":
+            p[:] = scipy.optimize.lsq_linear(
+                M, hcorr, method=solver, bounds=bounds, max_iter=max_iter
+            ).x
 
     # calculate amplitude and phase for each constituent
     ds = xr.Dataset(coords=dict(constituent=constituents))
     # for each constituent
-    for k,c in enumerate(constituents):
+    for k, c in enumerate(constituents):
         # indices for the sine and cosine terms
         # skip over the polynomial terms
-        isin = 2*k + order + 2
-        icos = 2*k + order + 1
-        ds[c] = xr.DataArray(p[icos] + 1j*p[isin])
+        isin = 2 * k + order + 2
+        icos = 2 * k + order + 1
+        ds[c] = xr.DataArray(p[icos] + 1j * p[isin])
     # return the xarray dataset
     return ds
