@@ -7,7 +7,6 @@ on:
   pull_request:
     paths:
       - pyTMD/**
-      - scripts/**
       - test/**
       - .github/workflows/python-request.yml
     types: [opened, synchronize, reopened, ready_for_review]
