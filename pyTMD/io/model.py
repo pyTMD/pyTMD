@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 model.py
 Written by Tyler Sutterley (11/2025)
 Retrieves tide model parameters for named tide models and
@@ -22,7 +22,7 @@ UPDATE HISTORY:
     Updated 06/2025: add function for reducing list of model files
         fix extra_databases to not overwrite the default database
         add capability to use a dictionary to expand the model database
-    Updated 02/2025: fixed missing grid kwarg for reading from TMD3 models 
+    Updated 02/2025: fixed missing grid kwarg for reading from TMD3 models
     Updated 11/2024: use Love numbers for long-period tides in node equilibrium
     Updated 10/2024: add wrapper functions to read and interpolate constants
         add functions to append node tide equilibrium values to amplitudes
@@ -75,34 +75,33 @@ UPDATE HISTORY:
         added atl10 attributes for tidal elevation files
     Written 09/2021
 """
+
 from __future__ import annotations
 
 import io
 import copy
 import json
+import pyproj
 import pathlib
 import warnings
 import xarray as xr
 import pyTMD.utilities
 from collections.abc import Iterable
+
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
-# attempt imports
-pyproj = pyTMD.utilities.import_dependency('pyproj')
 
-__all__ = [
-    'DataBase',
-    'load_database',
-    'model'
-]
+__all__ = ["DataBase", "load_database", "model"]
 
 # default working data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
+
 
 # allow model database to be subscriptable
 # and have attribute access
 class DataBase:
     """pyTMD model database and parameters"""
+
     def __init__(self, d: dict):
         self.__dict__ = d
 
@@ -123,13 +122,11 @@ class DataBase:
         return self.__dict__.items()
 
     def __repr__(self):
-        """Representation of the ``DataBase`` object
-        """
+        """Representation of the ``DataBase`` object"""
         return str(self.__dict__)
 
     def __str__(self):
-        """String representation of the ``DataBase`` object
-        """
+        """String representation of the ``DataBase`` object"""
         return str(self.__dict__)
 
     def get(self, key, default=None):
@@ -140,6 +137,7 @@ class DataBase:
 
     def __getitem__(self, key):
         return getattr(self, key)
+
 
 # PURPOSE: load the JSON database of model files
 def load_database(extra_databases: list = []):
@@ -158,9 +156,9 @@ def load_database(extra_databases: list = []):
         Database of model parameters
     """
     # path to model database
-    database = pyTMD.utilities.get_data_path(['data','database.json'])
+    database = pyTMD.utilities.get_data_path(["data", "database.json"])
     # extract JSON data
-    with database.open(mode='r', encoding='utf-8') as fid:
+    with database.open(mode="r", encoding="utf-8") as fid:
         parameters = json.load(fid)
     # verify that extra_databases is iterable
     if isinstance(extra_databases, (str, pathlib.Path, dict)):
@@ -177,11 +175,12 @@ def load_database(extra_databases: list = []):
             if not db.exists():
                 raise FileNotFoundError(db)
             # extract JSON data
-            with db.open(mode='r', encoding='utf-8') as fid:
+            with db.open(mode="r", encoding="utf-8") as fid:
                 extra_database = json.load(fid)
         # Add additional models to database
         parameters.update(extra_database)
     return DataBase(parameters)
+
 
 class model:
     """Retrieves tide model parameters for named models or
@@ -200,29 +199,27 @@ class model:
     verify: bool
         Verify that all model files exist
     """
+
     def __init__(self, directory: str | pathlib.Path | None = None, **kwargs):
         # set default keyword arguments
-        kwargs.setdefault('compressed', False)
-        kwargs.setdefault('verify', True)
-        kwargs.setdefault('extra_databases', [])
+        kwargs.setdefault("compressed", False)
+        kwargs.setdefault("verify", True)
+        kwargs.setdefault("extra_databases", [])
         # set initial attributes
-        self.compressed = copy.copy(kwargs['compressed'])
+        self.compressed = copy.copy(kwargs["compressed"])
         self.constituents = None
         self.minor = None
         # set working data directory
         self.directory = None
-        if (directory is not None):
+        if directory is not None:
             self.directory = pyTMD.utilities.Path(directory)
         # set any extra databases
-        self.extra_databases = copy.copy(kwargs['extra_databases'])
+        self.extra_databases = copy.copy(kwargs["extra_databases"])
         self.format = None
         self.name = None
-        self.verify = copy.copy(kwargs['verify'])
+        self.verify = copy.copy(kwargs["verify"])
 
-    def from_database(self,
-            m: str,
-            group: tuple = ('z', 'u', 'v')
-        ):
+    def from_database(self, m: str, group: tuple = ("z", "u", "v")):
         """
         Create a model object from known tidal models
 
@@ -254,7 +251,7 @@ class model:
             if not hasattr(self, g):
                 continue
             # validate paths: grid file for OTIS, ATLAS models
-            if hasattr(self[g], 'grid_file'):
+            if hasattr(self[g], "grid_file"):
                 self[g].grid_file = self.pathfinder(self[g].grid_file)
             # validate paths: model constituent files
             self[g].model_file = self.pathfinder(self[g].model_file)
@@ -264,10 +261,11 @@ class model:
         self.__parameters__ = self.to_dict(serialize=True)
         return self
 
-    def from_file(self,
-            definition_file: str | pathlib.Path | io.IOBase,
-            **kwargs,
-        ):
+    def from_file(
+        self,
+        definition_file: str | pathlib.Path | io.IOBase,
+        **kwargs,
+    ):
         """
         Create a model object from an input definition file
 
@@ -281,7 +279,7 @@ class model:
             self._parse_file(definition_file)
         elif isinstance(definition_file, (str, pathlib.Path)):
             definition_file = pyTMD.utilities.Path(definition_file)
-            with definition_file.open(mode='r', encoding='utf8') as fid:
+            with definition_file.open(mode="r", encoding="utf8") as fid:
                 self._parse_file(fid)
         # set dictionary of parameters
         self.__parameters__ = self.to_dict(serialize=True)
@@ -298,7 +296,7 @@ class model:
             Python dictionary for creating model object
         """
         for key, val in d.items():
-            if isinstance(val, dict) and key not in ('projection',):
+            if isinstance(val, dict) and key not in ("projection",):
                 setattr(self, key, DataBase(val))
             else:
                 setattr(self, key, copy.copy(val))
@@ -317,36 +315,35 @@ class model:
             Serialize dictionary for JSON output
         """
         # default fields
-        keys = ['name', 'format', 'projection', 'reference', 'z', 'u', 'v']
+        keys = ["name", "format", "projection", "reference", "z", "u", "v"]
         # set default keyword arguments
-        kwargs.setdefault('fields', keys)
-        kwargs.setdefault('serialize', False)
+        kwargs.setdefault("fields", keys)
+        kwargs.setdefault("serialize", False)
         # output dictionary
         d = {}
         # for each field
-        for key in kwargs['fields']:
+        for key in kwargs["fields"]:
             if hasattr(self, key) and getattr(self, key) is not None:
                 d[key] = getattr(self, key)
         # serialize dictionary for JSON output
-        if kwargs['serialize']:
+        if kwargs["serialize"]:
             d = self.serialize(d)
         # return the model dictionary
         return d
 
     @property
     def gzip(self) -> str:
-        """Returns suffix for gzip compression
-        """
-        return '.gz' if self.compressed else ''
+        """Returns suffix for gzip compression"""
+        return ".gz" if self.compressed else ""
 
     @property
     def corrections(self) -> str:
         """
         Returns the corrections group for the model
         """
-        part1, _, part2 = self.format.partition('-')
-        if self.format in ('GOT-ascii', ):
-            return 'perth3'
+        part1, _, part2 = self.format.partition("-")
+        if self.format in ("GOT-ascii",):
+            return "perth3"
         else:
             return part1
 
@@ -355,20 +352,19 @@ class model:
         """
         Returns the file format for the model
         """
-        part1, _, part2 = self.format.partition('-')
-        if self.format in ('ATLAS-compact'):
+        part1, _, part2 = self.format.partition("-")
+        if self.format in ("ATLAS-compact"):
             return part1
-        elif ('-' in self.format):
+        elif "-" in self.format:
             return part2
         else:
             return self.format
-        
+
     @property
     def multifile(self) -> bool:
-        """Returns if the model uses individual files for constituents
-        """
+        """Returns if the model uses individual files for constituents"""
         # try to find a valid mode group
-        for g in ('z', 'u', 'v'):
+        for g in ("z", "u", "v"):
             # verify case of model group
             g = g.lower()
             # skip if model group is unavailable
@@ -378,10 +374,9 @@ class model:
 
     @property
     def crs(self):
-        """Coordinate reference system of the model
-        """
+        """Coordinate reference system of the model"""
         # default is EPSG:4326 (WGS84)
-        CRS = self.get('projection', 4326)
+        CRS = self.get("projection", 4326)
         return pyproj.CRS.from_user_input(CRS)
 
     @staticmethod
@@ -394,7 +389,7 @@ class model:
         # extract all known formats
         format_list = []
         for model, val in parameters.items():
-            format_list.append(val['format'])
+            format_list.append(val["format"])
         # return unique list of formats
         return sorted(set(format_list))
 
@@ -408,9 +403,9 @@ class model:
         # extract all known ocean tide elevation models
         model_list = []
         for model, val in parameters.items():
-            if ('z' in val) and (val['z']['variable'] == 'tide_ocean'):
+            if ("z" in val) and (val["z"]["variable"] == "tide_ocean"):
                 model_list.append(model)
-            if ('z' in val) and (val['z']['variable'] == 'tide_lpe'):
+            if ("z" in val) and (val["z"]["variable"] == "tide_lpe"):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -425,7 +420,7 @@ class model:
         # extract all known load tide elevation models
         model_list = []
         for model, val in parameters.items():
-            if ('z' in val) and (val['z']['variable'] == 'tide_load'):
+            if ("z" in val) and (val["z"]["variable"] == "tide_load"):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -440,7 +435,7 @@ class model:
         # extract all known ocean tide current models
         model_list = []
         for model, val in parameters.items():
-            if ('u' in val) or ('v' in val):
+            if ("u" in val) or ("v" in val):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -455,7 +450,7 @@ class model:
         # extract all known OTIS models
         model_list = []
         for model, val in parameters.items():
-            if (val['format'] == 'OTIS'):
+            if val["format"] == "OTIS":
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -470,7 +465,7 @@ class model:
         # extract all known ATLAS-compact models
         model_list = []
         for model, val in parameters.items():
-            if (val['format'] == 'ATLAS-compact'):
+            if val["format"] == "ATLAS-compact":
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -485,7 +480,7 @@ class model:
         # extract all known TMD3 models
         model_list = []
         for model, val in parameters.items():
-            if (val['format'] == 'TMD3'):
+            if val["format"] == "TMD3":
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -500,7 +495,7 @@ class model:
         # extract all known TMD3 models
         model_list = []
         for model, val in parameters.items():
-            if (val['format'] == 'ATLAS-netcdf'):
+            if val["format"] == "ATLAS-netcdf":
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -515,7 +510,7 @@ class model:
         # extract all known GOT-ascii or GOT-netcdf models
         model_list = []
         for model, val in parameters.items():
-            if val['format'] in ('GOT-ascii', 'GOT-netcdf'):
+            if val["format"] in ("GOT-ascii", "GOT-netcdf"):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -530,7 +525,7 @@ class model:
         # extract all known FES-ascii or FES-netcdf models
         model_list = []
         for model, val in parameters.items():
-            if val['format'] in ('FES-ascii', 'FES-netcdf'):
+            if val["format"] in ("FES-ascii", "FES-netcdf"):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -553,7 +548,8 @@ class model:
             valid = all([f.exists() for f in output_file])
         elif isinstance(model_file, str):
             output_file = self.directory.joinpath(
-                ''.join([model_file, self.gzip]))
+                "".join([model_file, self.gzip])
+            )
             valid = output_file.exists()
         # check that (all) output files exist
         if self.verify and not valid and not self.compressed:
@@ -582,7 +578,7 @@ class model:
         else:
             return self
         # raise an exception
-        raise IOError('Cannot load model definition file')
+        raise IOError("Cannot load model definition file")
 
     def _parse_json(self, fid: io.IOBase):
         """
@@ -601,27 +597,31 @@ class model:
         assert temp.name
         temp.validate_format()
         # verify parameters for each model format
-        if temp.format in ('OTIS','ATLAS-compact','ATLAS-netcdf',):
+        if temp.format in (
+            "OTIS",
+            "ATLAS-compact",
+            "ATLAS-netcdf",
+        ):
             # extract model files
-            for g in ('z', 'u', 'v'):
+            for g in ("z", "u", "v"):
                 # check that model group is available
                 if not hasattr(temp, g):
                     continue
                 assert temp[g].grid_file
                 # check if grid file is relative or absolute
-                if (temp.directory is not None):
-                    temp[g].grid_file = \
-                        temp.directory.joinpath(temp[g].grid_file)
+                if temp.directory is not None:
+                    temp[g].grid_file = temp.directory.joinpath(
+                        temp[g].grid_file
+                    )
                 else:
-                    temp[g].grid_file = \
-                        pyTMD.utilities.Path(temp[g].grid_file)
+                    temp[g].grid_file = pyTMD.utilities.Path(temp[g].grid_file)
         # extract model files
-        for g in ('z', 'u', 'v'):
+        for g in ("z", "u", "v"):
             # check that model group is available
             if not hasattr(temp, g):
                 continue
             # get model files for model group
-            if (temp.directory is not None):
+            if temp.directory is not None:
                 # use glob strings to find files in directory
                 glob_string = copy.copy(temp[g].model_file)
                 # search singular glob string or iterable glob strings
@@ -635,13 +635,14 @@ class model:
                         temp[g].model_file.extend(temp.directory.glob(p))
             elif isinstance(temp[g].model_file, list):
                 # resolve paths to model files
-                temp[g].model_file = [pyTMD.utilities.Path(f) for f in
-                    temp[g].model_file]
+                temp[g].model_file = [
+                    pyTMD.utilities.Path(f) for f in temp[g].model_file
+                ]
             else:
                 # fully defined single file case
                 temp[g].model_file = pyTMD.utilities.Path(temp[g].model_file)
         # verify that projection attribute exists for projected models
-        if temp.format in ('OTIS','ATLAS-compact','TMD3'):
+        if temp.format in ("OTIS", "ATLAS-compact", "TMD3"):
             assert temp.projection
         # return the model parameters
         return temp
@@ -649,12 +650,16 @@ class model:
     def validate_format(self):
         """Asserts that the model format is a known type"""
         # known remapped cases
-        mapping = [('ATLAS','ATLAS-compact'), ('netcdf','ATLAS-netcdf'),
-            ('FES','FES-netcdf'), ('GOT','GOT-ascii')]
+        mapping = [
+            ("ATLAS", "ATLAS-compact"),
+            ("netcdf", "ATLAS-netcdf"),
+            ("FES", "FES-netcdf"),
+            ("GOT", "GOT-ascii"),
+        ]
         # iterate over known remapped cases
         for m in mapping:
             # check if tide model is a remapped case
-            if (self.format == m[0]):
+            if self.format == m[0]:
                 self.format = m[1]
         # assert that tide model is a known format
         assert self.format in self.known_formats()
@@ -673,7 +678,9 @@ class model:
             val = copy.copy(d[key])
             if isinstance(val, pathlib.Path):
                 d[key] = str(val)
-            elif isinstance(val, (list, tuple)) and isinstance(val[0], pathlib.Path):
+            elif isinstance(val, (list, tuple)) and isinstance(
+                val[0], pathlib.Path
+            ):
                 d[key] = [str(v) for v in val]
             elif isinstance(val, dict):
                 d[key] = self.serialize(val)
@@ -682,10 +689,7 @@ class model:
         # return the model dictionary
         return d
 
-    def parse_constituents(self,
-            group: str = 'z',
-            **kwargs
-        ) -> list:
+    def parse_constituents(self, group: str = "z", **kwargs) -> list:
         """
         Parses tide model files for a list of model constituents
 
@@ -708,10 +712,7 @@ class model:
         return self
 
     @staticmethod
-    def parse_file(
-            model_file: str | pathlib.Path,
-            raise_error: bool = False
-        ):
+    def parse_file(model_file: str | pathlib.Path, raise_error: bool = False):
         """
         Parses a model file for a tidal constituent name
 
@@ -729,6 +730,7 @@ class model:
         """
         # import constituents parser
         from pyTMD.constituents import _parse_name
+
         # convert to pathlib.Path
         model_file = pathlib.Path(model_file)
         # try to parse the constituent name from the file name
@@ -738,14 +740,11 @@ class model:
             pass
         # if no constituent name is found
         if raise_error:
-            raise ValueError(f'Constituent not found in file {model_file}')
+            raise ValueError(f"Constituent not found in file {model_file}")
         else:
             return None
 
-    def reduce_constituents(self,
-            constituents: str | list,
-            group: str = 'z'
-        ):
+    def reduce_constituents(self, constituents: str | list, group: str = "z"):
         """
         Reduce model files to a subset of constituents
 
@@ -766,14 +765,15 @@ class model:
         try:
             self.parse_constituents(group=group, raise_error=True)
         except ValueError as exc:
-            return None   
+            return None
         # only run for multiple files
         if isinstance(self[group].model_file, list):
             # multiple file case
             # filter model files to constituents
             self[group].model_file = [
                 self[group].model_file[self.constituents.index(c)]
-                for c in constituents if (c in self.constituents)
+                for c in constituents
+                if (c in self.constituents)
             ]
         # update list of constituents
         self.parse_constituents(group=group)
@@ -783,62 +783,68 @@ class model:
     def open_dataset(self, **kwargs):
         # import tide model functions
         from pyTMD.io import OTIS, ATLAS, GOT, FES
+
         # import tide model functions
         # set default keyword arguments
-        kwargs.setdefault('group', 'z')
-        kwargs.setdefault('use_default_units', True)
-        kwargs.setdefault('append_node', False)
-        kwargs.setdefault('compressed', self.compressed)
-        kwargs.setdefault('constituents', None)
+        kwargs.setdefault("group", "z")
+        kwargs.setdefault("use_default_units", True)
+        kwargs.setdefault("append_node", False)
+        kwargs.setdefault("compressed", self.compressed)
+        kwargs.setdefault("constituents", None)
         # model group
-        group = kwargs['group'].lower()
-        assert group in ('z', 'u', 'v'), f"Invalid model group {group}"
+        group = kwargs["group"].lower()
+        assert group in ("z", "u", "v"), f"Invalid model group {group}"
         # extract model file
-        model_file = self[group].get('model_file')
+        model_file = self[group].get("model_file")
         # reduce constituents if specified
-        self.reduce_constituents(kwargs['constituents'])
-        if self.format in ('OTIS', 'ATLAS-compact', 'TMD3'):
+        self.reduce_constituents(kwargs["constituents"])
+        if self.format in ("OTIS", "ATLAS-compact", "TMD3"):
             # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
-            ds = OTIS.open_dataset(model_file, 
-                grid_file=self[group].get('grid_file'),
+            ds = OTIS.open_dataset(
+                model_file,
+                grid_file=self[group].get("grid_file"),
                 format=self.file_format,
-                crs=self.crs, **kwargs)
-        elif self.format in ('ATLAS-netcdf',):
+                crs=self.crs,
+                **kwargs,
+            )
+        elif self.format in ("ATLAS-netcdf",):
             # open ATLAS netCDF4 files as xarray Dataset
-            ds = ATLAS.open_dataset(model_file, 
-                grid_file=self[group].get('grid_file'),
-                format=self.file_format, **kwargs)
-        elif self.format in ('GOT-ascii', 'GOT-netcdf'):
+            ds = ATLAS.open_dataset(
+                model_file,
+                grid_file=self[group].get("grid_file"),
+                format=self.file_format,
+                **kwargs,
+            )
+        elif self.format in ("GOT-ascii", "GOT-netcdf"):
             # open GOT ASCII/netCDF4 files as xarray Dataset
-            ds = GOT.open_mfdataset(model_file,
-                format=self.file_format, **kwargs)
-        elif self.format in ('FES-ascii', 'FES-netcdf'):
+            ds = GOT.open_mfdataset(
+                model_file, format=self.file_format, **kwargs
+            )
+        elif self.format in ("FES-ascii", "FES-netcdf"):
             # open FES ASCII/netCDF4 files as xarray Dataset
-            ds = FES.open_mfdataset(model_file,
-                format=self.file_format, **kwargs)
+            ds = FES.open_mfdataset(
+                model_file, format=self.file_format, **kwargs
+            )
         # append node equilibrium tide if not in constituents list
-        if kwargs['append_node'] and ('node' not in ds.tmd.constituents):
+        if kwargs["append_node"] and ("node" not in ds.tmd.constituents):
             # calculate and append node equilibrium tide
             ds = ds.tmd.node_equilibrium()
         # add attributes
-        ds.attrs['source'] = self.name
+        ds.attrs["source"] = self.name
         # add coordinate reference system to Dataset
-        ds.attrs['crs'] = self.crs.to_dict()
+        ds.attrs["crs"] = self.crs.to_dict()
         # list of constituents
         c = ds.tmd.constituents
         # set units attribute if not already set
         # (uses value defined in the model database)
-        ds[c].attrs['units'] = ds[c].attrs.get('units', self[group].units)
+        ds[c].attrs["units"] = ds[c].attrs.get("units", self[group].units)
         # convert to default units
-        if kwargs['use_default_units']:
+        if kwargs["use_default_units"]:
             ds = ds.tmd.to_default_units()
         # return xarray dataset
         return ds
 
-    def open_datatree(self,
-            group: tuple = ('z', 'u', 'v'),
-            **kwargs
-        ):
+    def open_datatree(self, group: tuple = ("z", "u", "v"), **kwargs):
         """
         Create a model object from known tidal models
 
@@ -862,12 +868,11 @@ class model:
         return dtree
 
     def __str__(self):
-        """String representation of the ``io.model`` object
-        """
-        properties = ['pyTMD.io.model']
+        """String representation of the ``io.model`` object"""
+        properties = ["pyTMD.io.model"]
         properties.append(f"    name: {self.name}")
-        return '\n'.join(properties)
-    
+        return "\n".join(properties)
+
     def get(self, key, default=None):
         return getattr(self, key, default) or default
 

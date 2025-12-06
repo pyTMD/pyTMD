@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 IERS.py
 Written by Tyler Sutterley (11/2025)
 
@@ -43,19 +43,20 @@ UPDATE HISTORY:
     Updated 12/2018: Compatibility updates for Python3
     Written 09/2017
 """
+
 from __future__ import annotations
 
 import re
 import gzip
+import pyproj
 import pathlib
 import warnings
 import numpy as np
 import xarray as xr
 import pyTMD.utilities
+
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
-# attempt imports
-pyproj = pyTMD.utilities.import_dependency('pyproj')
 
 __all__ = [
     "open_dataset",
@@ -63,15 +64,16 @@ __all__ = [
 
 # ocean pole tide file from Desai (2002) and IERS conventions
 _ocean_pole_tide_file = pyTMD.utilities.get_data_path(
-    ['data','opoleloadcoefcmcor.txt.gz']
+    ["data", "opoleloadcoefcmcor.txt.gz"]
 )
+
 
 # PURPOSE: read real and imaginary ocean pole tide coefficients
 def open_dataset(
-        input_file: str | pathlib.Path = _ocean_pole_tide_file,
-        chunks: int | dict | str | None = None,
-        **kwargs
-    ):
+    input_file: str | pathlib.Path = _ocean_pole_tide_file,
+    chunks: int | dict | str | None = None,
+    **kwargs,
+):
     """
     Open Ocean Pole Tide ASCII files from
     :cite:p:`Desai:2002ev,Desai:2015jr`
@@ -93,20 +95,20 @@ def open_dataset(
         Ocean pole tide data
     """
     # set default keyword arguments
-    kwargs.setdefault('compressed', True)
+    kwargs.setdefault("compressed", True)
     # default coordinate reference system is EPSG:4326 (WGS84)
-    crs = kwargs.get('crs', 4326)
+    crs = kwargs.get("crs", 4326)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if input_file.is_local() and not input_file.exists():
-        raise FileNotFoundError(f'File not found: {input_file}')
+        raise FileNotFoundError(f"File not found: {input_file}")
     # read compressed ocean pole tide file
-    if kwargs['compressed']:
+    if kwargs["compressed"]:
         # read gzipped ascii file
-        with gzip.open(input_file, 'rb') as f:
-            file_contents = f.read().decode('utf8').splitlines()
+        with gzip.open(input_file, "rb") as f:
+            file_contents = f.read().decode("utf8").splitlines()
     else:
-        with open(input_file, mode='r', encoding='utf8') as f:
+        with open(input_file, mode="r", encoding="utf8") as f:
             file_contents = f.read().splitlines()
 
     # counts the number of lines in the header
@@ -118,52 +120,54 @@ def open_dataset(
         # file line at count
         line = file_contents[count]
         # detect the end of the header text
-        HEADER = not bool(re.match(r'---------', line))
+        HEADER = not bool(re.match(r"---------", line))
         # parse key-value pairs from header
-        key, _, val = line.partition('=')
+        key, _, val = line.partition("=")
         parameters[key.strip().lower()] = val.strip()
         # add 1 to counter
         count += 1
 
     # grid parameters and dimensions
-    dlon = float(parameters['longitude_step_degrees'])
-    dlat = float(parameters['latitude_step_degrees'])
-    nlon = int(parameters['number_longitude_grid_points'])
-    nlat = int(parameters['number_latitude_grid_points'])
+    dlon = float(parameters["longitude_step_degrees"])
+    dlat = float(parameters["latitude_step_degrees"])
+    nlon = int(parameters["number_longitude_grid_points"])
+    nlat = int(parameters["number_latitude_grid_points"])
     # create grid vectors (coerce to -180:180 longitude convention)
-    lon_start = -180.0 + dlon/2.0
-    lat_start = float(parameters['first_latitude_degrees'])
-    lon = lon_start + np.arange(nlon)*dlon
-    lat = lat_start + np.arange(nlat)*dlat
+    lon_start = -180.0 + dlon / 2.0
+    lat_start = float(parameters["first_latitude_degrees"])
+    lon = lon_start + np.arange(nlon) * dlon
+    lat = lat_start + np.arange(nlat) * dlat
     # data dictionary
-    var = dict(dims=('y', 'x'), coords={}, data_vars={})
-    var["coords"]["y"] = dict(data=lat.copy(), dims='y')
-    var["coords"]["x"] = dict(data=lon.copy(), dims='x')
+    var = dict(dims=("y", "x"), coords={}, data_vars={})
+    var["coords"]["y"] = dict(data=lat.copy(), dims="y")
+    var["coords"]["x"] = dict(data=lon.copy(), dims="x")
     # allocate for output grid maps
-    for key in ['R','N','E']:
+    for key in ["R", "N", "E"]:
         var["data_vars"][key] = {}
-        var["data_vars"][key]["dims"] = ('y', 'x')
+        var["data_vars"][key]["dims"] = ("y", "x")
         data = np.zeros((nlat, nlon), dtype=np.clongdouble)
         var["data_vars"][key]["data"] = data
 
     # read lines of file and add to output variables
-    for i,line in enumerate(file_contents[count:]):
+    for i, line in enumerate(file_contents[count:]):
         # read line of ocean pole tide file
-        ln,lt,urr,uri,unr,uni,uer,uei = np.array(line.split(), dtype='f8')
+        ln, lt, urr, uri, unr, uni, uer, uei = np.array(
+            line.split(), dtype="f8"
+        )
         # calculate indices of output grid
         # coerce to -180:180 longitude convention
-        ilon = int(np.mod(ln - lon_start, 360.0)//dlon) 
-        ilat = int((lt - lat_start)//dlat)
+        ilon = int(np.mod(ln - lon_start, 360.0) // dlon)
+        ilat = int((lt - lat_start) // dlat)
         # assign ocean pole tide coefficients to output variables
-        var["data_vars"]["R"]["data"][ilat,ilon] = urr + 1j*uri
-        var["data_vars"]["N"]["data"][ilat,ilon] = unr + 1j*uni
-        var["data_vars"]["E"]["data"][ilat,ilon] = uer + 1j*uei
+        var["data_vars"]["R"]["data"][ilat, ilon] = urr + 1j * uri
+        var["data_vars"]["N"]["data"][ilat, ilon] = unr + 1j * uni
+        var["data_vars"]["E"]["data"][ilat, ilon] = uer + 1j * uei
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
     # coerce to specified chunks
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes
-    ds.attrs['crs'] = pyproj.CRS.from_user_input(crs).to_dict()
+    ds.attrs["crs"] = pyproj.CRS.from_user_input(crs).to_dict()
     # return xarray dataset
     return ds

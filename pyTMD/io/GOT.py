@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 GOT.py
 Written by Tyler Sutterley (11/2025)
 
@@ -59,6 +59,7 @@ UPDATE HISTORY:
     Updated 08/2018: added multivariate spline interpolation option
     Written 07/2018
 """
+
 from __future__ import division, annotations
 
 import re
@@ -70,24 +71,26 @@ import xarray as xr
 import pyTMD.version
 import pyTMD.constituents
 import pyTMD.utilities
+
 # attempt imports
-dask = pyTMD.utilities.import_dependency('dask')
-dask_available = pyTMD.utilities.dependency_available('dask')
+dask = pyTMD.utilities.import_dependency("dask")
+dask_available = pyTMD.utilities.dependency_available("dask")
 
 __all__ = [
-    'open_mfdataset',
-    'open_got_dataset',
-    'open_got_ascii',
-    'open_got_netcdf',
-    'GOTDataset',
+    "open_mfdataset",
+    "open_got_dataset",
+    "open_got_ascii",
+    "open_got_netcdf",
+    "GOTDataset",
 ]
+
 
 # PURPOSE: read a list of GOT ASCII or netCDF4 files
 def open_mfdataset(
-        model_files: list[str] | list[pathlib.Path],
-        parallel: bool = False,
-        **kwargs,
-    ):
+    model_files: list[str] | list[pathlib.Path],
+    parallel: bool = False,
+    **kwargs,
+):
     """
     Open multiple GOT model files
 
@@ -114,17 +117,15 @@ def open_mfdataset(
     d = [opener(f, **kwargs) for f in model_files]
     # read datasets as dask arrays
     if parallel and dask_available:
-        d, = dask.compute(d)
+        (d,) = dask.compute(d)
     # merge datasets
-    ds = xr.merge(d, compat='override')
+    ds = xr.merge(d, compat="override")
     # return xarray dataset
     return ds
 
+
 # PURPOSE: reads a GOT ASCII or netCDF4 file
-def open_got_dataset(
-        input_file: str | pathlib.Path,
-        **kwargs
-    ):
+def open_got_dataset(input_file: str | pathlib.Path, **kwargs):
     """
     Open GOT-formatted model files
 
@@ -139,36 +140,37 @@ def open_got_dataset(
             - ``'netcdf'``: GOT netCDF4 format
     **kwargs: dict
         additional keyword arguments for opening GOT files
-    
+
     Returns
     -------
     ds: xarray.Dataset
         GOT tide model data
     """
     # detect file format if not provided
-    if kwargs.get('format', None) is None:
-        kwargs['format'] = pyTMD.utilities.detect_format(input_file)
+    if kwargs.get("format", None) is None:
+        kwargs["format"] = pyTMD.utilities.detect_format(input_file)
     # detect if file is compressed if not provided
-    if kwargs.get('compressed', None) is None:
-        kwargs['compressed'] = pyTMD.utilities.detect_compression(input_file)
+    if kwargs.get("compressed", None) is None:
+        kwargs["compressed"] = pyTMD.utilities.detect_compression(input_file)
     # read constituent from elevation file
-    if kwargs['format'] == 'ascii':
+    if kwargs["format"] == "ascii":
         # GOT ascii constituent files
         ds = open_got_ascii(input_file, **kwargs)
-    elif kwargs['format'] == 'netcdf':
+    elif kwargs["format"] == "netcdf":
         # GOT netCDF4 constituent files
         ds = open_got_netcdf(input_file, **kwargs)
     else:
-        raise ValueError(f"Unrecognized file format: {kwargs['format']}") 
+        raise ValueError(f"Unrecognized file format: {kwargs['format']}")
     # return dataset
     return ds
 
+
 # PURPOSE: read GOT ASCII files
 def open_got_ascii(
-        input_file: str | pathlib.Path,
-        chunks: int | dict | str | None = None,
-        **kwargs
-    ):
+    input_file: str | pathlib.Path,
+    chunks: int | dict | str | None = None,
+    **kwargs,
+):
     """
     Open GOT-formatted ASCII files
 
@@ -187,24 +189,24 @@ def open_got_ascii(
         GOT tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('compressed', False)
+    kwargs.setdefault("compressed", False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if input_file.is_local() and not input_file.exists():
-        raise FileNotFoundError(f'File not found: {input_file}')
+        raise FileNotFoundError(f"File not found: {input_file}")
     # read the ASCII-format tide elevation file
-    if kwargs['compressed']:
+    if kwargs["compressed"]:
         # read gzipped ascii file
-        with gzip.open(input_file, 'rb') as f:
-            file_contents = f.read().decode('utf8').splitlines()
+        with gzip.open(input_file, "rb") as f:
+            file_contents = f.read().decode("utf8").splitlines()
     else:
-        with open(input_file, mode="r", encoding='utf8') as f:
+        with open(input_file, mode="r", encoding="utf8") as f:
             file_contents = f.read().splitlines()
     # parse header text
     # constituent identifier
     cons = pyTMD.constituents._parse_name(file_contents[0])
     # get units
-    units = re.findall(r'\((\w+m)\)', file_contents[0], re.IGNORECASE)
+    units = re.findall(r"\((\w+m)\)", file_contents[0], re.IGNORECASE)
     # grid dimensions
     nlat, nlon = np.array(file_contents[2].split(), dtype=int)
     # longitude range
@@ -220,30 +222,30 @@ def open_got_ascii(
     lat = np.linspace(ilat[0], ilat[1], nlat)
     lon = np.linspace(ilon[0], ilon[1], nlon)
     # data dictionary
-    var = dict(dims=('y', 'x'), coords={}, data_vars={})
-    var["coords"]["y"] = dict(data=lat.copy(), dims='y')
-    var["coords"]["x"] = dict(data=lon.copy(), dims='x')
+    var = dict(dims=("y", "x"), coords={}, data_vars={})
+    var["coords"]["y"] = dict(data=lat.copy(), dims="y")
+    var["coords"]["x"] = dict(data=lon.copy(), dims="x")
     # input amplitude and phase
     amp = np.zeros((nlat, nlon), dtype=np.float32)
     ph = np.zeros((nlat, nlon), dtype=np.float32)
     # starting lines to fill amplitude and phase variables
     l1 = 7
-    l2 = 14 + int(nlon//ncol)*nlat + nlat
+    l2 = 14 + int(nlon // ncol) * nlat + nlat
     # for each latitude
     for i in range(nlat):
-        for j in range(nlon//ncol):
-            j1 = j*ncol
+        for j in range(nlon // ncol):
+            j1 = j * ncol
             # amplitude and phase are on two separate rows
-            amp[i,j1:j1+ncol] = np.array(file_contents[l1].split())
-            ph[i,j1:j1+ncol] = np.array(file_contents[l2].split())
+            amp[i, j1 : j1 + ncol] = np.array(file_contents[l1].split())
+            ph[i, j1 : j1 + ncol] = np.array(file_contents[l2].split())
             l1 += 1
             l2 += 1
         # add last row of tidal variables
-        j1 = (j+1)*ncol
+        j1 = (j + 1) * ncol
         j2 = nlon % ncol
         # amplitude and phase are on two separate rows
-        amp[i,j1:j1+j2] = np.array(file_contents[l1].split())
-        ph[i,j1:j1+j2] = np.array(file_contents[l2].split())
+        amp[i, j1 : j1 + j2] = np.array(file_contents[l1].split())
+        ph[i, j1 : j1 + j2] = np.array(file_contents[l2].split())
         l1 += 1
         l2 += 1
     # convert to masked arrays
@@ -251,26 +253,27 @@ def open_got_ascii(
     ph = np.ma.masked_equal(ph, fill_value)
     # store the data variables
     var["data_vars"][cons] = {}
-    var["data_vars"][cons]["dims"] = ('y', 'x')
-    var["data_vars"][cons]["data"] = amp*np.exp(-1j*ph*np.pi/180.0)
+    var["data_vars"][cons]["dims"] = ("y", "x")
+    var["data_vars"][cons]["data"] = amp * np.exp(-1j * ph * np.pi / 180.0)
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
     # coerce to specified chunks
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes
-    ds.attrs['group'] = 'z'
+    ds.attrs["group"] = "z"
     if units:
-        ds[cons].attrs['units'] = units[0].lower()
+        ds[cons].attrs["units"] = units[0].lower()
     # return xarray dataset
     return ds
 
+
 # PURPOSE: read GOT netCDF4 files
 def open_got_netcdf(
-        input_file: str | pathlib.Path,
-        chunks: int | dict | str | None = None,
-        **kwargs
-    ):
+    input_file: str | pathlib.Path,
+    chunks: int | dict | str | None = None,
+    **kwargs,
+):
     """
     Open GOT-formatted netCDF4 files
 
@@ -289,51 +292,53 @@ def open_got_netcdf(
         GOT tide model data
     """
     # set default keyword arguments
-    kwargs.setdefault('compressed', False)
+    kwargs.setdefault("compressed", False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if input_file.is_local() and not input_file.exists():
-        raise FileNotFoundError(f'File not found: {input_file}')
+        raise FileNotFoundError(f"File not found: {input_file}")
     # read the netCDF4-format tide elevation file
-    if kwargs['compressed']:
+    if kwargs["compressed"]:
         # read gzipped netCDF4 file
-        f = gzip.open(input_file, 'rb')
+        f = gzip.open(input_file, "rb")
         tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
     # extract constituent from attribute
-    cons = pyTMD.constituents._parse_name(tmp.attrs['Constituent'])
+    cons = pyTMD.constituents._parse_name(tmp.attrs["Constituent"])
     # create output xarray dataset for file
     ds = xr.Dataset()
     # assign coordinates
-    ds.coords['x'] = tmp.longitude
-    ds.coords['y'] = tmp.latitude
+    ds.coords["x"] = tmp.longitude
+    ds.coords["y"] = tmp.latitude
     # calculate complex form of constituent oscillation
-    ds[cons] = tmp.amplitude*np.exp(-1j*tmp.phase*np.pi/180.0)
+    ds[cons] = tmp.amplitude * np.exp(-1j * tmp.phase * np.pi / 180.0)
     # rename coordinates
-    mapping_coords = dict(lon='x', lat='y')
+    mapping_coords = dict(lon="x", lat="y")
     ds = ds.rename(mapping_coords)
     # add attributes
-    ds.attrs['group'] = 'z'
-    ds[cons].attrs['units'] = tmp['amplitude'].attrs.get('units')
+    ds.attrs["group"] = "z"
+    ds[cons].attrs["units"] = tmp["amplitude"].attrs.get("units")
     # return xarray dataset
     return ds
 
+
 # PURPOSE: GOT utilities for xarray Datasets
-@xr.register_dataset_accessor('got')
+@xr.register_dataset_accessor("got")
 class GOTDataset:
-    """Accessor for extending an ``xarray.Dataset`` for GOT tidal models
-    """
+    """Accessor for extending an ``xarray.Dataset`` for GOT tidal models"""
+
     def __init__(self, ds):
         self._ds = ds
 
     # PURPOSE: output tidal constituent file in GOT netCDF format
-    def to_netcdf(self,
-            path: str | pathlib.Path,
-            mode: str = 'w',
-            encoding: dict = {"zlib": True, "complevel": 9},
-            **kwargs
-        ):
+    def to_netcdf(
+        self,
+        path: str | pathlib.Path,
+        mode: str = "w",
+        encoding: dict = {"zlib": True, "complevel": 9},
+        **kwargs,
+    ):
         """
         Writes tidal constituents to netCDF4 files in GOT format
 
@@ -351,39 +356,39 @@ class GOTDataset:
         # tilde-expand output path
         path = pyTMD.utilities.Path(path).resolve()
         # set default encoding
-        kwargs.setdefault('encoding', dict(amplitude=encoding, phase=encoding))
+        kwargs.setdefault("encoding", dict(amplitude=encoding, phase=encoding))
         # coordinate remapping
-        mapping_coords = dict(x='longitude', y='latitude')
+        mapping_coords = dict(x="longitude", y="latitude")
         attrs = dict(longitude={}, latitude={})
-        attrs['longitude'] = dict(units='degrees_east', long_name='longitude')
-        attrs['latitude'] = dict(units='degrees_north', long_name='latitude')
+        attrs["longitude"] = dict(units="degrees_east", long_name="longitude")
+        attrs["latitude"] = dict(units="degrees_north", long_name="latitude")
         # get longitude and latitude arrays
         # for each variable
         for v in self._ds.data_vars.keys():
             ds = xr.Dataset()
             # calculate amplitude and phase
-            ds['amplitude'] = self._ds[v].tmd.amplitude
-            ds['phase'] = self._ds[v].tmd.phase
-            ds['amplitude'].attrs['units'] = self._ds[v].attrs.get('units','')
-            ds['phase'].attrs['units'] = 'degrees'
-            ds['amplitude'].attrs['long_name'] = f'Tide amplitude'
-            ds['phase'].attrs['long_name'] = f'Greenwich tide phase lag'
+            ds["amplitude"] = self._ds[v].tmd.amplitude
+            ds["phase"] = self._ds[v].tmd.phase
+            ds["amplitude"].attrs["units"] = self._ds[v].attrs.get("units", "")
+            ds["phase"].attrs["units"] = "degrees"
+            ds["amplitude"].attrs["long_name"] = f"Tide amplitude"
+            ds["phase"].attrs["long_name"] = f"Greenwich tide phase lag"
             # define and fill constituent ID
-            ds['Constituent'] = v.upper().ljust(4).encode('utf8')
-            ds['Constituent'].attrs['_Encoding'] = 'utf8'
-            ds['Constituent'].attrs['long_name'] = 'tidal constituent'
+            ds["Constituent"] = v.upper().ljust(4).encode("utf8")
+            ds["Constituent"].attrs["_Encoding"] = "utf8"
+            ds["Constituent"].attrs["long_name"] = "tidal constituent"
             # remap coordinates to GOT convention
             ds = ds.rename(mapping_coords)
             # update variable attributes
             for att_name, att_val in attrs.items():
                 ds[att_name].attrs.update(att_val)
             # add global attributes
-            ds.attrs['title'] = 'GOT tidal constituent data'
-            ds.attrs['authors'] = 'Richard Ray'
-            ds.attrs['institution'] = 'NASA Goddard Space Flight Center'
-            ds.attrs['date_created'] = datetime.datetime.now().isoformat()
-            ds.attrs['software_reference'] = pyTMD.version.project_name
-            ds.attrs['software_version'] = pyTMD.version.full_version
+            ds.attrs["title"] = "GOT tidal constituent data"
+            ds.attrs["authors"] = "Richard Ray"
+            ds.attrs["institution"] = "NASA Goddard Space Flight Center"
+            ds.attrs["date_created"] = datetime.datetime.now().isoformat()
+            ds.attrs["software_reference"] = pyTMD.version.project_name
+            ds.attrs["software_version"] = pyTMD.version.full_version
             # write GOT netCDF4 file
             FILE = path.joinpath(f"{v}.nc")
             ds.to_netcdf(FILE, mode=mode, **kwargs)
