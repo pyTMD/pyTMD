@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_arcticdata.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (12/2025)
 Download Arctic Ocean Tide Models from the NSF ArcticData archive
 
 AODTM-5: https://arcticdata.io/catalog/view/doi:10.18739/A2901ZG3N
@@ -33,6 +33,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 12/2025: use URL class to build and operate on URLs
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to fetch_arcticdata
         made a callable function and added function docstrings
@@ -119,9 +120,10 @@ def fetch_arcticdata(
         pyTMD.utilities.quote_plus(posixpath.join("application", "bagit-097")),
         pyTMD.utilities.quote_plus(resource_map_doi),
     ]
+    URL = pyTMD.utilities.URL.from_parts(HOST)
     # download zipfile from host
-    logger.info(f"{posixpath.join(*HOST)} -->\n")
-    zfile = zipfile.ZipFile(pyTMD.utilities.from_http(HOST, timeout=timeout))
+    logger.info(f"{URL} -->\n")
+    zfile = zipfile.ZipFile(URL.get(timeout=timeout))
     # find model files within zip file
     rx = re.compile(r"(grid|h[0]?|UV[0]?|Model|xy)_(.*?)", re.VERBOSE)
     members = [m for m in zfile.filelist if rx.search(m.filename)]

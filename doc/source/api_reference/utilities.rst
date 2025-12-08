@@ -20,7 +20,9 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.dependency_available
 
-.. autoclass:: pyTMD.utilities.Path
+.. autofunction:: pyTMD.utilities.Path
+
+.. autoclass:: pyTMD.utilities.URL
    :members:
 
 .. autoclass:: pyTMD.utilities.reify

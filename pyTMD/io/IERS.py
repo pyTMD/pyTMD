@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 IERS.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 
 Reads ocean pole load tide coefficients provided by IERS
 http://maia.usno.navy.mil/conventions/2010/2010_official/chapter7/tn36_c7.pdf
@@ -25,6 +25,7 @@ REFERENCES:
         doi: 10.1007/s00190-015-0848-7
 
 UPDATE HISTORY:
+    Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 08/2024: convert outputs to be in -180:180 longitude convention
         added function to interpolate ocean pole tide values to coordinates
@@ -100,7 +101,7 @@ def open_dataset(
     crs = kwargs.get("crs", 4326)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_local() and not input_file.exists():
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
     # read compressed ocean pole tide file
     if kwargs["compressed"]:

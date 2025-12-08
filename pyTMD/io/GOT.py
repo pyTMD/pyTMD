@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GOT.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 
 Reads ascii and netCDF4 files from Richard Ray's Goddard Ocean Tide (GOT) model
     https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 10/2025: simplify ascii read function to use masked_equal
     Updated 08/2025: use numpy degree to radian conversions
@@ -192,7 +193,7 @@ def open_got_ascii(
     kwargs.setdefault("compressed", False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_local() and not input_file.exists():
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
     # read the ASCII-format tide elevation file
     if kwargs["compressed"]:
@@ -295,7 +296,7 @@ def open_got_netcdf(
     kwargs.setdefault("compressed", False)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_local() and not input_file.exists():
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
     # read the netCDF4-format tide elevation file
     if kwargs["compressed"]:

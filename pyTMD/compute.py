@@ -63,6 +63,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 12/2025: use coords functions to convert x and y to DataArrays
+        no longer subclassing pathlib.Path for working directories
     Updated 11/2025: use xarray DataArrays for input coordinates
         outputs from prediction functions will be also be DataArrays
     Updated 10/2025: change default directory for tide models to cache
@@ -333,7 +334,7 @@ def tide_elevations(
     # check that tide directory is accessible
     if directory is not None:
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_local() and not directory.exists():
+        if isinstance(directory, pathlib.Path) and not directory.exists():
             raise FileNotFoundError("Directory not found")
 
     # validate input arguments
@@ -523,7 +524,7 @@ def tide_currents(
     # check that tide directory is accessible
     if directory is not None:
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_local() and not directory.exists():
+        if isinstance(directory, pathlib.Path) and not directory.exists():
             raise FileNotFoundError("Directory not found")
 
     # validate input arguments
@@ -651,7 +652,7 @@ def tide_masks(
     # check that tide directory is accessible
     if directory is not None:
         directory = pyTMD.utilities.Path(directory).resolve()
-        if directory.is_local() and not directory.exists():
+        if isinstance(directory, pathlib.Path) and not directory.exists():
             raise FileNotFoundError("Directory not found")
 
     # get parameters for tide model

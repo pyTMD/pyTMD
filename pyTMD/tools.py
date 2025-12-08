@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 tools.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (12/2025)
 Jupyter notebook, user interface and plotting tools
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://github.com/jupyter-widgets/ipyleaflet
 
 UPDATE HISTORY:
+    Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 10/2025: change default directory for tide models to cache
     Updated 08/2025: use numpy degree to radian conversions
     Updated 07/2025: add a default directory for tide models
@@ -59,7 +60,9 @@ class widgets:
         self.VBox = ipywidgets.VBox
 
         # default working data directory for tide models
-        default_directory = pyTMD.utilities.get_cache_path().compressuser()
+        default_directory = pyTMD.utilities.compressuser(
+            pyTMD.utilities.get_cache_path()
+        )
         # set the directory with tide models
         self.directory = ipywidgets.Text(
             value=str(default_directory),
