@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ATLAS.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 
 Reads netCDF4 ATLAS tidal solutions provided by Oregon State University
 
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
@@ -184,7 +185,7 @@ def open_atlas_grid(grid_file: str | pathlib.Path, group: str = "z", **kwargs):
         kwargs["compressed"] = pyTMD.utilities.detect_compression(grid_file)
     # tilde-expand input file
     grid_file = pyTMD.utilities.Path(grid_file).resolve()
-    if grid_file.is_local() and not grid_file.exists():
+    if isinstance(grid_file, pathlib.Path) and not grid_file.exists():
         raise FileNotFoundError(f"File not found: {grid_file}")
     # read the netCDF4-format tide elevation file
     if kwargs["compressed"]:
@@ -257,7 +258,7 @@ def open_atlas_dataset(
         kwargs["compressed"] = pyTMD.utilities.detect_compression(input_file)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
-    if input_file.is_local() and not input_file.exists():
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
     # read the netCDF4-format tide elevation file
     if kwargs["compressed"]:

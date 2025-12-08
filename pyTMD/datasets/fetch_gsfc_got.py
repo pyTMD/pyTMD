@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_gsfc_got.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (12/2025)
 Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
@@ -32,6 +32,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 12/2025: use URL class to build and operate on URLs
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to fetch_gsfc_got
         made a callable function and added function docstrings
@@ -122,11 +123,14 @@ def fetch_gsfc_got(
         "files",
         *PATH[model],
     ]
-    # download tarfile from host
-    logger.info(f"{posixpath.join(*url)} -->\n")
-    fileobj = pyTMD.utilities.from_http(url, timeout=timeout)
+    URL = pyTMD.utilities.URL.from_parts(url)
+    logger.info(f"{URL} -->\n")
     # open the tar file
-    tar = tarfile.open(name=PATH[model][-1], fileobj=fileobj, mode=TAR[model])
+    tar = tarfile.open(
+        name=URL.parts[-1],
+        fileobj=URL.get(timeout=timeout),
+        mode=TAR[model]
+    )
     # read tar file and extract all files
     member_files = [m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)]
     for m in member_files:

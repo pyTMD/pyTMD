@@ -32,9 +32,8 @@ def download_nodes(N=324, cleanup=False):
     matfile = f'md{N:05d}.mat'
     HOST = ['https://github.com','gradywright','spherepts','raw',
         'master','nodes','max_determinant',matfile]
-    pyTMD.utilities.from_http(HOST,
-        local=filepath.joinpath(matfile),
-        verbose=True)
+    URL = pyTMD.utilities.URL.from_parts(HOST)
+    URL.get(local=filepath.joinpath(matfile), verbose=True)
     yield
     # remove the node file
     if cleanup:

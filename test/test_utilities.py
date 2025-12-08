@@ -13,7 +13,7 @@ def test_hash():
     # get hash of compressed file
     ocean_pole_tide_file = pyTMD.utilities.get_data_path(['data',
         'opoleloadcoefcmcor.txt.gz'])
-    TEST = ocean_pole_tide_file.md5_hash
+    TEST = pyTMD.utilities.get_hash(ocean_pole_tide_file)
     assert (TEST == '9c66edc2d0fbf627e7ae1cb923a9f0e5')
     # get hash of uncompressed file
     with gzip.open(ocean_pole_tide_file) as fid:
@@ -29,8 +29,8 @@ def test_valid_url():
         's3://pytmd-scratch/CATS2008.zarr'
     ]
     for URL in URLS:
-        url = pyTMD.utilities.Path(URL)
-        assert url.is_url()
+        url = pyTMD.utilities.Path(URL).resolve()
+        assert pyTMD.utilities.is_valid_url(url)
     # test over some file paths
     PATHS = [
         pathlib.PurePosixPath('/home/user/data/CATS2008/grid_CATS2008'),
@@ -39,4 +39,4 @@ def test_valid_url():
     ]
     for PATH in PATHS:
         path = pyTMD.utilities.Path(PATH).resolve()
-        assert path.is_local()
+        assert not pyTMD.utilities.is_valid_url(path)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 verify_box_tpxo.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 Verifies downloaded TPXO9-atlas global tide models from the box file
     sharing service
 
@@ -26,6 +26,7 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 12/2025: use URL class to build and operate on URLs
     Updated 11/2025: use from_database to access model parameters
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: made a callable function and added function docstrings
@@ -119,12 +120,11 @@ def verify_box_tpxo(
     rx = re.compile(r"^({0})".format(r"|".join(regex_patterns)), re.VERBOSE)
 
     # box api url
-    HOST = posixpath.join("https://api.box.com", "2.0")
+    HOST = ["https://api.box.com", "2.0"]
+    URL = pyTMD.utilities.URL.from_parts(HOST)
     # get folder contents
-    folder_url = posixpath.join(HOST, "folders", folder_id, "items")
-    request = pyTMD.utilities.urllib2.Request(folder_url)
-    response = pyTMD.utilities.urllib2.urlopen(request)
-    folder_contents = json.loads(response.read())
+    folder_url = URL.joinpath("folders", folder_id, "items")
+    folder_contents = json.loads(folder_url.read())
     # find files of interest
     file_entries = [
         entry
@@ -134,13 +134,11 @@ def verify_box_tpxo(
     # for each file in the folder
     for entry in file_entries:
         # have insufficient permissions for downloading content
-        file_url = posixpath.join(HOST, "files", entry["id"])
+        file_url = URL.joinpath("files", entry["id"])
         # print remote path
         logger.info(f"{file_url} -->")
         # get last modified time for file
-        request = pyTMD.utilities.urllib2.Request(file_url)
-        response = pyTMD.utilities.urllib2.urlopen(request)
-        file_contents = json.loads(response.read())
+        file_contents = json.loads(file_url.read())
         modified_at = file_contents["modified_at"]
         remote_mtime = pyTMD.utilities.get_unix_time(
             modified_at, format="%Y-%m-%dT%H:%M:%S%z"

@@ -12588,7 +12588,7 @@ packages:
 - pypi: ./
   name: pytmd
   version: 3.0.0
-  sha256: 3b67a25174aa612f60d9e1e1ffc362acf42f8b3cfd43f94818775c402342e95f
+  sha256: 1fd0914b18e1b1c7b4b7cf2e45f60b2219b8837c98caf1c7811ad68c46aaad3b
   requires_dist:
   - h5netcdf
   - lxml
@@ -12630,7 +12630,7 @@ packages:
   - pytest>=4.6 ; extra == 'dev'
   - pytest-cov ; extra == 'dev'
   - pytest-xdist ; extra == 'dev'
-  requires_python: ~=3.6
+  requires_python: ~=3.9
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pytz-2025.2-pyhd8ed1ab_0.conda
   sha256: 8d2a8bf110cc1fc3df6904091dead158ba3e614d8402a83e51ed3a8aa93cdeb0

@@ -11,6 +11,8 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 12/2025: add URL class to build and operate on URLs
+        no longer subclassing pathlib.Path for working directories
     Updated 11/2025: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for compression and model format
@@ -94,9 +96,11 @@ __all__ = [
     "dependency_available",
     "is_valid_url",
     "Path",
+    "URL",
     "reify",
     "detect_format",
     "detect_compression",
+    "compressuser",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -134,7 +138,7 @@ def get_data_path(relpath: list | str | pathlib.Path):
     """
     # current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
-    filepath = Path(filename).absolute().parent
+    filepath = pathlib.Path(filename).absolute().parent
     if isinstance(relpath, list):
         # use *splat operator to extract from list
         return filepath.joinpath(*relpath)
@@ -163,7 +167,7 @@ def get_cache_path(
         filepath = filepath.joinpath(*relpath)
     elif isinstance(relpath, (str, pathlib.Path)):
         filepath = filepath.joinpath(relpath)
-    return Path(filepath)
+    return pathlib.Path(filepath)
 
 
 def import_dependency(
@@ -251,97 +255,126 @@ def is_valid_url(url: str) -> bool:
         return False
 
 
-class Path(pathlib.Path):
-    """``Pathlib.Path`` subclass with additional methods and properties"""
+def Path(filename: str | pathlib.Path, *args, **kwargs):
+    """
+    Create a ``URL`` or ``pathlib.Path`` object
 
-    def __init__(self, filename: str | pathlib.Path, *args, **kwargs):
-        if is_valid_url(filename):
-            self.filename = str(filename)
-            self._raw_paths = list(url_split(self.filename))
-        else:
-            super().__init__(filename)
-            self.filename = pathlib.Path(filename, *args, **kwargs)
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        file path or URL
+    """
+    if is_valid_url(filename):
+        return URL(filename, *args, **kwargs)
+    else:
+        return pathlib.Path(filename, *args, **kwargs)
 
-    def joinpath(self, *args):
-        """Join path components to the existing path"""
-        if self.is_url():
-            return Path("/".join([self.filename, *args]))
-        else:
-            return Path(self.filename.joinpath(*args))
 
-    # PURPOSE: platform independent file opener
-    def openfile(self):
-        """Platform independent file opener"""
-        if self.is_url():
-            raise RuntimeError("Cannot open URL paths")
-        if self.is_local() and (sys.platform == "win32"):
-            os.startfile(self.filename, "explore")
-        elif self.is_local() and (sys.platform == "darwin"):
-            subprocess.call(["open", self.filename])
-        else:
-            subprocess.call(["xdg-open", self.filename])
+class URL:
+    """Handles URLs similar to ``pathlib.Path`` objects"""
 
-    def compressuser(self):
-        """Tilde-compress a file to be relative to the home directory"""
-        if self.is_url():
-            raise RuntimeError("Cannot compress URL paths")
-        # attempt to compress filename relative to home directory
-        filename = pathlib.Path(self.filename).expanduser().absolute()
-        try:
-            relative_to = filename.relative_to(pathlib.Path().home())
-        except (ValueError, AttributeError) as exc:
-            return self.filename
-        else:
-            return Path("~").joinpath(relative_to)
+    def __init__(self, urlname: str | pathlib.Path, *args, **kwargs):
+        """Initialize a ``URL`` object"""
+        self.urlname = str(urlname)
+        self._raw_paths = list(url_split(self.urlname))
 
-    def exists(self):
-        """Check if the resolved path exists"""
-        if self.is_url():
-            return is_valid_url(self.filename)
+    @classmethod
+    def from_parts(cls, parts: str | list | tuple):
+        """
+        Return a ``URL`` object from components
+
+        Parameters
+        ----------
+        parts: str, list or tuple
+            URL components
+        """
+        # verify that parts are iterable as list or tuple
+        if isinstance(parts, str):
+            return cls(parts)
         else:
-            return self.filename.expanduser().absolute().exists()
+            return cls("/".join([*parts]))
+
+    def joinpath(self, *pathsegments: list[str]):
+        """Append URL components to existing
+        
+        Parameters
+        ----------
+        pathsegments: list[str]
+            URL components to append
+        """
+        return URL("/".join([*self._raw_paths, *pathsegments]))
 
     def resolve(self):
-        """Resolve the path to an absolute path"""
-        if self.is_url():
-            return Path("/".join(url_split(self.filename)))
-        else:
-            return Path(self.filename.expanduser().absolute())
+        """Resolve the URL"""
+        return URL("/".join([*self._raw_paths]))
 
     def is_file(self):
         """Boolean flag if path is a local file"""
-        return (
-            not is_valid_url(self.filename)
-            and self.filename.expanduser().absolute().is_file()
-        )
+        return False
 
     def is_dir(self):
         """Boolean flag if path is a local directory"""
-        return (
-            not is_valid_url(self.filename)
-            and self.filename.expanduser().absolute().is_dir()
-        )
+        return False
+    
+    def geturl(self):
+        """String representation of the ``URL`` object"""
+        return self._components.geturl()
+    
+    def get(self, *args, **kwargs):
+        """Get contents from URL
+        """
+        return from_http(self.urlname, *args, **kwargs)
 
-    def is_local(self):
-        """Boolean flag if path is a local file or directory"""
-        return not is_valid_url(self.filename)
+    def ping(self, *args, **kwargs) -> bool:
+        """Ping URL to check connection
+        """
+        return check_connection(self.urlname, *args, **kwargs)
 
-    def is_url(self):
-        """Boolean flag if path is a URL"""
-        return is_valid_url(self.filename)
+    def read(self, *args, **kwargs):
+        """Open URL and read response
+        """
+        request = urllib2.Request(self.urlname)
+        response = urllib2.urlopen(request, *args, **kwargs)
+        return response.read()
 
     @property
-    def md5_hash(self):
-        """MD5 hash value of the file"""
-        return get_hash(self.filename, algorithm="md5")
+    def scheme(self):
+        """URL scheme"""
+        return self._components.scheme + '://'
+    
+    @property
+    def netloc(self):
+        """URL network location"""
+        return self._components.netloc
+
+    @property
+    def parts(self):
+        """URL parts as a tuple"""
+        paths = url_split(self._components.path)
+        return (self.scheme, self.netloc, *paths)
+    
+    @property
+    def _components(self):
+        """
+        URL parsed into six components using ``urlparse``
+        """
+        return urlparse(self.urlname)
 
     def __repr__(self):
-        """Representation of the ``Path`` object"""
-        return str(self.filename)
+        """Representation of the ``URL`` object"""
+        return str(self.urlname)
 
     def __str__(self):
-        """String representation of the ``Path`` object"""
-        return str(self.filename)
+        """String representation of the ``URL`` object"""
+        return str(self.urlname)
+    
+    def __div__(self, other):
+        """Join URL components using the division operator"""
+        return self.joinpath(other)
+
+    def __truediv__(self, other):
+        """Join URL components using the division operator"""
+        return self.joinpath(other)
 
 
 class reify(object):
@@ -405,6 +438,25 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
     """
     filename = Path(filename).resolve()
     return bool(re.search(r"\.gz$", filename.name, re.IGNORECASE))
+
+
+def compressuser(filename: str | pathlib.Path):
+    """
+    Tilde-compress a file to be relative to the home directory
+    
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        input filename to compress
+    """
+    # attempt to compress filename relative to home directory
+    filename = pathlib.Path(filename).expanduser().absolute()
+    try:
+        relative_to = filename.relative_to(pathlib.Path().home())
+    except (ValueError, AttributeError) as exc:
+        return filename
+    else:
+        return pathlib.Path("~").joinpath(relative_to)
 
 
 # PURPOSE: get the hash value of a file
@@ -491,7 +543,7 @@ def url_split(s: str):
     s: str
         url string
     """
-    head, tail = posixpath.split(s)
+    head, tail = posixpath.split(str(s))
     if head in ("http:", "https:", "ftp:", "s3:"):
         return (s,)
     elif head in ("", posixpath.sep):
@@ -857,10 +909,11 @@ def _set_ssl_context_options(context: ssl.SSLContext) -> None:
 _default_ssl_context = _create_ssl_context_no_verify()
 
 
-# PURPOSE: check internet connection
+# PURPOSE: check connection with http host
 def check_connection(
     HOST: str,
     context: ssl.SSLContext = _default_ssl_context,
+    timeout: int = 20,
 ):
     """
     Check internet connection with http host
@@ -871,10 +924,12 @@ def check_connection(
         remote http host
     context: obj, default pyTMD.utilities._default_ssl_context
         SSL context for ``urllib`` opener object
+    timeout: int, default 20
+        timeout in seconds for blocking operations
     """
     # attempt to connect to http host
     try:
-        urllib2.urlopen(HOST, timeout=20, context=context)
+        urllib2.urlopen(HOST, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
         raise RuntimeError(exc.reason) from exc

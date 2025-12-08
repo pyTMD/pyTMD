@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (09/2025)
+Written by Tyler Sutterley (12/2025)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -21,6 +21,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 12/2025: use URL class to build and operate on URLs
     Updated 10/2025: change default directory for tide models to cache
     Written 10/2025
 """
@@ -104,23 +105,23 @@ def from_figshare(
     """
     # figshare host for articles
     HOST = ["https://api.figshare.com", "v2", "articles", article]
+    URL = pyTMD.utilities.URL.from_parts(HOST)
     # Create and submit request
-    response = pyTMD.utilities.from_http(HOST, timeout=timeout, context=context)
+    response = URL.get(timeout=timeout, context=context)
     resp = json.loads(response.read())
     # for each file in the JSON response
     for f in resp["files"]:
         # check if file already exists by matching MD5 checksums
         local_file = directory.joinpath(f["name"])
-        original_md5 = local_file.md5_hash
+        original_md5 = pyTMD.utilities.get_hash(local_file)
         # skip download if checksums match
         if original_md5 == f["supplied_md5"]:
             continue
         # output file information
         logger.info(f["download_url"])
         # get remote file as a byte-stream
-        remote_buffer = pyTMD.utilities.from_http(
-            f["download_url"], timeout=timeout, context=context
-        )
+        remote = pyTMD.utilities.URL(f["download_url"])
+        remote_buffer = remote.get(timeout=timeout, context=context)
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(remote_buffer)
         # raise exception if checksums do not match
