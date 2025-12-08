@@ -100,6 +100,7 @@ __all__ = [
     "reify",
     "detect_format",
     "detect_compression",
+    "compressuser",
     "get_hash",
     "get_git_revision_hash",
     "get_git_status",
@@ -273,12 +274,19 @@ class URL:
     """Handles URLs similar to ``pathlib.Path`` objects"""
 
     def __init__(self, urlname: str | pathlib.Path, *args, **kwargs):
+        """Initialize a ``URL`` object"""
         self.urlname = str(urlname)
         self._raw_paths = list(url_split(self.urlname))
 
     @classmethod
-    def from_parts(cls, parts: list | tuple):
-        """Return a ``URL`` object from components
+    def from_parts(cls, parts: str | list | tuple):
+        """
+        Return a ``URL`` object from components
+
+        Parameters
+        ----------
+        parts: str, list or tuple
+            URL components
         """
         # verify that parts are iterable as list or tuple
         if isinstance(parts, str):
@@ -286,9 +294,15 @@ class URL:
         else:
             return cls("/".join([*parts]))
 
-    def joinpath(self, *args):
-        """Append URL components to existing"""
-        return URL("/".join([*self._raw_paths, *args]))
+    def joinpath(self, *pathsegments: list[str]):
+        """Append URL components to existing
+        
+        Parameters
+        ----------
+        pathsegments: list[str]
+            URL components to append
+        """
+        return URL("/".join([*self._raw_paths, *pathsegments]))
 
     def resolve(self):
         """Resolve the URL"""
@@ -311,7 +325,7 @@ class URL:
         """
         return from_http(self.urlname, *args, **kwargs)
 
-    def ping(self, *args, **kwargs):
+    def ping(self, *args, **kwargs) -> bool:
         """Ping URL to check connection
         """
         return check_connection(self.urlname, *args, **kwargs)
@@ -324,8 +338,8 @@ class URL:
         return response.read()
 
     @property
-    def schema(self):
-        """URL schema"""
+    def scheme(self):
+        """URL scheme"""
         return self._components.scheme + '://'
     
     @property
@@ -337,7 +351,7 @@ class URL:
     def parts(self):
         """URL parts as a tuple"""
         paths = url_split(self._components.path)
-        return (self.schema, self.netloc, *paths)
+        return (self.scheme, self.netloc, *paths)
     
     @property
     def _components(self):
@@ -646,7 +660,7 @@ def copy(
     """
     source = pathlib.Path(source).expanduser().absolute()
     destination = pathlib.Path(destination).expanduser().absolute()
-    # log source and destinationurl_split
+    # log source and destination
     logging.info(f"{str(source)} -->\n\t{str(destination)}")
     shutil.copyfile(source, destination)
     shutil.copystat(source, destination)
