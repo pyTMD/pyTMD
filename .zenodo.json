@@ -1,5 +1,12 @@
 {
-  "title": "pyTMD",
+  "title": "pyTMD: Python-based tidal prediction software",
+  "keywords": [
+    "Ocean Tides",
+    "Load Tides",
+    "Pole Tides",
+    "Solid Earth Tides",
+    "Tidal Prediction"
+  ],
   "creators": [
     {
       "affiliation": "University of Washington, Applied Physics Laboratory",
