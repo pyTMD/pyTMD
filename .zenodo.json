@@ -1,5 +1,5 @@
 {
-  "title": "pyTMD",
+  "title": "pyTMD: Python-based tidal prediction software",
   "creators": [
     {
       "affiliation": "University of Washington, Applied Physics Laboratory",
@@ -38,5 +38,23 @@
       "name": "Brunt, Kelly",
       "type": "Other"
     }
-  ]
+  ],
+  "grants": [
+    {
+      "code": "80NSSC22K0379",
+      "program": "Cryospheric Sciences Program",
+      "funder": {
+        "name": "NASA Earth Sciences Division",
+        "doi": "10.13039/100014573"
+      }
+    },
+    {
+      "code": "80NSSC21K0911",
+      "program": "Cryospheric Sciences Program",
+      "funder": {
+        "name": "NASA Earth Sciences Division",
+        "doi": "10.13039/100014573"
+      }
+    }
+  ],
 }

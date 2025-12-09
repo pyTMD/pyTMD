@@ -5,5 +5,7 @@ prune notebooks*
 prune providers*
 prune run*
 prune test*
-exclude *.cfg
+exclude *.cff
 exclude *.yml
+exclude .gitignore
+exclude .zenodo.json

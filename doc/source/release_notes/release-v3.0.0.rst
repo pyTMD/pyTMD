@@ -23,5 +23,7 @@
 * ``refactor``: merge minor constituent inference loop `(#488) <https://github.com/pyTMD/pyTMD/pull/488>`_
 * ``docs``: update module docstrings `(#488) <https://github.com/pyTMD/pyTMD/pull/488>`_
 * ``feat``: add functions to transform coordinates to ``DataArrays`` `(#489) <https://github.com/pyTMD/pyTMD/pull/489>`_
+* ``ci``: only run workflow to publish to `PyPI <https://pypi.org/project/pyTMD/>`_ when formally released
+* ``chore``: ``ruff`` format for `#100 <https://github.com/pyTMD/pyTMD/issues/100>`_ `(#493) <https://github.com/pyTMD/pyTMD/pull/493>`_
 
 .. __: https://github.com/pyTMD/pyTMD/releases/tag/3.0.0-beta
