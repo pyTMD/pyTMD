@@ -85,6 +85,8 @@ If you wish to add a new model to the ``pyTMD`` database, please see the `contri
 .. note::
     Any model parameterized with a definition file or added to the database will have to fit a presently supported file standard.
 
+.. _definition-files:
+
 Definition Files
 ################
 
