@@ -18,6 +18,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 12/2025: add coords functions to transform coordinates
+        set units attribute for amplitude and phase data arrays
     Updated 11/2025: get crs directly using pyproj.CRS.from_user_input
         set variable name to constituent for to_dataarray method
         added is_global property for models covering a global domain
@@ -761,6 +762,7 @@ class DataArray:
         """
         # calculate constituent amplitude
         amp = np.sqrt(self._da.real**2 + self._da.imag**2)
+        amp.attrs["units"] = self._da.attrs.get("units", "")
         return amp
 
     @property
@@ -776,6 +778,7 @@ class DataArray:
         # calculate constituent phase and convert to degrees
         ph = np.degrees(np.arctan2(-self._da.imag, self._da.real))
         ph = ph.where(ph >= 0, ph + 360.0, drop=False)
+        ph.attrs["units"] = "degrees"
         return ph
 
     def to_units(self, units: str, value: float = 1.0):
