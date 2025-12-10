@@ -13,7 +13,7 @@ Recipes
 
       :material-outlined:`cloud_download;5em`
 
-    .. grid-item-card:: Transition from v2 to v3
+    .. grid-item-card:: Transition Guide for v3
       :text-align: center
       :link: ./Transition_Guide.html
 
