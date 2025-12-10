@@ -677,7 +677,7 @@ def tide_masks(
     local = ds.tmd.interp(X, Y, method=method)
     # get name of first listed constituent
     c = local.tmd.constituents[0]
-    mask = np.logical_not(local[c].real.isnull()).astype(bool)
+    mask = local[c].real.notnull().astype(bool)
     # return mask
     return mask
 
