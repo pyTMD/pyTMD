@@ -114,6 +114,7 @@ html_show_sphinx = True
 html_show_copyright = True
 
 numfig_format = {
+    'code-block': None,
     'figure': 'Figure %s:',
     'table': 'Table %s:',
 }

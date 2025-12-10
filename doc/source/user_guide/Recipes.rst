@@ -13,9 +13,16 @@ Recipes
 
       :material-outlined:`cloud_download;5em`
 
+    .. grid-item-card:: Transition from v2 to v3
+      :text-align: center
+      :link: ./Transition_Guide.html
+
+      :material-outlined:`autorenew;5em`
+
 .. toctree::
     :maxdepth: 1
     :hidden:
     :caption: Recipes
 
     ./Cloud_Access.rst
+    ./Transition_Guide.rst
