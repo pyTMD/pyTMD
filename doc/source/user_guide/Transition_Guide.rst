@@ -51,7 +51,7 @@ Examples
     # read model as xarray Dataset
     ds = m.open_dataset(group='z')
     # interpolate to location
-    local = m.tmd.interp(lon, lat, extrapolate=True)
+    local = ds.tmd.interp(lon, lat, extrapolate=True)
     # calculate tide values for time series
     tide = local.tmd.predict(time, deltat=deltat,
         corrections=m.corrections)
@@ -110,7 +110,7 @@ Restructuring Definition Files
 In version 2, the structure of the JSON database and definition files were separated into elevation and currents models.
 This was a legacy of the original design of the library (v1), which hardcoded the elevation and currents parameters.
 Model files in version 2 could be a string or list for elevation models, and a dictionary of strings or lists for currents models.
-In version 3, the database and example definition files have been flattened into a single structure  [see :ref:`definition-files`].
+In version 3, the database and example definition files have been flattened into a single structure [see :ref:`definition-files`].
 In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and units.
 Units can also be extracted from files when reading the model data if stored as metadata attributes.
 
@@ -152,7 +152,7 @@ In version 3, these functions have been removed and replaced with a unified inte
 Model data can be read using the ``open_dataset`` method, which returns an ``xarray`` dataset containing all model constituents.
 Interpolation to specific locations is performed using the ``interp`` method.
 
-In version 2, tide prediction was be separated into ``drift``, ``map`` and ``time_series`` functions depending on the shape of the input data.
+In version 2, tide prediction was separated into ``drift``, ``map`` and ``time_series`` functions depending on the shape of the input data.
 In version 3, these have been consolidated into a single ``time_series`` method that uses ``xarray`` to handle different input shapes.
 
 Function Renaming
