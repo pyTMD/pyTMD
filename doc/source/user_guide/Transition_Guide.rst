@@ -59,3 +59,45 @@ Examples
     tide += local.tmd.infer(time, deltat=deltat,
         corrections=m.corrections)
 
+**Example 2: Plotting a Tidal Model**
+
+.. code-block:: python
+    :caption: Version 2
+
+    import pyTMD
+    import matplotlib.pyplot as plt
+    # get model parameters for model
+    m = pyTMD.io.model(directory).elevation(model)
+    # read model constituents
+    c = m.read_constants()
+    # get spatial bounds of model grid
+    xmin, xmax = c.coords.x.min(), c.coords.x.max()
+    ymin, ymax = c.coords.y.min(), c.coords.y.max()
+    extent = [xmin, xmax, ymin, ymax]
+    # plot model amplitude and phase
+    fig, ax = plt.subplots(ncols=2)
+    ax[0].imshow(c.amplitude('m2'), origin='lower',
+        extent=extent, interpolation='nearest',
+        cmap='viridis', vmin=0)
+    ax[1].imshow(c.phase('m2'), origin='lower',
+        extent=extent, interpolation='nearest',
+        cmap='hsv', vmin=0, vmax=360)
+    # show plot
+    plt.show()
+
+.. code-block:: python
+    :caption: Version 3
+
+    import pyTMD
+    import matplotlib.pyplot as plt
+    # get model parameters for model
+    m = pyTMD.io.model().from_database(model)
+    # read model as xarray Dataset
+    ds = m.open_dataset(group='z')
+    # plot model amplitude and phase
+    fig, ax = plt.subplots(ncols=2)
+    ds.m2.tmd.amplitude.plot(ax=ax[0], cmap='viridis', vmin=0)
+    ds.m2.tmd.phase.plot(ax=ax[1], cmap='hsv', vmin=0, vmax=360)
+    # show plot
+    plt.show()
+
