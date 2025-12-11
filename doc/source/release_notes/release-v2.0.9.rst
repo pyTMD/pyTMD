@@ -1,3 +1,5 @@
+.. _release-v2.0.9:
+
 ##################
 `Release v2.0.9`__
 ##################
@@ -6,10 +8,10 @@
 * ``refactor``: renamed tidal ellipse function (`#243 <https://github.com/pyTMD/pyTMD/pull/243>`_)
 * ``refactor``: renamed constituent parameters function (`#243 <https://github.com/pyTMD/pyTMD/pull/243>`_)
 * ``refactor``: renamed check tide model points function (`#243 <https://github.com/pyTMD/pyTMD/pull/243>`_)
-* ``feat``: can read from netCDF4 or HDF5 variable groups (`#243 <https://github.com/pyTMD/pyTMD/pull/249>`_)
-* ``fix``: spelling mistakes (`#243 <https://github.com/pyTMD/pyTMD/pull/249>`_)
-* ``feat``: add generic wrapper function for reading ATLAS constituents (`#243 <https://github.com/pyTMD/pyTMD/pull/250>`_)
-* ``feat``: can write datetime as time column for csv files (`#243 <https://github.com/pyTMD/pyTMD/pull/252>`_)
-* ``fix``: replace deprecated ``pkg_resources`` with ``importlib``  (`#243 <https://github.com/pyTMD/pyTMD/pull/256>`_)
+* ``feat``: can read from netCDF4 or HDF5 variable groups (`#249 <https://github.com/pyTMD/pyTMD/pull/249>`_)
+* ``fix``: spelling mistakes (`#249 <https://github.com/pyTMD/pyTMD/pull/249>`_)
+* ``feat``: add generic wrapper function for reading ATLAS constituents (`#250 <https://github.com/pyTMD/pyTMD/pull/250>`_)
+* ``feat``: can write datetime as time column for csv files (`#252 <https://github.com/pyTMD/pyTMD/pull/252>`_)
+* ``fix``: replace deprecated ``pkg_resources`` with ``importlib``  (`#256 <https://github.com/pyTMD/pyTMD/pull/256>`_)
 
 .. __: https://github.com/pyTMD/pyTMD/releases/tag/2.0.9

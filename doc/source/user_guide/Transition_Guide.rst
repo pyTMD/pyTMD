@@ -5,7 +5,7 @@ Transition Guide for v3
 Overview
 ========
 
-The transition from ``pyTMD`` version 2 to version 3 includes several changes to the
+Version 3 of ``pyTMD`` introduces significant updates to the codebase [see :ref:`release-v3.0.0`].
 API and functionality of the library. This document outlines the key differences
 between the two versions and provides guidance on how to adapt existing code to
 work with ``pyTMD`` v3.
