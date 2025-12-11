@@ -45,8 +45,9 @@ for tau in range(0, l+1):
         ax.pcolormesh(lon, lat, Y_lm.real,
             transform=ccrs.PlateCarree(),
             cmap='viridis', rasterized=True)
-        # add coastlines and set global
-        ax.coastlines()
+        # add moderate resolution cartopy coastlines
+        ax.coastlines('50m')
+        # set global view
         ax.set_global()
         # turn off the axis
         ax.set_axis_off()
