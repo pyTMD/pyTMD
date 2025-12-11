@@ -164,8 +164,7 @@ In version 2, the structure of the JSON database and definition files were separ
 This was a legacy of the original design of the library (v1), which hardcoded the elevation and currents parameters.
 Model files in version 2 could be a string or list for elevation models, and a dictionary of strings or lists for currents models.
 In version 3, the database and example definition files have been flattened into a single structure [see :ref:`definition-files`].
-In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and units.
-Units can also be extracted from files when reading the model data if stored as metadata attributes.
+In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and variable units.
 
 Existing JSON files can be restructured to the new flattened format using a script provided in the ``test`` directory:
 
@@ -183,9 +182,9 @@ Units Support
 In version 2, units were only implicitly handled within ``pyTMD`` by setting scaling factors within the model definitions.
 This could lead to some confusion when working with different tide models that used different units.
 In version 3, units for different variables are explicitly handled using the ``pint`` library.
-When reading model data, units are extracted from the definition files or from attributes in the data files.
-The variables are then converted to default sets of units: 1) meters for elevation, 2) centimeters per second for currents and 3) meters squared per second for transports.
-Datasets can also be converted to different units using the ``to_units`` method.
+When reading model data, units are extracted from the definition files or from attributes stored in the data files (if available as variable metadata).
+The variables are then converted to default sets of units: 1) meters for elevation (``'z'``), 2) centimeters per second for currents (``'u'`` and ``'v'``) and 3) meters squared per second for transports (``'U'`` and ``'V'``).
+Datasets can also be converted to alternative units using the ``to_units`` method.
 
 .. code-block:: python
 
@@ -208,7 +207,7 @@ Interpolation to specific locations is performed using the ``interp`` method.
 In version 2, tide prediction was separated into ``drift``, ``map`` and ``time_series`` functions depending on the shape of the input data.
 In version 3, these have been consolidated into a single ``time_series`` method that uses ``xarray`` to handle different input shapes.
 
-Function Renaming
+Renamed Functions
 =================
 
 The ``arguments`` module has been renamed ``constituents`` to better reflect its expanded capabilities from the earliest versions.
