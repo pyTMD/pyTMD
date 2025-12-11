@@ -6,6 +6,10 @@ Getting Started
 
     See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
+.. note::
+
+    If you have previously used ``pyTMD``, check out the :ref:`transition-guide-v3` for information on changes incorporated in Version 3.
+
 Tide Model Formats
 ##################
 

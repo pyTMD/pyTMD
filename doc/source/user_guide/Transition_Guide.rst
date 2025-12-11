@@ -1,3 +1,5 @@
+.. _transition-guide-v3:
+
 =======================
 Transition Guide for v3
 =======================
@@ -5,10 +7,11 @@ Transition Guide for v3
 Overview
 ========
 
-Version 3 of ``pyTMD`` introduces significant updates to the codebase [see :ref:`release-v3.0.0`].
-API and functionality of the library. This document outlines the key differences
-between the two versions and provides guidance on how to adapt existing code to
-work with ``pyTMD`` v3.
+Version 3 of ``pyTMD`` introduces significant updates to the codebase [see :ref:`release-v3.0.0`],
+including upgrades to the overall functionality of the library.
+
+This document outlines the key differences between the two versions
+and provides guidance on how to adapt existing code to work with ``pyTMD`` Version 3.
 
 Key Changes
 ===========
@@ -21,7 +24,7 @@ Key Changes
 Examples
 ========
 
-**Example 1: Reading a Tidal Model and Predicting a Time Series**
+**Example 1: Reading a Tide Model and Predicting a Tidal Elevation Time Series**
 
 .. code-block:: python
     :caption: Version 2
@@ -59,7 +62,57 @@ Examples
     tide += local.tmd.infer(time, deltat=deltat,
         corrections=m.corrections)
 
-**Example 2: Plotting a Tidal Model**
+**Example 2: Reading a Tide Model and Predicting a Tidal Current Time Series**
+
+.. code-block:: python
+    :caption: Version 2
+
+    import pyTMD
+    # get model parameters for model
+    m = pyTMD.io.model(directory).current(model)
+    # allocate for output currents
+    tide = {}
+    # for each current component
+    for component in ['u','v']:
+        # read model and interpolate to location
+        amp, ph, c = m.extract_constants(lon, lat, type=component,
+            extrapolate=True)
+        # calculate complex phase in radians for Euler's
+        cph = -1j*ph*np.pi/180.0
+        # calculate constituent oscillation
+        hc = amp*np.exp(cph)
+        # calculate tide values for time series
+        tide[component] = pyTMD.predict.time_series(time, hc, c,
+            deltat=deltat, corrections=m.corrections)
+        # infer minor corrections and add to prediction
+        tide[component] += pyTMD.predict.infer_minor(time, hc, c,
+            deltat=deltat, corrections=m.corrections)
+
+.. code-block:: python
+    :caption: Version 3
+
+    import pyTMD
+    import xarray as xr
+    # get model parameters for model
+    m = pyTMD.io.model(directory).from_database(model)
+    # read model as xarray DataTree
+    dtree = m.open_datatree(group=('u','v'))
+    # interpolate to location
+    local = dtree.tmd.interp(lon, lat, extrapolate=True)
+    # allocate for output currents
+    tide = xr.DataTree()
+    # for each current component
+    for component in ['u','v']:
+        # convert to dataset
+        ds = local[component].to_dataset()
+        # calculate tide values for time series
+        tide[component] = ds.tmd.predict(time, deltat=deltat,
+            corrections=m.corrections)
+        # infer minor corrections and add to prediction
+        tide[component] += ds.tmd.infer(time, deltat=deltat,
+            corrections=m.corrections)
+
+**Example 3: Plotting a Map of a Tidal Constituent**
 
 .. code-block:: python
     :caption: Version 2
