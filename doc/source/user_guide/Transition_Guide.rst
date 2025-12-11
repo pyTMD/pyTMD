@@ -166,7 +166,8 @@ Model files in version 2 could be a string or list for elevation models, and a d
 In version 3, the database and example definition files have been flattened into a single structure [see :ref:`definition-files`].
 In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and variable units.
 
-Existing JSON files can be restructured to the new flattened format using a script provided in the ``test`` directory:
+.. tip::
+    Existing JSON definition files can be restructured to the new flat format using a script provided in the ``test`` directory:
 
 .. code-block:: bash
 
@@ -183,8 +184,10 @@ In version 2, units were only implicitly handled within ``pyTMD`` by setting sca
 This could lead to some confusion when working with different tide models that used different units.
 In version 3, units for different variables are explicitly handled using the ``pint`` library.
 When reading model data, units are extracted from the definition files or from attributes stored in the data files (if available as variable metadata).
-The variables are then converted to default sets of units: 1) meters for elevation (``'z'``), 2) centimeters per second for currents (``'u'`` and ``'v'``) and 3) meters squared per second for transports (``'U'`` and ``'V'``).
-Datasets can also be converted to alternative units using the ``to_units`` method.
+The variables are then converted to default sets of units: meters for elevation (``'z'``), centimeters per second for currents (``'u'`` and ``'v'``) and meters squared per second for transports (``'U'`` and ``'V'``).
+
+.. tip::
+    Datasets can also be converted to alternative units using the ``to_units`` method:
 
 .. code-block:: python
 
@@ -200,6 +203,7 @@ Removed Functions
 Each model format (``'ATLAS'``, ``'FES'``, ``'GOT'``, ``'OTIS'``, etc) previously had two functions for reading model constituents: 
 ``extract_constants`` was used to read model data and interpolate to a specific location, and ``read_constants`` was used to read the full model grid.
 The ``constituents`` class stored the model constituents from ``read_constants`` and had some methods for calculating amplitude and phase.
+
 In version 3, these functions have been removed and replaced with a unified interface using ``xarray`` datasets.
 Model data can be read using the ``open_dataset`` method, which returns an ``xarray`` dataset containing all model constituents.
 Interpolation to specific locations is performed using the ``interp`` method.
