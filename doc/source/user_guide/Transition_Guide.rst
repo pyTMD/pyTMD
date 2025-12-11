@@ -1,3 +1,5 @@
+.. _transition-guide-v3:
+
 =======================
 Transition Guide for v3
 =======================
@@ -5,10 +7,11 @@ Transition Guide for v3
 Overview
 ========
 
-Version 3 of ``pyTMD`` introduces significant updates to the codebase [see :ref:`release-v3.0.0`].
-API and functionality of the library. This document outlines the key differences
-between the two versions and provides guidance on how to adapt existing code to
-work with ``pyTMD`` v3.
+Version 3 of ``pyTMD`` introduces significant updates to the codebase [see :ref:`release-v3.0.0`],
+including upgrades to the overall functionality of the library.
+
+This document outlines the key differences between the two versions
+and provides guidance on how to adapt existing code to work with ``pyTMD`` Version 3.
 
 Key Changes
 ===========
@@ -21,7 +24,7 @@ Key Changes
 Examples
 ========
 
-**Example 1: Reading a Tidal Model and Predicting a Time Series**
+**Example 1: Reading a Tide Model and Predicting a Tidal Elevation Time Series**
 
 .. code-block:: python
     :caption: Version 2
@@ -59,7 +62,57 @@ Examples
     tide += local.tmd.infer(time, deltat=deltat,
         corrections=m.corrections)
 
-**Example 2: Plotting a Tidal Model**
+**Example 2: Reading a Tide Model and Predicting a Tidal Current Time Series**
+
+.. code-block:: python
+    :caption: Version 2
+
+    import pyTMD
+    # get model parameters for model
+    m = pyTMD.io.model(directory).current(model)
+    # allocate for output currents
+    tide = {}
+    # for each current component
+    for component in ['u','v']:
+        # read model and interpolate to location
+        amp, ph, c = m.extract_constants(lon, lat, type=component,
+            extrapolate=True)
+        # calculate complex phase in radians for Euler's
+        cph = -1j*ph*np.pi/180.0
+        # calculate constituent oscillation
+        hc = amp*np.exp(cph)
+        # calculate tide values for time series
+        tide[component] = pyTMD.predict.time_series(time, hc, c,
+            deltat=deltat, corrections=m.corrections)
+        # infer minor corrections and add to prediction
+        tide[component] += pyTMD.predict.infer_minor(time, hc, c,
+            deltat=deltat, corrections=m.corrections)
+
+.. code-block:: python
+    :caption: Version 3
+
+    import pyTMD
+    import xarray as xr
+    # get model parameters for model
+    m = pyTMD.io.model(directory).from_database(model)
+    # read model as xarray DataTree
+    dtree = m.open_datatree(group=('u','v'))
+    # interpolate to location
+    local = dtree.tmd.interp(lon, lat, extrapolate=True)
+    # allocate for output currents
+    tide = xr.DataTree()
+    # for each current component
+    for component in ['u','v']:
+        # convert to dataset
+        ds = local[component].to_dataset()
+        # calculate tide values for time series
+        tide[component] = ds.tmd.predict(time, deltat=deltat,
+            corrections=m.corrections)
+        # infer minor corrections and add to prediction
+        tide[component] += ds.tmd.infer(time, deltat=deltat,
+            corrections=m.corrections)
+
+**Example 3: Plotting a Map of a Tidal Constituent**
 
 .. code-block:: python
     :caption: Version 2
@@ -111,10 +164,10 @@ In version 2, the structure of the JSON database and definition files were separ
 This was a legacy of the original design of the library (v1), which hardcoded the elevation and currents parameters.
 Model files in version 2 could be a string or list for elevation models, and a dictionary of strings or lists for currents models.
 In version 3, the database and example definition files have been flattened into a single structure [see :ref:`definition-files`].
-In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and units.
-Units can also be extracted from files when reading the model data if stored as metadata attributes.
+In the new structure, each group (``'z'`` for elevation and ``'u'`` or ``'v'`` for currents) contains the model files and variable units.
 
-Existing JSON files can be restructured to the new flattened format using a script provided in the ``test`` directory:
+.. tip::
+    Existing JSON definition files can be restructured to the new flat format using a script provided in the ``test`` directory:
 
 .. code-block:: bash
 
@@ -130,9 +183,11 @@ Units Support
 In version 2, units were only implicitly handled within ``pyTMD`` by setting scaling factors within the model definitions.
 This could lead to some confusion when working with different tide models that used different units.
 In version 3, units for different variables are explicitly handled using the ``pint`` library.
-When reading model data, units are extracted from the definition files or from attributes in the data files.
-The variables are then converted to default sets of units: 1) meters for elevation, 2) centimeters per second for currents and 3) meters squared per second for transports.
-Datasets can also be converted to different units using the ``to_units`` method.
+When reading model data, units are extracted from the definition files or from attributes stored in the data files (if available as variable metadata).
+The variables are then converted to default sets of units: meters for elevation (``'z'``), centimeters per second for currents (``'u'`` and ``'v'``) and meters squared per second for transports (``'U'`` and ``'V'``).
+
+.. tip::
+    Datasets can also be converted to alternative units using the ``to_units`` method:
 
 .. code-block:: python
 
@@ -148,6 +203,7 @@ Removed Functions
 Each model format (``'ATLAS'``, ``'FES'``, ``'GOT'``, ``'OTIS'``, etc) previously had two functions for reading model constituents: 
 ``extract_constants`` was used to read model data and interpolate to a specific location, and ``read_constants`` was used to read the full model grid.
 The ``constituents`` class stored the model constituents from ``read_constants`` and had some methods for calculating amplitude and phase.
+
 In version 3, these functions have been removed and replaced with a unified interface using ``xarray`` datasets.
 Model data can be read using the ``open_dataset`` method, which returns an ``xarray`` dataset containing all model constituents.
 Interpolation to specific locations is performed using the ``interp`` method.
@@ -155,7 +211,7 @@ Interpolation to specific locations is performed using the ``interp`` method.
 In version 2, tide prediction was separated into ``drift``, ``map`` and ``time_series`` functions depending on the shape of the input data.
 In version 3, these have been consolidated into a single ``time_series`` method that uses ``xarray`` to handle different input shapes.
 
-Function Renaming
+Renamed Functions
 =================
 
 The ``arguments`` module has been renamed ``constituents`` to better reflect its expanded capabilities from the earliest versions.
