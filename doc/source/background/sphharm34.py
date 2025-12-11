@@ -36,8 +36,9 @@ for n, l in enumerate(range(lmin, lmax+1)):
             cmap='viridis', rasterized=True)
         # set the title
         ax.set_title(f'$l={l}, m={tau}$')
-        # add coastlines and set global
-        ax.coastlines()
+        # add moderate resolution cartopy coastlines
+        ax.coastlines('50m')
+        # set global view
         ax.set_global()
         # turn off the axis
         ax.set_axis_off()
