@@ -267,7 +267,7 @@ def Path(filename: str | pathlib.Path, *args, **kwargs):
     if is_valid_url(filename):
         return URL(filename, *args, **kwargs)
     else:
-        return pathlib.Path(filename, *args, **kwargs).expanduser()
+        return pathlib.Path(filename, *args, **kwargs).expanduser().absolute()
 
 
 class URL:
@@ -338,9 +338,9 @@ class URL:
         return response.read()
 
     @property
-    def scheme(self):
-        """URL scheme"""
-        return self._components.scheme + '://'
+    def name(self):
+        """URL basename"""
+        return self.parts[-1]
     
     @property
     def netloc(self):
@@ -348,11 +348,33 @@ class URL:
         return self._components.netloc
 
     @property
+    def parent(self):
+        """URL parent path as a ``URL`` object"""
+        paths = url_split(self.urlname)[:-1]
+        return URL.from_parts(paths)
+    
+    @property
+    def parents(self):
+        """URL parents as a list of ``URL`` objects"""
+        paths = url_split(self.urlname)
+        return [URL.from_parts(paths[:i]) for i in range(len(paths)-1, 0, -1)]
+
+    @property
     def parts(self):
         """URL parts as a tuple"""
         paths = url_split(self._components.path)
         return (self.scheme, self.netloc, *paths)
     
+    @property
+    def scheme(self):
+        """URL scheme"""
+        return self._components.scheme + '://'
+
+    @property
+    def stem(self):
+        """URL stem"""
+        return pathlib.PurePosixPath(self.name).stem
+
     @property
     def _components(self):
         """
@@ -419,7 +441,7 @@ def detect_format(filename: str | pathlib.Path) -> str:
         # FES or GOT netCDF4 formats
         return "netcdf"
     else:
-        raise ValueError(f"Unrecognized FES file format: {filename}")
+        raise ValueError(f"Unrecognized file format: {filename}")
 
 
 def detect_compression(filename: str | pathlib.Path) -> bool:
