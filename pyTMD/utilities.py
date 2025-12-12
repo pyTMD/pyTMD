@@ -267,7 +267,7 @@ def Path(filename: str | pathlib.Path, *args, **kwargs):
     if is_valid_url(filename):
         return URL(filename, *args, **kwargs)
     else:
-        return pathlib.Path(filename, *args, **kwargs).expanduser().absolute()
+        return pathlib.Path(filename, *args, **kwargs).expanduser()
 
 
 class URL:
