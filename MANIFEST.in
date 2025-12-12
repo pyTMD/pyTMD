@@ -1,11 +1,13 @@
 graft pyTMD/data
 prune .github*
 prune doc*
-prune notebooks*
 prune providers*
 prune run*
 prune test*
 exclude *.cff
+exclude *.md
 exclude *.yml
+exclude pixi.lock
+exclude .gitattributes
 exclude .gitignore
 exclude .zenodo.json

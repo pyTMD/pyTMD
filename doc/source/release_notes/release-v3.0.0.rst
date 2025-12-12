@@ -27,5 +27,8 @@
 * ``feat``: add functions to transform coordinates to ``DataArrays`` `(#489) <https://github.com/pyTMD/pyTMD/pull/489>`_
 * ``ci``: only run workflow to publish to `PyPI <https://pypi.org/project/pyTMD/>`_ when formally released
 * ``chore``: ``ruff`` format for `#100 <https://github.com/pyTMD/pyTMD/issues/100>`_ `(#493) <https://github.com/pyTMD/pyTMD/pull/493>`_
+* ``docs``: add transition guide for v3 `(#497) <https://github.com/pyTMD/pyTMD/pull/497>`_
+* ``docs``: only use moderate resolution coastlines `(#498) <https://github.com/pyTMD/pyTMD/pull/498>`_
+* ``docs``: add reference to TMD2.5 `(#501) <https://github.com/pyTMD/pyTMD/pull/501>`_
 
-.. __: https://github.com/pyTMD/pyTMD/releases/tag/3.0.0-beta
+.. __: https://github.com/pyTMD/pyTMD/releases/tag/3.0.0-beta-3
