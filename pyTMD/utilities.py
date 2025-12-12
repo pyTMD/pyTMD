@@ -340,7 +340,7 @@ class URL:
     @property
     def name(self):
         """URL basename"""
-        return self.parts[-1]
+        return pathlib.PurePosixPath(self.urlname).name
     
     @property
     def netloc(self):
@@ -373,7 +373,7 @@ class URL:
     @property
     def stem(self):
         """URL stem"""
-        return pathlib.PurePosixPath(self.name).stem
+        return pathlib.PurePosixPath(self.urlname).stem
 
     @property
     def _components(self):
