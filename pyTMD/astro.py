@@ -293,7 +293,7 @@ def planetary_longitudes(MJD: np.ndarray):
     jupiter_longitude = np.array([34.351519, 3036.3027748, 2.233e-4, 3.7e-8])
     LJu = polynomial_sum(jupiter_longitude, T)
     # mean longitudes of Saturn
-    saturn_longitude = np.array([50.077444, 1223.5110686, 5.1908-4, -3.0e-8])
+    saturn_longitude = np.array([50.077444, 1223.5110686, 5.1908e-4, -3.0e-8])
     LSa = polynomial_sum(saturn_longitude, T)
     # take the modulus of each
     LMe = normalize_angle(LMe)

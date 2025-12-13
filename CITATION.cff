@@ -1,9 +1,9 @@
 # This CITATION.cff file was generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
 
-cff-version: 1.2.0
+cff-version: 1.3.0
 title: pyTMD
-message: Python-based tidal prediction software
+abstract: Python-based tidal prediction software
 type: software
 keywords:
   - Ocean Tides
@@ -12,23 +12,14 @@ keywords:
   - Solid Earth Tides
   - Tidal Prediction
 license: MIT
-version: "2.2.9"
-date-released: "2025-11-21"
+version: "2.2.9.1"
+date-released: "2025-12-12"
 message: If you use this software, please consider citing our library.
 
 authors:
   - given-names: Tyler
     family-names: Sutterley
     affiliation: University of Washington, Applied Physics Laboratory
-  - given-names: Karen
-    family-names: Alley
-    affiliation: University of Manitoba
-  - given-names: Robbi
-    family-names: Bishop-Taylor
-    affiliation: Geoscience Australia
-  - given-names: Kelly
-    family-names: Brunt
-    affiliation: NASA Goddard Space Flight Center
   - given-names: Susan
     family-names: Howard
     affiliation: Earth & Space Research
@@ -38,14 +29,33 @@ authors:
   - given-names: Matthew
     family-names: Siegfried
     affiliation: Colorado School of Mines
+
+contributors:
+  - given-names: Karen
+    family-names: Alley
+    affiliation: University of Manitoba
+  - given-names: Robbi
+    family-names: Bishop-Taylor
+    affiliation: Geoscience Australia
+  - given-names: Kelly
+    family-names: Brunt
+    affiliation: National Science Foundation
+
 identifiers:
   - type: doi
     value: 10.5281/zenodo.5555395
-    description: Zenodo Archive
-repository-code: 'https://github.com/pyTMD/pyTMD'
-url: 'https://pytmd.readthedocs.io'
-repository: 'https://pypi.org/project/pyTMD'
-repository-artifact: 'https://anaconda.org/conda-forge/pytmd'
+    description: Persistent identifier for pyTMD
+  - type: url
+    value: https://github.com/pyTMD/pyTMD
+    description: GitHub repository for pyTMD
+  - type: url
+    value: https://pypi.org/project/pyTMD
+    description: pyTMD on PyPI
+  - type: url
+    value: https://anaconda.org/conda-forge/pytmd
+    description: pyTMD on conda-forge
+repository-code: "https://github.com/pyTMD/pyTMD"
+url: "https://pytmd.readthedocs.io"
 doi: "10.5281/zenodo.5555395"
 
 references:

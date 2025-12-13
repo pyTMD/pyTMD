@@ -1,0 +1,49 @@
+{
+  "title": "pyTMD: Python-based tidal prediction software",
+  "keywords": [
+    "Ocean Tides",
+    "Load Tides",
+    "Pole Tides",
+    "Solid Earth Tides",
+    "Tidal Prediction"
+  ],
+  "creators": [
+    {
+      "affiliation": "University of Washington, Applied Physics Laboratory",
+      "name": "Sutterley, Tyler",
+      "orcid": "https://orcid.org/0000-0002-6964-1194"
+    },
+    {
+      "affiliation": "Earth & Space Research",
+      "name": "Howard, Susan",
+      "orcid": "https://orcid.org/0000-0002-9183-0178"
+    },
+    {
+      "affiliation": "Earth & Space Research",
+      "name": "Padman, Laurie",
+      "orcid": "https://orcid.org/0000-0003-2010-642X"
+    },
+    {
+      "affiliation": "Colorado School of Mines",
+      "name": "Siegfried, Matthew",
+      "orcid": "https://orcid.org/0000-0002-0868-4633"
+    }
+  ],
+  "contributors": [
+    {
+      "affiliation": "University of Manitoba",
+      "name": "Alley, Karen",
+      "type": "Other"
+    },
+    {
+      "affiliation": "Geoscience Australia",
+      "name": "Bishop-Taylor, Robbi",
+      "type": "Other"
+    },
+    {
+      "affiliation": "National Science Foundation",
+      "name": "Brunt, Kelly",
+      "type": "Other"
+    }
+  ]
+}
