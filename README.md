@@ -5,6 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/pyTMD.svg)](https://pypi.python.org/pypi/pyTMD/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/pytmd)](https://anaconda.org/conda-forge/pytmd)
 [![commits-since](https://img.shields.io/github/commits-since/pyTMD/pyTMD/latest)](https://github.com/pyTMD/pyTMD/releases/latest)
+[![JOSS](https://joss.theoj.org/papers/10.21105/joss.08566/status.svg)](https://doi.org/10.21105/joss.08566)
 [![zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.5555395.svg)](https://doi.org/10.5281/zenodo.5555395)
 
 Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides

@@ -14,7 +14,8 @@ keywords:
 license: MIT
 version: "3.0.0"
 date-released: "2025-12-12"
-message: If you use this software, please consider citing our library.
+message: If you use this software, please consider citing our article
+  in the Journal of Open Source Software.
 
 authors:
   - given-names: Tyler
@@ -41,6 +42,11 @@ contributors:
     family-names: Brunt
     affiliation: National Science Foundation
 
+contact:
+- family-names: Sutterley
+  given-names: Tyler C.
+  orcid: "https://orcid.org/0000-0002-6964-1194"
+
 identifiers:
   - type: doi
     value: 10.5281/zenodo.5555395
@@ -54,9 +60,39 @@ identifiers:
   - type: url
     value: https://anaconda.org/conda-forge/pytmd
     description: pyTMD on conda-forge
+  - type: doi
+    value: 10.21105/joss.08566
+    description: JOSS article for pyTMD
 repository-code: "https://github.com/pyTMD/pyTMD"
 url: "https://pytmd.readthedocs.io"
 doi: "10.5281/zenodo.5555395"
+
+preferred-citation:
+  authors:
+  - family-names: Sutterley
+    given-names: Tyler C.
+    orcid: "https://orcid.org/0000-0002-6964-1194"
+  - family-names: Howard
+    given-names: Susan L.
+    orcid: "https://orcid.org/0000-0002-9183-0178"
+  - family-names: Padman
+    given-names: Laurie
+    orcid: "https://orcid.org/0000-0003-2010-642X"
+  - family-names: Siegfried
+    given-names: Matthew R.
+    orcid: "https://orcid.org/0000-0002-0868-4633"
+  date-published: 2025-12-15
+  doi: 10.21105/joss.08566
+  issn: 2475-9066
+  issue: 116
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 8566
+  title: "pyTMD: Python-based tidal prediction software"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.08566"
+  volume: 10
 
 references:
   - type: grant
@@ -87,3 +123,12 @@ references:
     authors:
       - given-names: Richard
         family-names: Ray
+  - type: software
+    title: "OTPS: OSU Tidal Prediction Software "
+    version: 2024
+    repository-code: "https://www.tpxo.net/otps"
+    authors:
+      - given-names: Gary
+        family-names: Egbert
+      - given-names: Lana
+        family-names: Erofeeva
