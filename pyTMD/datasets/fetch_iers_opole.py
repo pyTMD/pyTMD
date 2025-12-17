@@ -54,7 +54,7 @@ def fetch_iers_opole(
 
     Parameters
     ----------
-    directory: str
+    directory: str or pathlib.Path
         Directory to download the ocean pole tide map file
     timeout: int or NoneType, default None
         timeout in seconds for blocking operations
