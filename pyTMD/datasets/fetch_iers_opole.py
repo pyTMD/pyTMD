@@ -31,6 +31,7 @@ REFERENCES:
 UPDATE HISTORY:
     Written 12/2025
 """
+
 import os
 import logging
 import pathlib
@@ -40,6 +41,7 @@ from timescale.time import parse
 
 # default working data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
+
 
 def fetch_iers_opole(
     directory: str | pathlib.Path = _default_directory,
@@ -67,7 +69,7 @@ def fetch_iers_opole(
         "content",
         "chapter7",
         "additional_info",
-        "opoleloadcoefcmcor.txt.gz"
+        "opoleloadcoefcmcor.txt.gz",
     ]
     URL = pyTMD.utilities.URL.from_parts(url)
     # create local directory if it doesn't exist
@@ -75,14 +77,14 @@ def fetch_iers_opole(
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
     local = directory.joinpath(URL.name)
     # get ocean pole tide file from remote host
-    logger.info(f"{URL}")
+    logger.info(URL)
     URL.get(local=local, timeout=timeout)
     # get last modified time from remote host
-    last_modified = URL.headers.get("last-modified", None)
+    last_modified = URL._headers.get("last-modified", None)
     # keep remote modification time of file and local access time
     if last_modified:
-        os.utime(local,
-            (local.stat().st_atime, parse(last_modified).timestamp())
+        os.utime(
+            local, (local.stat().st_atime, parse(last_modified).timestamp())
         )
     # change the permissions mode
     local.chmod(mode=mode)
@@ -143,4 +145,3 @@ def main():
 # run main program
 if __name__ == "__main__":
     main()
-

@@ -27,12 +27,14 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Written 12/2025
 """
+
 import os
 import logging
 import pathlib
 import argparse
 import pyTMD.utilities
 from timescale.time import parse
+
 
 def fetch_jpl_ssd(
     kernel="de440s.bsp",
@@ -72,14 +74,14 @@ def fetch_jpl_ssd(
     URL = pyTMD.utilities.URL.from_parts(url)
     # get kernel file from remote host
     logger.info("Downloading JPL Planetary Ephemeride Kernel File")
-    logger.info(f"{URL}")
+    logger.info(URL)
     URL.get(local=local, timeout=timeout)
     # get last modified time from remote host
-    last_modified = URL.headers.get("last-modified", None)
+    last_modified = URL._headers.get("last-modified", None)
     # keep remote modification time of file and local access time
     if last_modified:
-        os.utime(local,
-            (local.stat().st_atime, parse(last_modified).timestamp())
+        os.utime(
+            local, (local.stat().st_atime, parse(last_modified).timestamp())
         )
     # change the permissions mode
     local.chmod(mode=mode)
@@ -95,11 +97,13 @@ def arguments():
     )
     parser.convert_arg_line_to_args = pyTMD.utilities.convert_arg_line_to_args
     # command line parameters
-    parser.add_argument('--kernel',
-        '-K',
+    parser.add_argument(
+        "--kernel",
+        "-K",
         type=str,
-        default='de440s.bsp',
-        help='JPL kernel file to download')
+        default="de440s.bsp",
+        help="JPL kernel file to download",
+    )
     # local path to kernel file
     parser.add_argument(
         "--local",
@@ -146,4 +150,3 @@ def main():
 # run main program
 if __name__ == "__main__":
     main()
-
