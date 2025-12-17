@@ -68,13 +68,10 @@ dev = ["dask", "flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xd
 "fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
 "fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
 "fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
+"fetch_iers_opole.py" = "pyTMD.datasets.fetch_iers_opole:main"
+"fetch_jpl_ssd.py" = "pyTMD.datasets.fetch_jpl_ssd:main"
 "fetch_test_data.py" = "pyTMD.datasets.fetch_test_data:main" 
 "reduce_otis.py" = "pyTMD.datasets.reduce_otis:main" 
-"verify_box_tpxo.py" = "pyTMD.datasets.verify_box_tpxo:main" 
-"arcticdata_tides.py" = "pyTMD.datasets.fetch_arcticdata:main" 
-"aviso_fes_tides.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
-"gsfc_got_tides.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
-"reduce_OTIS_files.py" = "pyTMD.datasets.reduce_otis:main" 
 
 [tool.setuptools.packages.find]
 exclude = ["providers*", "run*", "test*"]

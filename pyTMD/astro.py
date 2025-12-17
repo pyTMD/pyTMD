@@ -83,8 +83,8 @@ from pyTMD.utilities import (
     get_cache_path,
     import_dependency,
     dependency_available,
-    from_jpl_ssd,
 )
+from pyTMD.datasets import fetch_jpl_ssd
 
 # attempt imports
 jplephem = import_dependency("jplephem")
@@ -749,7 +749,7 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # download kernel file if not currently existing
     if not pathlib.Path(kwargs["kernel"]).exists():
-        from_jpl_ssd(kernel=None, local=kwargs["kernel"])
+        fetch_jpl_ssd(kernel=None, local=kwargs["kernel"])
     # read JPL ephemerides kernel
     SPK = jplephem.spk.SPK.open(kwargs["kernel"])
     # segments for computing position of the sun
@@ -943,7 +943,7 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     kwargs.setdefault("include_aberration", False)
     # download kernel file if not currently existing
     if not pathlib.Path(kwargs["kernel"]).exists():
-        from_jpl_ssd(kernel=None, local=kwargs["kernel"])
+        fetch_jpl_ssd(kernel=None, local=kwargs["kernel"])
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # difference to convert to Barycentric Dynamical Time (TDB)
