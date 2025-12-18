@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
+        moved JPL kernel download function to datasets with other fetchers
     Updated 11/2025: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for compression and model format
@@ -90,6 +91,7 @@ else:
     import urllib.request as urllib2
 
 __all__ = [
+    "reify",
     "get_data_path",
     "get_cache_path",
     "import_dependency",
@@ -97,7 +99,6 @@ __all__ = [
     "is_valid_url",
     "Path",
     "URL",
-    "reify",
     "detect_format",
     "detect_compression",
     "compressuser",
@@ -121,9 +122,25 @@ __all__ = [
     "from_http",
     "from_json",
     "iers_list",
-    "from_jpl_ssd",
     "uhslc_list",
 ]
+
+
+class reify(object):
+    """Class decorator that puts the result of the method it
+    decorates into the instance"""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.__name__ = wrapped.__name__
+        self.__doc__ = wrapped.__doc__
+
+    def __get__(self, inst, objtype=None):
+        if inst is None:
+            return self
+        val = self.wrapped(inst)
+        setattr(inst, self.wrapped.__name__, val)
+        return val
 
 
 # PURPOSE: get absolute path within a package from a relative path
@@ -277,6 +294,7 @@ class URL:
         """Initialize a ``URL`` object"""
         self.urlname = str(urlname)
         self._raw_paths = list(url_split(self.urlname))
+        self._headers = {}
 
     @classmethod
     def from_parts(cls, parts: str | list | tuple):
@@ -296,7 +314,7 @@ class URL:
 
     def joinpath(self, *pathsegments: list[str]):
         """Append URL components to existing
-        
+
         Parameters
         ----------
         pathsegments: list[str]
@@ -315,33 +333,42 @@ class URL:
     def is_dir(self):
         """Boolean flag if path is a local directory"""
         return False
-    
+
     def geturl(self):
         """String representation of the ``URL`` object"""
         return self._components.geturl()
-    
+
     def get(self, *args, **kwargs):
-        """Get contents from URL
-        """
-        return from_http(self.urlname, *args, **kwargs)
+        """Get contents from URL"""
+        return from_http(self.urlname, headers=self._headers, *args, **kwargs)
+
+    def headers(self, *args, **kwargs):
+        """Get headers from URL"""
+        self.urlopen(*args, **kwargs)
+        return self._headers
 
     def ping(self, *args, **kwargs) -> bool:
-        """Ping URL to check connection
-        """
+        """Ping URL to check connection"""
         return check_connection(self.urlname, *args, **kwargs)
 
     def read(self, *args, **kwargs):
-        """Open URL and read response
-        """
+        """Open URL and read response"""
+        return self.urlopen(*args, **kwargs).read()
+
+    def urlopen(self, *args, **kwargs):
+        """Open URL and return response"""
         request = urllib2.Request(self.urlname)
         response = urllib2.urlopen(request, *args, **kwargs)
-        return response.read()
+        self._headers.update(
+            {k.lower(): v for k, v in response.headers.items()}
+        )
+        return response
 
     @property
     def name(self):
         """URL basename"""
         return pathlib.PurePosixPath(self.urlname).name
-    
+
     @property
     def netloc(self):
         """URL network location"""
@@ -352,23 +379,23 @@ class URL:
         """URL parent path as a ``URL`` object"""
         paths = url_split(self.urlname)[:-1]
         return URL.from_parts(paths)
-    
+
     @property
     def parents(self):
         """URL parents as a list of ``URL`` objects"""
         paths = url_split(self.urlname)
-        return [URL.from_parts(paths[:i]) for i in range(len(paths)-1, 0, -1)]
+        return [URL.from_parts(paths[:i]) for i in range(len(paths) - 1, 0, -1)]
 
     @property
     def parts(self):
         """URL parts as a tuple"""
         paths = url_split(self._components.path)
         return (self.scheme, self.netloc, *paths)
-    
+
     @property
     def scheme(self):
         """URL scheme"""
-        return self._components.scheme + '://'
+        return self._components.scheme + "://"
 
     @property
     def stem(self):
@@ -389,7 +416,7 @@ class URL:
     def __str__(self):
         """String representation of the ``URL`` object"""
         return str(self.urlname)
-    
+
     def __div__(self, other):
         """Join URL components using the division operator"""
         return self.joinpath(other)
@@ -397,23 +424,6 @@ class URL:
     def __truediv__(self, other):
         """Join URL components using the division operator"""
         return self.joinpath(other)
-
-
-class reify(object):
-    """Class decorator that puts the result of the method it
-    decorates into the instance"""
-
-    def __init__(self, wrapped):
-        self.wrapped = wrapped
-        self.__name__ = wrapped.__name__
-        self.__doc__ = wrapped.__doc__
-
-    def __get__(self, inst, objtype=None):
-        if inst is None:
-            return self
-        val = self.wrapped(inst)
-        setattr(inst, self.wrapped.__name__, val)
-        return val
 
 
 def detect_format(filename: str | pathlib.Path) -> str:
@@ -465,7 +475,7 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
 def compressuser(filename: str | pathlib.Path):
     """
     Tilde-compress a file to be relative to the home directory
-    
+
     Parameters
     ----------
     filename: str or pathlib.Path
@@ -1048,6 +1058,7 @@ def from_http(
     local: str | pathlib.Path | None = None,
     hash: str = "",
     chunk: int = 16384,
+    headers: dict = {},
     verbose: bool = False,
     fid=sys.stdout,
     mode: oct = 0o775,
@@ -1070,6 +1081,8 @@ def from_http(
         MD5 hash of local file
     chunk: int, default 16384
         chunk size for transfer encoding
+    headers: dict, default {}
+        dictionary of headers to append from url request
     verbose: bool, default False
         print file transfer information
     fid: obj, default sys.stdout
@@ -1102,6 +1115,8 @@ def from_http(
         remote_buffer.seek(0)
         # save file basename with bytesIO object
         remote_buffer.filename = HOST[-1]
+        # copy headers from response
+        headers.update({k.lower(): v for k, v in response.getheaders()})
         # generate checksum hash for remote file
         remote_hash = hashlib.md5(remote_buffer.getvalue()).hexdigest()
         # compare checksums
@@ -1218,63 +1233,6 @@ def iers_list(
         # sort list of column names and last modified times in reverse order
         # return the list of column names and last modified times
         return (colnames[::-1], collastmod[::-1])
-
-
-def from_jpl_ssd(
-    kernel="de440s.bsp",
-    timeout: int | None = None,
-    context: ssl.SSLContext = _default_ssl_context,
-    local: str | pathlib.Path | None = None,
-    hash: str = "",
-    chunk: int = 16384,
-    verbose: bool = False,
-    mode: oct = 0o775,
-):
-    """
-    Download `planetary ephemeride kernels`__ from the JPL Solar
-    System Dynamics server
-
-    .. __: https://ssd.jpl.nasa.gov/planets/eph_export.html
-
-    Parameters
-    ----------
-    kernel: str
-        JPL kernel file to download
-    timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
-    hash: str, default ''
-        MD5 hash of local file
-    chunk: int, default 16384
-        chunk size for transfer encoding
-    verbose: bool, default False
-        print file transfer information
-    mode: oct, default 0o775
-        permissions mode of output local file
-    """
-    # determine which kernel file to download
-    if local is None:
-        # local path to kernel file
-        local = get_cache_path(kernel)
-    elif (kernel is None) and (local is not None):
-        # verify inputs for remote http host
-        local = pathlib.Path(local).expanduser().absolute()
-        kernel = local.name
-    # remote host path to kernel file
-    HOST = ["https://ssd.jpl.nasa.gov", "ftp", "eph", "planets", "bsp", kernel]
-    # get kernel file from remote host
-    logging.info("Downloading JPL Planetary Ephemeride Kernel File")
-    from_http(
-        HOST,
-        timeout=timeout,
-        context=context,
-        local=local,
-        hash=hash,
-        chunk=chunk,
-        verbose=verbose,
-        mode=mode,
-    )
 
 
 # PURPOSE: list a directory on the University of Hawaii SLC Server

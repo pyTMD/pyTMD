@@ -7,12 +7,18 @@ import io
 import gzip
 import pytest
 import pathlib
+import pyTMD.datasets
 import pyTMD.utilities
 
 def test_hash():
     # get hash of compressed file
-    ocean_pole_tide_file = pyTMD.utilities.get_data_path(['data',
-        'opoleloadcoefcmcor.txt.gz'])
+    ocean_pole_tide_file = pyTMD.utilities.get_cache_path(
+        'opoleloadcoefcmcor.txt.gz')
+    # fetch file if it doesn't exist
+    if not ocean_pole_tide_file.exists():
+        pyTMD.datasets.fetch_iers_opole(
+            directory=ocean_pole_tide_file.parent
+        )
     TEST = pyTMD.utilities.get_hash(ocean_pole_tide_file)
     assert (TEST == '9c66edc2d0fbf627e7ae1cb923a9f0e5')
     # get hash of uncompressed file

@@ -26,6 +26,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
+        fetch ocean pole tide file if it doesn't exist instead of raising error
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 08/2024: convert outputs to be in -180:180 longitude convention
         added function to interpolate ocean pole tide values to coordinates
@@ -55,6 +56,7 @@ import warnings
 import numpy as np
 import xarray as xr
 import pyTMD.utilities
+from pyTMD.datasets import fetch_iers_opole
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -64,8 +66,8 @@ __all__ = [
 ]
 
 # ocean pole tide file from Desai (2002) and IERS conventions
-_ocean_pole_tide_file = pyTMD.utilities.get_data_path(
-    ["data", "opoleloadcoefcmcor.txt.gz"]
+_ocean_pole_tide_file = pyTMD.utilities.get_cache_path(
+    "opoleloadcoefcmcor.txt.gz"
 )
 
 
@@ -101,8 +103,9 @@ def open_dataset(
     crs = kwargs.get("crs", 4326)
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
+    # fetch ocean pole tide file if it doesn't exist
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
-        raise FileNotFoundError(f"File not found: {input_file}")
+        fetch_iers_opole(directory=input_file.parent)
     # read compressed ocean pole tide file
     if kwargs["compressed"]:
         # read gzipped ascii file

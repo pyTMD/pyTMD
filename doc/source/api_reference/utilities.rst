@@ -12,6 +12,9 @@ Download and management utilities for syncing time and auxiliary files
 General Methods
 ===============
 
+.. autoclass:: pyTMD.utilities.reify
+   :members:
+
 .. autofunction:: pyTMD.utilities.get_data_path
 
 .. autofunction:: pyTMD.utilities.get_cache_path
@@ -23,9 +26,6 @@ General Methods
 .. autofunction:: pyTMD.utilities.Path
 
 .. autoclass:: pyTMD.utilities.URL
-   :members:
-
-.. autoclass:: pyTMD.utilities.reify
    :members:
 
 .. autofunction:: pyTMD.utilities.detect_format
@@ -67,7 +67,5 @@ General Methods
 .. autofunction:: pyTMD.utilities.from_json
 
 .. autofunction:: pyTMD.utilities.iers_list
-
-.. autofunction:: pyTMD.utilities.from_jpl_ssd
 
 .. autofunction:: pyTMD.utilities.uhslc_list

@@ -124,7 +124,7 @@ references:
       - given-names: Richard
         family-names: Ray
   - type: software
-    title: "OTPS: OSU Tidal Prediction Software "
+    title: "OTPS: OSU Tidal Prediction Software"
     version: 2024
     repository-code: "https://www.tpxo.net/otps"
     authors:
