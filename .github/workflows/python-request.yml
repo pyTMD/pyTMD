@@ -56,8 +56,10 @@ jobs:
     - name: Create coverage comment
       uses: MishaKav/pytest-coverage-comment@main
       with:
-        pytest-xml-coverage-path: ./test/coverage.xml
-        junitxml-path: ./test/pytest.xml
+        pytest-xml-coverage-path: coverage.xml
+        junitxml-path: pytest.xml
+        unique-id-for-comment: ${{ matrix.os }}
+        title: Coverage for Python ${{ matrix.os }}
     - name: Archive code coverage results
       uses: actions/upload-artifact@v4
       with:

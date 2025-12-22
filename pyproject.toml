@@ -91,14 +91,12 @@ testpaths = [
 branch = true
 source = [
     "pyTMD",
-    "test",
 ]
 omit = [
     "doc/*",
     "providers/*.py",
     "pyTMD/datasets/*",
-    "test/_coefficients_to_json.py",
-    "test/_def_to_json.py",
+    "test/*",
 ]
 
 [tool.coverage.report]
@@ -184,9 +182,7 @@ cwd = "test"
 description = "Run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.coverage]
-args = [ { "arg" = "test", "default" = "." } ]
-cmd = "pytest -n=0 --cov=./ --junitxml=pytest.xml --cov-report=xml {{ test }}"
-cwd = "test"
+cmd = "pytest -n=0 --cov=pyTMD --junitxml=pytest.xml --cov-report=xml test"
 description = "Run the pytest suite and create coverage reports"
 
 [tool.pixi.feature.dev.tasks.lint]
