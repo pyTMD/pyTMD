@@ -1,0 +1,18 @@
+name: Run ruff format on pull requests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+
+jobs:
+  ruff-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Format and annotate PR
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: "format --check --diff"

@@ -127,9 +127,7 @@ def fetch_gsfc_got(
     logger.info(f"{URL} -->\n")
     # open the tar file
     tar = tarfile.open(
-        name=URL.parts[-1],
-        fileobj=URL.get(timeout=timeout),
-        mode=TAR[model]
+        name=URL.parts[-1], fileobj=URL.get(timeout=timeout), mode=TAR[model]
     )
     # read tar file and extract all files
     member_files = [m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)]
