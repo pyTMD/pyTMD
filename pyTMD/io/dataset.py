@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 12/2025: add coords functions to transform coordinates
         set units attribute for amplitude and phase data arrays
+        add functions for assigning coordinates to datasets
     Updated 11/2025: get crs directly using pyproj.CRS.from_user_input
         set variable name to constituent for to_dataarray method
         added is_global property for models covering a global domain
@@ -58,6 +59,41 @@ class DataTree:
         # initialize DataTree
         self._dtree = dtree
 
+    def assign_coords(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
+        """
+        Assign new coordinates to the ``DataTree``
+
+        Parameters
+        ----------
+        x: np.ndarray
+            New x-coordinates
+        y: np.ndarray
+            New y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of coordinates
+        kwargs: keyword arguments
+            keyword arguments for ``xarray.Dataset.assign_coords``
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            dataset with new coordinates
+        """
+        # assign new coordinates to each dataset
+        dtree = self._dtree.copy()
+        for key, ds in self._dtree.items():
+            ds = ds.to_dataset().assign_coords(dict(x=x, y=y), **kwargs)
+            ds.attrs["crs"] = crs
+            dtree[key] = ds
+        # return the datatree
+        return dtree
+
     def coords_as(
         self,
         x: np.ndarray,
@@ -66,7 +102,7 @@ class DataTree:
         **kwargs,
     ):
         """
-        Transform coordinates into DataArrays in the DataTree
+        Transform coordinates into ``DataArrays`` in the ``DataTree``
         coordinate reference system
 
         Parameters
@@ -157,7 +193,7 @@ class DataTree:
 
     def transform_as(self, x, y, crs=4326, **kwargs):
         """
-        Transform coordinates to/from the datatree coordinate reference system
+        Transform coordinates to/from the ``DataTree`` coordinate reference system
 
         Parameters
         ----------
@@ -312,6 +348,38 @@ class Dataset:
         da = da.assign_coords(constituent=kwargs["constituents"])
         return da
 
+    def assign_coords(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
+        """
+        Assign new coordinates to the ``Dataset``
+
+        Parameters
+        ----------
+        x: np.ndarray
+            New x-coordinates
+        y: np.ndarray
+            New y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of coordinates
+        kwargs: keyword arguments
+            keyword arguments for ``xarray.Dataset.assign_coords``
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            dataset with new coordinates
+        """
+        # assign new coordinates to dataset
+        ds = self._ds.assign_coords(dict(x=x, y=y), **kwargs)
+        ds.attrs["crs"] = crs
+        # return the dataset
+        return ds
+
     def coords_as(
         self,
         x: np.ndarray,
@@ -320,7 +388,7 @@ class Dataset:
         **kwargs,
     ):
         """
-        Transform coordinates into DataArrays in the Dataset
+        Transform coordinates into ``DataArrays`` in the ``Dataset``
         coordinate reference system
 
         Parameters
@@ -559,7 +627,7 @@ class Dataset:
         Returns
         -------
         ds: xarray.Dataset
-            padded xarray Dataset
+            padded dataset
         """
         # (possibly) unchunk x-coordinates and pad to wrap at meridian
         x = xr.DataArray(self._x, dims="x").pad(
@@ -625,7 +693,7 @@ class Dataset:
         **kwargs,
     ):
         """
-        Transform coordinates to/from the dataset coordinate reference system
+        Transform coordinates to/from the ``Dataset`` coordinate reference system
 
         Parameters
         ----------
