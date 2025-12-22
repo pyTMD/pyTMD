@@ -49,7 +49,7 @@ Coverage reports can be generated using the ``pytest-cov`` plugin (which is inst
 
 .. code-block:: bash
 
-    pixi run test "--cov ../pyTMD --cov-report=term"
+    pixi run coverage
 
 Parallelization
 ^^^^^^^^^^^^^^^
@@ -73,7 +73,8 @@ The workflows use ``pixi`` to install the required dependencies and build the cu
 
 The GitHub Actions jobs include:
 
-* Running `flake8 <https://flake8.pycqa.org/en/latest/>`_ to check the code for style and compilation errors
-* Running the test suite on multiple combinations of OS and Python version
-* Uploading test coverage statistics to `Codecov <https://app.codecov.io/gh/pyTMD/pyTMD>`_
+* Verifying that the code meets style guidelines using `ruff <https://docs.astral.sh/ruff/>`_
+* Running `flake8 <https://flake8.pycqa.org/en/latest/>`_ to check the code for compilation errors
+* Running the test suite on different operating systems
+* Creating a comment with test coverage statistics
 * Uploading source and wheel distributions to `PyPI <https://pypi.org/project/pyTMD/>`_ (on releases)

@@ -183,6 +183,12 @@ cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
 description = "Run the pytest suite"
 
+[tool.pixi.feature.dev.tasks.coverage]
+args = [ { "arg" = "test", "default" = "." } ]
+cmd = "pytest -n=0 --cov=./ --junitxml=pytest.xml --cov-report=xml {{ test }}"
+cwd = "test"
+description = "Run the pytest suite and create coverage reports"
+
 [tool.pixi.feature.dev.tasks.lint]
 args = [ { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" }, { "arg" = "test", "default" = "." } ]
 cmd = "flake8 {{ test }} --count {{ flags }} --statistics --extend-exclude 'build/,run/,*.ipynb_checkpoints/,.pixi/'"
