@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  lint:
+  ruff-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
