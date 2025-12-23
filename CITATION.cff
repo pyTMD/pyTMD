@@ -105,6 +105,16 @@ references:
         family-names: Sutterley
       - given-names: Kelly
         family-names: Brunt
+  - type: grant
+    title: "Using ICESat-2 To Map The Production, Dispersal And Decay Of Meteoric And Landfast Sea Ice Around Antarctica, And Effects On Sea Ice And The Upper Ocean"
+    institution:
+      name: National Aeronautics and Space Administration
+    number: 80NSSC21K0911
+    authors:
+      - given-names: Laurie
+        family-names: Padman
+      - given-names: Susan
+        family-names: Howard
   - type: software
     title: "TMD Matlab Toolbox"
     version: 2.5

@@ -9,7 +9,7 @@ This work was initially supported by an appointment to the NASA Postdoctoral
 Program (NPP) at NASA Goddard Space Flight Center (GSFC), administered by
 Universities Space Research Association (USRA) under contract with NASA.
 It is currently supported under the NASA Cryospheric Sciences Program
-(Grant Number 80NSSC22K0379).
+(Grant Numbers `80NSSC22K0379`_ and `80NSSC21K0911`_).
 
 .. admonition:: Please consider citing our article in the Journal of Open Source Software (JOSS):
 
@@ -17,6 +17,9 @@ It is currently supported under the NASA Cryospheric Sciences Program
     "pyTMD: Python-based tidal prediction software," 
     *Journal of Open Source Software*, 10(116), 8566 (2025).
     `doi: 10.21105/joss.08566 <https://doi.org/10.21105/joss.08566>`_
+
+.. _80NSSC22K0379: https://app.dimensions.ai/details/grant/grant.13212262
+.. _80NSSC21K0911: https://app.dimensions.ai/details/grant/grant.13210572
 
 Dependencies
 ############

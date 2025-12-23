@@ -147,7 +147,7 @@ Glossary
         see :term:`Spring Tide`
 
     Nodal Corrections
-        adjustments to the amplitudes and phases of harmonic constituents to allow for periodic modulations over the 18.6-year nodal period
+        adjustments to the amplitudes (:math:`f`) and phases (:math:`u`) of harmonic constituents to allow for periodic modulations over the 18.6-year nodal period (:math:`N`).
 
     Nutation
         short-period oscillations in the motion of the pole of rotation of a freely rotating body
