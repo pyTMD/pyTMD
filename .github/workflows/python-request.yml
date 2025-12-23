@@ -52,15 +52,16 @@ jobs:
         pixi run fetch
     - name: Test with pytest
       run: |
-        pixi run test "--cov=./ --cov-report=xml"
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+        pixi run coverage
+    - name: Create coverage comment
+      uses: MishaKav/pytest-coverage-comment@main
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
-        verbose: true
+        pytest-xml-coverage-path: coverage.xml
+        junitxml-path: pytest.xml
+        unique-id-for-comment: ${{ matrix.os }}
+        title: Coverage for Python on ${{ matrix.os }}
     - name: Archive code coverage results
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-report-${{ matrix.os }}
-        path: ./test/coverage.xml
+        path: coverage.xml
