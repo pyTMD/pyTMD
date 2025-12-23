@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
+        added option to change the output datatype when writing netCDF files
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 08/2025: use numpy degree to radian conversions
         added option to gap fill when reading constituent grids
@@ -310,6 +311,7 @@ class ATLASDataset:
         path: str | pathlib.Path,
         mode: str = "w",
         encoding: dict = {"zlib": True, "complevel": 9},
+        astype: str = 'float32',
         **kwargs,
     ):
         """
@@ -349,7 +351,9 @@ class ATLASDataset:
         attrs[depth_key]["field"] = "bath, scalar"
         # create output xarray dataset
         ds = xr.Dataset()
-        ds[depth_key] = self._ds["bathymetry"]
+        ds[depth_key] = self._ds["bathymetry"].astype(astype)
+        # rename dimensions
+        ds = ds.swap_dims(dict(x="nx", y="ny"))
         # remap coordinates to ATLAS convention
         ds = ds.rename(mapping_coords)
         # add global attributes
@@ -370,6 +374,7 @@ class ATLASDataset:
         path: str | pathlib.Path,
         mode: str = "w",
         encoding: dict = {"zlib": True, "complevel": 9},
+        astype: str = 'float32',
         **kwargs,
     ):
         """
@@ -427,14 +432,19 @@ class ATLASDataset:
             # create xarray dataset
             ds = xr.Dataset()
             # extract real and imaginary components
-            ds[f"{type_key}Re"] = self._ds[v].real.values
-            ds[f"{type_key}Im"] = self._ds[v].imag.values
+            ds[f"{type_key}Re"] = self._ds[v].real.astype(astype)
+            ds[f"{type_key}Im"] = self._ds[v].imag.astype(astype)
+            # constituent name
+            ds["con"] = v.ljust(4).encode('utf-8')
+            # rename dimensions
+            ds = ds.swap_dims(dict(x="nx", y="ny"))
             # remap coordinates to ATLAS convention
             ds = ds.rename(mapping_coords)
             # update variable attributes
             for att_name, att_val in attrs.items():
                 ds[att_name].attrs.update(att_val)
             ds[att_name].attrs["units"] = self._ds[v].attrs["units"]
+            ds["con"].attrs["long_name"] = "tidal constituent"
             # add global attributes
             if group == "z":
                 ds.attrs["title"] = "ATLAS tidal elevation file"

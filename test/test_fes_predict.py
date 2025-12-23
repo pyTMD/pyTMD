@@ -50,12 +50,11 @@ filepath = pathlib.Path(filename).absolute().parent
 
 # PURPOSE: Tests check point program
 def test_check_FES2014(directory):
-    lons = np.zeros((10)) + 178.0
-    lats = -45.0 - np.arange(10)*5.0
+    lons = np.arange(6)*60
+    lats = np.zeros((6)) + 59.0
     obs = pyTMD.compute.tide_masks(lons, lats, directory=directory,
         model='FES2014', crs=4326)
-    exp = np.array([True, True, True, True, True,
-        True, True, True, False, False])
+    exp = np.array([True, False, False, True, False, True])
     assert np.all(obs == exp)
 
 # parametrize over cropping the model fields
