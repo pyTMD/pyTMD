@@ -311,7 +311,7 @@ class ATLASDataset:
         path: str | pathlib.Path,
         mode: str = "w",
         encoding: dict = {"zlib": True, "complevel": 9},
-        astype: str = 'float32',
+        astype: str = "float32",
         **kwargs,
     ):
         """
@@ -374,7 +374,7 @@ class ATLASDataset:
         path: str | pathlib.Path,
         mode: str = "w",
         encoding: dict = {"zlib": True, "complevel": 9},
-        astype: str = 'float32',
+        astype: str = "float32",
         **kwargs,
     ):
         """
@@ -435,7 +435,7 @@ class ATLASDataset:
             ds[f"{type_key}Re"] = self._ds[v].real.astype(astype)
             ds[f"{type_key}Im"] = self._ds[v].imag.astype(astype)
             # constituent name
-            ds["con"] = v.ljust(4).encode('utf-8')
+            ds["con"] = v.ljust(4).encode("utf-8")
             # rename dimensions
             ds = ds.swap_dims(dict(x="nx", y="ny"))
             # remap coordinates to ATLAS convention
