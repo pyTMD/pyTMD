@@ -45,7 +45,7 @@ Ocean tide models are typically one of following categories:
 
 Under the equilibrium theory of tides, the Earth is a spherical body with a uniform distribution of water over its surface :cite:p:`Doodson:1921kt`.
 In this model, the oceanic surface instantaneously responds to the tide-producing forces of the moon and sun, and is not influenced by inertia, currents or the irregular distribution of land :cite:p:`Schureman:1958ty`.
-However in reality, every constituent lags behind its corresponding equilibrium wave, and their amplitudes differ in magnitude :cite:p:`Dronkers:1975hm`.
+However in reality due to a combination of hydrodynamic and real world effects, every constituent lags behind its corresponding equilibrium wave, and their amplitudes differ in magnitude :cite:p:`Dronkers:1975hm`.
 While the equilibrium condition is rarely satisfied for shorter period tides, some of the longest period ocean tides are often assumed to be well approximated as equilibrium responses to the tidal force :cite:p:`Proudman:1960jj,Ray:2014fu`. 
 
 Using the relative amplitudes from equilibrium theory are also useful for *inferring* unmodeled constituents :cite:p:`Cartwright:1971iz,Cartwright:1973em`.

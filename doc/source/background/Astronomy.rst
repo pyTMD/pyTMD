@@ -44,7 +44,7 @@ The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`
 
     \tau = t - S + H
 
-When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as the fundamental variables :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp` .
+When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as the fundamental orbital elements :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp` .
 
 .. list-table:: Delaunay Arguments
     :header-rows: 1
