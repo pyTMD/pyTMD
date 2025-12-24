@@ -434,8 +434,8 @@ class ATLASDataset:
             # extract real and imaginary components
             ds[f"{type_key}Re"] = self._ds[v].real.astype(astype)
             ds[f"{type_key}Im"] = self._ds[v].imag.astype(astype)
-            # constituent name
-            ds["con"] = v.ljust(4).encode("utf-8")
+            # define and fill constituent ID
+            ds["con"] = v.ljust(4).encode("utf8")
             # rename dimensions
             ds = ds.swap_dims(dict(x="nx", y="ny"))
             # remap coordinates to ATLAS convention
@@ -444,6 +444,7 @@ class ATLASDataset:
             for att_name, att_val in attrs.items():
                 ds[att_name].attrs.update(att_val)
             ds[att_name].attrs["units"] = self._ds[v].attrs["units"]
+            ds["con"].attrs["_Encoding"] = "utf8"
             ds["con"].attrs["long_name"] = "tidal constituent"
             # add global attributes
             if group == "z":

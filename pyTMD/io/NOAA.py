@@ -122,10 +122,13 @@ def from_xml(url, **kwargs):
     try:
         logging.debug(url)
         df = pd.read_xml(url, **kwargs)
-    except ValueError:
+    except ValueError as exc:
         logging.error(traceback.format_exc())
-    # return the dataframe
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        logging.error(traceback.format_exc())
+        raise RuntimeError("Error querying NOAA webservices API") from exc
     else:
+        # return the dataframe
         return df
 
 
