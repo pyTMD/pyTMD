@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-u"""
+"""
 model.py
 Written by Tyler Sutterley (05/2024)
 Base class for estimating tidal constituents using hydrodynamic modeling
@@ -19,8 +19,8 @@ PYTHON DEPENDENCIES:
         https://pyproj4.github.io/pyproj/
 
 PROGRAM DEPENDENCIES:
-    arguments.py: loads nodal corrections for tidal constituents
     astro.py: computes the basic astronomical mean longitudes
+    constituents.py: calculates constituent parameters and nodal arguments
     grid.py: sets up finite difference grids for tidal modeling
     utilities.py: download and management utilities for files
 
@@ -28,12 +28,14 @@ UPDATE HISTORY:
     Updated 05/2024: make subscriptable and allow item assignment
     Written 02/2024
 """
+
 from __future__ import annotations
 
 import numpy as np
-import pyTMD.arguments
+import pyTMD.constituents
 import pyTMD.solve.grid as fdgrid
 import pyTMD.math
+
 
 class model:
     """
@@ -116,7 +118,7 @@ class model:
         species: float
             spherical harmonic dependence of quadrupole potential
         """
-        return pyTMD.arguments._constituent_parameters(c)
+        return pyTMD.constituents._constituent_parameters(c)
 
     # PURPOSE: calculate the astronomical tide generating force
     def generating_force(self, c: str):
@@ -148,23 +150,35 @@ class model:
         ph = 0.0
 
         # calculate forcing for constituent
-        Fu = alpha*amp*gamma_u*np.exp(1j*phi_u*species + 1j*ph)/self.grid.rad_e
-        Fv = alpha*amp*gamma_v*np.exp(1j*phi_v*species + 1j*ph)/self.grid.rad_e
-        
+        Fu = (
+            alpha
+            * amp
+            * gamma_u
+            * np.exp(1j * phi_u * species + 1j * ph)
+            / self.grid.rad_e
+        )
+        Fv = (
+            alpha
+            * amp
+            * gamma_v
+            * np.exp(1j * phi_v * species + 1j * ph)
+            / self.grid.rad_e
+        )
+
         # calculate latitudinal dependence of forcing
         # for a given spherical harmonic dependence
-        if (species == 1):
+        if species == 1:
             # diurnal species
-            Fu *= 2j*np.cos(th_u)
-            Fv *= 2.0*(2.0*np.sin(th_v)**2 - 1.0)
-        elif (species == 2):
+            Fu *= 2j * np.cos(th_u)
+            Fv *= 2.0 * (2.0 * np.sin(th_v) ** 2 - 1.0)
+        elif species == 2:
             # semidiurnal species
-            Fu *= 2j*np.sin(th_u)
-            Fv *= -2.0*(np.sin(th_v)*np.cos(th_v))
+            Fu *= 2j * np.sin(th_u)
+            Fv *= -2.0 * (np.sin(th_v) * np.cos(th_v))
         else:
             # long-period species
             Fu *= 0.0 + 0j
-            Fv *= -3.0*(np.sin(th_v)*np.cos(th_v))
+            Fv *= -3.0 * (np.sin(th_v) * np.cos(th_v))
 
         # return the generating forces
         return (Fu, Fv)
@@ -193,50 +207,45 @@ class model:
         ph = 0.0
 
         # calculate potential for constituent
-        zeta = alpha*amp*np.exp(1j*phi_z*species + 1j*ph)
+        zeta = alpha * amp * np.exp(1j * phi_z * species + 1j * ph)
 
         # calculate latitudinal dependence of potential
         # for a given spherical harmonic dependence
-        if (species == 1):
+        if species == 1:
             # diurnal species
-            zeta *= 2.0*np.sin(th_z)*np.cos(th_z)
-        elif (species == 2):
+            zeta *= 2.0 * np.sin(th_z) * np.cos(th_z)
+        elif species == 2:
             # semidiurnal species
-            zeta *= np.sin(th_z)**2
+            zeta *= np.sin(th_z) ** 2
         else:
             # long-period species
-            zeta *= -1.0*(3.0/2.0*np.cos(th_z)**2 - 1.0/2.0)
+            zeta *= -1.0 * (3.0 / 2.0 * np.cos(th_z) ** 2 - 1.0 / 2.0)
 
         # return the generating potential and the angular frequency
         return (zeta, omega)
 
     @property
     def shape(self) -> tuple:
-        """Shape of the grid
-        """
+        """Shape of the grid"""
         return self.grid.shape
 
     @property
     def size(self) -> int:
-        """Total number of nodes
-        """
+        """Total number of nodes"""
         return self.grid.size
 
     @property
     def nx(self) -> int:
-        """Number of nodes in the x-direction
-        """
+        """Number of nodes in the x-direction"""
         return self.grid.shape[1]
 
     @property
     def ny(self) -> int:
-        """Number of nodes in the y-direction
-        """
+        """Number of nodes in the y-direction"""
         return self.grid.shape[0]
 
     def __validate__(self):
-        """Check if class inputs are appropriate
-        """
+        """Check if class inputs are appropriate"""
         NoneType = type(None)
         assert isinstance(self.beta, (int, float))
         assert isinstance(self.rho_w, (int, float))
@@ -248,12 +257,11 @@ class model:
         assert isinstance(self.dt, (int, float))
 
     def __str__(self):
-        """String representation of the ``model`` object
-        """
-        properties = ['pyTMD.solve.model']
-        shape = ', '.join(map(str, self.shape))
+        """String representation of the ``model`` object"""
+        properties = ["pyTMD.solve.model"]
+        shape = ", ".join(map(str, self.shape))
         properties.append(f"    shape: {shape}")
-        return '\n'.join(properties)
+        return "\n".join(properties)
 
     def __getitem__(self, key):
         return getattr(self, key)
