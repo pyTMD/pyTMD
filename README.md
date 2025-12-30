@@ -25,6 +25,7 @@ Python-based tidal prediction software for estimating ocean, load, solid Earth a
     <td>
         <a href="https://pytmd.readthedocs.io/en/latest/?badge=latest" alt="Documentation Status"><img src="https://readthedocs.org/projects/pytmd/badge/?version=latest"></a>
         <a href="https://github.com/pyTMD/pyTMD/actions/workflows/python-request.yml" alt="Build"><img src="https://github.com/pyTMD/pyTMD/actions/workflows/python-request.yml/badge.svg"></a>
+        <a href="https://github.com/pyTMD/pyTMD/actions/workflows/ruff-format.yml" alt="Ruff"><img src="https://github.com/pyTMD/pyTMD/actions/workflows/ruff-format.yml/badge.svg"></a>
     </td>
   </tr>
   <tr>
