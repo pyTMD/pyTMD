@@ -219,7 +219,7 @@ def _zenodo(
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
         # download file or extract files from zip
-        if pathlib.Path(f["name"]).suffix == ".zip":
+        if pathlib.Path(f["filename"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
