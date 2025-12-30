@@ -1,14 +1,39 @@
 # pyTMD
 
-[![License](https://img.shields.io/github/license/pyTMD/pyTMD)](https://github.com/pyTMD/pyTMD/blob/main/LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/pytmd/badge/?version=latest)](https://pytmd.readthedocs.io/en/latest/?badge=latest)
-[![PyPI](https://img.shields.io/pypi/v/pyTMD.svg)](https://pypi.python.org/pypi/pyTMD/)
-[![conda-forge](https://img.shields.io/conda/vn/conda-forge/pytmd)](https://anaconda.org/conda-forge/pytmd)
-[![commits-since](https://img.shields.io/github/commits-since/pyTMD/pyTMD/latest)](https://github.com/pyTMD/pyTMD/releases/latest)
-[![JOSS](https://joss.theoj.org/papers/10.21105/joss.08566/status.svg)](https://doi.org/10.21105/joss.08566)
-[![zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.5555395.svg)](https://doi.org/10.5281/zenodo.5555395)
-
 Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides
+
+## About
+
+<table>
+  <tr>
+    <td><b>Version:</b></td>
+    <td>
+        <a href="https://pypi.python.org/pypi/pyTMD/" alt="PyPI"><img src="https://img.shields.io/pypi/v/pyTMD.svg"></a>
+        <a href="https://anaconda.org/conda-forge/pytmd" alt="conda-forge"><img src="https://img.shields.io/conda/vn/conda-forge/pytmd"></a>
+        <a href="https://github.com/pyTMD/pyTMD/releases/latest" alt="commits-since"><img src="https://img.shields.io/github/commits-since/pyTMD/pyTMD/latest"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Citation:</b></td>
+    <td>
+        <a href="https://doi.org/10.21105/joss.08566" alt="JOSS"><img src="https://joss.theoj.org/papers/10.21105/joss.08566/status.svg"></a>
+        <a href="https://doi.org/10.5281/zenodo.5555395" alt="zenodo"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5555395.svg"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Tests:</b></td>
+    <td>
+        <a href="https://pytmd.readthedocs.io/en/latest/?badge=latest" alt="Documentation Status"><img src="https://readthedocs.org/projects/pytmd/badge/?version=latest"></a>
+        <a href="https://github.com/pyTMD/pyTMD/actions/workflows/python-request.yml" alt="Build"><img src="https://github.com/pyTMD/pyTMD/actions/workflows/python-request.yml/badge.svg"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><b>License:</b></td>
+    <td>
+        <a href="https://github.com/pyTMD/pyTMD/blob/main/LICENSE" alt="License"><img src="https://img.shields.io/github/license/pyTMD/pyTMD"></a>
+    </td>
+  </tr>
+</table>
 
 For more information: see the documentation at [pytmd.readthedocs.io](https://pytmd.readthedocs.io/)
 
@@ -80,11 +105,15 @@ This will automatically create the environment, install all dependencies, and la
 
 ## References
 
+>  T. C. Sutterley, S. L. Howard, L. Padman, and M. R. Siegfried,
+> "pyTMD: Python-based tidal prediction software". *Journal of Open Source Software*,
+> 10(116), 8566, (2025). [doi: 10.21105/joss.08566](https://doi.org/10.21105/joss.08566)
+> 
 > T. C. Sutterley, T. Markus, T. A. Neumann, M. R. van den Broeke, J. M. van Wessem, and S. R. M. Ligtenberg,
 > "Antarctic ice shelf thickness change from multimission lidar mapping", *The Cryosphere*,
 > 13, 1801-1817, (2019). [doi: 10.5194/tc-13-1801-2019](https://doi.org/10.5194/tc-13-1801-2019)
 >
-> L. Padman, M. R. Siegfried, H. A. Fricker,
+> L. Padman, M. R. Siegfried, and H. A. Fricker,
 > "Ocean Tide Influences on the Antarctic and Greenland Ice Sheets", *Reviews of Geophysics*,
 > 56, 142-184, (2018). [doi: 10.1002/2016RG000546](https://doi.org/10.1002/2016RG000546)
 
