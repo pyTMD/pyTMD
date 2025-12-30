@@ -14,6 +14,7 @@ UPDATE HISTORY:
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
         moved JPL kernel download function to datasets with other fetchers
+        added load JSON function for URL class (wrapper for from_json)
     Updated 11/2025: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for compression and model format
@@ -346,6 +347,10 @@ class URL:
         """Get headers from URL"""
         self.urlopen(*args, **kwargs)
         return self._headers
+
+    def load(self, *args, **kwargs):
+        """Load JSON response from URL"""
+        return from_json(self.urlname, headers=self._headers, *args, **kwargs)
 
     def ping(self, *args, **kwargs) -> bool:
         """Ping URL to check connection"""
@@ -1144,6 +1149,7 @@ def from_json(
     HOST: str | list,
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
+    headers: dict = {},
 ) -> dict:
     """
     Load a JSON response from a http host
@@ -1156,6 +1162,8 @@ def from_json(
         timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
         SSL context for ``urllib`` opener object
+    headers: dict, default {}
+        dictionary of headers to append from url request
     """
     # verify inputs for remote http host
     if isinstance(HOST, str):
@@ -1174,6 +1182,8 @@ def from_json(
         msg = "Load error from {0}".format(posixpath.join(*HOST))
         raise Exception(msg) from exc
     else:
+        # copy headers from response
+        headers.update({k.lower(): v for k, v in response.getheaders()})
         # load JSON response
         return json.loads(response.read())
 

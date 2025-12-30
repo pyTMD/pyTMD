@@ -1,4 +1,4 @@
-name: Run ruff format on pull requests
+name: Ruff Format
 
 on:
   pull_request:

@@ -27,6 +27,7 @@ REFERENCE:
 
 UPDATE HISTORY:
     Updated 12/2025: use URL class to build and operate on URLs
+        use load method to get JSON responses from urls
     Updated 11/2025: use from_database to access model parameters
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: made a callable function and added function docstrings
@@ -122,9 +123,9 @@ def verify_box_tpxo(
     # box api url
     HOST = ["https://api.box.com", "2.0"]
     URL = pyTMD.utilities.URL.from_parts(HOST)
-    # get folder contents
+    # create and submit request and load JSON response
     folder_url = URL.joinpath("folders", folder_id, "items")
-    folder_contents = json.loads(folder_url.read())
+    folder_contents = folder_url.load()
     # find files of interest
     file_entries = [
         entry
@@ -137,8 +138,8 @@ def verify_box_tpxo(
         file_url = URL.joinpath("files", entry["id"])
         # print remote path
         logger.info(f"{file_url} -->")
-        # get last modified time for file
-        file_contents = json.loads(file_url.read())
+        # create and submit request and load JSON response
+        file_contents = file_url.load()
         modified_at = file_contents["modified_at"]
         remote_mtime = pyTMD.utilities.get_unix_time(
             modified_at, format="%Y-%m-%dT%H:%M:%S%z"

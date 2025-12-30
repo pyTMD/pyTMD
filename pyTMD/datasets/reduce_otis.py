@@ -29,6 +29,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 12/2025: simplify function call signatures
     Updated 11/2025: use new xarray file access protocols for OTIS files
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to reduce_otis
@@ -75,16 +76,6 @@ import timescale.time
 
 # default data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
-
-
-# PURPOSE: keep track of threads
-def info(args):
-    logging.debug(pathlib.Path(sys.argv[0]).name)
-    logging.debug(args)
-    logging.debug(f"module name: {__name__}")
-    if hasattr(os, "getppid"):
-        logging.debug(f"parent process: {os.getppid():d}")
-    logging.debug(f"process id: {os.getpid():d}")
 
 
 # PURPOSE: reads OTIS-format tidal files and reduces to a regional subset
@@ -145,9 +136,9 @@ def reduce_otis(
     dtree["V"] = dsv.tmd.crop([x.min(), x.max(), y.min(), y.max()])
 
     # create unique filenames for reduced datasets
-    new_grid_file = create_unique_filename(m["z"].grid_file)
-    new_elevation_file = create_unique_filename(m["z"].model_file)
-    new_transport_file = create_unique_filename(m["u"].model_file)
+    new_grid_file = _unique_filename(m["z"].grid_file)
+    new_elevation_file = _unique_filename(m["z"].model_file)
+    new_transport_file = _unique_filename(m["u"].model_file)
     # output reduced datasets to file
     dtree.otis.to_grid(new_grid_file)
     dtree.otis.to_elevation(new_elevation_file)
@@ -159,7 +150,7 @@ def reduce_otis(
 
 
 # PURPOSE: create a unique filename adding a numerical instance if existing
-def create_unique_filename(filename):
+def _unique_filename(filename):
     # split filename into parts
     filename = pathlib.Path(filename)
     stem = filename.stem
@@ -274,7 +265,6 @@ def main():
 
     # try to run regional program
     try:
-        info(args)
         reduce_otis(
             args.tide,
             directory=args.directory,

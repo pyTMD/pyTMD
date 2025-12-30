@@ -12,7 +12,7 @@ Running the test suite requires a `dev installation <../getting_started/Install.
 Test Data Access
 ^^^^^^^^^^^^^^^^
 The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
-For project developers, the data files can be fetched from a permanent open research repository using the :func:`pyTMD.datasets.fetch_test_data` function.
+For project developers, the data files can be fetched from a permanent open research repository (``figshare`` or ``zenodo``) using the :func:`pyTMD.datasets.fetch_test_data` function.
 These files accessed similarly during `continuous integration (CI) testing <./Testing.html#continuous-integration>`_.
 
 Fetching the data using ``pixi``:
