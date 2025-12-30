@@ -172,7 +172,7 @@ cwd = "doc"
 description = "Create HTML documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.fetch]
-cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data()'"
+cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout=360)'"
 description = "Fetch data needed to run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.test]
