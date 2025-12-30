@@ -42,6 +42,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 12/2025: simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
         remove printing to log file
     Updated 09/2025: renamed module and function to fetch_aviso_fes
@@ -143,7 +144,7 @@ def fetch_aviso_fes(
 
     # download the FES tide model files
     if model in ("FES1999", "FES2004", "FES2012", "FES2014"):
-        aviso_fes_tar(
+        _fes_tar(
             model,
             f,
             logger,
@@ -155,7 +156,7 @@ def fetch_aviso_fes(
             MODE=mode,
         )
     elif model in ("FES2022",):
-        aviso_fes_list(
+        _fes_list(
             model,
             f,
             logger,
@@ -173,7 +174,7 @@ def fetch_aviso_fes(
 
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading tar files and extracting contents
-def aviso_fes_tar(
+def _fes_tar(
     MODEL,
     f,
     logger,
@@ -301,7 +302,7 @@ def aviso_fes_tar(
         FES[MODEL], TAR[MODEL], FLATTEN[MODEL]
     ):
         # download file from ftp and decompress tar files
-        ftp_download(
+        _ftp_download(
             logger,
             f,
             remotepath,
@@ -315,7 +316,7 @@ def aviso_fes_tar(
 
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading individual files
-def aviso_fes_list(
+def _fes_list(
     MODEL,
     f,
     logger,
@@ -371,11 +372,11 @@ def aviso_fes_list(
     # for each model file type
     for subdir in FES[MODEL]:
         local_dir = DIRECTORY.joinpath(*subdir)
-        file_list = ftp_list(f, subdir, basename=True, sort=True)
+        file_list = _ftp_list(f, subdir, basename=True, sort=True)
         for fi in file_list:
             remote_path = [*subdir, fi]
             LZMA = fi.endswith(".xz")
-            ftp_download(
+            _ftp_download(
                 logger,
                 f,
                 remote_path,
@@ -388,7 +389,7 @@ def aviso_fes_list(
 
 
 # PURPOSE: List a directory on a ftp host
-def ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
+def _ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
     """
     List a directory on a ftp host
 
@@ -425,7 +426,7 @@ def ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
 
 
 # PURPOSE: pull file from a remote ftp server and decompress if tar file
-def ftp_download(
+def _ftp_download(
     logger,
     f,
     remote_path,
@@ -491,7 +492,7 @@ def ftp_download(
             )
             local_file = local_dir.joinpath(*posixpath.split(output))
             # check if the local file exists
-            if local_file.exists() and newer(
+            if local_file.exists() and _newer(
                 m.mtime, local_file.stat().st_mtime
             ):
                 # check the modification time of the local file
@@ -519,7 +520,7 @@ def ftp_download(
         output = f"{stem}.gz" if sfx in (".asc", ".nc") and GZIP else stem
         local_file = local_dir.joinpath(output)
         # check if the local file exists
-        if local_file.exists() and newer(mtime, local_file.stat().st_mtime):
+        if local_file.exists() and _newer(mtime, local_file.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             return
@@ -549,7 +550,7 @@ def ftp_download(
         mdtm = f.sendcmd(f"MDTM {remote_file}")
         mtime = calendar.timegm(time.strptime(mdtm[4:], "%Y%m%d%H%M%S"))
         # check if the local file exists
-        if local_file.exists() and newer(mtime, local_file.stat().st_mtime):
+        if local_file.exists() and _newer(mtime, local_file.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             return
@@ -566,7 +567,7 @@ def ftp_download(
 
 
 # PURPOSE: compare the modification time of two files
-def newer(t1: int, t2: int) -> bool:
+def _newer(t1: int, t2: int) -> bool:
     """
     Compare the modification time of two files
 

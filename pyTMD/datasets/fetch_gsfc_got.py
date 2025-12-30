@@ -33,6 +33,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 12/2025: use URL class to build and operate on URLs
+        simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to fetch_gsfc_got
         made a callable function and added function docstrings
@@ -151,7 +152,7 @@ def fetch_gsfc_got(
         # create local file path
         local_file = directory.joinpath(*posixpath.split(output))
         # check if the local file exists
-        if local_file.exists() and newer(m.mtime, local_file.stat().st_mtime):
+        if local_file.exists() and _newer(m.mtime, local_file.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             continue
@@ -169,7 +170,7 @@ def fetch_gsfc_got(
 
 
 # PURPOSE: compare the modification time of two files
-def newer(t1: int, t2: int) -> bool:
+def _newer(t1: int, t2: int) -> bool:
     """
     Compare the modification time of two files
 
