@@ -1,6 +1,6 @@
 # This workflow will install Python dependencies and update database from the provider files
 
-name: Update provider database on pull request
+name: Update Provider Database
 
 on:
   pull_request:
