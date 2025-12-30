@@ -29,6 +29,13 @@ Python-based tidal prediction software for estimating ocean, load, solid Earth a
     </td>
   </tr>
   <tr>
+    <td><b>Data:</b></td>
+    <td>
+        <a href="https://doi.org/10.5281/zenodo.18091740" alt="zenodo"><img src="https://img.shields.io/badge/zenodo-pyTMD_test_data-2f6fa7"></a>
+        <a href="https://doi.org/10.6084/m9.figshare.30260326" alt="figshare"><img src="https://img.shields.io/badge/figshare-pyTMD_test_data-a60845?logo=figshare"></a>
+    </td>
+  </tr>
+  <tr>
     <td><b>License:</b></td>
     <td>
         <a href="https://github.com/pyTMD/pyTMD/blob/main/LICENSE" alt="License"><img src="https://img.shields.io/github/license/pyTMD/pyTMD"></a>
