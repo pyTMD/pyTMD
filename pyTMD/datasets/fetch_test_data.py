@@ -88,7 +88,7 @@ def _figshare(
     article: str = "30260326",
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
-    chunk: int | None = 16384,
+    chunk: int = 16384,
     logger: logging.Logger | None = None,
     mode: oct = 0o775,
     **kwargs,
@@ -106,8 +106,6 @@ def _figshare(
         timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
         SSL context for ``urllib`` opener object
-    hash: str, default ''
-        MD5 hash of local file
     chunk: int, default 16384
         chunk size for transfer encoding
     logger: logging.logger object
@@ -162,7 +160,7 @@ def _zenodo(
     record: str = "18091740",
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
-    chunk: int | None = 16384,
+    chunk: int = 16384,
     logger: logging.Logger | None = None,
     mode: oct = 0o775,
     **kwargs,
@@ -180,8 +178,6 @@ def _zenodo(
         timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
         SSL context for ``urllib`` opener object
-    hash: str, default ''
-        MD5 hash of local file
     chunk: int, default 16384
         chunk size for transfer encoding
     logger: logging.logger object
