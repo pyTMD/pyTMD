@@ -46,6 +46,8 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/pyproj/
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 PROGRAM DEPENDENCIES:
     time.py: utilities for calculating time operations
@@ -209,7 +211,7 @@ def corrections(
     Returns
     -------
     values: np.ndarray
-        tidal correction at coordinates and time in meters
+        tidal correction (meters)
     """
     if correction.lower() in ("ocean", "load"):
         return tide_elevations(x, y, delta_time, **kwargs)
@@ -320,7 +322,7 @@ def tide_elevations(
     Returns
     -------
     tide: xarray.DataArray
-        tidal elevation in meters
+        tidal elevation (meters)
     """
     # default keyword arguments
     kwargs.setdefault("chunks", None)
@@ -727,7 +729,7 @@ def LPET_elevations(
     Returns
     -------
     LPET: xr.DataArray
-        long-period equilibrium tide at coordinates and time in meters
+        long-period equilibrium tide (meters)
     """
 
     # validate input arguments
@@ -827,7 +829,7 @@ def LPT_displacements(
     Returns
     -------
     S: xr.DataArray
-        solid earth pole tide at coordinates and time in meters
+        solid earth pole tide (meters)
     """
 
     # validate input arguments
@@ -987,7 +989,7 @@ def OPT_displacements(
     Returns
     -------
     U: xr.DataArray
-        ocean pole tide at coordinates and time in meters
+        ocean pole tide (meters)
     """
 
     # validate input arguments
@@ -1191,7 +1193,7 @@ def _ephemeride_SET(
     Returns
     -------
     SE: xr.DataArray
-        solid earth tide at coordinates and time in meters
+        solid earth tide (meters)
     """
 
     # validate input arguments
@@ -1370,7 +1372,7 @@ def _catalog_SET(
     Returns
     -------
     SE: xr.DataArray
-        solid earth tide at coordinates and time in meters
+        solid earth tide (meters)
     """
 
     # validate input arguments

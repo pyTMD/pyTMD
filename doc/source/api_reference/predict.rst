@@ -45,3 +45,5 @@ predict
 .. autofunction:: pyTMD.predict._free_to_mean
 
 .. autofunction:: pyTMD.predict.body_tide
+
+.. autofunction:: pyTMD.predict.length_of_day
