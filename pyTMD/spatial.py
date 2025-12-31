@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 spatial.py
-Written by Tyler Sutterley (08/2025)
+Written by Tyler Sutterley (12/2025)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 12/2025: add units to input and output variables in docstrings
     Updated 08/2025: convert angles with numpy radians and degrees functions
     Updated 03/2025: add more ellipsoidal parameters to datum class
     Updated 02/2025: major refactor to move io routines out of this module
@@ -660,9 +661,9 @@ def convert_ellipsoid(
     Parameters
     ----------
     lat1: np.ndarray
-        latitude of input ellipsoid in degrees
+        latitude of input ellipsoid (degrees)
     h1: np.ndarray
-        height above input ellipsoid in meters
+        height above input ellipsoid (meters)
     a1: float
         semi-major axis of input ellipsoid
     f1: float
@@ -680,9 +681,9 @@ def convert_ellipsoid(
     Returns
     -------
     lat2: np.ndarray
-        latitude of output ellipsoid in degrees
+        latitude of output ellipsoid (degrees)
     h2: np.ndarray
-        height above output ellipsoid in meters
+        height above output ellipsoid (meters)
     """
     if len(lat1) != len(h1):
         raise ValueError("lat and h have incompatible dimensions")
@@ -849,7 +850,7 @@ def to_dms(d: np.ndarray):
     Parameters
     ----------
     d: np.ndarray
-        decimal degrees
+        angle (decimal degrees)
 
     Returns
     -------
@@ -882,7 +883,7 @@ def from_dms(degree: np.ndarray, minute: np.ndarray, second: np.ndarray):
     Returns
     -------
     d: np.ndarray
-        decimal degrees
+        angle (decimal degrees)
     """
     sign = np.sign(degree)
     d = np.abs(degree) + minute / 60.0 + second / 3600.0
@@ -919,6 +920,15 @@ def to_cartesian(
         ellipsoidal flattening
 
         for spherical coordinates set to 0
+
+    Returns
+    -------
+    x: np.ndarray
+        cartesian x-coordinates (meters)
+    y: np.ndarray
+        cartesian y-coordinates (meters)
+    z: np.ndarray
+        cartesian z-coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(lon) == 0
@@ -953,11 +963,20 @@ def to_sphere(x: np.ndarray, y: np.ndarray, z: np.ndarray):
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
+
+    Returns
+    -------
+    lon: np.ndarray
+        longitude (degrees east)
+    lat: np.ndarray
+        latitude (degrees north)
+    rad: np.ndarray
+        radius (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1004,11 +1023,11 @@ def to_geodetic(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
         semimajor axis of the ellipsoid
     flat: float, default 1.0/298.257223563
@@ -1023,6 +1042,15 @@ def to_geodetic(
         tolerance for iterative methods
     iterations: int, default 10
         maximum number of iterations
+
+    Returns
+    -------
+    lon: np.ndarray
+        longitude (degrees east)
+    lat: np.ndarray
+        latitude (degrees north)
+    h: np.ndarray
+        height above ellipsoid (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1066,11 +1094,11 @@ def _moritz_iterative(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
         semimajor axis of the ellipsoid
     flat: float, default 1.0/298.257223563
@@ -1127,11 +1155,11 @@ def _bowring_iterative(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
         semimajor axis of the ellipsoid
     flat: float, default 1.0/298.257223563
@@ -1198,11 +1226,11 @@ def _zhu_closed_form(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
         semimajor axis of the ellipsoid
     flat: float, default 1.0/298.257223563
@@ -1268,11 +1296,11 @@ def to_ENU(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     lon0: float or np.ndarray, default 0.0
         reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
@@ -1287,11 +1315,11 @@ def to_ENU(
     Returns
     -------
     E: np.ndarray
-        east coordinates
+        east coordinates (meters)
     N: np.ndarray
-        north coordinates
+        north coordinates (meters)
     U: np.ndarray
-        up coordinates
+        up coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1341,11 +1369,11 @@ def from_ENU(
     Parameters
     ----------
     E, np.ndarray
-        east coordinates
+        east coordinates (meters)
     N, np.ndarray
-        north coordinates
+        north coordinates (meters)
     U, np.ndarray
-        up coordinates
+        up coordinates (meters)
     lon0: float or np.ndarray, default 0.0
         reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
@@ -1360,11 +1388,11 @@ def from_ENU(
     Returns
     -------
     x, float
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, float
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, float
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(E) == 0
@@ -1413,20 +1441,19 @@ def to_horizontal(
     Parameters
     ----------
     E: np.ndarray
-        east coordinates
+        east coordinates (meters)
     N: np.ndarray
-        north coordinates
+        north coordinates (meters)
     U: np.ndarray
-        up coordinates
-
+        up coordinates (meters)
     Returns
     -------
     alpha: np.ndarray
-        altitude (elevation) angle in degrees
+        altitude (elevation) angle (degrees)
     phi: np.ndarray
-        azimuth angle in degrees
+        azimuth angle (degrees)
     D: np.ndarray
-        distance from observer to object in meters
+        distance from observer to object (meters)
     """
     # calculate distance to object
     # convert coordinates to unit vectors
@@ -1455,11 +1482,11 @@ def to_zenith(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates
+        cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates
+        cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates
+        cartesian z-coordinates (meters)
     lon0: float or np.ndarray, default 0.0
         reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
@@ -1474,7 +1501,7 @@ def to_zenith(
     Returns
     -------
     zenith: np.ndarray
-        zenith angle of object in degrees
+        zenith angle of object (degrees)
     """
     # convert from ECEF to ENU
     E, N, U = to_ENU(

@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 """
 predict.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (12/2025)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
     G. D. Egbert and S. Erofeeva, "Efficient Inverse Modeling of Barotropic
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
+    R. Ray and S. Erofeeva, "Long-period tidal variations in the length of day",
+        Journal of Geophysical Research: Solid Earth, 119, (2014).
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -14,6 +16,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     timescale: Python tools for time and astronomical calculations
         https://pypi.org/project/timescale/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
@@ -21,6 +25,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 12/2025: added tidal LOD calculation from Ray and Erofeeva (2014)
     Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
         can choose different tide potential catalogs for body tides
@@ -115,6 +120,7 @@ __all__ = [
     "_frequency_dependence_long_period",
     "_free_to_mean",
     "body_tide",
+    "length_of_day",
 ]
 
 # number of days between the Julian day epoch and MJD
@@ -984,8 +990,8 @@ def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    lpet: np.ndarray
-        long-period equilibrium tide in meters
+    lpet: xr.DataArray
+        long-period equilibrium tide (meters)
     """
     # set default keyword arguments
     cindex = [
@@ -1183,7 +1189,7 @@ def load_pole_tide(
     Returns
     -------
     dxt: np.ndarray
-        Load pole tide displacements in meters in Cartesian coordinates
+        Load pole tide displacements (meters)
     """
     # convert time to nominal years (Terrestrial Time)
     time_decimal = 1992.0 + np.atleast_1d(t + deltat) / 365.25
@@ -1314,7 +1320,7 @@ def ocean_pole_tide(
     Returns
     -------
     dxt: np.ndarray
-        Load pole tide displacements in meters in Cartesian coordinates
+        Ocean pole tide displacements (meters)
     """
     # convert time to nominal years (Terrestrial Time)
     time_decimal = 1992.0 + np.atleast_1d(t + deltat) / 365.25
@@ -1375,8 +1381,8 @@ def solid_earth_tide(
     **kwargs,
 ):
     """
-    Compute the solid Earth tides due to the gravitational
-    attraction of the moon and sun
+    Compute the solid Earth tides in Cartesian coordinates
+    due to the gravitational attraction of the moon and sun
     :cite:p:`Mathews:1991kv,Mathews:1997js,Ries:1992ip,Wahr:1981ea`
 
     Parameters
@@ -1414,7 +1420,7 @@ def solid_earth_tide(
     Returns
     -------
     dxt: np.ndarray
-        Solid Earth tide in meters in Cartesian coordinates
+        Solid Earth tide (meters)
     """
     # set default keyword arguments
     # nominal Love and Shida numbers for degrees 2 and 3
@@ -2208,7 +2214,7 @@ def body_tide(
     Returns
     -------
     zeta: np.ndarray
-        Solid Earth tide in meters
+        Solid Earth tide (meters)
     """
     # set default keyword arguments
     kwargs.setdefault("include_planets", False)
@@ -2381,3 +2387,90 @@ def body_tide(
         zeta[var].attrs["units"] = "meters"
     # return the body tides
     return zeta
+
+
+# PURPOSE: estimate variations in length of day
+def length_of_day(t: np.ndarray, **kwargs):
+    """
+    Compute the variations in earth rotation caused by long-period (zonal)
+    tides :cite:p:`Ray:2014fu`
+
+    Parameters
+    ----------
+    t: np.ndarray
+        days relative to 1992-01-01T00:00:00
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
+
+    Returns
+    -------
+    ds: xr.Dataset
+        Dataset containing:
+
+        - ``dUT``: anomaly in UT1-TAI (microseconds)
+        - ``dLOD``: excess LOD (microseconds per day)
+        - ``period``: period of constituent (days)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("deltat", 0.0)
+    # convert dates to Modified Julian Days
+    MJD = t + _mjd_tide
+    # compute astronomical arguments
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(
+        MJD + kwargs["deltat"], method="ASTRO5"
+    )
+    # initial time conversions
+    hour = 24.0 * np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0 * hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    k = 90.0 + 0.0 * MJD
+    # dataset of arguments
+    # note the sign change to go from N to N'
+    arguments = xr.Dataset(
+        data_vars=dict(
+            tau=(["time"], tau),
+            s=(["time"], s),
+            h=(["time"], h),
+            p=(["time"], p),
+            n=(["time"], -n),
+            pp=(["time"], pp),
+            k=(["time"], k),
+        ),
+        coords=dict(time=np.atleast_1d(MJD)),
+    ).to_dataarray(dim="argument")
+    # parse rotation rate table from Ray and Erofeeva (2014)
+    ZROT = pyTMD.constituents._parse_rotation_rate_table()
+    # Doodson coefficients
+    coefficients = xr.DataArray(
+        np.array(
+            [
+                ZROT["tau"],
+                ZROT["s"],
+                ZROT["h"],
+                ZROT["p"],
+                ZROT["n"],
+                ZROT["pp"],
+                ZROT["k"],
+            ]
+        ),
+        dims=["argument", "constituent"],
+        coords=dict(argument=["tau", "s", "h", "p", "n", "pp", "k"]),
+    )
+    # equilibrium phase converted gto radians
+    arg = np.radians(arguments.dot(coefficients))
+    # create output dataset
+    ds = xr.Dataset()
+    # compute delta UT1-TAI (microseconds)
+    ds["dUT"] = ZROT["UTc"] * np.cos(arg) + ZROT["UTs"] * np.sin(arg)
+    ds["dUT"].attrs["units"] = "microseconds"
+    ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
+    # compute delta LOD (microseconds per day)
+    ds["dLOD"] = ZROT["dLODc"] * np.cos(arg) + ZROT["dLODs"] * np.sin(arg)
+    ds["dLOD"].attrs["units"] = "microseconds per day"
+    ds["dLOD"].attrs["long_name"] = "excess length of day"
+    # period of constituent (days)
+    ds["period"] = ("constituent", ZROT["period"])
+    ds["period"].attrs["units"] = "days"
+    # return the variations in earth rotation
+    return ds

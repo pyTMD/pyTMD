@@ -25,6 +25,7 @@ REFERENCES:
 
 UPDATE HISTORY:
     Updated 12/2025: added m1a and m1b constituents to nodal corrections
+        added function to parse LOD table from Ray and Erofeeva (2014)
     Updated 11/2025: renamed from arguments to constituents
     Updated 09/2025: added spherical harmonic degree to tide potential tables
         added IERS Conventions references for Love number calculations
@@ -114,6 +115,7 @@ __all__ = [
     "_love_numbers",
     "_complex_love_numbers",
     "_parse_tide_potential_table",
+    "_parse_rotation_rate_table",
     "_parse_name",
     "_to_constituent_id",
     "_to_doodson_number",
@@ -2564,6 +2566,62 @@ def _parse_tide_potential_table(
         CTE[i] = np.array(tuple(line.split()[:total_columns]), dtype=dtype)
     # return the table values
     return CTE
+
+
+def _parse_rotation_rate_table():
+    """Parse table of tidal constituent rotation rates from
+    :cite:t:`Ray:2014fu`
+
+    Returns
+    -------
+    ZROT: np.ndarray
+        rotation rate table values
+    """
+    table = get_data_path(["data", "re14_tab3.txt"])
+    with table.open(mode="r", encoding="utf8") as f:
+        file_contents = f.readlines()
+    # compile numerical expression operator
+    rx = re.compile(r"[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))")
+    # number of lines in the file
+    file_lines = len(file_contents) - 1
+    # names: names of the columns in the table
+    # formats: data types for each column in the table
+    names = []
+    formats = []
+    names.append("row")
+    formats.append("i")
+    # tau: spherical harmonic dependence (order)
+    # s: coefficient for mean longitude of moon
+    # h: coefficient for mean longitude of sun
+    # p: coefficient for mean longitude of lunar perigee
+    # n: coefficient for mean longitude of ascending lunar node
+    # pp: coefficient for mean longitude of solar perigee
+    # k: variable for multiples of 90 degrees (Ray technical note 2017)
+    names.extend(["tau", "s", "h", "p", "n", "pp", "k"])
+    formats.extend(["i", "i", "i", "i", "i", "i", "i"])
+    # period of constituent (days)
+    names.append("period")
+    formats.append("f")
+    # Cartwright-Tayler-Edden amplitude (meters)
+    names.append("CTE_amp")
+    formats.append("f")
+    # anomaly in UT1-TAI in microseconds
+    names.extend(["UTc", "UTs"])
+    formats.extend(["f", "f"])
+    # excess LOD in microseconds (per day)
+    names.extend(["dLODc", "dLODs"])
+    formats.extend(["f", "f"])
+    # real and imaginary components of admittance
+    names.extend(["kap_r", "kap_i"])
+    formats.extend(["f", "f"])
+    # create a structured numpy dtype for the table
+    dtype = np.dtype({"names": names, "formats": formats})
+    ZROT = np.zeros((file_lines), dtype=dtype)
+    # iterate over each line in the file
+    for i, line in enumerate(file_contents[1:]):
+        ZROT[i] = np.array(tuple(rx.findall(line)), dtype=dtype)
+    # return the table values
+    return ZROT
 
 
 def _parse_name(constituent: str) -> str:
