@@ -67,6 +67,7 @@ dev = ["dask", "flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xd
 [project.scripts]
 "fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
 "fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
+"fetch_box_tpxo.py" = "pyTMD.datasets.fetch_box_tpxo:main"
 "fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
 "fetch_iers_opole.py" = "pyTMD.datasets.fetch_iers_opole:main"
 "fetch_jpl_ssd.py" = "pyTMD.datasets.fetch_jpl_ssd:main"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 OTIS.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (01/2026)
 
 Reads OTIS format tidal solutions provided by Oregon State University and ESR
     http://volkov.oce.orst.edu/tides/region.html
@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 01/2026: check if flexure variable exists in TMD3 files
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 10/2025: refactored binary read programs
@@ -503,7 +504,8 @@ def open_tmd3_dataset(
     # convert bathymetry to float and rename to match
     ds["bathymetry"] = tmp.wct.astype("f")
     # convert flexure from percent to scale factor
-    ds["flexure"] = tmp.flexure.astype("f") / 100.0
+    if hasattr(tmp, "flexure"):
+        ds["flexure"] = tmp.flexure.astype("f") / 100.0
     # add attributes
     for con in ds.data_vars:
         ds[con].attrs["units"] = units

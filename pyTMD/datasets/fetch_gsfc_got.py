@@ -61,7 +61,7 @@ import pyTMD.utilities
 _default_directory = pyTMD.utilities.get_cache_path()
 
 
-# PURPOSE: Download Arctic Ocean Tide Models from the NSF ArcticData archive
+# PURPOSE: Download Goddard Ocean Tide (GOT) models
 def fetch_gsfc_got(
     model: str,
     directory: str | pathlib.Path | None = _default_directory,
