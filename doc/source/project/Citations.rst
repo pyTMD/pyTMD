@@ -68,28 +68,18 @@ Data Citations
 
 Internally, ``pyTMD`` includes datasets from the following:
 
-    D. E. Cartwright and R. J. Tayler, "New Computations of the Tide-generating Potential,"
-    *Geophysical Journal of the Royal Astronomical Society*, 23(1), 45--73. (1971).
-    `doi: 10.1111/j.1365-246X.1971.tb01803.x <https://doi.org/10.1111/j.1365-246X.1971.tb01803.x>`_
+.. bibliography::
+    :list: bullet
+    :filter: False
 
-    D. E. Cartwright and A. C. Edden, "Corrected Tables of Tidal Harmonics,"
-    *Geophysical Journal of the Royal Astronomical Society*, 33(3), 253--264, (1973).
-    `doi: 10.1111/j.1365-246X.1973.tb03420.x <https://doi.org/10.1111/j.1365-246X.1973.tb03420.x>`_
-    
-    S. Desai, J. Wahr and B. Beckley "Revisiting the pole tide for and from satellite altimetry,"
-    *Journal of Geodesy*, 89(12), 1233--1243, (2015).
-    `doi: 10.1007/s00190-015-0848-7 <https://doi.org/10.1007/s00190-015-0848-7>`_
+    Cartwright:1971iz
+    Cartwright:1973em
+    Desai:2015jr
+    Hartmann:1995jp
+    Petit:2010tp
+    Ray:2014fu
+    Tamura:1987tp
 
-    T. Hartmann and H.-G. Wenzel, "The HW95 tidal potential catalogue,"
-    *Geophysical Research Letters*, 22(24), 3553--3556, (1995).
-    `doi: 10.1029/95GL03324 <https://doi.org/10.1029/95GL03324>`_
-
-    *IERS Conventions (2010)*, G. Petit and B. Luzum (eds.), (IERS Technical Note; 36),
-    Frankfurt am Main: Verlag des Bundesamts f\ |uuml|\ r Kartographie und Geod\ |auml|\ sie, 179 pp. (2010).
-    `ISBN 3-89888-989-6 <https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html>`_
-
-    Y. Tamura, "A harmonic development of the tide-generating potential,"
-    *Marees Terrestres Bulletin d'Informations*, 99, 6813--6855, (1987).
 
 Disclaimer
 ##########

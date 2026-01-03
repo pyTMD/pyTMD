@@ -2457,7 +2457,7 @@ def length_of_day(t: np.ndarray, **kwargs):
         dims=["argument", "constituent"],
         coords=dict(argument=["tau", "s", "h", "p", "n", "pp", "k"]),
     )
-    # equilibrium phase converted gto radians
+    # equilibrium phase converted to radians
     arg = np.radians(arguments.dot(coefficients))
     # create output dataset
     ds = xr.Dataset()

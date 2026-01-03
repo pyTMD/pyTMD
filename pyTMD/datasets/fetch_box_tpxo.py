@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 """
-verify_box_tpxo.py
-Written by Tyler Sutterley (12/2025)
-Verifies downloaded TPXO9-atlas global tide models from the box file
-    sharing service
+fetch_box_tpxo.py
+Written by Tyler Sutterley (01/2026)
+Downloads TPXO ATLAS tide models from the box file sharing service
+
+Need to generate a user token that has sufficient permissions to
+access the folder containing the tide model files.
+See: https://developer.box.com/guides/
+
+Developer tokens can be created from the Box Developer Console:
+https://app.box.com/developers/console
 
 CALLING SEQUENCE:
-    python verify_box_tpxo.py --token <token> --tide TPXO9-atlas-v5
+    python fetch_box_tpxo.py --token <token> --tide TPXO9-atlas-v5
     where <username> is your box api access token
 
 COMMAND LINE OPTIONS:
@@ -14,8 +20,8 @@ COMMAND LINE OPTIONS:
     --directory X: working data directory
     -t X, --token X: user access token for box API
     -F X, --folder X: box folder id for model
-    --tide X: TPXO9-atlas model to verify
-    --currents: verify tide model current outputs
+    --tide X: TPXO ATLAS model to download
+    --currents: download tide model current outputs
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -26,8 +32,8 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 01/2026: fixed the box token to allow file downloads
     Updated 12/2025: use URL class to build and operate on URLs
-        use load method to get JSON responses from urls
     Updated 11/2025: use from_database to access model parameters
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: made a callable function and added function docstrings
@@ -48,32 +54,40 @@ from __future__ import print_function
 
 import os
 import re
+import ssl
+import gzip
 import json
+import shutil
 import logging
 import pathlib
 import argparse
-import posixpath
 import pyTMD.utilities
 
 # default data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
+# default ssl context
+_default_ssl_context = pyTMD.utilities._default_ssl_context
+# box API host
+_box_api_url = "https://api.box.com/2.0"
 
 
 # PURPOSE: create an opener for box with a supplied user access token
 def build_opener(
-    token, context=pyTMD.utilities._default_ssl_context, redirect=True
+    token: str,
+    context: ssl.SSLContext = _default_ssl_context,
+    redirect: bool = True,
 ):
     """
     Build ``urllib`` opener for box with supplied user access token
 
-    Arguments
-    ---------
-    token: box user access token
-
-    Keyword arguments
-    -----------------
-    context: SSL context for opener object
-    redirect: create redirect handler object
+    Parameters
+    ----------
+    token: str
+        box user access token
+    context: obj, default pyTMD.utilities._default_ssl_context
+        SSL context for ``urllib`` opener object
+    redirect: bool, default True
+        create redirect handler object
     """
     # https://docs.python.org/3/howto/urllib2.html#id5
     handler = []
@@ -93,22 +107,50 @@ def build_opener(
     return opener
 
 
-# PURPOSE: verify downloaded TPXO9-atlas files with box server
-def verify_box_tpxo(
-    model,
-    folder_id,
+# PURPOSE: fetch TPXO ATLAS files from box server
+def fetch_box_tpxo(
+    model: str,
+    folder_id: str,
     directory: str | pathlib.Path | None = _default_directory,
-    currents=False,
-    mode=None,
+    currents: bool = False,
+    compressed: bool = False,
+    timeout: int | None = None,
+    chunk: int = 16384,
+    mode: oct = 0o775,
+    **kwargs,
 ):
+    """
+    Download files from box file sharing service
+
+    Parameters
+    ----------
+    model: str
+        TPXO9-atlas tide model to download
+    folder_id: str
+        box folder id for model
+    directory: str or pathlib.Path
+        download directory
+    currents: bool, default False
+        download tidal current files
+    compressed: bool, default False
+        Compress output binary or netCDF4 tide files
+    timeout: int or NoneType, default None
+        timeout in seconds for blocking operations
+    chunk: int, default 16384
+        chunk size for transfer encoding
+    mode: oct, default 0o775
+        permissions mode of output local file
+    """
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
 
     # check if local directory exists and recursively create if not
-    m = pyTMD.io.model(directory=directory).from_database(model)
+    m = pyTMD.io.model(directory=directory, verify=False).from_database(model)
     localpath = m["z"].model_file[0].parent
     # create output directory if non-existent
     localpath.mkdir(mode=mode, parents=True, exist_ok=True)
+    # if compressing the output file
+    opener = gzip.open if compressed else open
 
     # regular expression pattern for files of interest
     regex_patterns = []
@@ -121,11 +163,10 @@ def verify_box_tpxo(
     rx = re.compile(r"^({0})".format(r"|".join(regex_patterns)), re.VERBOSE)
 
     # box api url
-    HOST = ["https://api.box.com", "2.0"]
-    URL = pyTMD.utilities.URL.from_parts(HOST)
+    URL = pyTMD.utilities.URL(_box_api_url)
     # create and submit request and load JSON response
     folder_url = URL.joinpath("folders", folder_id, "items")
-    folder_contents = folder_url.load()
+    folder_contents = json.loads(folder_url.read())
     # find files of interest
     file_entries = [
         entry
@@ -134,25 +175,30 @@ def verify_box_tpxo(
     ]
     # for each file in the folder
     for entry in file_entries:
-        # have insufficient permissions for downloading content
+        # need to have sufficient permissions for downloading content
         file_url = URL.joinpath("files", entry["id"])
+        content_url = file_url.joinpath("content")
         # print remote path
         logger.info(f"{file_url} -->")
         # create and submit request and load JSON response
-        file_contents = file_url.load()
-        modified_at = file_contents["modified_at"]
+        file_contents = json.loads(file_url.read())
         remote_mtime = pyTMD.utilities.get_unix_time(
-            modified_at, format="%Y-%m-%dT%H:%M:%S%z"
+            file_contents["modified_at"], format="%Y-%m-%dT%H:%M:%S%z"
         )
+        # local output filename
+        output = entry.get("name")
+        # append .gz to filename if compressing
+        if compressed:
+            output += ".gz"
         # print file information
-        local = localpath.joinpath(entry["name"])
+        local = localpath.joinpath(output)
         logger.info(f"\t{str(local)}")
-        # compare checksums to validate download
-        sha1 = pyTMD.utilities.get_hash(local, algorithm="sha1")
-        if sha1 != entry["sha1"]:
-            logger.critical(f"Remote checksum: {entry['sha1']}")
-            logger.critical(f"Local checksum: {sha1}")
-            raise Exception("Checksum verification failed")
+        # extract file to local directory
+        with (
+            content_url.urlopen(timeout=timeout) as f_in,
+            opener(local, "wb") as f_out,
+        ):
+            shutil.copyfileobj(f_in, f_out, chunk)
         # keep remote modification time of file and local access time
         os.utime(local, (local.stat().st_atime, remote_mtime))
         # change the permissions mode of the local file
@@ -162,7 +208,7 @@ def verify_box_tpxo(
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Verifies downloaded TPXO9-atlas global
+        description="""Downloads TPXO ATLAS global
             tide models from the box file sharing service
             """,
         fromfile_prefix_chars="@",
@@ -180,7 +226,6 @@ def arguments():
     # box user access token
     parser.add_argument(
         "--token",
-        "-t",
         type=str,
         default="",
         help="User access token for box API",
@@ -189,20 +234,36 @@ def arguments():
     parser.add_argument(
         "--folder", "-F", type=str, default="", help="box folder id for model"
     )
-    # TPXO9-atlas tide models
+    # TPXO ATLAS tide models
     parser.add_argument(
         "--tide",
         "-T",
         type=str,
-        default="TPXO9-atlas-v5",
-        help="TPXO9-atlas tide model to verify",
+        default="TPXO10-atlas-v2",
+        help="TPXO ATLAS tide model to download",
     )
     # download tidal currents
     parser.add_argument(
         "--currents",
         default=False,
         action="store_true",
-        help="Verify tide model current outputs",
+        help="Download tide model current outputs",
+    )
+    # compress output binary or netCDF4 tide files with gzip
+    parser.add_argument(
+        "--gzip",
+        "-G",
+        default=False,
+        action="store_true",
+        help="Compress output binary or netCDF4 tide files",
+    )
+    # connection timeout
+    parser.add_argument(
+        "--timeout",
+        "-t",
+        type=int,
+        default=3600,
+        help="Timeout in seconds for blocking operations",
     )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
@@ -210,7 +271,7 @@ def arguments():
         "-M",
         type=lambda x: int(x, base=8),
         default=0o775,
-        help="Permission mode of directories and files downloaded",
+        help="Permissions mode of the files downloaded",
     )
     # return the parser
     return parser
@@ -226,11 +287,13 @@ def main():
     opener = build_opener(args.token)
     # check internet connection before attempting to run program
     if pyTMD.utilities.check_connection("https://app.box.com/"):
-        verify_box_tpxo(
+        fetch_box_tpxo(
             args.tide,
             args.folder,
             directory=args.directory,
             currents=args.currents,
+            compressed=args.gzip,
+            timeout=args.timeout,
             mode=args.mode,
         )
 
