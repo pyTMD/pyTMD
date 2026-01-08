@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (01/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 01/2026: use nan as the default fill value for non-masked arrays
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
         generalize vectorized 1D linear interpolation for more cases of fp
@@ -230,9 +231,7 @@ def extrapolate(
     dtype = kwargs.get("dtype", zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(
-            zs, dtype=zs.dtype, fill_value=np.ma.default_fill_value(zs.dtype)
-        )
+        zs = np.ma.array(zs, dtype=zs.dtype, fill_value=np.nan)
         zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
