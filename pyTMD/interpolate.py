@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (01/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -10,8 +10,11 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 01/2026: output data from extrapolate as an xarray DataArray
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
         generalize vectorized 1D linear interpolation for more cases of fp
@@ -29,6 +32,7 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import numpy as np
+import xarray as xr
 import scipy.fftpack
 import scipy.spatial
 import pyTMD.spatial
@@ -332,4 +336,4 @@ def extrapolate(
         data.data[ind] = flattened[ii[ind]]
         data.mask[ind] = False
     # return extrapolated values
-    return data
+    return xr.DataArray(data)
