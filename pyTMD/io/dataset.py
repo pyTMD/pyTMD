@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (01/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 01/2026: handle scalar inputs for coordinate transformations
     Updated 12/2025: add coords functions to transform coordinates
         set units attribute for amplitude and phase data arrays
         add functions for assigning coordinates to datasets
@@ -1008,7 +1009,9 @@ def _coords(
     kwargs.setdefault("type", None)
     kwargs.setdefault("time", None)
     # determine coordinate data type if possible
-    if kwargs["type"] is None:
+    if (np.ndim(x) == 0) and (np.ndim(y) == 0):
+        coord_type = "time series"
+    elif kwargs["type"] is None:
         # must provide time variable to determine data type
         assert kwargs["time"] is not None, (
             "Must provide time parameter when type is not specified"
