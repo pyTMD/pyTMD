@@ -10,9 +10,11 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
     scipy: Scientific Tools for Python
         https://docs.scipy.org/doc/
+    xarray: N-D labeled arrays and datasets in Python
+        https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
-    Updated 01/2026: use nan as the default fill value for non-masked arrays
+    Updated 01/2026: output data from extrapolate as an xarray DataArray
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
         generalize vectorized 1D linear interpolation for more cases of fp
@@ -30,6 +32,7 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import numpy as np
+import xarray as xr
 import scipy.fftpack
 import scipy.spatial
 import pyTMD.spatial
@@ -231,7 +234,9 @@ def extrapolate(
     dtype = kwargs.get("dtype", zs.dtype)
     # verify that input data is masked array
     if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(zs, dtype=zs.dtype, fill_value=np.nan)
+        zs = np.ma.array(
+            zs, dtype=zs.dtype, fill_value=np.ma.default_fill_value(zs.dtype)
+        )
         zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
@@ -331,4 +336,4 @@ def extrapolate(
         data.data[ind] = flattened[ii[ind]]
         data.mask[ind] = False
     # return extrapolated values
-    return data
+    return xr.DataArray(data)
