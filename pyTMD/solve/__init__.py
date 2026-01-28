@@ -2,4 +2,4 @@
 Solve functions for estimating ocean tides
 """
 
-from .constants import *
+from .constants import constants

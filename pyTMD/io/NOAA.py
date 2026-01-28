@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 NOAA.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (01/2026)
 Query and parsing functions for NOAA webservices API
 
 PYTHON DEPENDENCIES:
@@ -9,6 +9,7 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 01/2026: raise original exception in case of HTTPError
     Updated 12/2025: make dataframe accessor inherit from Dataset
     Updated 11/2025: add accessor for pandas dataframe objects
         added function to reduce prediction stations to active
@@ -126,7 +127,8 @@ def from_xml(url, **kwargs):
         logging.error(traceback.format_exc())
     except pyTMD.utilities.urllib2.HTTPError as exc:
         logging.error(traceback.format_exc())
-        raise RuntimeError("Error querying NOAA webservices API") from exc
+        exc.msg = "Error querying NOAA webservices API"
+        raise
     else:
         # return the dataframe
         return df

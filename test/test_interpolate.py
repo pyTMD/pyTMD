@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 u"""
-test_interpolate.py (08/2025)
+test_interpolate.py (01/2026)
 Test the interpolation and extrapolation routines
 
 UPDATE HISTORY:
+    Updated 01/2026: xfail tests on HTTPError exceptions
     Updated 08/2025: added 1d interpolation routine test
         added inpaint interpolation test based on 2D franke function
     Updated 04/2023: test geodetic conversion additionally as arrays
@@ -32,8 +33,13 @@ def download_nodes(N=324, cleanup=False):
     matfile = f'md{N:05d}.mat'
     HOST = ['https://github.com','gradywright','spherepts','raw',
         'master','nodes','max_determinant',matfile]
-    URL = pyTMD.utilities.URL.from_parts(HOST)
-    URL.get(local=filepath.joinpath(matfile), verbose=True)
+    # attempt to download the node file
+    try:
+        URL = pyTMD.utilities.URL.from_parts(HOST)
+        URL.get(local=filepath.joinpath(matfile), verbose=True)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
+    # run tests
     yield
     # remove the node file
     if cleanup:
