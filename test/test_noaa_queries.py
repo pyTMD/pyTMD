@@ -8,10 +8,12 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 01/2026: xfail tests on HTTPError exceptions
     Updated 11/2025: added test for pandas dataframe accessor
         added test for xarray dataset conversion
     Written 07/2025
 """
+import pytest
 import pyTMD.io.NOAA
 import numpy as np
 
@@ -22,8 +24,11 @@ def test_noaa_stations():
     xpath = pyTMD.io.NOAA._xpaths[api]
     # get list of tide prediction stations
     url, namespaces = pyTMD.io.NOAA.build_query(api)
-    stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
-        namespaces=namespaces)
+    try:
+        stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
+            namespaces=namespaces)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     # check that station indicator is in list
     assert '9410230' in stations['ID'].values
 
@@ -40,8 +45,11 @@ def test_noaa_harmonic_constituents():
     # get list of harmonic constituents
     url, namespaces = pyTMD.io.NOAA.build_query(api,
         stationId=station_id, unit=unit, timeZone=timeZone)
-    hcons = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
-        namespaces=namespaces).set_index('constNum')
+    try:
+        hcons = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
+            namespaces=namespaces).set_index('constNum')
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     # check if the values match expected
     expected_columns = ['name', 'amplitude', 'phase', 'speed']
     assert hcons.columns.tolist() == expected_columns
@@ -79,8 +87,11 @@ def test_noaa_water_level():
     url, namespaces = pyTMD.io.NOAA.build_query(api,
         stationId=station_id, unit=unit, timeZone=timeZone,
         beginDate=startdate, endDate=enddate, datum=datum)
-    wlevel = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
-        namespaces=namespaces, parse_dates=['timeStamp'])
+    try:
+        wlevel = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
+            namespaces=namespaces, parse_dates=['timeStamp'])
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     expected_columns = ['timeStamp', 'WL', 'sigma', 'I', 'L']
     expected_WL = np.array([-0.2, -0.438, -0.571, -0.65, -0.589,
         -0.447, -0.278, -0.026, 0.159, 0.28, 0.341, 0.299, 0.246,

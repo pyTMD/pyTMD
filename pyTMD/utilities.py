@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (01/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 01/2026: raise original exceptions in cases of HTTPError/URLError
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
         moved JPL kernel download function to datasets with other fetchers
@@ -969,10 +970,11 @@ def check_connection(
         urllib2.urlopen(HOST, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
+        raise
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        raise RuntimeError("Check internet connection") from exc
+        exc.message = "Check internet connection"
+        raise
     else:
         return True
 
@@ -1025,11 +1027,11 @@ def http_list(
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
+        raise
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = "List error from {0}".format(posixpath.join(*HOST))
-        raise Exception(msg) from exc
+        exc.message = "Check internet connection"
+        raise
     else:
         # read and parse request for files (column names and modified times)
         tree = lxml.etree.parse(response, parser)
@@ -1111,8 +1113,13 @@ def from_http(
         # Create and submit request.
         request = urllib2.Request(posixpath.join(*HOST), **kwargs)
         response = urllib2.urlopen(request, timeout=timeout, context=context)
-    except:
-        raise Exception("Download error from {0}".format(posixpath.join(*HOST)))
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        exc.message = "Check internet connection"
+        raise
     else:
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
@@ -1176,11 +1183,11 @@ def from_json(
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
+        raise
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = "Load error from {0}".format(posixpath.join(*HOST))
-        raise Exception(msg) from exc
+        exc.message = "Check internet connection"
+        raise
     else:
         # copy headers from response
         headers.update({k.lower(): v for k, v in response.getheaders()})
@@ -1226,11 +1233,11 @@ def iers_list(
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
+        raise
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = "List error from {0}".format(posixpath.join(*HOST))
-        raise Exception(msg) from exc
+        exc.message = "Check internet connection"
+        raise
     else:
         # read and parse request for files (column names and modified times)
         tree = lxml.etree.parse(response, parser)
@@ -1287,11 +1294,11 @@ def uhslc_list(
         response = urllib2.urlopen(request, timeout=timeout, context=context)
     except urllib2.HTTPError as exc:
         logging.debug(exc.code)
-        raise RuntimeError(exc.reason) from exc
+        raise
     except urllib2.URLError as exc:
         logging.debug(exc.reason)
-        msg = "List error from {0}".format(posixpath.join(*HOST))
-        raise Exception(msg) from exc
+        exc.message = "Check internet connection"
+        raise
     else:
         # read and parse request for files
         tree = lxml.etree.parse(response, parser)
