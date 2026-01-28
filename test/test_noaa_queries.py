@@ -22,7 +22,7 @@ def test_noaa_stations():
     """
     api = 'tidepredictionstations'
     xpath = pyTMD.io.NOAA._xpaths[api]
-    # get list of tide prediction stations
+    # attempt to get list of tide prediction stations
     url, namespaces = pyTMD.io.NOAA.build_query(api)
     try:
         stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
@@ -42,7 +42,7 @@ def test_noaa_harmonic_constituents():
     # get harmonic constituents for station
     api = 'harmonicconstituents'
     xpath = pyTMD.io.NOAA._xpaths[api]
-    # get list of harmonic constituents
+    # attempt to get list of harmonic constituents
     url, namespaces = pyTMD.io.NOAA.build_query(api,
         stationId=station_id, unit=unit, timeZone=timeZone)
     try:
@@ -84,6 +84,7 @@ def test_noaa_water_level():
     # get water levels for station and date range
     api = 'waterlevelverifiedhourly'
     xpath = pyTMD.io.NOAA._xpaths[api]
+    # attempt to get the water level data 
     url, namespaces = pyTMD.io.NOAA.build_query(api,
         stationId=station_id, unit=unit, timeZone=timeZone,
         beginDate=startdate, endDate=enddate, datum=datum)
@@ -101,9 +102,12 @@ def test_noaa_water_level():
     assert wlevel.columns.tolist() == expected_columns
     assert wlevel['timeStamp'][0] == np.datetime64('2020-01-01')
     assert np.allclose(wlevel['WL'].values, expected_WL)
-    # get dataframe using wrapper function
-    df = pyTMD.io.NOAA.water_level(api, stationId=station_id,
-        beginDate=startdate, endDate=enddate)
+    # attempt to get dataframe using wrapper function
+    try:
+        df = pyTMD.io.NOAA.water_level(api, stationId=station_id,
+            beginDate=startdate, endDate=enddate)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     # check if the values match expected
     assert df.columns.tolist() == expected_columns
     assert df['timeStamp'][0] == np.datetime64('2020-01-01')
