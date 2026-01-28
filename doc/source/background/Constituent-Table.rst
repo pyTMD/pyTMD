@@ -11,3 +11,9 @@ Major Tidal Constituents
 
 
 From :cite:t:`Doodson:1921kt,Cartwright:1971iz,Cartwright:1973em`
+
+Compound Constituents
+---------------------
+
+Two or more constituents can interact harmonically in shallow-water to form overtides or compound constituents. 
+The properties of these compound constituents can be derived from the properties of their parent constituents.

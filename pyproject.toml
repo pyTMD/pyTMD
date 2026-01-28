@@ -193,8 +193,8 @@ description = "Run flake8 to check for compilation errors"
 
 [tool.pixi.dependencies]
 h5netcdf = "*"
-numpy = "*"
 lxml = "*"
+numpy = "*"
 pint = "*"
 platformdirs = "*"
 pyproj = ">=2.5.0"
@@ -204,13 +204,13 @@ xarray = "*"
 
 [tool.pixi.feature.all.dependencies]
 cartopy = "*"
-matplotlib-base = "*"
 ipyleaflet = "*"
 ipywidgets = "*"
 jplephem = "*"
 jupyterlab = "*"
-pandas = "*"
+matplotlib-base = "*"
 notebook = "*"
+pandas = "*"
 
 [tool.pixi.feature.aws.dependencies]
 dask = "*"
