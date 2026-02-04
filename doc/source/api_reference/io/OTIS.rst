@@ -53,5 +53,5 @@ Calling Sequence
 .. autoclass:: pyTMD.io.OTIS.OTISDataTree
    :members:
 
-.. autoclass:: pyTMD.io.OTIS.ATLASDataset
+.. autoclass:: pyTMD.io.OTIS.CompactDataset
    :members:

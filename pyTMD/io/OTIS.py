@@ -126,7 +126,7 @@ __all__ = [
     "write_raw_binary",
     "OTISDataset",
     "OTISDataTree",
-    "ATLASDataset",
+    "CompactDataset",
 ]
 
 # variable attributes
@@ -373,7 +373,7 @@ def open_otis_dataset(
         # transports are returned as (u,v)
         ds2 = open_otis_transport(model_file, **kwargs)[1]
     # merge datasets
-    ds = ds1.otis.merge(ds2, group=group)
+    ds = OTISDataset(ds1).merge(ds2, group=group)
     # add attributes
     ds.attrs["group"] = group.upper() if group in ("u", "v") else group
     # return xarray dataset
@@ -421,22 +421,22 @@ def open_atlas_dataset(
     crs = kwargs.get("crs", 4326)
     # open grid file
     dsg, dtg = open_atlas_grid(grid_file, use_mmap=use_mmap)
-    ds1 = dsg.compact.combine_local(dtg, chunks=chunks)
+    ds1 = CompactDataset(dsg).combine_local(dtg, chunks=chunks)
     # add attributes
     ds1.attrs["crs"] = pyproj.CRS.from_user_input(crs).to_dict()
     # open model file(s)
     if group == "z":
         # elevations are returned as (z, localz)
         dsh, dth = open_atlas_elevation(model_file, use_mmap=use_mmap)
-        ds2 = dsh.compact.combine_local(dth, chunks=chunks)
+        ds2 = CompactDataset(dsh).combine_local(dth, chunks=chunks)
     elif group in ("u", "U"):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsu.compact.combine_local(dtu, chunks=chunks)
+        ds2 = CompactDataset(dsu).combine_local(dtu, chunks=chunks)
     elif group in ("v", "V"):
         # transports are returned as (u, v, localu, localv)
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
-        ds2 = dsv.compact.combine_local(dtv, chunks=chunks)
+        ds2 = CompactDataset(dsv).combine_local(dtv, chunks=chunks)
     # merge datasets
     ds = xr.merge([ds1, ds2], compat="override")
     # add attributes
@@ -1836,9 +1836,8 @@ def write_raw_binary(
 
 
 # PURPOSE: OTIS utilities for xarray Datasets
-@xr.register_dataset_accessor("otis")
 class OTISDataset:
-    """Accessor for extending an ``xarray.Dataset`` for OTIS tidal models"""
+    """``xarray.Dataset`` utilities for OTIS tidal models"""
 
     def __init__(self, ds):
         # initialize dataset
@@ -1913,9 +1912,8 @@ class OTISDataset:
 
 
 # PURPOSE: OTIS utilities for xarray datatrees
-@xr.register_datatree_accessor("otis")
 class OTISDataTree:
-    """Accessor for extending an ``xarray.DataTree`` for OTIS tidal models"""
+    """``xarray.DataTree`` utilities for OTIS tidal models"""
 
     def __init__(self, dtree):
         # initialize datatree
@@ -2144,11 +2142,9 @@ class OTISDataTree:
 
 
 # PURPOSE: ATLAS-compact utilities for xarray Datasets
-@xr.register_dataset_accessor("compact")
-class ATLASDataset:
+class CompactDataset:
     """
-    Accessor for extending an ``xarray.Dataset`` for ATLAS-compact
-    tidal models
+    ``xarray.Dataset`` utilities for ATLAS-compact tidal models
     """
 
     def __init__(self, ds, spacing: float | list[float] = 1.0 / 30.0):
