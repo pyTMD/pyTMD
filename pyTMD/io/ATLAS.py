@@ -295,11 +295,9 @@ def open_atlas_dataset(
 
 
 # PURPOSE: ATLAS-netcdf utilities for xarray Datasets
-@xr.register_dataset_accessor("atlas")
 class ATLASDataset:
     """
-    Accessor for extending an ``xarray.Dataset`` for ATLAS-netcdf
-    tidal models
+    ``xarray.Dataset`` utilities for ATLAS-netcdf tidal models
     """
 
     def __init__(self, ds):
@@ -462,11 +460,9 @@ class ATLASDataset:
 
 
 # PURPOSE: ATLAS-netcdf utilities for xarray DataTrees
-@xr.register_datatree_accessor("atlas")
 class ATLASDataTree:
     """
-    Accessor for extending an ``xarray.DataTree`` for ATLAS-netcdf
-    tidal models
+    ``xarray.DataTree`` utilities for ATLAS-netcdf tidal models
     """
 
     def __init__(self, dtree):
@@ -500,6 +496,8 @@ class ATLASDataTree:
             ds = self._dtree[group].to_dataset()
             # write in append mode to add group to same grid and directory
             # output grid file
-            ds.atlasnc.to_grid(grid_file, group=group, mode="a", **kwargs)
+            ATLASDataset(ds).to_grid(grid_file, group=group, mode="a", **kwargs)
             # output constituent files
-            ds.atlasnc.to_netcdf(directory, group=group, mode="a", **kwargs)
+            ATLASDataset(ds).to_netcdf(
+                directory, group=group, mode="a", **kwargs
+            )

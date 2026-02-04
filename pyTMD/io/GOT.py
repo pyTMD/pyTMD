@@ -331,9 +331,8 @@ def open_got_netcdf(
 
 
 # PURPOSE: GOT utilities for xarray Datasets
-@xr.register_dataset_accessor("got")
 class GOTDataset:
-    """Accessor for extending an ``xarray.Dataset`` for GOT tidal models"""
+    """``xarray.Dataset`` utilities for GOT tidal models"""
 
     def __init__(self, ds):
         self._ds = ds

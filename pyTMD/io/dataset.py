@@ -56,9 +56,15 @@ _default_units = {
 class DataTree:
     """Accessor for extending an ``xarray.DataTree`` for tidal model data"""
 
+    from .ATLAS import ATLASDataTree as _ATLASDataTree
+    from .OTIS import OTISDataTree as _OTISDataTree
+
     def __init__(self, dtree):
         # initialize DataTree
         self._dtree = dtree
+        # add accessors for tidal model types
+        self.atlas = self._ATLASDataTree(self._dtree)
+        self.otis = self._OTISDataTree(self._dtree)
 
     def assign_coords(
         self,
@@ -333,9 +339,21 @@ class DataTree:
 class Dataset:
     """Accessor for extending an ``xarray.Dataset`` for tidal model data"""
 
+    from .ATLAS import ATLASDataset as _ATLASDataset
+    from .FES import FESDataset as _FESDataset
+    from .GOT import GOTDataset as _GOTDataset
+    from .OTIS import OTISDataset as _OTISDataset
+    from .OTIS import CompactDataset as _CompactDataset
+
     def __init__(self, ds):
         # initialize Dataset
         self._ds = ds
+        # add accessors for tidal model types
+        self.atlas = self._ATLASDataset(self._ds)
+        self.fes = self._FESDataset(self._ds)
+        self.got = self._GOTDataset(self._ds)
+        self.otis = self._OTISDataset(self._ds)
+        self.compact = self._CompactDataset(self._ds)
 
     def to_dataarray(self, **kwargs):
         """

@@ -114,10 +114,10 @@ def reduce_otis(
             m["u"].model_file
         )
         # combine local solutions with global solution
-        dsg = dsg.compact.combine_local(dtg)
-        dsz = dsz.compact.combine_local(dtz)
-        dsu = dsu.compact.combine_local(dtu)
-        dsv = dsv.compact.combine_local(dtv)
+        dsg = dsg.tmd.compact.combine_local(dtg)
+        dsz = dsz.tmd.compact.combine_local(dtz)
+        dsu = dsu.tmd.compact.combine_local(dtu)
+        dsv = dsv.tmd.compact.combine_local(dtv)
     else:
         # if reading a pure global solution
         dsg = pyTMD.io.OTIS.open_otis_grid(m["z"].grid_file)
@@ -140,9 +140,9 @@ def reduce_otis(
     new_elevation_file = _unique_filename(m["z"].model_file)
     new_transport_file = _unique_filename(m["u"].model_file)
     # output reduced datasets to file
-    dtree.otis.to_grid(new_grid_file)
-    dtree.otis.to_elevation(new_elevation_file)
-    dtree.otis.to_transport(new_transport_file)
+    dtree.tmd.otis.to_grid(new_grid_file)
+    dtree.tmd.otis.to_elevation(new_elevation_file)
+    dtree.tmd.otis.to_transport(new_transport_file)
     # change the permissions level to mode
     new_grid_file.chmod(mode=mode)
     new_elevation_file.chmod(mode=mode)

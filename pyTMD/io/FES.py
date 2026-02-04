@@ -344,9 +344,8 @@ def open_fes_netcdf(
 
 
 # PURPOSE: FES utilities for xarray Datasets
-@xr.register_dataset_accessor("fes")
 class FESDataset:
-    """Accessor for extending an ``xarray.Dataset`` for FES tidal models"""
+    """``xarray.Dataset`` utilities for FES tidal models"""
 
     def __init__(self, ds):
         self._ds = ds
