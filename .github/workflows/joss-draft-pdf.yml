@@ -1,10 +1,6 @@
 name: Draft PDF
 on:
-  push:
-    paths:
-      - doc/source/_assets/paper.md
-      - doc/source/_assets/pytmd-refs.bib
-      - .github/workflows/joss-draft-pdf.yml
+  workflow_dispatch:
 
 env:
   PAPER_PATH: doc/source/_assets
