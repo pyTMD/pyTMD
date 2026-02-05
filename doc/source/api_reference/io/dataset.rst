@@ -11,14 +11,20 @@ dataset
 General Attributes and Methods
 ==============================
 
-.. autoclass:: pyTMD.io.DataTree
+.. autoclass:: pyTMD.io.dataset.DataTree
    :members:
 
-.. autoclass:: pyTMD.io.Dataset
+.. autoclass:: pyTMD.io.dataset.Dataset
    :members:
 
-.. autoclass:: pyTMD.io.DataArray
+.. autoclass:: pyTMD.io.dataset.DataArray
    :members:
+
+.. autofunction:: pyTMD.io.dataset.register_datatree_subaccessor
+
+.. autofunction:: pyTMD.io.dataset.register_dataset_subaccessor
+
+.. autofunction:: pyTMD.io.dataset.register_dataarray_subaccessor
 
 .. autofunction:: pyTMD.io.dataset._transform
 
