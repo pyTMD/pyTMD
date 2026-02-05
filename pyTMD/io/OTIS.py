@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 OTIS.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (02/2026)
 
 Reads OTIS format tidal solutions provided by Oregon State University and ESR
     http://volkov.oce.orst.edu/tides/region.html
@@ -19,6 +19,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: make dataset and datatree accessors for OTIS
+        be subaccessors from dataset module
     Updated 01/2026: check if flexure variable exists in TMD3 files
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
@@ -102,6 +104,10 @@ import warnings
 import numpy as np
 import xarray as xr
 import pyTMD.utilities
+from .dataset import (
+    register_dataset_subaccessor,
+    register_datatree_subaccessor,
+)
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -1836,6 +1842,7 @@ def write_raw_binary(
 
 
 # PURPOSE: OTIS utilities for xarray Datasets
+@register_dataset_subaccessor("otis")
 class OTISDataset:
     """``xarray.Dataset`` utilities for OTIS tidal models"""
 
@@ -1912,6 +1919,7 @@ class OTISDataset:
 
 
 # PURPOSE: OTIS utilities for xarray datatrees
+@register_datatree_subaccessor("otis")
 class OTISDataTree:
     """``xarray.DataTree`` utilities for OTIS tidal models"""
 
@@ -2142,6 +2150,7 @@ class OTISDataTree:
 
 
 # PURPOSE: ATLAS-compact utilities for xarray Datasets
+@register_datatree_subaccessor("compact")
 class CompactDataset:
     """
     ``xarray.Dataset`` utilities for ATLAS-compact tidal models

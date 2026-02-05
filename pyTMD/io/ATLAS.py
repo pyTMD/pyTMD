@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ATLAS.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 
 Reads netCDF4 ATLAS tidal solutions provided by Oregon State University
 
@@ -10,6 +10,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: make dataset and datatree accessors for ATLAS
+        be subaccessors from dataset module
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
         added option to change the output datatype when writing netCDF files
     Updated 11/2025: near-complete rewrite of program to use xarray
@@ -63,6 +65,10 @@ import datetime
 import xarray as xr
 import pyTMD.version
 import pyTMD.utilities
+from .dataset import (
+    register_dataset_subaccessor,
+    register_datatree_subaccessor,
+)
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -295,6 +301,7 @@ def open_atlas_dataset(
 
 
 # PURPOSE: ATLAS-netcdf utilities for xarray Datasets
+@register_dataset_subaccessor("atlas")
 class ATLASDataset:
     """
     ``xarray.Dataset`` utilities for ATLAS-netcdf tidal models
@@ -460,6 +467,7 @@ class ATLASDataset:
 
 
 # PURPOSE: ATLAS-netcdf utilities for xarray DataTrees
+@register_datatree_subaccessor("atlas")
 class ATLASDataTree:
     """
     ``xarray.DataTree`` utilities for ATLAS-netcdf tidal models

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 FES.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 
 Reads ascii and netCDF4 files for FES tidal solutions provided by AVISO
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: make dataset accessor for FES be a subaccessor from dataset
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
     Updated 10/2025: simplify ascii read function to use masked_equal
@@ -71,6 +72,7 @@ import numpy as np
 import xarray as xr
 import pyTMD.constituents
 import pyTMD.utilities
+from .dataset import register_dataset_subaccessor
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -344,6 +346,7 @@ def open_fes_netcdf(
 
 
 # PURPOSE: FES utilities for xarray Datasets
+@register_dataset_subaccessor("fes")
 class FESDataset:
     """``xarray.Dataset`` utilities for FES tidal models"""
 

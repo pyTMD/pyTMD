@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GOT.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 
 Reads ascii and netCDF4 files from Richard Ray's Goddard Ocean Tide (GOT) model
     https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: make dataset accessor for GOT be a subaccessor from dataset
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
         added function to write to output GOT-formatted ascii files
         fixed writing of output constituents to match GOT attribute format
@@ -74,6 +75,7 @@ import xarray as xr
 import pyTMD.version
 import pyTMD.constituents
 import pyTMD.utilities
+from .dataset import register_dataset_subaccessor
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -331,6 +333,7 @@ def open_got_netcdf(
 
 
 # PURPOSE: GOT utilities for xarray Datasets
+@register_dataset_subaccessor("got")
 class GOTDataset:
     """``xarray.Dataset`` utilities for GOT tidal models"""
 

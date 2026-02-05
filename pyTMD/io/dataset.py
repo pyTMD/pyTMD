@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (02/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: create subaccessor registration functions
     Updated 01/2026: handle scalar inputs for coordinate transformations
     Updated 12/2025: add coords functions to transform coordinates
         set units attribute for amplitude and phase data arrays
@@ -56,15 +57,9 @@ _default_units = {
 class DataTree:
     """Accessor for extending an ``xarray.DataTree`` for tidal model data"""
 
-    from .ATLAS import ATLASDataTree as _ATLASDataTree
-    from .OTIS import OTISDataTree as _OTISDataTree
-
     def __init__(self, dtree):
         # initialize DataTree
         self._dtree = dtree
-        # add accessors for tidal model types
-        self.atlas = self._ATLASDataTree(self._dtree)
-        self.otis = self._OTISDataTree(self._dtree)
 
     def assign_coords(
         self,
@@ -339,21 +334,9 @@ class DataTree:
 class Dataset:
     """Accessor for extending an ``xarray.Dataset`` for tidal model data"""
 
-    from .ATLAS import ATLASDataset as _ATLASDataset
-    from .FES import FESDataset as _FESDataset
-    from .GOT import GOTDataset as _GOTDataset
-    from .OTIS import OTISDataset as _OTISDataset
-    from .OTIS import CompactDataset as _CompactDataset
-
     def __init__(self, ds):
         # initialize Dataset
         self._ds = ds
-        # add accessors for tidal model types
-        self.atlas = self._ATLASDataset(self._ds)
-        self.fes = self._FESDataset(self._ds)
-        self.got = self._GOTDataset(self._ds)
-        self.otis = self._OTISDataset(self._ds)
-        self.compact = self._CompactDataset(self._ds)
 
     def to_dataarray(self, **kwargs):
         """
@@ -932,6 +915,39 @@ class DataArray:
             return "transport"
         else:
             raise ValueError(f"Unknown unit group: {self.units}")
+
+
+def register_datatree_subaccessor(name):
+    """Register a subaccessor on ``DataTree`` objects
+
+    Parameters
+    ----------
+    name: str
+        subaccessor name
+    """
+    return xr.core.extensions._register_accessor(name, DataTree)
+
+
+def register_dataset_subaccessor(name):
+    """Register a subaccessor on ``Dataset`` objects
+
+    Parameters
+    ----------
+    name: str
+        subaccessor name
+    """
+    return xr.core.extensions._register_accessor(name, Dataset)
+
+
+def register_dataarray_subaccessor(name):
+    """Register a subaccessor on ``DataArray`` objects
+
+    Parameters
+    ----------
+    name: str
+        subaccessor name
+    """
+    return xr.core.extensions._register_accessor(name, DataArray)
 
 
 def _transform(
