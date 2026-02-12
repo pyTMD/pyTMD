@@ -41,7 +41,16 @@ import xarray as xr
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-__all__ = ["DataTree", "Dataset", "DataArray", "_transform", "_coords"]
+__all__ = [
+    "DataTree",
+    "Dataset",
+    "DataArray",
+    "register_datatree_subaccessor",
+    "register_dataset_subaccessor",
+    "register_dataarray_subaccessor",
+    "_transform",
+    "_coords",
+]
 
 # pint unit registry
 __ureg__ = pint.UnitRegistry()

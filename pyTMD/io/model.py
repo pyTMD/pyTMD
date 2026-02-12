@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 model.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (02/2026)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: add HTML representation for model objects using xarray
     Updated 11/2025: use default cache directory if directory is None
         added crs property for model coordinate reference system
         refactor to use new simpler (flattened) database format
@@ -121,13 +122,13 @@ class DataBase:
         """Returns the items of the model database"""
         return self.__dict__.items()
 
-    def __repr__(self):
-        """Representation of the ``DataBase`` object"""
-        return str(self.__dict__)
-
     def __str__(self):
         """String representation of the ``DataBase`` object"""
         return str(self.__dict__)
+
+    def __repr__(self):
+        """Representation of the ``DataBase`` object"""
+        return self.__str__()
 
     def get(self, key, default=None):
         if not hasattr(self, key) or getattr(self, key) is None:
@@ -199,6 +200,8 @@ class model:
     verify: bool
         Verify that all model files exist
     """
+
+    __parameters__: dict
 
     def __init__(self, directory: str | pathlib.Path | None = None, **kwargs):
         # set default keyword arguments
@@ -872,6 +875,22 @@ class model:
         properties = ["pyTMD.io.model"]
         properties.append(f"    name: {self.name}")
         return "\n".join(properties)
+
+    def __repr__(self):
+        """Representation of the ``io.model`` object"""
+        return self.__str__()
+
+    def _repr_html_(self):
+        """HTML representation of the ``io.model`` object"""
+        header = "pyTMD.io.model"
+        header_components = [f"<div class='xr-obj-type'>{header}</div>"]
+        sections = []
+        sections.append(
+            xr.core.formatting_html.attr_section(self.__parameters__)
+        )
+        return xr.core.formatting_html._obj_repr(
+            self, header_components, sections
+        )
 
     def get(self, key, default=None):
         return getattr(self, key, default) or default
