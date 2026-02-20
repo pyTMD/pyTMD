@@ -202,8 +202,6 @@ class model:
         Verify that all model files exist
     """
 
-    __parameters__: dict
-
     def __init__(self, directory: str | pathlib.Path | None = None, **kwargs):
         # set default keyword arguments
         kwargs.setdefault("compressed", False)
@@ -222,6 +220,7 @@ class model:
         self.format = None
         self.name = None
         self.verify = copy.copy(kwargs["verify"])
+        self.__parameters__ = {}
 
     def from_database(self, m: str, group: tuple = ("z", "u", "v")):
         """
