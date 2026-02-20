@@ -14,7 +14,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2026: add HTML representation for model objects using xarray
-        set units on constituent variables in a loop
+        set tidal constituent units (if unset) in a loop
     Updated 11/2025: use default cache directory if directory is None
         added crs property for model coordinate reference system
         refactor to use new simpler (flattened) database format
@@ -885,9 +885,21 @@ class model:
         header = "pyTMD.io.model"
         header_components = [f"<div class='xr-obj-type'>{header}</div>"]
         sections = []
-        sections.append(
-            xr.core.formatting_html.attr_section(self.__parameters__)
-        )
+        data_vars = [k for k in ("z", "u", "v") if k in self.__parameters__]
+        parameters = {
+            k: v for k, v in self.__parameters__.items() if k not in data_vars
+        }
+        sections.append(xr.core.formatting_html.attr_section(parameters))
+        for v in data_vars:
+            sections.append(
+                xr.core.formatting_html._mapping_section(
+                    mapping=self.__parameters__[v],
+                    name=f"{v}-Attributes",
+                    details_func=xr.core.formatting_html.summarize_attrs,
+                    max_items_collapse=0,
+                    expand_option_name="display_expand_attrs",
+                )
+            )
         return xr.core.formatting_html._obj_repr(
             self, header_components, sections
         )
