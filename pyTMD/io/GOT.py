@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2026: make dataset accessor for GOT be a subaccessor from dataset
+        some models have units in the second line of the header text
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
         added function to write to output GOT-formatted ascii files
         fixed writing of output constituents to match GOT attribute format
@@ -210,8 +211,14 @@ def open_got_ascii(
     # parse header text
     # constituent identifier
     cons = pyTMD.constituents._parse_name(file_contents[0])
-    # get units
-    units = re.findall(r"\((\w+m)\)", file_contents[0], re.IGNORECASE)
+    # get units from header if available
+    rx = re.compile(r"\((\w+m)\)", re.IGNORECASE)
+    # GOT headers from Richard Ray have units on the first line
+    # some other models have units on the second line
+    if rx.search(file_contents[0]):
+        units = rx.findall(file_contents[0], re.IGNORECASE)
+    elif rx.search(file_contents[1]):
+        units = rx.findall(file_contents[1], re.IGNORECASE)
     # grid dimensions
     nlat, nlon = np.array(file_contents[2].split(), dtype=int)
     # longitude range
