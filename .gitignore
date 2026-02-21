@@ -98,8 +98,9 @@ None*.png
 # Jupyter Checkpoints #
 #######################
 .ipynb_checkpoints
-Untitled.ipynb
+Untitled*.ipynb
 core.*
-# pixi environments
+# pixi environments #
+#####################
 .pixi/*
 !.pixi/config.toml

@@ -47,11 +47,8 @@ Model Database
 ``pyTMD`` comes parameterized with models for the prediction of tidal elevations and currents.
 All presently available models are stored within a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 
-.. code-block:: python
-
-   >>> import pyTMD
-   >>> pyTMD.models.get('CATS2008')
-   {'format': 'OTIS', 'name': 'CATS2008', 'projection': {'datum': 'WGS84', 'lat_0': -90, 'lat_ts': -71, 'lon_0': -70, 'proj': 'stere', 'type': 'crs', 'units': 'km', 'x_0': 0, 'y_0': 0}, 'reference': 'https://doi.org/10.15784/601235', 'u': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/uv.CATS2008.out', 'units': 'm^2/s', 'variable': 'zonal_tidal_current'}, 'v': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/uv.CATS2008.out', 'units': 'm^2/s', 'variable': 'meridional_tidal_current'}, 'z': {'grid_file': 'CATS2008/grid_CATS2008', 'model_file': 'CATS2008/hf.CATS2008.out', 'units': 'm', 'variable': 'tide_ocean'}}
+.. include:: Model-Database.ipynb
+   :parser: myst_nb.docutils_
 
 ``pyTMD`` currently supports several solutions from the following tide models:
 

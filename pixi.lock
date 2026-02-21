@@ -12588,7 +12588,7 @@ packages:
 - pypi: ./
   name: pytmd
   version: 3.0.2
-  sha256: 34712e1eb1fa6f4361aaa4731ae619f5dc9939107f92f7e14a8f9708710d7329
+  sha256: a902441adc216d21cde0d04ce5000acc3c80a873b2c9010320db3348d46f2fbd
   requires_dist:
   - h5netcdf
   - lxml
@@ -12599,7 +12599,7 @@ packages:
   - scipy>=1.10.1
   - timescale>=0.0.8
   - xarray
-  - docutils ; extra == 'doc'
+  - docutils>=0.17 ; extra == 'doc'
   - graphviz ; extra == 'doc'
   - ipympl ; extra == 'doc'
   - myst-nb ; extra == 'doc'

@@ -313,14 +313,14 @@ def open_fes_netcdf(
     if "Ha" in tmp.variables:
         # FES2012 variable names
         mapping_coords = dict(lon="x", lat="y")
-        mapping_amp = dict(z="Ha", u="Ua", v="Va")
-        mapping_ph = dict(z="Hg", u="Ug", v="Vg")
-    elif "amplitude" in tmp.variables:
+        mapping_amp = dict(z="Ha")
+        mapping_ph = dict(z="Hg")
+    elif any([v in tmp.variables for v in ["amplitude", "Ua", "Va"]]):
         # FES2014/2022 variable names
         mapping_coords = dict(lon="x", lat="y")
         mapping_amp = dict(z="amplitude", u="Ua", v="Va")
         mapping_ph = dict(z="phase", u="Ug", v="Vg")
-    elif "AMPL" in tmp.variables:
+    elif any([v in tmp.variables for v in ["AMPL", "UAMP", "VAMP"]]):
         # HAMTIDE11 variable names
         mapping_coords = dict(LON="x", LAT="y")
         mapping_amp = dict(z="AMPL", u="UAMP", v="VAMP")

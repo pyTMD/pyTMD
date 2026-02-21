@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 model.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (02/2026)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -13,6 +13,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: add HTML representation for model objects using xarray
+        set tidal constituent units (if unset) in a loop
     Updated 11/2025: use default cache directory if directory is None
         added crs property for model coordinate reference system
         refactor to use new simpler (flattened) database format
@@ -121,13 +123,13 @@ class DataBase:
         """Returns the items of the model database"""
         return self.__dict__.items()
 
-    def __repr__(self):
-        """Representation of the ``DataBase`` object"""
-        return str(self.__dict__)
-
     def __str__(self):
         """String representation of the ``DataBase`` object"""
         return str(self.__dict__)
+
+    def __repr__(self):
+        """Representation of the ``DataBase`` object"""
+        return self.__str__()
 
     def get(self, key, default=None):
         if not hasattr(self, key) or getattr(self, key) is None:
@@ -218,6 +220,7 @@ class model:
         self.format = None
         self.name = None
         self.verify = copy.copy(kwargs["verify"])
+        self.__parameters__ = {}
 
     def from_database(self, m: str, group: tuple = ("z", "u", "v")):
         """
@@ -833,11 +836,10 @@ class model:
         ds.attrs["source"] = self.name
         # add coordinate reference system to Dataset
         ds.attrs["crs"] = self.crs.to_dict()
-        # list of constituents
-        c = ds.tmd.constituents
         # set units attribute if not already set
         # (uses value defined in the model database)
-        ds[c].attrs["units"] = ds[c].attrs.get("units", self[group].units)
+        for c in ds.tmd.constituents:
+            ds[c].attrs["units"] = ds[c].attrs.get("units", self[group].units)
         # convert to default units
         if kwargs["use_default_units"]:
             ds = ds.tmd.to_default_units()
@@ -872,6 +874,34 @@ class model:
         properties = ["pyTMD.io.model"]
         properties.append(f"    name: {self.name}")
         return "\n".join(properties)
+
+    def __repr__(self):
+        """Representation of the ``io.model`` object"""
+        return self.__str__()
+
+    def _repr_html_(self):
+        """HTML representation of the ``io.model`` object"""
+        header = "pyTMD.io.model"
+        header_components = [f"<div class='xr-obj-type'>{header}</div>"]
+        sections = []
+        data_vars = [k for k in ("z", "u", "v") if k in self.__parameters__]
+        parameters = {
+            k: v for k, v in self.__parameters__.items() if k not in data_vars
+        }
+        sections.append(xr.core.formatting_html.attr_section(parameters))
+        for v in data_vars:
+            sections.append(
+                xr.core.formatting_html._mapping_section(
+                    mapping=self.__parameters__[v],
+                    name=f"{v}-Attributes",
+                    details_func=xr.core.formatting_html.summarize_attrs,
+                    max_items_collapse=0,
+                    expand_option_name="display_expand_attrs",
+                )
+            )
+        return xr.core.formatting_html._obj_repr(
+            self, header_components, sections
+        )
 
     def get(self, key, default=None):
         return getattr(self, key, default) or default
