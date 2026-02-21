@@ -219,6 +219,8 @@ def open_got_ascii(
         units = rx.findall(file_contents[0], re.IGNORECASE)
     elif rx.search(file_contents[1]):
         units = rx.findall(file_contents[1], re.IGNORECASE)
+    else:
+        units = None
     # grid dimensions
     nlat, nlon = np.array(file_contents[2].split(), dtype=int)
     # longitude range
