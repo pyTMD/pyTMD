@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 02/2026: add HTML representation for model objects using xarray
         set tidal constituent units (if unset) in a loop
+        check if units are compatible with known types before setting units
     Updated 11/2025: use default cache directory if directory is None
         added crs property for model coordinate reference system
         refactor to use new simpler (flattened) database format
@@ -836,10 +837,11 @@ class model:
         ds.attrs["source"] = self.name
         # add coordinate reference system to Dataset
         ds.attrs["crs"] = self.crs.to_dict()
-        # set units attribute if not already set
-        # (uses value defined in the model database)
+        # check if units attribute can be parsed and is a known type
+        # if units cannot be parsed: use value defined in the model database
         for c in ds.tmd.constituents:
-            ds[c].attrs["units"] = ds[c].attrs.get("units", self[group].units)
+            if not ds[c].tmd._has_compatible_units:
+                ds[c].attrs["units"] = self[group].units
         # convert to default units
         if kwargs["use_default_units"]:
             ds = ds.tmd.to_default_units()

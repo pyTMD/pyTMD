@@ -18,6 +18,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2026: create subaccessor registration functions
+        add functions to test if units are compatible with known groups
     Updated 01/2026: handle scalar inputs for coordinate transformations
     Updated 12/2025: add coords functions to transform coordinates
         set units attribute for amplitude and phase data arrays
@@ -906,7 +907,12 @@ class DataArray:
     @property
     def units(self):
         """Units of the ``DataArray``"""
-        return __ureg__.parse_units(self._da.attrs.get("units", ""))
+        try:
+            return __ureg__.parse_units(self._units)
+        except TypeError as exc:
+            raise ValueError(f"Unknown units: {self._units}") from exc
+        except AttributeError as exc:
+            raise AttributeError("DataArray has no attribute 'units'") from exc
 
     @property
     def quantity(self):
@@ -922,8 +928,25 @@ class DataArray:
             return "current"
         elif self.units.is_compatible_with("m^2/s"):
             return "transport"
+        elif self.units.is_compatible_with("degrees"):
+            return "angle"
         else:
-            raise ValueError(f"Unknown unit group: {self.units}")
+            raise ValueError(f"Unknown unit group: {self._units}")
+
+    @property
+    def _units(self):
+        """Units attribute of the ``DataArray`` as a string"""
+        return self._da.attrs.get("units")
+
+    @property
+    def _has_compatible_units(self):
+        """Tests that units are compatible with known groups"""
+        try:
+            unit_group = self.group
+        except (TypeError, ValueError, AttributeError) as exc:
+            return False
+        else:
+            return True
 
 
 def register_datatree_subaccessor(name):
