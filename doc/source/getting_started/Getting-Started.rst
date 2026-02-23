@@ -182,11 +182,8 @@ Programs
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
 compute the corresponding tidal elevation or currents.
 
-.. code-block:: python
-
-    >>> import pyTMD
-    >>> tide_h = pyTMD.compute.tide_elevations(x, y, delta_time, directory=path_to_tide_models, model='CATS2008', crs=3031, epoch=(2000,1,1,0,0,0), type='drift', standard='GPS', method='linear')
-    >>> tide_uv = pyTMD.compute.tide_currents(x, y, delta_time, directory=path_to_tide_models, model='CATS2008', crs=3031, epoch=(2000,1,1,0,0,0), type='drift', standard='GPS', method='linear')
+.. include:: Compute-Tides.ipynb
+   :parser: myst_nb.docutils_
 
 Time
 ####
