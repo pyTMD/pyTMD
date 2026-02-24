@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 predict.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -25,6 +25,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 02/2026: added attributes for constituents to output DataArrays
     Updated 12/2025: added tidal LOD calculation from Ray and Erofeeva (2014)
     Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
@@ -189,6 +190,7 @@ def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     ).sum(dim="constituent", skipna=False)
     # copy units attribute
     tpred.attrs["units"] = ds[constituents[0]].attrs.get("units", None)
+    tpred.attrs["constituents"] = constituents
     # return the predicted tides
     return tpred
 
@@ -231,15 +233,25 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     kwargs.setdefault("minor", None)
     # infer the minor tidal constituents
     tinfer = 0.0
+    constituents = []
+    species = []
     # infer short-period tides for minor constituents
     if kwargs["corrections"] in ("GOT",):
-        tinfer += _infer_semi_diurnal(t, ds, **kwargs)
-        tinfer += _infer_diurnal(t, ds, **kwargs)
+        species.extend(["semi_diurnal", "diurnal"])
     else:
-        tinfer += _infer_short_period(t, ds, **kwargs)
+        species.append("short_period")
     # infer long-period tides for minor constituents
     if kwargs["infer_long_period"]:
-        tinfer += _infer_long_period(t, ds, **kwargs)
+        species.append("long_period")
+    # infer minor constituents for each species
+    for s in species:
+        result = _infer[s](t, ds, **kwargs)
+        tinfer += result
+        if hasattr(result, "constituents"):
+            constituents.extend(result.constituents)
+    # update attributes for inferred constituents
+    if hasattr(tinfer, "constituents"):
+        tinfer.attrs["constituents"] = constituents
     # return the inferred values
     return tinfer
 
@@ -966,6 +978,14 @@ def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     return tinfer
 
 
+# dictionary of functions for inferring minor tidal constituents
+_infer = {}
+_infer["short_period"] = _infer_short_period
+_infer["semi_diurnal"] = _infer_semi_diurnal
+_infer["diurnal"] = _infer_diurnal
+_infer["long_period"] = _infer_long_period
+
+
 # PURPOSE: estimate long-period equilibrium tides
 def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
     """
@@ -1143,6 +1163,7 @@ def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
     )
     # add units attribute
     tpred.attrs["units"] = "centimeters"
+    tpred.attrs["constituents"] = constituents
     # return the long-period equilibrium tides
     return tpred.tmd.to_units("meters")
 

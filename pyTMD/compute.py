@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 compute.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -64,6 +64,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 02/2026: added attributes for constituents to output DataArrays
     Updated 12/2025: use coords functions to convert x and y to DataArrays
         no longer subclassing pathlib.Path for working directories
     Updated 11/2025: use xarray DataArrays for input coordinates
@@ -321,8 +322,8 @@ def tide_elevations(
 
     Returns
     -------
-    tide: xarray.DataArray
-        tidal elevation (meters)
+    tpred: xarray.DataArray
+        predicted tide elevation (meters)
     """
     # default keyword arguments
     kwargs.setdefault("chunks", None)
@@ -404,20 +405,28 @@ def tide_elevations(
         X, Y, method=method, extrapolate=extrapolate, cutoff=cutoff
     )
     # calculate tide values for input data type
-    tide = local.tmd.predict(
+    tpred = local.tmd.predict(
         ts.tide, deltat=deltat, corrections=nodal_corrections
     )
     # calculate values for minor constituents by inference
     if kwargs["infer_minor"]:
-        # add major and minor components
-        tide += local.tmd.infer(
+        # infer minor constituents
+        tinfer = local.tmd.infer(
             ts.tide,
             deltat=deltat,
             corrections=nodal_corrections,
             minor=minor_constituents,
         )
+        # add major and minor components
+        tpred += tinfer
+        # add attributes for inferred constituents
+        tpred.attrs["inferred"] = []
+        if hasattr(tinfer, "constituents"):
+            tpred.attrs["inferred"].extend(tinfer.constituents)
+    # add attributes
+    tpred.attrs["nodal_corrections"] = nodal_corrections
     # return the ocean or load tide correction
-    return tide
+    return tpred
 
 
 # PURPOSE: compute tides at points and times using tide model algorithms
@@ -508,8 +517,8 @@ def tide_currents(
 
     Returns
     -------
-    tide: xr.DataTree
-        tidal currents in cm/s
+    tpred: xr.DataTree
+        predicted tidal currents in cm/s
 
         u: xr.Dataset
             zonal velocities
@@ -584,7 +593,7 @@ def tide_currents(
         deltat = ts.tt_ut1
 
     # python dictionary with tide model data
-    tide = xr.DataTree()
+    tpred = xr.DataTree()
     # iterate over u and v currents
     for key, ds in dtree.items():
         # convert component to dataset
@@ -594,20 +603,28 @@ def tide_currents(
             X, Y, method=method, extrapolate=extrapolate, cutoff=cutoff
         )
         # calculate tide values for input data type
-        tide[key] = local.tmd.predict(
+        tpred[key] = local.tmd.predict(
             ts.tide, deltat=deltat, corrections=nodal_corrections
         )
         # calculate values for minor constituents by inference
         if kwargs["infer_minor"]:
-            # add major and minor components
-            tide[key] += local.tmd.infer(
+            # infer minor constituents
+            tinfer = local.tmd.infer(
                 ts.tide,
                 deltat=deltat,
                 corrections=nodal_corrections,
                 minor=minor_constituents,
             )
+            # add major and minor components
+            tpred[key] += tinfer
+            # add attributes for inferred constituents
+            tpred[key].attrs["inferred"] = []
+            if hasattr(tinfer, "constituents"):
+                tpred[key].attrs["inferred"].extend(tinfer.constituents)
+        # add attributes
+        tpred[key].attrs["nodal_corrections"] = nodal_corrections
     # return the tidal currents
-    return tide
+    return tpred
 
 
 # PURPOSE: check if points are within a tide model domain
