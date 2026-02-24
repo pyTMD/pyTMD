@@ -26,6 +26,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2026: added attributes for constituents to output DataArrays
+        do not infer minor constituents with frequencies equal to any major
     Updated 12/2025: added tidal LOD calculation from Ray and Erofeeva (2014)
     Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
@@ -497,11 +498,16 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     ]
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
+    # angular frequencies for inferred constituents
+    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # only add minor constituents that are not on the list of major values
+    # and with frequencies not equal to any major constituent
     constituents = [
         m
         for i, m in enumerate(minor_constituents)
-        if (m not in ds.tmd.constituents) and (m in minor)
+        if (m not in ds.tmd.constituents)
+        and (m in minor)
+        and (np.all(omega[i] != omajor))
     ]
     # if there are no constituents to infer
     msg = "No semi-diurnal tidal constituents to infer"
@@ -509,8 +515,6 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         logging.debug(msg)
         return 0.0
 
-    # angular frequencies for inferred constituents
-    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # Cartwright and Edden potential amplitudes for inferred constituents
     amin = np.zeros((14))
     amin[0] = 0.004669  # eps2
@@ -693,11 +697,16 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     ]
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
+    # angular frequencies for inferred constituents
+    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # only add minor constituents that are not on the list of major values
+    # and with frequencies not equal to any major constituent
     constituents = [
         m
         for i, m in enumerate(minor_constituents)
-        if (m not in ds.tmd.constituents) and (m in minor)
+        if (m not in ds.tmd.constituents)
+        and (m in minor)
+        and (np.all(omega[i] != omajor))
     ]
     # if there are no constituents to infer
     msg = "No diurnal tidal constituents to infer"
@@ -705,8 +714,6 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         logging.debug(msg)
         return 0.0
 
-    # angular frequencies for inferred constituents
-    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # Cartwright and Edden potential amplitudes for inferred constituents
     amin = np.zeros((17))
     amin[0] = 0.006638  # 2q1
@@ -889,11 +896,16 @@ def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     ]
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
+    # angular frequencies for inferred constituents
+    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # only add minor constituents that are not on the list of major values
+    # and with frequencies not equal to any major constituent
     constituents = [
         m
         for i, m in enumerate(minor_constituents)
-        if (m not in ds.tmd.constituents) and (m in minor)
+        if (m not in ds.tmd.constituents)
+        and (m in minor)
+        and (np.all(omega[i] != omajor))
     ]
     # if there are no constituents to infer
     msg = "No long-period tidal constituents to infer"
@@ -901,8 +913,6 @@ def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         logging.debug(msg)
         return 0.0
 
-    # angular frequencies for inferred constituents
-    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # Cartwright and Edden potential amplitudes for inferred constituents
     amin = np.zeros((9))
     amin[0] = 0.004922  # sa

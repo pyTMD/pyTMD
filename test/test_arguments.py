@@ -745,7 +745,27 @@ def test_parameters():
         assert np.isclose(omega, omegas[i])
         # assert phase calculation
         assert np.isclose(phase, G[0,i])
-        
+
+def test_frequencies():
+    """
+    Test constituents with equal frequency values
+    """
+    # constituent pairs with equal frequencies
+    mapping = []
+    mapping.append(['tau1', 'mp1'])
+    mapping.append(['ups1', 'kq1'])
+    mapping.append(['alpha2', 'ma2'])
+    mapping.append(['beta2', 'mb2'])
+    mapping.append(['delta2', 'mks2'])
+    mapping.append(['mu2', '2ms2'])
+    # for each mapping
+    for c1, c2 in mapping:
+        # get frequencies
+        omega1 = pyTMD.constituents.frequency(c1)
+        omega2 = pyTMD.constituents.frequency(c2)
+        # assert frequencies are equal
+        assert np.isclose(omega1, omega2)
+
 # create list of tables
 tables = []
 # Doodson (1921) table with values missing from Cartwright tables
