@@ -456,6 +456,28 @@ def test_predict_ocean_pole_tide():
         val = test[key].values
         assert np.all(np.abs(val - validation[mapping]) < eps)
 
+# PURPOSE: validate pole tide displacements against data from John Robbins
+def validate_pole_tide_displacements():
+    # read ocean and load pole tide test file from John Robbins
+    pole_tide_test_file = filepath.joinpath('oceanloadpole.test')
+    validation = np.loadtxt(pole_tide_test_file, skiprows=1)
+    # convert MJD to datetime objects
+    ts = timescale.time.Timescale(MJD=validation[:,0])
+    # calculate ocean and pole tide displacements
+    # John's routines use IERS 2015 conventions for the mean pole
+    OPT = pyTMD.compute.OPT_displacements(
+        validation[:,1], validation[:,2], ts.to_datetime(),
+        crs=4326, standard='datetime', convention='2015'
+    )
+    LPT = pyTMD.compute.LPT_displacements(
+        validation[:,1], validation[:,2], ts.to_datetime(),
+        crs=4326, standard='datetime', convention='2015'
+    )
+    # compare with test values
+    eps = np.finfo(np.float16).eps
+    assert np.all(np.abs(OPT - 1e-3*validation[:,3]) < eps)
+    assert np.all(np.abs(LPT - 1e-3*validation[:,4]) < eps)
+
 # PURPOSE: verify inverse of rotation matrix
 def test_rotation_matrix():
     # number of data points
