@@ -12,6 +12,10 @@ math
 
 .. autofunction:: pyTMD.math.masec2rad
 
+.. autofunction:: pyTMD.math.rad2asec
+
+.. autofunction:: pyTMD.math.rad2masec
+
 .. autofunction:: pyTMD.math.polynomial_sum
 
 .. autofunction:: pyTMD.math.normalize_angle
