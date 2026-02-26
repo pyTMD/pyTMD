@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 spatial.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (02/2026)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 02/2026: add function to compute geocentric latitudes
     Updated 12/2025: add units to input and output variables in docstrings
     Updated 08/2025: convert angles with numpy radians and degrees functions
     Updated 03/2025: add more ellipsoidal parameters to datum class
@@ -99,6 +100,7 @@ __all__ = [
     "from_ENU",
     "to_horizontal",
     "to_zenith",
+    "geocentric_latitude",
     "scale_factors",
 ]
 
@@ -1513,6 +1515,35 @@ def to_zenith(
     zenith = 90.0 - alpha
     # return zenith angle
     return zenith
+
+
+def geocentric_latitude(
+    lat: np.ndarray,
+    flat: float = _wgs84.flat,
+):
+    """
+    Compute the geocentric latitude from a geodetic latitude
+    using a simplified empirical relation :cite:p:`Snyder:1982gf`
+
+    Parameters
+    ----------
+    lat: np.ndarray
+        geodetic latitudes (degrees north)
+    flat: float, default 1.0/298.257223563
+        ellipsoidal flattening
+
+    Returns
+    -------
+    geolat: np.ndarray
+        geocentric latitude (degrees)
+    """
+    # convert latitude to radians
+    phi = np.radians(lat)
+    # compute difference between geodetic and geocentric latitudes
+    d2 = (flat + flat**2 / 2.0) * np.sin(2.0 * phi)
+    d4 = (flat**2 / 2.0) * np.sin(4.0 * phi)
+    geolat = lat - np.degrees(d2 - d4)
+    return geolat
 
 
 def scale_areas(*args, **kwargs):

@@ -47,4 +47,6 @@ General Methods
 
 .. autofunction:: pyTMD.spatial.to_zenith
 
+.. autofunction:: pyTMD.spatial.geocentric_latitude
+
 .. autofunction:: pyTMD.spatial.scale_factors
