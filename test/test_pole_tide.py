@@ -23,7 +23,6 @@ import pytest
 import pyproj
 import xarray as xr
 import numpy as np
-import scipy.interpolate
 import pyTMD.compute
 import pyTMD.predict
 import timescale.time
@@ -158,22 +157,22 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((ny,nx,nt))
         for i in range(nt):
             SRAD = dfactor*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi) - my[i]*np.sin(phi))
+                (mx[i]*np.cos(phi) + my[i]*np.sin(phi))
             # reform grid
             Srad.data[:,:,i] = np.reshape(SRAD, (ny, nx))
             Srad.mask[:,:,i] = np.isnan(Srad.data[:,:,i])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi) - my[i]*np.sin(phi))
+                (mx[i]*np.cos(phi) + my[i]*np.sin(phi))
             approx[:,:,i] = np.reshape(S, (ny, nx))/1e3
     elif (TYPE == 'drift'):
         Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
         Srad.data[:] = dfactor*np.sin(2.0*theta) * \
-            (mx*np.cos(phi) - my*np.sin(phi))
+            (mx*np.cos(phi) + my*np.sin(phi))
         Srad.mask = np.isnan(Srad.data)
         # approximate values from IERS (2010) conventions
         S = -33.0*np.sin(2.0*theta) * \
-            (mx*np.cos(phi) - my*np.sin(phi))
+            (mx*np.cos(phi) + my*np.sin(phi))
         approx = S/1e3
     elif (TYPE == 'time series'):
         nstation = len(x)
@@ -182,12 +181,12 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((nstation,nt))
         for s in range(nstation):
             SRAD = dfactor[s]*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s]) - my*np.sin(phi[s]))
+                (mx*np.cos(phi[s]) + my*np.sin(phi[s]))
             Srad.data[s,:] = np.copy(SRAD)
             Srad.mask[s,:] = np.isnan(Srad.data[s,:])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s]) - my*np.sin(phi[s]))
+                (mx*np.cos(phi[s]) + my*np.sin(phi[s]))
             approx[s,:] = np.copy(S)/1e3
     # replace invalid data with fill values
     Srad.data[Srad.mask] = Srad.fill_value
@@ -303,6 +302,9 @@ def test_ocean_pole_tide():
         convention='2003')
     # read and interpolate IERS daily polar motion values
     px, py = timescale.eop.iers_polar_motion(ts.MJD, k=3, s=0)
+    # assert that the daily pole values are close
+    assert np.all(np.abs(px - validation['x_p']) < eps)
+    assert np.all(np.abs(py - validation['y_p']) < eps)
     # calculate differentials from mean/secular pole positions
     # using the latest definition from IERS Conventions (2010)
     mx = px - mpx
@@ -453,6 +455,28 @@ def test_predict_ocean_pole_tide():
         # assert that the computed values are close
         val = test[key].values
         assert np.all(np.abs(val - validation[mapping]) < eps)
+
+# PURPOSE: validate pole tide displacements against data from John Robbins
+def validate_pole_tide_displacements():
+    # read ocean and load pole tide test file from John Robbins
+    pole_tide_test_file = filepath.joinpath('oceanloadpole.test')
+    validation = np.loadtxt(pole_tide_test_file, skiprows=1)
+    # convert MJD to datetime objects
+    ts = timescale.time.Timescale(MJD=validation[:,0])
+    # calculate ocean and pole tide displacements
+    # John's routines use IERS 2015 conventions for the mean pole
+    OPT = pyTMD.compute.OPT_displacements(
+        validation[:,1], validation[:,2], ts.to_datetime(),
+        crs=4326, standard='datetime', convention='2015'
+    )
+    LPT = pyTMD.compute.LPT_displacements(
+        validation[:,1], validation[:,2], ts.to_datetime(),
+        crs=4326, standard='datetime', convention='2015'
+    )
+    # compare with test values
+    eps = np.finfo(np.float16).eps
+    assert np.all(np.abs(OPT - 1e-3*validation[:,3]) < eps)
+    assert np.all(np.abs(LPT - 1e-3*validation[:,4]) < eps)
 
 # PURPOSE: verify inverse of rotation matrix
 def test_rotation_matrix():

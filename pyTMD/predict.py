@@ -27,6 +27,8 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
+        revert (again) load pole tides to a newer IERS convention definition
+        but allow for both sign definitions based on the convention variable
     Updated 12/2025: added tidal LOD calculation from Ray and Erofeeva (2014)
     Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
@@ -1240,6 +1242,7 @@ def load_pole_tide(
     mpx, mpy, fl = timescale.eop.iers_mean_pole(
         time_decimal, convention=convention
     )
+    sign_convention = -1.0 if convention in ("1996", "2003") else 1.0
     # read and interpolate IERS daily polar motion values
     px, py = timescale.eop.iers_polar_motion(MJD, k=3, s=0)
     # calculate differentials from mean/secular pole positions
@@ -1268,15 +1271,17 @@ def load_pole_tide(
     S["N"] = (
         dfactor["N"]
         * np.cos(2.0 * theta)
-        * (pm.X * np.cos(phi) - pm.Y * np.sin(phi))
+        * (pm.X * np.cos(phi) + sign_convention * pm.Y * np.sin(phi))
     )
     S["E"] = (
-        dfactor["E"] * np.cos(theta) * (pm.X * np.sin(phi) + pm.Y * np.cos(phi))
+        dfactor["E"]
+        * np.cos(theta)
+        * (pm.X * np.sin(phi) - sign_convention * pm.Y * np.cos(phi))
     )
     S["R"] = (
         dfactor["R"]
         * np.sin(2.0 * theta)
-        * (pm.X * np.cos(phi) - pm.Y * np.sin(phi))
+        * (pm.X * np.cos(phi) + sign_convention * pm.Y * np.sin(phi))
     )
 
     # rotation matrix for converting to/from cartesian coordinates
