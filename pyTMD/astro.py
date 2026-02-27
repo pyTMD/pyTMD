@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 astro.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (02/2026)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 02/2026: added longitude and distance functions from Kubo 1980
     Updated 10/2025: change default directory for JPL SSD kernels to cache
     Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
@@ -102,9 +103,14 @@ __all__ = [
     "solar_ecef",
     "solar_approximate",
     "solar_ephemerides",
+    "solar_longitude",
+    "solar_distance",
     "lunar_ecef",
     "lunar_approximate",
     "lunar_ephemerides",
+    "lunar_longitude",
+    "lunar_latitude",
+    "lunar_distance",
     "gast",
     "itrs",
     "_eqeq_complement",
@@ -786,6 +792,138 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     return (X, Y, Z)
 
 
+def solar_longitude(MJD: np.ndarray, include_aberration=False):
+    """
+    Calculates the longitude of the sun
+    :cite:p:`Kubo:1980ut,Tamura:1982wx`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    include_aberration: bool, default False
+        Correct for aberration effects
+
+    Returns
+    -------
+    H: np.ndarray
+        longitude of the sun (radians)
+    """
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # coefficients for calculating the longitude of the sun
+    A = np.array(
+        [
+            19147e-4,
+            200e-4,
+            20e-4,
+            18e-4,
+            18e-4,
+            15e-4,
+            13e-4,
+            7e-4,
+            7e-4,
+            7e-4,
+            6e-4,
+            5e-4,
+            5e-4,
+            4e-4,
+            4e-4,
+        ]
+    )
+    B = np.array(
+        [
+            35999.05,
+            71998.1,
+            32964.0,
+            19.0,
+            445267.0,
+            45038.0,
+            22519.0,
+            65929.0,
+            3035.0,
+            9038.0,
+            33718.0,
+            155.0,
+            2281.0,
+            29930.0,
+            31557.0,
+        ]
+    )
+    C = np.array(
+        [
+            267.52,
+            265.1,
+            158.0,
+            159.0,
+            208.0,
+            254.0,
+            352.0,
+            45.0,
+            110.0,
+            64.0,
+            316.0,
+            118.0,
+            221.0,
+            48.0,
+            161.0,
+        ]
+    )
+    # calculate the longitude of the sun
+    longitude = 36000.7695 + 280.4659 * ts.T
+    for i, a in enumerate(A):
+        if i == 0:
+            a -= 48e-4 * ts.T
+        longitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+    # correct for aberration of light
+    if include_aberration:
+        # additional coefficients for correcting longitudes
+        A0, B0, C0 = 48e-4, 1934.0, 145.0
+        # convert to apparent longitude
+        longitude += -0.0057 + A0 * np.cos(np.radians(B0 * ts.T + C0))
+    # convert to radians
+    H = np.radians(longitude)
+    return H
+
+
+def solar_distance(MJD: np.ndarray):
+    """
+    Calculates the distance from the sun to the Earth
+    :cite:p:`Kubo:1980ut,Tamura:1982wx`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    R: np.ndarray
+        distance from the sun to the Earth (meters)
+    """
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # distance of 1 AU in meters
+    AU = 1.495978707e11
+    # coefficients for calculating the distance from the sun to the Earth
+    A = np.array(
+        [1000140e-6, 16706e-6, 139e-6, 31e-6, 16e-6, 16e-6, 5e-6, 5e-6]
+    )
+    B = np.array(
+        [0.0, 35999.05, 71998.0, 445267.0, 32964.0, 45038.0, 22519.0, 33718.0]
+    )
+    C = np.array([0.0, 177.53, 175.0, 298.0, 68.0, 164.0, 233.0, 226.0])
+    # calculate the distance from the sun to the Earth
+    solar_au = 36000.7695 + 280.4659 * ts.T
+    for i, a in enumerate(A):
+        if i == 0:
+            a -= 42e-6 * ts.T
+        solar_au += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+    # convert from AU to meters
+    R = solar_au * AU
+    return R
+
+
 # PURPOSE: compute coordinates of the moon in an ECEF frame
 def lunar_ecef(MJD: np.ndarray, **kwargs):
     """
@@ -983,6 +1121,575 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
+
+def lunar_longitude(MJD: np.ndarray):
+    """
+    Calculates the longitude of the moon
+    :cite:p:`Kubo:1980ut,Tamura:1982wx`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    S: np.ndarray
+        longitude of the moon (radians)
+    """
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # coefficients for calculating the longitude of the moon
+    A = np.array(
+        [
+            62888e-4,
+            12740e-4,
+            6583e-4,
+            2136e-4,
+            1851e-4,
+            1144e-4,
+            588e-4,
+            571e-4,
+            533e-4,
+            458e-4,
+            409e-4,
+            347e-4,
+            304e-4,
+            154e-4,
+            125e-4,
+            110e-4,
+            107e-4,
+            100e-4,
+            85e-4,
+            79e-4,
+            68e-4,
+            52e-4,
+            50e-4,
+            40e-4,
+            40e-4,
+            40e-4,
+            38e-4,
+            37e-4,
+            28e-4,
+            27e-4,
+            26e-4,
+            24e-4,
+            23e-4,
+            22e-4,
+            21e-4,
+            21e-4,
+            21e-4,
+            18e-4,
+            16e-4,
+            12e-4,
+            11e-4,
+            9e-4,
+            8e-4,
+            7e-4,
+            7e-4,
+            7e-4,
+            7e-4,
+            6e-4,
+            6e-4,
+            5e-4,
+            5e-4,
+            5e-4,
+            4e-4,
+            4e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+        ]
+    )
+    B = np.array(
+        [
+            477198.868,
+            413335.35,
+            890534.22,
+            954397.74,
+            35999.05,
+            966404.0,
+            63863.5,
+            377336.3,
+            1367733.1,
+            854535.2,
+            441199.8,
+            445267.1,
+            513197.9,
+            75870.0,
+            1443603.0,
+            489205.0,
+            1303870.0,
+            1431597.0,
+            826671.0,
+            449334.0,
+            926533.0,
+            31932.0,
+            481266.0,
+            1331734.0,
+            1844932.0,
+            133.0,
+            1781068.0,
+            541062.0,
+            1934.0,
+            918399.0,
+            1379739.0,
+            99863.0,
+            922466.0,
+            818536.0,
+            990397.0,
+            71998.0,
+            341337.0,
+            401329.0,
+            1856938.0,
+            1267871.0,
+            1920802.0,
+            858602.0,
+            1403732.0,
+            790672.0,
+            405201.0,
+            485333.0,
+            27864.0,
+            111869.0,
+            2258267.0,
+            1908795.0,
+            1745069.0,
+            509131.0,
+            39871.0,
+            12006.0,
+            958465.0,
+            381404.0,
+            349472.0,
+            1808933.0,
+            549197.0,
+            4067.0,
+            2322131.0,
+        ]
+    )
+    C = np.array(
+        [
+            44.963,
+            10.74,
+            145.70,
+            179.93,
+            87.53,
+            276.5,
+            124.2,
+            13.2,
+            280.7,
+            148.2,
+            47.4,
+            27.9,
+            222.5,
+            41.0,
+            52.0,
+            142.0,
+            246.0,
+            315.0,
+            111.0,
+            188.0,
+            323.0,
+            107.0,
+            205.0,
+            283.0,
+            56.0,
+            29.0,
+            21.0,
+            259.0,
+            145.0,
+            182.0,
+            17.0,
+            122.0,
+            163.0,
+            151.0,
+            357.0,
+            85.0,
+            16.0,
+            274.0,
+            152.0,
+            249.0,
+            186.0,
+            129.0,
+            98.0,
+            114.0,
+            50.0,
+            186.0,
+            127.0,
+            38.0,
+            156.0,
+            90.0,
+            24.0,
+            242.0,
+            223.0,
+            187.0,
+            340.0,
+            354.0,
+            337.0,
+            58.0,
+            220.0,
+            70.0,
+            191.0,
+        ]
+    )
+    # calculate the longitude of the moon
+    longitude = 218.3162 + 481267.8809 * ts.T
+    for i, a in enumerate(A):
+        longitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+    # convert to radians
+    S = np.radians(longitude)
+    return S
+
+
+def lunar_latitude(MJD: np.ndarray):
+    """
+    Calculate the apparent latitude of the moon
+    :cite:p:`Kubo:1980ut,Tamura:1982wx`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    F: np.ndarray
+        latitude of the moon (radians)
+    """
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # coefficients for calculating the latitude of the moon
+    A = np.array(
+        [
+            51281e-4,
+            2806e-4,
+            2777e-4,
+            1733e-4,
+            554e-4,
+            463e-4,
+            326e-4,
+            172e-4,
+            93e-4,
+            88e-4,
+            82e-4,
+            43e-4,
+            42e-4,
+            34e-4,
+            25e-4,
+            22e-4,
+            22e-4,
+            21e-4,
+            19e-4,
+            18e-4,
+            18e-4,
+            18e-4,
+            15e-4,
+            15e-4,
+            15e-4,
+            14e-4,
+            13e-4,
+            13e-4,
+            11e-4,
+            10e-4,
+            9e-4,
+            8e-4,
+            7e-4,
+            6e-4,
+            6e-4,
+            5e-4,
+            5e-4,
+            5e-4,
+            4e-4,
+            4e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+            3e-4,
+        ]
+    )
+    B = np.array(
+        [
+            483202.019,
+            960400.89,
+            6003.15,
+            407332.20,
+            896537.4,
+            69866.7,
+            1373736.2,
+            1437599.8,
+            884531.0,
+            471196.0,
+            371333.0,
+            547066.0,
+            1850935.0,
+            443331.0,
+            860538.0,
+            481268.0,
+            1337737.0,
+            105866.0,
+            924402.0,
+            820668.0,
+            519201.0,
+            1449606.0,
+            42002.0,
+            928469.0,
+            996400.0,
+            29996.0,
+            447203.0,
+            37935.0,
+            1914799.0,
+            1297866.0,
+            1787072.0,
+            972407.0,
+            1309873.0,
+            559072.0,
+            1361730.0,
+            848532.0,
+            419339.0,
+            948395.0,
+            2328134.0,
+            1024264.0,
+            932536.0,
+            1409735.0,
+            2264270.0,
+            1814936.0,
+            335334.0,
+        ]
+    )
+    C = np.array(
+        [
+            3.273,
+            138.24,
+            48.31,
+            52.34,
+            104.0,
+            82.5,
+            239.0,
+            273.2,
+            187.0,
+            87.0,
+            55.0,
+            217.0,
+            14.0,
+            230.0,
+            106.0,
+            308.0,
+            241.0,
+            80.0,
+            141.0,
+            153.0,
+            181.0,
+            10.0,
+            46.0,
+            121.0,
+            316.0,
+            129.0,
+            6.0,
+            65.0,
+            48.0,
+            288.0,
+            340.0,
+            235.0,
+            205.0,
+            134.0,
+            322.0,
+            190.0,
+            149.0,
+            222.0,
+            149.0,
+            352.0,
+            282.0,
+            57.0,
+            115.0,
+            16.0,
+            57.0,
+        ]
+    )
+    # calculate the latitude of the moon
+    latitude = 0.0
+    for i, a in enumerate(A):
+        latitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+    # convert to radians
+    F = np.radians(latitude)
+    return F
+
+
+def lunar_distance(MJD: np.ndarray):
+    """
+    Calculate the geocentric distance from the moon to the Earth
+    :cite:p:`Kubo:1980ut,Tamura:1982wx`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    R: np.ndarray
+        distance from the moon to the Earth (meters)
+    """
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # semi-major axis of the Earth (meters)
+    a_axis = 6378137.0
+    # coefficients for calculating the distance from the moon to the Earth
+    A = np.array(
+        [
+            51820e-6,
+            9530e-6,
+            7842e-6,
+            2824e-6,
+            858e-6,
+            531e-6,
+            400e-6,
+            319e-6,
+            271e-6,
+            263e-6,
+            197e-6,
+            173e-6,
+            167e-6,
+            111e-6,
+            103e-6,
+            84e-6,
+            83e-6,
+            78e-6,
+            73e-6,
+            64e-6,
+            63e-6,
+            41e-6,
+            34e-6,
+            33e-6,
+            31e-6,
+            30e-6,
+            29e-6,
+            26e-6,
+            23e-6,
+            19e-6,
+            13e-6,
+            13e-6,
+            13e-6,
+            12e-6,
+            11e-6,
+            11e-6,
+            10e-6,
+            9e-6,
+            7e-6,
+            7e-6,
+            6e-6,
+            6e-6,
+            5e-5,
+        ]
+    )
+    B = np.array(
+        [
+            477198.868,
+            413335.35,
+            890534.22,
+            954397.74,
+            1367733.1,
+            854535.2,
+            377336.3,
+            441199.8,
+            445267.0,
+            513198.0,
+            489205.0,
+            1431597.0,
+            1303870.0,
+            35999.0,
+            826671.0,
+            63864.0,
+            926533.0,
+            1844932.0,
+            1781068.0,
+            1331734.0,
+            449334.0,
+            481266.0,
+            918399.0,
+            541062.0,
+            922466.0,
+            75870.0,
+            990397.0,
+            818536.0,
+            553069.0,
+            1267871.0,
+            1403732.0,
+            341337.0,
+            401329.0,
+            2258267.0,
+            1908795.0,
+            858602.0,
+            1745069.0,
+            790672.0,
+            2322131.0,
+            1808933.0,
+            485333.0,
+            99863.0,
+            405201.0,
+        ]
+    )
+    C = np.array(
+        [
+            134.963,
+            100.74,
+            235.7,
+            269.93,
+            10.7,
+            238.2,
+            103.2,
+            137.4,
+            118.0,
+            312.0,
+            232.0,
+            45.0,
+            336.0,
+            178.0,
+            201.0,
+            214.0,
+            53.0,
+            146.0,
+            111.0,
+            13.0,
+            278.0,
+            295.0,
+            272.0,
+            349.0,
+            253.0,
+            131.0,
+            87.0,
+            241.0,
+            266.0,
+            339.0,
+            188.0,
+            106.0,
+            4.0,
+            246.0,
+            180.0,
+            219.0,
+            144.0,
+            204.0,
+            281.0,
+            148.0,
+            276.0,
+            212.0,
+            140.0,
+        ]
+    )
+    # horizontal parallax of the moon (degrees)
+    parallax = 0.950725
+    # calculate the distance from the moon to the Earth
+    for i, a in enumerate(A):
+        parallax += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+    # convert parallax to radians
+    p = np.radians(parallax)
+    # convert to meters
+    R = a_axis / (p * (1.0 - p * p / 6.0))
+    return R
 
 
 def gast(T: float | np.ndarray):
