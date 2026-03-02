@@ -44,8 +44,8 @@ def test_masec2rad():
     test = angles * atr
     assert np.allclose(exp, test)
     # test reverse conversion
-    marcseconds = pyTMD.math.rad2masec(test)
-    assert np.allclose(angles, marcseconds)
+    microarcseconds = pyTMD.math.rad2masec(test)
+    assert np.allclose(angles, microarcseconds)
 
 def test_normalize_angle():
     """

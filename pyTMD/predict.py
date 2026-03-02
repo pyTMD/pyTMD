@@ -2429,7 +2429,7 @@ def body_tide(
     return zeta
 
 
-def earth_orientation(t: np.ndarray, **kwargs):
+def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     """
     Compute the variations in earth rotation caused by diurnal
     and semidiurnal tides :cite:p:`Herring:1994ku,Ray:1994dk`
@@ -2450,18 +2450,16 @@ def earth_orientation(t: np.ndarray, **kwargs):
         - ``dY``: anomaly in polar motion in Y (arcseconds)
         - ``dUT``: anomaly in UT1-TAI (seconds)
     """
-    # set default keyword arguments
-    kwargs.setdefault("deltat", 0.0)
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
     # convert to centuries relative to 2000-01-01T12:00:00
-    T = (MJD - _mjd_j2000) / _century
+    T = (MJD + deltat - _mjd_j2000) / _century
     # 360 degrees
     circle = 1296000
     # 90 degrees in arcseconds
     K = circle / 4.0
     # compute the Delaunay arguments (IERS conventions)
-    l, lp, F, D, omega = pyTMD.astro.delaunay_arguments(MJD)
+    l, lp, F, D, omega = pyTMD.astro.delaunay_arguments(MJD + deltat)
     # convert from radians to arcseconds
     l = pyTMD.math.rad2asec(l)
     lp = pyTMD.math.rad2asec(lp)
@@ -2547,7 +2545,7 @@ def earth_orientation(t: np.ndarray, **kwargs):
         - 0.0038 * np.cos(arg8)
     )
     # create output dataset
-    ds = xr.Dataset()
+    ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
     ds["dX"] = ("time", 1e-3 * dX)
     ds["dX"].attrs["units"] = "arcseconds"
     ds["dX"].attrs["long_name"] = "anomaly in polar motion in X"
@@ -2562,7 +2560,7 @@ def earth_orientation(t: np.ndarray, **kwargs):
 
 
 # PURPOSE: estimate variations in length of day
-def length_of_day(t: np.ndarray, **kwargs):
+def length_of_day(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     """
     Compute the variations in earth rotation caused by long-period (zonal)
     tides :cite:p:`Ray:2014fu`
@@ -2579,18 +2577,14 @@ def length_of_day(t: np.ndarray, **kwargs):
     ds: xr.Dataset
         Dataset containing:
 
-        - ``dUT``: anomaly in UT1-TAI (microseconds)
-        - ``dLOD``: excess LOD (microseconds per day)
+        - ``dUT``: anomaly in UT1-TAI (seconds)
+        - ``dLOD``: excess LOD (seconds per day)
         - ``period``: period of constituent (days)
     """
-    # set default keyword arguments
-    kwargs.setdefault("deltat", 0.0)
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
     # compute astronomical arguments
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(
-        MJD + kwargs["deltat"], method="ASTRO5"
-    )
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + deltat, method="ASTRO5")
     # initial time conversions
     hour = 24.0 * np.mod(MJD, 1)
     # convert from hours solar time into mean lunar time in degrees
@@ -2632,13 +2626,13 @@ def length_of_day(t: np.ndarray, **kwargs):
     # equilibrium phase converted to radians
     arg = np.radians(arguments.dot(coefficients))
     # create output dataset
-    ds = xr.Dataset()
-    # compute delta UT1-TAI (microseconds)
+    ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
+    # compute delta UT1-TAI (seconds)
     dUT = ZROT["UTc"] * np.cos(arg) + ZROT["UTs"] * np.sin(arg)
     ds["dUT"] = 1e-6 * dUT
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
-    # compute delta LOD (microseconds per day)
+    # compute delta LOD (seconds per day)
     dLOD = ZROT["dLODc"] * np.cos(arg) + ZROT["dLODs"] * np.sin(arg)
     ds["dLOD"] = 1e-6 * dLOD
     ds["dLOD"].attrs["units"] = "seconds per day"
