@@ -809,8 +809,8 @@ def solar_longitude(MJD: np.ndarray, include_aberration=False):
     H: np.ndarray
         longitude of the sun (radians)
     """
-    # create timescale from Modified Julian Day (MJD)
-    ts = timescale.time.Timescale(MJD=MJD)
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the longitude of the sun
     A = np.array(
         [
@@ -870,23 +870,26 @@ def solar_longitude(MJD: np.ndarray, include_aberration=False):
         ]
     )
     # calculate the longitude of the sun
-    longitude = 36000.7695 + 280.4659 * ts.T
+    longitude = 36000.7695 + 280.4659 * T
     for i, a in enumerate(A):
         if i == 0:
-            a -= 48e-4 * ts.T
-        longitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+            a -= 48e-4 * T
+        longitude += a * np.cos(np.radians(B[i] * T + C[i]))
     # correct for aberration of light
     if include_aberration:
         # additional coefficients for correcting longitudes
         A0, B0, C0 = 48e-4, 1934.0, 145.0
         # convert to apparent longitude
-        longitude += -0.0057 + A0 * np.cos(np.radians(B0 * ts.T + C0))
+        longitude += -0.0057 + A0 * np.cos(np.radians(B0 * T + C0))
     # convert to radians
     H = np.radians(longitude)
     return H
 
 
-def solar_distance(MJD: np.ndarray):
+def solar_distance(
+        MJD: np.ndarray,
+        AU: float = 1.495978707e11,
+    ):
     """
     Calculates the distance from the sun to the Earth
     :cite:p:`Kubo:1980ut,Tamura:1982wx`
@@ -895,16 +898,16 @@ def solar_distance(MJD: np.ndarray):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    AU: float, default 1.495978707e11
+        distance of 1 Astronomical Unit (AU) in meters
 
     Returns
     -------
     R: np.ndarray
         distance from the sun to the Earth (meters)
     """
-    # create timescale from Modified Julian Day (MJD)
-    ts = timescale.time.Timescale(MJD=MJD)
-    # distance of 1 AU in meters
-    AU = 1.495978707e11
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the distance from the sun to the Earth
     A = np.array(
         [1000140e-6, 16706e-6, 139e-6, 31e-6, 16e-6, 16e-6, 5e-6, 5e-6]
@@ -914,11 +917,11 @@ def solar_distance(MJD: np.ndarray):
     )
     C = np.array([0.0, 177.53, 175.0, 298.0, 68.0, 164.0, 233.0, 226.0])
     # calculate the distance from the sun to the Earth
-    solar_au = 36000.7695 + 280.4659 * ts.T
+    solar_au = 36000.7695 + 280.4659 * T
     for i, a in enumerate(A):
         if i == 0:
-            a -= 42e-6 * ts.T
-        solar_au += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+            a -= 42e-6 * T
+        solar_au += a * np.cos(np.radians(B[i] * T + C[i]))
     # convert from AU to meters
     R = solar_au * AU
     return R
@@ -1138,8 +1141,8 @@ def lunar_longitude(MJD: np.ndarray):
     S: np.ndarray
         longitude of the moon (radians)
     """
-    # create timescale from Modified Julian Day (MJD)
-    ts = timescale.time.Timescale(MJD=MJD)
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the longitude of the moon
     A = np.array(
         [
@@ -1337,9 +1340,9 @@ def lunar_longitude(MJD: np.ndarray):
         ]
     )
     # calculate the longitude of the moon
-    longitude = 218.3162 + 481267.8809 * ts.T
+    longitude = 218.3162 + 481267.8809 * T
     for i, a in enumerate(A):
-        longitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+        longitude += a * np.cos(np.radians(B[i] * T + C[i]))
     # convert to radians
     S = np.radians(longitude)
     return S
@@ -1360,8 +1363,8 @@ def lunar_latitude(MJD: np.ndarray):
     F: np.ndarray
         latitude of the moon (radians)
     """
-    # create timescale from Modified Julian Day (MJD)
-    ts = timescale.time.Timescale(MJD=MJD)
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the latitude of the moon
     A = np.array(
         [
@@ -1513,13 +1516,16 @@ def lunar_latitude(MJD: np.ndarray):
     # calculate the latitude of the moon
     latitude = 0.0
     for i, a in enumerate(A):
-        latitude += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+        latitude += a * np.cos(np.radians(B[i] * T + C[i]))
     # convert to radians
     F = np.radians(latitude)
     return F
 
 
-def lunar_distance(MJD: np.ndarray):
+def lunar_distance(
+        MJD: np.ndarray,
+        a_axis: float = 6378137.0
+    ):
     """
     Calculate the geocentric distance from the moon to the Earth
     :cite:p:`Kubo:1980ut,Tamura:1982wx`
@@ -1528,16 +1534,16 @@ def lunar_distance(MJD: np.ndarray):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    a_axis: float, default 6378137.0
+        Semi-major axis of the Earth (meters)
 
     Returns
     -------
     R: np.ndarray
         distance from the moon to the Earth (meters)
     """
-    # create timescale from Modified Julian Day (MJD)
-    ts = timescale.time.Timescale(MJD=MJD)
-    # semi-major axis of the Earth (meters)
-    a_axis = 6378137.0
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the distance from the moon to the Earth
     A = np.array(
         [
@@ -1684,7 +1690,7 @@ def lunar_distance(MJD: np.ndarray):
     parallax = 0.950725
     # calculate the distance from the moon to the Earth
     for i, a in enumerate(A):
-        parallax += a * np.cos(np.radians(B[i] * ts.T + C[i]))
+        parallax += a * np.cos(np.radians(B[i] * T + C[i]))
     # convert parallax to radians
     p = np.radians(parallax)
     # convert to meters
