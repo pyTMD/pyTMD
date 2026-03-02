@@ -887,9 +887,9 @@ def solar_longitude(MJD: np.ndarray, include_aberration=False):
 
 
 def solar_distance(
-        MJD: np.ndarray,
-        AU: float = 1.495978707e11,
-    ):
+    MJD: np.ndarray,
+    AU: float = 1.495978707e11,
+):
     """
     Calculates the distance from the sun to the Earth
     :cite:p:`Kubo:1980ut,Tamura:1982wx`
@@ -1522,10 +1522,7 @@ def lunar_latitude(MJD: np.ndarray):
     return F
 
 
-def lunar_distance(
-        MJD: np.ndarray,
-        a_axis: float = 6378137.0
-    ):
+def lunar_distance(MJD: np.ndarray, a_axis: float = 6378137.0):
     """
     Calculate the geocentric distance from the moon to the Earth
     :cite:p:`Kubo:1980ut,Tamura:1982wx`
