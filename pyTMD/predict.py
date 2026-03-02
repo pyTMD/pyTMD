@@ -139,6 +139,8 @@ _mjd_j2000 = 51544.5
 _jd_tide = _jd_mjd + _mjd_tide
 # number of days between the Julian day epoch and J2000 epoch
 _jd_j2000 = _jd_mjd + _mjd_j2000
+# number of days between the J2000 epoch and the tide epoch
+_j2000_tide = _mjd_tide - _mjd_j2000
 # Julian century
 _century = 36525.0
 
