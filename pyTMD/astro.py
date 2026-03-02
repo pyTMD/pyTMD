@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 astro.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (10/2025)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,7 +18,6 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
-    Updated 02/2026: added longitude and distance functions from Kubo 1980
     Updated 10/2025: change default directory for JPL SSD kernels to cache
     Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
