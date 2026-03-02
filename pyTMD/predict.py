@@ -29,6 +29,7 @@ UPDATE HISTORY:
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
         but allow for both sign definitions based on the convention variable
+        add function to calculate variations in Earth orientation parameters
     Updated 12/2025: added tidal LOD calculation from Ray and Erofeeva (2014)
     Updated 11/2025: update all prediction functions to use xarray Datasets
     Updated 09/2025: make permanent tide amplitude an input parameter
@@ -124,6 +125,7 @@ __all__ = [
     "_frequency_dependence_long_period",
     "_free_to_mean",
     "body_tide",
+    "earth_orientation",
     "length_of_day",
 ]
 
@@ -131,8 +133,10 @@ __all__ = [
 _jd_mjd = 2400000.5
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-# number of days between the Julian day epoch and the tide epoch
-_jd_tide = _jd_mjd + _mjd_tide
+# number of days between MJD and the J2000 epoch
+_mjd_j2000 = 51544.5
+# Julian century
+_century = 36525.0
 
 
 def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
@@ -1401,7 +1405,7 @@ def ocean_pole_tide(
     return dxt
 
 
-# get IERS parameters
+# get ellipsoidal parameters
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
 
 
@@ -2425,8 +2429,138 @@ def body_tide(
     return zeta
 
 
+def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
+    """
+    Compute the variations in earth rotation caused by diurnal
+    and semidiurnal tides :cite:p:`Herring:1994ku,Ray:1994dk`
+
+    Parameters
+    ----------
+    t: np.ndarray
+        days relative to 1992-01-01T00:00:00
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
+
+    Returns
+    -------
+    ds: xr.Dataset
+        Dataset containing:
+
+        - ``dX``: anomaly in polar motion in X (arcseconds)
+        - ``dY``: anomaly in polar motion in Y (arcseconds)
+        - ``dUT``: anomaly in UT1-TAI (seconds)
+    """
+    # convert dates to Modified Julian Days
+    MJD = t + _mjd_tide
+    # convert to centuries relative to 2000-01-01T12:00:00
+    T = (MJD + deltat - _mjd_j2000) / _century
+    # 360 degrees
+    circle = 1296000
+    # 90 degrees in arcseconds
+    K = circle / 4.0
+    # compute the Delaunay arguments (IERS conventions)
+    l, lp, F, D, omega = pyTMD.astro.delaunay_arguments(MJD + deltat)
+    # convert from radians to arcseconds
+    l = pyTMD.math.rad2asec(l)
+    lp = pyTMD.math.rad2asec(lp)
+    F = pyTMD.math.rad2asec(F)
+    D = pyTMD.math.rad2asec(D)
+    omega = pyTMD.math.rad2asec(omega)
+    # angle of Greenwich Mean Standard Time (arcseconds)
+    gmst_angle = np.array(
+        [67310.54841, 876600 * 3600 + 8640184.812866, 0.093104, 6.2e-6]
+    )
+    theta = 648000.0 + 15.0 * pyTMD.math.polynomial_sum(gmst_angle, T)
+    # additional arguments (arcseconds)
+    arg1 = np.mod((-2.0 * F - 2.0 * omega + theta), circle) - K
+    arg2 = np.mod((-2.0 * F + 2.0 * D - 2.0 * omega + theta), circle) - K
+    arg3 = np.mod(theta, circle) + K
+    arg4 = np.mod((-l - 2.0 * F - 2.0 * omega + 2.0 * theta), circle)
+    arg5 = np.mod((-2.0 * F - 2.0 * omega + 2.0 * theta), circle)
+    arg6 = np.mod((-2.0 * F + 2.0 * D - 2.0 * omega + 2.0 * theta), circle)
+    arg7 = np.mod((-l - 2.0 * F - 2.0 * omega + theta), circle) - K
+    arg8 = np.mod(2.0 * theta, circle)
+    # convert from arcseconds to radians
+    arg1 = pyTMD.math.asec2rad(arg1)
+    arg2 = pyTMD.math.asec2rad(arg2)
+    arg3 = pyTMD.math.asec2rad(arg3)
+    arg4 = pyTMD.math.asec2rad(arg4)
+    arg5 = pyTMD.math.asec2rad(arg5)
+    arg6 = pyTMD.math.asec2rad(arg6)
+    arg7 = pyTMD.math.asec2rad(arg7)
+    arg8 = pyTMD.math.asec2rad(arg8)
+    # calculate corrections
+    dX = (
+        -0.026 * np.sin(arg7)
+        + 0.006 * np.cos(arg7)
+        - 0.133 * np.sin(arg1)
+        + 0.049 * np.cos(arg1)
+        - 0.050 * np.sin(arg2)
+        + 0.025 * np.cos(arg2)
+        - 0.152 * np.sin(arg3)
+        + 0.078 * np.cos(arg3)
+        - 0.057 * np.sin(arg4)
+        - 0.013 * np.cos(arg4)
+        - 0.330 * np.sin(arg5)
+        - 0.028 * np.cos(arg5)
+        - 0.145 * np.sin(arg6)
+        + 0.064 * np.cos(arg6)
+        - 0.036 * np.sin(arg8)
+        + 0.017 * np.cos(arg8)
+    )
+    dY = (
+        -0.006 * np.sin(arg7)
+        - 0.026 * np.cos(arg7)
+        - 0.049 * np.sin(arg1)
+        - 0.133 * np.cos(arg1)
+        - 0.025 * np.sin(arg2)
+        - 0.050 * np.cos(arg2)
+        - 0.078 * np.sin(arg3)
+        - 0.152 * np.cos(arg3)
+        + 0.011 * np.sin(arg4)
+        + 0.033 * np.cos(arg4)
+        + 0.037 * np.sin(arg5)
+        + 0.196 * np.cos(arg5)
+        + 0.059 * np.sin(arg6)
+        + 0.087 * np.cos(arg6)
+        + 0.018 * np.sin(arg8)
+        + 0.022 * np.cos(arg8)
+    )
+    dUT = (
+        +0.0245 * np.sin(arg7)
+        + 0.0503 * np.cos(arg7)
+        + 0.1210 * np.sin(arg1)
+        + 0.1605 * np.cos(arg1)
+        + 0.0286 * np.sin(arg2)
+        + 0.0516 * np.cos(arg2)
+        + 0.0864 * np.sin(arg3)
+        + 0.1771 * np.cos(arg3)
+        - 0.0380 * np.sin(arg4)
+        - 0.0154 * np.cos(arg4)
+        - 0.1617 * np.sin(arg5)
+        - 0.0720 * np.cos(arg5)
+        - 0.0759 * np.sin(arg6)
+        - 0.0004 * np.cos(arg6)
+        - 0.0196 * np.sin(arg8)
+        - 0.0038 * np.cos(arg8)
+    )
+    # create output dataset
+    ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
+    ds["dX"] = ("time", 1e-3 * dX)
+    ds["dX"].attrs["units"] = "arcseconds"
+    ds["dX"].attrs["long_name"] = "anomaly in polar motion in X"
+    ds["dY"] = ("time", 1e-3 * dY)
+    ds["dY"].attrs["units"] = "arcseconds"
+    ds["dY"].attrs["long_name"] = "anomaly in polar motion in Y"
+    ds["dUT"] = ("time", 1e-4 * dUT)
+    ds["dUT"].attrs["units"] = "seconds"
+    ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
+    # return the variations in earth rotation
+    return ds
+
+
 # PURPOSE: estimate variations in length of day
-def length_of_day(t: np.ndarray, **kwargs):
+def length_of_day(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     """
     Compute the variations in earth rotation caused by long-period (zonal)
     tides :cite:p:`Ray:2014fu`
@@ -2443,18 +2577,14 @@ def length_of_day(t: np.ndarray, **kwargs):
     ds: xr.Dataset
         Dataset containing:
 
-        - ``dUT``: anomaly in UT1-TAI (microseconds)
-        - ``dLOD``: excess LOD (microseconds per day)
+        - ``dUT``: anomaly in UT1-TAI (seconds)
+        - ``dLOD``: excess LOD (seconds per day)
         - ``period``: period of constituent (days)
     """
-    # set default keyword arguments
-    kwargs.setdefault("deltat", 0.0)
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
     # compute astronomical arguments
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(
-        MJD + kwargs["deltat"], method="ASTRO5"
-    )
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + deltat, method="ASTRO5")
     # initial time conversions
     hour = 24.0 * np.mod(MJD, 1)
     # convert from hours solar time into mean lunar time in degrees
@@ -2496,14 +2626,16 @@ def length_of_day(t: np.ndarray, **kwargs):
     # equilibrium phase converted to radians
     arg = np.radians(arguments.dot(coefficients))
     # create output dataset
-    ds = xr.Dataset()
-    # compute delta UT1-TAI (microseconds)
-    ds["dUT"] = ZROT["UTc"] * np.cos(arg) + ZROT["UTs"] * np.sin(arg)
-    ds["dUT"].attrs["units"] = "microseconds"
+    ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
+    # compute delta UT1-TAI (seconds)
+    dUT = ZROT["UTc"] * np.cos(arg) + ZROT["UTs"] * np.sin(arg)
+    ds["dUT"] = 1e-6 * dUT
+    ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
-    # compute delta LOD (microseconds per day)
-    ds["dLOD"] = ZROT["dLODc"] * np.cos(arg) + ZROT["dLODs"] * np.sin(arg)
-    ds["dLOD"].attrs["units"] = "microseconds per day"
+    # compute delta LOD (seconds per day)
+    dLOD = ZROT["dLODc"] * np.cos(arg) + ZROT["dLODs"] * np.sin(arg)
+    ds["dLOD"] = 1e-6 * dLOD
+    ds["dLOD"].attrs["units"] = "seconds per day"
     ds["dLOD"].attrs["long_name"] = "excess length of day"
     # period of constituent (days)
     ds["period"] = ("constituent", ZROT["period"])

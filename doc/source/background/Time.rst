@@ -87,3 +87,13 @@ where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is th
 
 Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longitudinal position in degrees East from the Greenwich meridian.
 
+Variations in Length of Day
+---------------------------
+
+The Earth's rotation can vary on timescales from hours to centuries, and is influenced by a number of factors including ocean tides :cite:p:`Petit:2010tp`.
+Many of the early estimates of the sub-daily variations in the length of day (LOD) were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.
+
+.. plot:: ./background/length-of-day.py
+    :show-source-link: False
+    :caption: Length of Day Variations from :cite:t:`Ray:1994dk`
+    :align: center

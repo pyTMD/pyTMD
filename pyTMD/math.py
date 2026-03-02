@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 math.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (02/2026)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 02/2026: add inverse functions for converting radians to arcseconds
     Updated 11/2025: legendre now returns both polynomials and derivatives
     Updated 09/2025: added degree 4 to legendre polynomials function
     Updated 08/2025: add asec2rad and masec2rad functions for arcseconds
@@ -32,6 +33,8 @@ from scipy.special import factorial
 __all__ = [
     "asec2rad",
     "masec2rad",
+    "rad2asec",
+    "rad2masec",
     "polynomial_sum",
     "normalize_angle",
     "rotate",
@@ -67,6 +70,34 @@ def masec2rad(
         Input angle in microarcseconds
     """
     return np.radians(x / 3.6e9)
+
+
+def rad2asec(
+    x: float | np.ndarray,
+):
+    """
+    Convert angles from radians to arcseconds
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        Input angle in radians
+    """
+    return 3600.0 * np.degrees(x)
+
+
+def rad2masec(
+    x: float | np.ndarray,
+):
+    """
+    Convert angles from radians to microarcseconds
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        Input angle in radians
+    """
+    return 3.6e9 * np.degrees(x)
 
 
 # PURPOSE: calculate the sum of a polynomial function of time

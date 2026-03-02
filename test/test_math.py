@@ -23,6 +23,9 @@ def test_asec2rad():
     # test conversion to radians
     test = angles * atr
     assert np.allclose(exp, test)
+    # test reverse conversion
+    arcseconds = pyTMD.math.rad2asec(test)
+    assert np.allclose(angles, arcseconds)
 
 def test_masec2rad():
     """
@@ -40,6 +43,9 @@ def test_masec2rad():
     # test conversion to radians
     test = angles * atr
     assert np.allclose(exp, test)
+    # test reverse conversion
+    microarcseconds = pyTMD.math.rad2masec(test)
+    assert np.allclose(angles, microarcseconds)
 
 def test_normalize_angle():
     """
