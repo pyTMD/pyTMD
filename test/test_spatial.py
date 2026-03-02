@@ -123,6 +123,39 @@ def test_convert_geodetic():
     assert np.allclose(latitude, lt3)
     assert np.allclose(height, h3)
 
+# PURPOSE: test calculation of geocentric latitudes
+def test_geocentric_latitude():
+    # WGS84 ellipsoidal parameters
+    a_axis = 6378137.0
+    flat = (1.0/298.257223563)
+    # first numerical eccentricity
+    ecc1 = np.sqrt((2.0*flat - flat**2)*a_axis**2)/a_axis
+    # latitude and longitude arrays for testing
+    lat = 90.0 - np.arange(181, dtype=np.float64)
+    lon = np.zeros((181), dtype=np.float64)
+    # calculate geocentric latitudes
+    test = pyTMD.spatial.geocentric_latitude(lat, flat=flat)
+    # validate against Cartesian coordinate method
+    # geodetic latitude in radians
+    latitude_geodetic_rad = np.pi*lat/180.0
+    # prime vertical radius of curvature
+    N = a_axis/np.sqrt(1.0 - ecc1**2.*np.sin(latitude_geodetic_rad)**2.)
+    # calculate X, Y and Z from geodetic latitude and longitude
+    X = N * np.cos(latitude_geodetic_rad) * np.cos(np.pi*lon/180.0)
+    Y = N * np.cos(latitude_geodetic_rad) * np.sin(np.pi*lon/180.0)
+    Z = (N * (1.0 - ecc1**2.0)) * np.sin(latitude_geodetic_rad)
+    # calculate geocentric latitude and convert to degrees
+    validation = 180.0*np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/np.pi
+    # validate outputs
+    assert np.allclose(test, validation, atol=1e-5)
+    # validate against Cartesian coordinate method from function
+    x, y, z = pyTMD.spatial.to_cartesian(lon, lat,
+        a_axis=a_axis, flat=flat)
+    # calculate geocentric latitude and convert to degrees
+    validation = 180.0*np.arctan(z / np.sqrt(x**2.0 + y**2.0))/np.pi
+    # validate outputs
+    assert np.allclose(test, validation, atol=1e-5)
+
 # PURPOSE: test wrap longitudes
 def test_wrap_longitudes():
     # number of data points
