@@ -1409,7 +1409,8 @@ def ocean_pole_tide(
     return dxt
 
 
-# get IERS parameters
+# get ellipsoidal parameters
+_wgs84 = pyTMD.spatial.datum(ellipsoid="WGS84", units="MKS")
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
 
 

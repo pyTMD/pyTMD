@@ -1406,8 +1406,10 @@ def _catalog_SET(
     longitude, latitude = pyTMD.io.dataset._coords(
         x, y, type=type, source_crs=crs, target_crs=4326
     )
+    # geocentric latitude (degrees)
+    latitude_geocentric = pyTMD.spatial.geocentric_latitude(latitude)
     # create dataset
-    ds = xr.Dataset(coords={"x": longitude, "y": latitude})
+    ds = xr.Dataset(coords={"x": longitude, "y": latitude_geocentric})
 
     # verify that delta time is an array
     delta_time = np.atleast_1d(delta_time)
