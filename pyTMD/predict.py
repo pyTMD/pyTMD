@@ -135,12 +135,6 @@ _jd_mjd = 2400000.5
 _mjd_tide = 48622.0
 # number of days between MJD and the J2000 epoch
 _mjd_j2000 = 51544.5
-# number of days between the Julian day epoch and the tide epoch
-_jd_tide = _jd_mjd + _mjd_tide
-# number of days between the Julian day epoch and J2000 epoch
-_jd_j2000 = _jd_mjd + _mjd_j2000
-# number of days between the J2000 epoch and the tide epoch
-_j2000_tide = _mjd_tide - _mjd_j2000
 # Julian century
 _century = 36525.0
 
@@ -1412,7 +1406,6 @@ def ocean_pole_tide(
 
 
 # get ellipsoidal parameters
-_wgs84 = pyTMD.spatial.datum(ellipsoid="WGS84", units="MKS")
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
 
 
