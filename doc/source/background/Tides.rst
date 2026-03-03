@@ -91,9 +91,10 @@ For the catalog method, some tide potential catalogs additionally include the po
 
 For both methods, the elastic response of the Earth to the tidal potential is calculated using :term:`Love and Shida Numbers`.
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
-For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency :cite:p:`Wahr:1979vx,Wahr:1981ea`.
-However, for a rotating, ellipsoidal Earth, the Love and Shida numbers are dependent on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Merriam:1992kg,Ray:2017jx`.
-``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js`.
+Combinations of these non-dimensional quantities can be used to calculate additional parameters, such as the displacement of the Earth's ocean surface with respect to the Earth's tidally deformed crust :cite:p:`Baker:1984tq,Munk:1960uk`.
+For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency as the tidal periods are longer than the Earth's free oscillation periods :cite:p:`Baker:1984tq,Wahr:1979vx,Wahr:1981ea`.
+However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some dependence on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Merriam:1992kg,Ray:2017jx`.
+``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
 
 .. plot:: ./background/love-numbers.py
     :show-source-link: False

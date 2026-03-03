@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 predict.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 Prediction routines for ocean, load, equilibrium and solid earth tides
 
 REFERENCES:
@@ -25,6 +25,8 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 03/2026: simplify structure by spliting up IERS corrections
+        and adding wrapper functions where appropriate
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -118,9 +120,13 @@ __all__ = [
     "load_pole_tide",
     "ocean_pole_tide",
     "solid_earth_tide",
+    "_out_of_phase",
     "_out_of_phase_diurnal",
     "_out_of_phase_semidiurnal",
     "_latitude_dependence",
+    "_latitude_dependence_diurnal",
+    "_latitude_dependence_semidiurnal",
+    "_frequency_dependence",
     "_frequency_dependence_diurnal",
     "_frequency_dependence_long_period",
     "_free_to_mean",
@@ -1536,13 +1542,11 @@ def solid_earth_tide(
         )
         dxt[d] = S2 + L2 + S3 + L3
     # corrections for out-of-phase portions of the Love and Shida numbers
-    dxt += _out_of_phase_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
-    dxt += _out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
-    # corrections for the latitudinal dependence
+    dxt += _out_of_phase(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    # corrections for the latitudinal dependence (diurnal and semi-diurnal)
     dxt += _latitude_dependence(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
-    # corrections for the frequency dependence
-    dxt += _frequency_dependence_diurnal(XYZ, MJD, deltat=deltat)
-    dxt += _frequency_dependence_long_period(XYZ, MJD, deltat=deltat)
+    # corrections for the frequency dependence (diurnal and long-period)
+    dxt += _frequency_dependence(XYZ, MJD, deltat=deltat)
     # convert the permanent tide system if specified
     if tide_system.lower() == "mean_tide":
         dxt += _free_to_mean(XYZ, h2, l2)
@@ -1551,6 +1555,37 @@ def solid_earth_tide(
         dxt[var].attrs["units"] = "meters"
     # return the solid earth tide
     return dxt
+
+
+def _out_of_phase(
+    XYZ: xr.Dataset,
+    SXYZ: xr.Dataset,
+    LXYZ: xr.Dataset,
+    F2_solar: np.ndarray,
+    F2_lunar: np.ndarray,
+):
+    """
+    Wrapper function to compute the out-of-phase corrections induced
+    by mantle anelasticity :cite:p:`Petit:2010tp`
+
+    Parameters
+    ----------
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
+    F2_solar: np.ndarray
+        Factors for the sun
+    F2_lunar: np.ndarray
+        Factors for the moon
+    """
+    # compute diurnal and semi-diurnal corrections separately
+    D = _out_of_phase_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    D += _out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    # return the out-of-phase corrections
+    return D
 
 
 def _out_of_phase_diurnal(
@@ -1701,8 +1736,7 @@ def _out_of_phase_semidiurnal(
     lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
     # calculate offsets
     dr_solar = (
-        -3.0
-        / 4.0
+        (-3.0 / 4.0)
         * dhi
         * cosphi**2
         * F2_solar
@@ -1713,8 +1747,7 @@ def _out_of_phase_semidiurnal(
         / solar_radius**2
     )
     dr_lunar = (
-        -3.0
-        / 4.0
+        (-3.0 / 4.0)
         * dhi
         * cosphi**2
         * F2_lunar
@@ -1725,8 +1758,7 @@ def _out_of_phase_semidiurnal(
         / lunar_radius**2
     )
     dn_solar = (
-        3.0
-        / 2.0
+        (3.0 / 2.0)
         * dli
         * sinphi
         * cosphi
@@ -1738,8 +1770,7 @@ def _out_of_phase_semidiurnal(
         / solar_radius**2
     )
     dn_lunar = (
-        3.0
-        / 2.0
+        (3.0 / 2.0)
         * dli
         * sinphi
         * cosphi
@@ -1751,8 +1782,7 @@ def _out_of_phase_semidiurnal(
         / lunar_radius**2
     )
     de_solar = (
-        -3.0
-        / 2.0
+        (-3.0 / 2.0)
         * dli
         * cosphi
         * F2_solar
@@ -1763,8 +1793,7 @@ def _out_of_phase_semidiurnal(
         / solar_radius**2
     )
     de_lunar = (
-        -3.0
-        / 2.0
+        (-3.0 / 2.0)
         * dli
         * cosphi
         * F2_lunar
@@ -1796,8 +1825,9 @@ def _latitude_dependence(
     F2_lunar: np.ndarray,
 ):
     r"""
-    Computes the corrections induced by the latitude of the
-    dependence given by L\ :sup:`1` :cite:p:`Petit:2010tp`
+    Wrapper function to compute the latitudinal dependent corrections
+    given by L\ :sup:`1` for both the diurnal and semi-diurnal bands
+    :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1812,9 +1842,122 @@ def _latitude_dependence(
     F2_lunar: np.ndarray
         Factors for the moon
     """
-    # Love/Shida number corrections (diurnal and semi-diurnal)
-    l1d = 0.0012
-    l1sd = 0.0024
+    # compute diurnal and semi-diurnal corrections separately
+    D = _latitude_dependence_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    D += _latitude_dependence_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    # return the latitudinal dependent corrections
+    return D
+
+
+def _latitude_dependence_diurnal(
+    XYZ: xr.Dataset,
+    SXYZ: xr.Dataset,
+    LXYZ: xr.Dataset,
+    F2_solar: np.ndarray,
+    F2_lunar: np.ndarray,
+):
+    r"""
+    Computes the corrections induced by the latitudinal
+    dependence of the diurnal band :cite:p:`Petit:2010tp`
+
+    Parameters
+    ----------
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
+    F2_solar: np.ndarray
+        Factors for the sun
+    F2_lunar: np.ndarray
+        Factors for the moon
+    """
+    # Love/Shida number corrections (diurnal)
+    L1 = 0.0012
+    # Compute the normalized position vector of coordinates
+    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    sinphi = XYZ["Z"] / radius
+    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    sinla = XYZ["Y"] / cosphi / radius
+    cosla = XYZ["X"] / cosphi / radius
+    # Compute the normalized position vector of the Sun/Moon
+    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
+    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
+    # calculate offsets for the diurnal band
+    dn_solar = (
+        -L1
+        * sinphi**2
+        * F2_solar
+        * SXYZ["Z"]
+        * (SXYZ["X"] * cosla + SXYZ["Y"] * sinla)
+        / solar_radius**2
+    )
+    dn_lunar = (
+        -L1
+        * sinphi**2
+        * F2_lunar
+        * LXYZ["Z"]
+        * (LXYZ["X"] * cosla + LXYZ["Y"] * sinla)
+        / lunar_radius**2
+    )
+    de_solar = (
+        L1
+        * sinphi
+        * (cosphi**2 - sinphi**2)
+        * F2_solar
+        * SXYZ["Z"]
+        * (SXYZ["X"] * sinla - SXYZ["Y"] * cosla)
+        / solar_radius**2
+    )
+    de_lunar = (
+        L1
+        * sinphi
+        * (cosphi**2 - sinphi**2)
+        * F2_lunar
+        * LXYZ["Z"]
+        * (LXYZ["X"] * sinla - LXYZ["Y"] * cosla)
+        / lunar_radius**2
+    )
+    # add solar and lunar offsets
+    DN = 3.0 * (dn_solar + dn_lunar)
+    DE = 3.0 * (de_solar + de_lunar)
+    # output corrections
+    D = xr.Dataset()
+    # compute corrections in cartesian coordinates
+    D["X"] = -DE * sinla - DN * cosla * sinphi
+    D["Y"] = DE * cosla - DN * sinla * sinphi
+    D["Z"] = DN * cosphi
+    # return the corrections
+    return D
+
+
+def _latitude_dependence_semidiurnal(
+    XYZ: xr.Dataset,
+    SXYZ: xr.Dataset,
+    LXYZ: xr.Dataset,
+    F2_solar: np.ndarray,
+    F2_lunar: np.ndarray,
+):
+    r"""
+    Computes the corrections induced by the latitudinal
+    dependence of the semi-diurnal band :cite:p:`Petit:2010tp`
+
+    Parameters
+    ----------
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
+    F2_solar: np.ndarray
+        Factors for the sun
+    F2_lunar: np.ndarray
+        Factors for the moon
+    """
+    # Love/Shida number corrections (semi-diurnal)
+    L1 = 0.0024
     # Compute the normalized position vector of coordinates
     radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
     sinphi = XYZ["Z"] / radius
@@ -1826,45 +1969,9 @@ def _latitude_dependence(
     # Compute the normalized position vector of the Sun/Moon
     solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
     lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
-    # calculate offsets for the diurnal band
-    dn_d_solar = (
-        -l1d
-        * sinphi**2
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * cosla + SXYZ["Y"] * sinla)
-        / solar_radius**2
-    )
-    dn_d_lunar = (
-        -l1d
-        * sinphi**2
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * cosla + LXYZ["Y"] * sinla)
-        / lunar_radius**2
-    )
-    de_d_solar = (
-        l1d
-        * sinphi
-        * (cosphi**2 - sinphi**2)
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * sinla - SXYZ["Y"] * cosla)
-        / solar_radius**2
-    )
-    de_d_lunar = (
-        l1d
-        * sinphi
-        * (cosphi**2 - sinphi**2)
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * sinla - LXYZ["Y"] * cosla)
-        / lunar_radius**2
-    )
     # calculate offsets for the semi-diurnal band
-    dn_s_solar = (
-        -l1sd
-        / 2.0
+    dn_solar = (
+        (-L1 / 2.0)
         * sinphi
         * cosphi
         * F2_solar
@@ -1874,9 +1981,8 @@ def _latitude_dependence(
         )
         / solar_radius**2
     )
-    dn_s_lunar = (
-        -l1sd
-        / 2.0
+    dn_lunar = (
+        (-L1 / 2.0)
         * sinphi
         * cosphi
         * F2_lunar
@@ -1886,9 +1992,8 @@ def _latitude_dependence(
         )
         / lunar_radius**2
     )
-    de_s_solar = (
-        -l1sd
-        / 2.0
+    de_solar = (
+        (-L1 / 2.0)
         * sinphi**2
         * cosphi
         * F2_solar
@@ -1898,9 +2003,8 @@ def _latitude_dependence(
         )
         / solar_radius**2
     )
-    de_s_lunar = (
-        -l1sd
-        / 2.0
+    de_lunar = (
+        (-L1 / 2.0)
         * sinphi**2
         * cosphi
         * F2_lunar
@@ -1910,9 +2014,9 @@ def _latitude_dependence(
         )
         / lunar_radius**2
     )
-    # add solar and lunar offsets (diurnal and semi-diurnal)
-    DN = 3.0 * (dn_d_solar + dn_d_lunar + dn_s_solar + dn_s_lunar)
-    DE = 3.0 * (de_d_solar + de_d_lunar + de_s_solar + de_s_lunar)
+    # add solar and lunar offsets
+    DN = 3.0 * (dn_solar + dn_lunar)
+    DE = 3.0 * (de_solar + de_lunar)
     # output corrections
     D = xr.Dataset()
     # compute corrections in cartesian coordinates
@@ -1923,12 +2027,36 @@ def _latitude_dependence(
     return D
 
 
+def _frequency_dependence(
+    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+):
+    """
+    Wrapper function to compute the frequency dependent in-phase and
+    out-of-phase corrections :cite:p:`Petit:2010tp`
+
+    Parameters
+    ----------
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    MJD: np.ndarray
+        Modified Julian Day (MJD)
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
+    """
+    # Love/Shida number corrections (diurnal and long-period)
+    # compute diurnal and long-period corrections separately
+    D = _frequency_dependence_diurnal(XYZ, MJD, deltat=deltat)
+    D += _frequency_dependence_long_period(XYZ, MJD, deltat=deltat)
+    # return the frequency dependent corrections
+    return D
+
+
 def _frequency_dependence_diurnal(
     XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
 ):
     """
-    Computes the in-phase and out-of-phase corrections induced by mantle
-    anelasticity in the diurnal band :cite:p:`Petit:2010tp`
+    Computes the frequency dependent in-phase and out-of-phase corrections
+    of the diurnal band :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -1942,41 +2070,52 @@ def _frequency_dependence_diurnal(
     # Corrections to Diurnal Tides for Frequency Dependence
     # of Love and Shida Number Parameters
     # reduced version of table 7.3a from IERS conventions
-    columns = ["s", "h", "p", "np", "ps", "dR_ip", "dR_op", "dT_ip", "dT_op"]
+    columns = [
+        "tau",
+        "s",
+        "h",
+        "p",
+        "np",
+        "ps",
+        "dR_ip",
+        "dR_op",
+        "dT_ip",
+        "dT_op",
+    ]
     table = xr.DataArray(
         np.array(
             [
-                [-3.0, 0.0, 2.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
-                [-3.0, 2.0, 0.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
-                [-2.0, 0.0, 1.0, -1.0, 0.0, -0.02, 0.0, 0.0, 0.0],
-                [-2.0, 0.0, 1.0, 0.0, 0.0, -0.08, 0.0, -0.01, 0.01],
-                [-2.0, 2.0, -1.0, 0.0, 0.0, -0.02, 0.0, 0.0, 0.0],
-                [-1.0, 0.0, 0.0, -1.0, 0.0, -0.10, 0.0, 0.0, 0.0],
-                [-1.0, 0.0, 0.0, 0.0, 0.0, -0.51, 0.0, -0.02, 0.03],
-                [-1.0, 2.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
-                [0.0, -2.0, 1.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
-                [0.0, 0.0, -1.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 0.0, 0.06, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 1.0, 0.0, 0.01, 0.0, 0.0, 0.0],
-                [0.0, 2.0, -1.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
-                [1.0, -3.0, 0.0, 0.0, 1.0, -0.06, 0.0, 0.0, 0.0],
-                [1.0, -2.0, 0.0, -1.0, 0.0, 0.01, 0.0, 0.0, 0.0],
-                [1.0, -2.0, 0.0, 0.0, 0.0, -1.23, -0.07, 0.06, 0.01],
-                [1.0, -1.0, 0.0, 0.0, -1.0, 0.02, 0.0, 0.0, 0.0],
-                [1.0, -1.0, 0.0, 0.0, 1.0, 0.04, 0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0, -1.0, 0.0, -0.22, 0.01, 0.01, 0.0],
-                [1.0, 0.0, 0.0, 0.0, 0.0, 12.00, -0.80, -0.67, -0.03],
-                [1.0, 0.0, 0.0, 1.0, 0.0, 1.73, -0.12, -0.10, 0.0],
-                [1.0, 0.0, 0.0, 2.0, 0.0, -0.04, 0.0, 0.0, 0.0],
-                [1.0, 1.0, 0.0, 0.0, -1.0, -0.50, -0.01, 0.03, 0.0],
-                [1.0, 1.0, 0.0, 0.0, 1.0, 0.01, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 1.0, -1.0, -0.01, 0.0, 0.0, 0.0],
-                [1.0, 2.0, -2.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
-                [1.0, 2.0, 0.0, 0.0, 0.0, -0.11, 0.01, 0.01, 0.0],
-                [2.0, -2.0, 1.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
-                [2.0, 0.0, -1.0, 0.0, 0.0, -0.02, 0.0, 0.0, 0.0],
-                [3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [1.0, -3.0, 0.0, 2.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
+                [1.0, -3.0, 2.0, 0.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
+                [1.0, -2.0, 0.0, 1.0, -1.0, 0.0, -0.02, 0.0, 0.0, 0.0],
+                [1.0, -2.0, 0.0, 1.0, 0.0, 0.0, -0.08, 0.0, -0.01, 0.01],
+                [1.0, -2.0, 2.0, -1.0, 0.0, 0.0, -0.02, 0.0, 0.0, 0.0],
+                [1.0, -1.0, 0.0, 0.0, -1.0, 0.0, -0.10, 0.0, 0.0, 0.0],
+                [1.0, -1.0, 0.0, 0.0, 0.0, 0.0, -0.51, 0.0, -0.02, 0.03],
+                [1.0, -1.0, 2.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 0.0, -2.0, 1.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.06, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 2.0, -1.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 1.0, -3.0, 0.0, 0.0, 1.0, -0.06, 0.0, 0.0, 0.0],
+                [1.0, 1.0, -2.0, 0.0, -1.0, 0.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 1.0, -2.0, 0.0, 0.0, 0.0, -1.23, -0.07, 0.06, 0.01],
+                [1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.02, 0.0, 0.0, 0.0],
+                [1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.04, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0, -1.0, 0.0, -0.22, 0.01, 0.01, 0.0],
+                [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 12.00, -0.80, -0.67, -0.03],
+                [1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.73, -0.12, -0.10, 0.0],
+                [1.0, 1.0, 0.0, 0.0, 2.0, 0.0, -0.04, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 1.0, 0.0, 0.0, -1.0, -0.50, -0.01, 0.03, 0.0],
+                [1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.01, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 1.0, 0.0, 1.0, -1.0, -0.01, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 2.0, -2.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 2.0, 0.0, 0.0, 0.0, -0.11, 0.01, 0.01, 0.0],
+                [1.0, 2.0, -2.0, 1.0, 0.0, 0.0, -0.01, 0.0, 0.0, 0.0],
+                [1.0, 2.0, 0.0, -1.0, 0.0, 0.0, -0.02, 0.0, 0.0, 0.0],
+                [1.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [1.0, 3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         ),
         dims=["constituent", "argument"],
@@ -2007,7 +2146,7 @@ def _frequency_dependence_diurnal(
     zla = np.arctan2(XYZ["Y"], XYZ["X"])
     # compute phase angle of tide potential (Greenwich)
     thetaf = (
-        arguments.tau
+        arguments.tau * coef["tau"]
         + arguments.s * coef["s"]
         + arguments.h * coef["h"]
         + arguments.p * coef["p"]
@@ -2049,8 +2188,9 @@ def _frequency_dependence_long_period(
     XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
 ):
     """
-    Computes the in-phase and out-of-phase corrections induced by mantle
-    anelasticity in the long-period band :cite:p:`Petit:2010tp`
+    Computes the frequency dependent in-phase and out-of-phase corrections
+    induced by mantle anelasticity in the long-period band
+    :cite:p:`Petit:2010tp`
 
     Parameters
     ----------
@@ -2064,15 +2204,26 @@ def _frequency_dependence_long_period(
     # Corrections to Long-Period Tides for Frequency Dependence
     # of Love and Shida Number Parameters
     # reduced version of table 7.3b from IERS conventions
-    columns = ["s", "h", "p", "np", "ps", "dR_ip", "dR_op", "dT_ip", "dT_op"]
+    columns = [
+        "tau",
+        "s",
+        "h",
+        "p",
+        "np",
+        "ps",
+        "dR_ip",
+        "dR_op",
+        "dT_ip",
+        "dT_op",
+    ]
     table = xr.DataArray(
         np.array(
             [
-                [0.0, 0.0, 0.0, 1.0, 0.0, 0.47, 0.23, 0.16, 0.07],
-                [0.0, 2.0, 0.0, 0.0, 0.0, -0.20, -0.12, -0.11, -0.05],
-                [1.0, 0.0, -1.0, 0.0, 0.0, -0.11, -0.08, -0.09, -0.04],
-                [2.0, 0.0, 0.0, 0.0, 0.0, -0.13, -0.11, -0.15, -0.07],
-                [2.0, 0.0, 0.0, 1.0, 0.0, -0.05, -0.05, -0.06, -0.03],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.47, 0.23, 0.16, 0.07],
+                [0.0, 0.0, 2.0, 0.0, 0.0, 0.0, -0.20, -0.12, -0.11, -0.05],
+                [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, -0.11, -0.08, -0.09, -0.04],
+                [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, -0.13, -0.11, -0.15, -0.07],
+                [0.0, 2.0, 0.0, 0.0, 1.0, 0.0, -0.05, -0.05, -0.06, -0.03],
             ]
         ),
         dims=["constituent", "argument"],
@@ -2101,7 +2252,8 @@ def _frequency_dependence_long_period(
     cosla = XYZ["X"] / cosphi / radius
     # compute phase angle of tide potential (Greenwich)
     thetaf = (
-        arguments.s * coef["s"]
+        arguments.tau * coef["tau"]
+        + arguments.s * coef["s"]
         + arguments.h * coef["h"]
         + arguments.p * coef["p"]
         + arguments.np * coef["np"]

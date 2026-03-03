@@ -32,11 +32,19 @@ predict
 
 .. autofunction:: pyTMD.predict.solid_earth_tide
 
+.. autofunction:: pyTMD.predict._out_of_phase
+
 .. autofunction:: pyTMD.predict._out_of_phase_diurnal
 
 .. autofunction:: pyTMD.predict._out_of_phase_semidiurnal
 
 .. autofunction:: pyTMD.predict._latitude_dependence
+
+.. autofunction:: pyTMD.predict._latitude_dependence_diurnal
+
+.. autofunction:: pyTMD.predict._latitude_dependence_semidiurnal
+
+.. autofunction:: pyTMD.predict._frequency_dependence
 
 .. autofunction:: pyTMD.predict._frequency_dependence_diurnal
 
