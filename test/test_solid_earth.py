@@ -1,5 +1,5 @@
 """
-test_solid_earth.py (09/2025)
+test_solid_earth.py (03/2026)
 Tests the steps for calculating the solid earth tides
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 03/2026: refactored IERS corrections to reduce redundancy
     Updated 09/2025: check body tides for both tide-free and mean-tide
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
     Updated 04/2025: moved astronomical tests to test_astro.py
@@ -45,8 +46,8 @@ def test_out_of_phase_diurnal():
     dy_expected = 0.1125342324347507444e-3
     dz_expected = -0.2471186224343683169e-3
     # calculate displacements
-    dXYZ = pyTMD.predict._out_of_phase_diurnal(XYZ, SXYZ, LXYZ,
-        F2_solar, F2_lunar)
+    dXYZ = pyTMD.predict._out_of_phase_diurnal(XYZ, SXYZ, F2_solar)
+    dXYZ += pyTMD.predict._out_of_phase_diurnal(XYZ, LXYZ, F2_lunar)
     # assert matching
     assert np.isclose(dx_expected, dXYZ['X'])
     assert np.isclose(dy_expected, dXYZ['Y'])
@@ -73,8 +74,8 @@ def test_out_of_phase_semidiurnal():
     dy_expected = 0.2939522229284325029e-4
     dz_expected = -0.6051677912316721561e-4
     # calculate displacements
-    dXYZ = pyTMD.predict._out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ,
-        F2_solar, F2_lunar)
+    dXYZ = pyTMD.predict._out_of_phase_semidiurnal(XYZ, SXYZ, F2_solar)
+    dXYZ += pyTMD.predict._out_of_phase_semidiurnal(XYZ, LXYZ, F2_lunar)
     # assert matching
     assert np.isclose(dx_expected, dXYZ['X'])
     assert np.isclose(dy_expected, dXYZ['Y'])
@@ -100,6 +101,15 @@ def test_latitude_dependence():
     dx_expected = 0.2367189532359759044e-3
     dy_expected = 0.5181609907284959182e-3
     dz_expected = -0.3014881422940427977e-3
+    # calculate displacements with individual functions
+    dXYZ = pyTMD.predict._latitude_dependence_diurnal(XYZ, SXYZ, F2_solar)
+    dXYZ += pyTMD.predict._latitude_dependence_diurnal(XYZ, LXYZ, F2_lunar)
+    dXYZ += pyTMD.predict._latitude_dependence_semidiurnal(XYZ, SXYZ, F2_solar)
+    dXYZ += pyTMD.predict._latitude_dependence_semidiurnal(XYZ, LXYZ, F2_lunar)
+    # assert matching
+    assert np.isclose(dx_expected, dXYZ['X'])
+    assert np.isclose(dy_expected, dXYZ['Y'])
+    assert np.isclose(dz_expected, dXYZ['Z'])
     # calculate displacements
     dXYZ = pyTMD.predict._latitude_dependence(XYZ, SXYZ, LXYZ,
         F2_solar, F2_lunar)
