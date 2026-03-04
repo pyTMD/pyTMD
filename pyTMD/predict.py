@@ -1528,18 +1528,21 @@ def solid_earth_tide(
     # compute total displacement (Mathews et al. 1997)
     dxt = xr.Dataset()
     for d in ("X", "Y", "Z"):
+        # degree 2 solar and lunar terms
         S2 = F2_solar * (
             X2_solar * SXYZ[d] / solar_radius + P2_solar * XYZ[d] / radius
         )
         L2 = F2_lunar * (
             X2_lunar * LXYZ[d] / lunar_radius + P2_lunar * XYZ[d] / radius
         )
+        # degree 3 solar and lunar terms
         S3 = F3_solar * (
             X3_solar * SXYZ[d] / solar_radius + P3_solar * XYZ[d] / radius
         )
         L3 = F3_lunar * (
             X3_lunar * LXYZ[d] / lunar_radius + P3_lunar * XYZ[d] / radius
         )
+        # sum degree 2 and degree 3 displacements
         dxt[d] = S2 + L2 + S3 + L3
     # corrections for out-of-phase portions of the Love and Shida numbers
     dxt += _out_of_phase(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
@@ -1595,6 +1598,8 @@ def _out_of_phase_diurnal(
     XYZ: xr.Dataset,
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
+    dh2: float = -0.0025,
+    dl2: float = -0.0007,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -1608,10 +1613,11 @@ def _out_of_phase_diurnal(
         Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
     F2: np.ndarray
         Factors for the sun or moon
+    dh2: float, default -0.0025
+        Love number correction for the diurnal band
+    dl2: float, default -0.0007
+        Shida number correction for the diurnal band
     """
-    # Love and Shida number corrections
-    dhi = -0.0025
-    dli = -0.0007
     # Compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
@@ -1624,7 +1630,7 @@ def _out_of_phase_diurnal(
     # calculate offsets
     DR = (
         -3.0
-        * dhi
+        * dh2
         * sinphi
         * cosphi
         * F2
@@ -1634,7 +1640,7 @@ def _out_of_phase_diurnal(
     )
     DN = (
         -3.0
-        * dli
+        * dl2
         * cos2phi
         * F2
         * LSXYZ["Z"]
@@ -1643,7 +1649,7 @@ def _out_of_phase_diurnal(
     )
     DE = (
         -3.0
-        * dli
+        * dl2
         * sinphi
         * F2
         * LSXYZ["Z"]
@@ -1664,6 +1670,8 @@ def _out_of_phase_semidiurnal(
     XYZ: xr.Dataset,
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
+    dh2: float = -0.0022,
+    dl2: float = -0.0007,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -1677,10 +1685,11 @@ def _out_of_phase_semidiurnal(
         Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
     F2: np.ndarray
         Factors for the sun or moon
+    dh2: float, default -0.0022
+        Love number correction for the semi-diurnal band
+    dl2: float, default -0.0007
+        Shida number correction for the semi-diurnal band
     """
-    # Love and Shida number corrections
-    dhi = -0.0022
-    dli = -0.0007
     # Compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
@@ -1694,7 +1703,7 @@ def _out_of_phase_semidiurnal(
     # calculate offsets
     DR = (
         (-3.0 / 4.0)
-        * dhi
+        * dh2
         * cosphi**2
         * F2
         * (
@@ -1705,7 +1714,7 @@ def _out_of_phase_semidiurnal(
     )
     DN = (
         (3.0 / 2.0)
-        * dli
+        * dl2
         * sinphi
         * cosphi
         * F2
@@ -1717,7 +1726,7 @@ def _out_of_phase_semidiurnal(
     )
     DE = (
         (-3.0 / 2.0)
-        * dli
+        * dl2
         * cosphi
         * F2
         * (
@@ -1775,6 +1784,7 @@ def _latitude_dependence_diurnal(
     XYZ: xr.Dataset,
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
+    L1: float = 0.0012,
 ):
     r"""
     Computes the corrections induced by the latitudinal
@@ -1788,9 +1798,9 @@ def _latitude_dependence_diurnal(
         Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
     F2: np.ndarray
         Factors for the sun or moon
+    L1: float, default 0.0012
+         Love/Shida number correction for the diurnal band
     """
-    # Love/Shida number corrections (diurnal)
-    L1 = 0.0012
     # Compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
@@ -1831,6 +1841,7 @@ def _latitude_dependence_semidiurnal(
     XYZ: xr.Dataset,
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
+    L1: float = 0.0024,
 ):
     r"""
     Computes the corrections induced by the latitudinal
@@ -1844,9 +1855,9 @@ def _latitude_dependence_semidiurnal(
         Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
     F2: np.ndarray
         Factors for the sun or moon
+    L1: float, default 0.0024
+         Love/Shida number correction for the semi-diurnal band
     """
-    # Love/Shida number corrections (semi-diurnal)
-    L1 = 0.0024
     # Compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
