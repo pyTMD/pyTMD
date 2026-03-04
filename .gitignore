@@ -33,6 +33,7 @@ octave-workspace
 __pycache__
 build/
 _build/
+doc/source/_assets/*.csv
 dist/
 develop-eggs/
 run/

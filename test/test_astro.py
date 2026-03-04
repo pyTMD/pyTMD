@@ -195,13 +195,19 @@ def test_solar_ecef():
     # calculate approximate solar ephemerides
     x1, y1, z1 = pyTMD.astro.solar_ecef(MJD, ephemerides='approximate')
     r1 = np.sqrt(x1**2 + y1**2 + z1**2)
+    rad1 = pyTMD.math.radius(x1, y1, z1)
     # predict solar ephemerides
     x2, y2, z2 = pyTMD.astro.solar_ecef(MJD, ephemerides='JPL')
     r2 = np.sqrt(x2**2 + y2**2 + z2**2)
+    rad2 = pyTMD.math.radius(x2, y2, z2)
     # test distances
     assert np.allclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=1e9)
     # test absolute distance
     assert np.allclose(r1, r2, atol=1e9)
+    # test radial distance
+    assert np.allclose(r1, rad1)
+    assert np.allclose(r2, rad2)
+    assert np.allclose(rad1, rad2, atol=1e9)
 
 def test_lunar_ecef():
     """Test lunar ECEF coordinates with ephemeride predictions
@@ -210,12 +216,16 @@ def test_lunar_ecef():
     # calculate approximate lunar ephemerides
     x1, y1, z1 = pyTMD.astro.lunar_ecef(MJD, ephemerides='approximate')
     r1 = np.sqrt(x1**2 + y1**2 + z1**2)
+    rad1 = pyTMD.math.radius(x1, y1, z1)
     # predict lunar ephemerides
     x2, y2, z2 = pyTMD.astro.lunar_ecef(MJD, ephemerides='JPL')
     r2 = np.sqrt(x2**2 + y2**2 + z2**2)
+    rad2 = pyTMD.math.radius(x2, y2, z2)
     # test distances
     assert np.allclose(np.c_[x1,y1,z1], np.c_[x2,y2,z2], atol=5e6)
     # test absolute distance
+    assert np.allclose(r1, rad1)
+    assert np.allclose(r2, rad2)
     assert np.allclose(r1, r2, atol=5e6)
 
 def test_earth_rotation_angle():
