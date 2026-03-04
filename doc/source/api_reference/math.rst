@@ -20,7 +20,11 @@ math
 
 .. autofunction:: pyTMD.math.normalize_angle
 
+.. autofunction:: pyTMD.math.radius
+
 .. autofunction:: pyTMD.math.rotate
+
+.. autofunction:: pyTMD.math.scalar_product
 
 .. autofunction:: pyTMD.math.aliasing
 

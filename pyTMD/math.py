@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 math.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 03/2026: add radius and scalar product functions
     Updated 02/2026: add inverse functions for converting radians to arcseconds
     Updated 11/2025: legendre now returns both polynomials and derivatives
     Updated 09/2025: added degree 4 to legendre polynomials function
@@ -37,7 +38,9 @@ __all__ = [
     "rad2masec",
     "polynomial_sum",
     "normalize_angle",
+    "radius",
     "rotate",
+    "scalar_product",
     "aliasing",
     "legendre",
     "sph_harm",
@@ -132,6 +135,26 @@ def normalize_angle(theta: float | np.ndarray, circle: float = 360.0):
     return np.mod(theta, circle)
 
 
+def radius(
+    x: float | np.ndarray,
+    y: float | np.ndarray,
+    z: float | np.ndarray,
+):
+    """
+    Calculate the radius from the origin to a point in 3-dimensional space
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        x-coordinate of the point
+    y: float or np.ndarray
+        y-coordinate of the point
+    z: float or np.ndarray
+        z-coordinate of the point
+    """
+    return np.sqrt(x**2 + y**2 + z**2)
+
+
 def rotate(theta: float | np.ndarray, axis: str = "x"):
     """
     Rotate a 3-dimensional matrix about a given axis
@@ -170,6 +193,35 @@ def rotate(theta: float | np.ndarray, axis: str = "x"):
         raise ValueError(f"Invalid axis {axis}")
     # return the rotation matrix
     return R
+
+
+def scalar_product(
+    x: float | np.ndarray,
+    y: float | np.ndarray,
+    z: float | np.ndarray,
+    u: float | np.ndarray,
+    v: float | np.ndarray,
+    w: float | np.ndarray,
+):
+    """
+    Calculate the scalar product of two vectors in 3-dimensional space
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        x-coordinate of the first vector
+    y: float or np.ndarray
+        y-coordinate of the first vector
+    z: float or np.ndarray
+        z-coordinate of the first vector
+    u: float or np.ndarray
+        x-coordinate of the second vector
+    v: float or np.ndarray
+        y-coordinate of the second vector
+    w: float or np.ndarray
+        z-coordinate of the second vector
+    """
+    return x * u + y * v + z * w
 
 
 def aliasing(f: float, fs: float) -> float:

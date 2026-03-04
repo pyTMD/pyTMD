@@ -1240,7 +1240,7 @@ def load_pole_tide(
     MJD = t + deltat + _mjd_tide
 
     # radius of the Earth
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # geocentric latitude (radians)
     latitude = np.arctan(XYZ["Z"] / np.sqrt(XYZ["X"] ** 2.0 + XYZ["Y"] ** 2.0))
     # geocentric colatitude (radians)
@@ -1482,14 +1482,14 @@ def solid_earth_tide(
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # scalar product of input coordinates with sun/moon vectors
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
-    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
-    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
-    solar_scalar = (
-        XYZ["X"] * SXYZ["X"] + XYZ["Y"] * SXYZ["Y"] + XYZ["Z"] * SXYZ["Z"]
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    solar_radius = pyTMD.math.radius(SXYZ["X"], SXYZ["Y"], SXYZ["Z"])
+    lunar_radius = pyTMD.math.radius(LXYZ["X"], LXYZ["Y"], LXYZ["Z"])
+    solar_scalar = pyTMD.math.scalar_product(
+        XYZ["X"], XYZ["Y"], XYZ["Z"], SXYZ["X"], SXYZ["Y"], SXYZ["Z"]
     ) / (radius * solar_radius)
-    lunar_scalar = (
-        XYZ["X"] * LXYZ["X"] + XYZ["Y"] * LXYZ["Y"] + XYZ["Z"] * LXYZ["Z"]
+    lunar_scalar = pyTMD.math.scalar_product(
+        XYZ["X"], XYZ["Y"], XYZ["Z"], LXYZ["X"], LXYZ["Y"], LXYZ["Z"]
     ) / (radius * lunar_radius)
     # compute new h2 and l2 (Mathews et al., 1997)
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
@@ -1582,18 +1582,19 @@ def _out_of_phase(
         Factors for the moon
     """
     # compute diurnal and semi-diurnal corrections separately
-    D = _out_of_phase_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
-    D += _out_of_phase_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    # for both the sun and moon
+    D = _out_of_phase_diurnal(XYZ, SXYZ, F2_solar)
+    D += _out_of_phase_diurnal(XYZ, LXYZ, F2_lunar)
+    D += _out_of_phase_semidiurnal(XYZ, SXYZ, F2_solar)
+    D += _out_of_phase_semidiurnal(XYZ, LXYZ, F2_lunar)
     # return the out-of-phase corrections
     return D
 
 
 def _out_of_phase_diurnal(
     XYZ: xr.Dataset,
-    SXYZ: xr.Dataset,
-    LXYZ: xr.Dataset,
-    F2_solar: np.ndarray,
-    F2_lunar: np.ndarray,
+    LSXYZ: xr.Dataset,
+    F2: np.ndarray,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -1603,89 +1604,52 @@ def _out_of_phase_diurnal(
     ----------
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
-    SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
-    LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
-    F2_solar: np.ndarray
-        Factors for the sun
-    F2_lunar: np.ndarray
-        Factors for the moon
+    LSXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+    F2: np.ndarray
+        Factors for the sun or moon
     """
     # Love and Shida number corrections
     dhi = -0.0025
     dli = -0.0007
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     cos2phi = cosphi**2 - sinphi**2
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
-    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets
-    dr_solar = (
+    DR = (
         -3.0
         * dhi
         * sinphi
         * cosphi
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * sinla - SXYZ["Y"] * cosla)
-        / solar_radius**2
+        * F2
+        * LSXYZ["Z"]
+        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
+        / lunisolar_radius**2
     )
-    dr_lunar = (
-        -3.0
-        * dhi
-        * sinphi
-        * cosphi
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * sinla - LXYZ["Y"] * cosla)
-        / lunar_radius**2
-    )
-    dn_solar = (
+    DN = (
         -3.0
         * dli
         * cos2phi
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * sinla - SXYZ["Y"] * cosla)
-        / solar_radius**2
+        * F2
+        * LSXYZ["Z"]
+        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
+        / lunisolar_radius**2
     )
-    dn_lunar = (
-        -3.0
-        * dli
-        * cos2phi
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * sinla - LXYZ["Y"] * cosla)
-        / lunar_radius**2
-    )
-    de_solar = (
+    DE = (
         -3.0
         * dli
         * sinphi
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * cosla + SXYZ["Y"] * sinla)
-        / solar_radius**2
+        * F2
+        * LSXYZ["Z"]
+        * (LSXYZ["X"] * cosla + LSXYZ["Y"] * sinla)
+        / lunisolar_radius**2
     )
-    de_lunar = (
-        -3.0
-        * dli
-        * sinphi
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * cosla + LXYZ["Y"] * sinla)
-        / lunar_radius**2
-    )
-    # add solar and lunar offsets
-    DR = dr_solar + dr_lunar
-    DN = dn_solar + dn_lunar
-    DE = de_solar + de_lunar
     # output corrections
     D = xr.Dataset()
     # compute corrections in cartesian coordinates
@@ -1698,10 +1662,8 @@ def _out_of_phase_diurnal(
 
 def _out_of_phase_semidiurnal(
     XYZ: xr.Dataset,
-    SXYZ: xr.Dataset,
-    LXYZ: xr.Dataset,
-    F2_solar: np.ndarray,
-    F2_lunar: np.ndarray,
+    LSXYZ: xr.Dataset,
+    F2: np.ndarray,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -1711,20 +1673,16 @@ def _out_of_phase_semidiurnal(
     ----------
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
-    SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
-    LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
-    F2_solar: np.ndarray
-        Factors for the sun
-    F2_lunar: np.ndarray
-        Factors for the moon
+    LSXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+    F2: np.ndarray
+        Factors for the sun or moon
     """
     # Love and Shida number corrections
     dhi = -0.0022
     dli = -0.0007
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
@@ -1732,81 +1690,42 @@ def _out_of_phase_semidiurnal(
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
-    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets
-    dr_solar = (
+    DR = (
         (-3.0 / 4.0)
         * dhi
         * cosphi**2
-        * F2_solar
+        * F2
         * (
-            (SXYZ["X"] ** 2 - SXYZ["Y"] ** 2) * sin2la
-            - 2.0 * SXYZ["X"] * SXYZ["Y"] * cos2la
+            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
+            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
         )
-        / solar_radius**2
+        / lunisolar_radius**2
     )
-    dr_lunar = (
-        (-3.0 / 4.0)
-        * dhi
-        * cosphi**2
-        * F2_lunar
-        * (
-            (LXYZ["X"] ** 2 - LXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LXYZ["X"] * LXYZ["Y"] * cos2la
-        )
-        / lunar_radius**2
-    )
-    dn_solar = (
+    DN = (
         (3.0 / 2.0)
         * dli
         * sinphi
         * cosphi
-        * F2_solar
+        * F2
         * (
-            (SXYZ["X"] ** 2 - SXYZ["Y"] ** 2) * sin2la
-            - 2.0 * SXYZ["X"] * SXYZ["Y"] * cos2la
+            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
+            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
         )
-        / solar_radius**2
+        / lunisolar_radius**2
     )
-    dn_lunar = (
-        (3.0 / 2.0)
-        * dli
-        * sinphi
-        * cosphi
-        * F2_lunar
-        * (
-            (LXYZ["X"] ** 2 - LXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LXYZ["X"] * LXYZ["Y"] * cos2la
-        )
-        / lunar_radius**2
-    )
-    de_solar = (
+    DE = (
         (-3.0 / 2.0)
         * dli
         * cosphi
-        * F2_solar
+        * F2
         * (
-            (SXYZ["X"] ** 2 - SXYZ["Y"] ** 2) * cos2la
-            + 2.0 * SXYZ["X"] * SXYZ["Y"] * sin2la
+            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * cos2la
+            + 2.0 * LSXYZ["X"] * LSXYZ["Y"] * sin2la
         )
-        / solar_radius**2
+        / lunisolar_radius**2
     )
-    de_lunar = (
-        (-3.0 / 2.0)
-        * dli
-        * cosphi
-        * F2_lunar
-        * (
-            (LXYZ["X"] ** 2 - LXYZ["Y"] ** 2) * cos2la
-            + 2.0 * LXYZ["X"] * LXYZ["Y"] * sin2la
-        )
-        / lunar_radius**2
-    )
-    # add solar and lunar offsets
-    DR = dr_solar + dr_lunar
-    DN = dn_solar + dn_lunar
-    DE = de_solar + de_lunar
     # output corrections
     D = xr.Dataset()
     # compute corrections in cartesian coordinates
@@ -1843,18 +1762,19 @@ def _latitude_dependence(
         Factors for the moon
     """
     # compute diurnal and semi-diurnal corrections separately
-    D = _latitude_dependence_diurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
-    D += _latitude_dependence_semidiurnal(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
+    # for both the sun and moon
+    D = _latitude_dependence_diurnal(XYZ, SXYZ, F2_solar)
+    D += _latitude_dependence_diurnal(XYZ, LXYZ, F2_lunar)
+    D += _latitude_dependence_semidiurnal(XYZ, SXYZ, F2_solar)
+    D += _latitude_dependence_semidiurnal(XYZ, LXYZ, F2_lunar)
     # return the latitudinal dependent corrections
     return D
 
 
 def _latitude_dependence_diurnal(
     XYZ: xr.Dataset,
-    SXYZ: xr.Dataset,
-    LXYZ: xr.Dataset,
-    F2_solar: np.ndarray,
-    F2_lunar: np.ndarray,
+    LSXYZ: xr.Dataset,
+    F2: np.ndarray,
 ):
     r"""
     Computes the corrections induced by the latitudinal
@@ -1864,64 +1784,39 @@ def _latitude_dependence_diurnal(
     ----------
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
-    SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
-    LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
-    F2_solar: np.ndarray
-        Factors for the sun
-    F2_lunar: np.ndarray
-        Factors for the moon
+    LSXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+    F2: np.ndarray
+        Factors for the sun or moon
     """
     # Love/Shida number corrections (diurnal)
     L1 = 0.0012
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
-    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets for the diurnal band
-    dn_solar = (
-        -L1
+    DN = (
+        (-3.0 * L1)
         * sinphi**2
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * cosla + SXYZ["Y"] * sinla)
-        / solar_radius**2
+        * F2
+        * LSXYZ["Z"]
+        * (LSXYZ["X"] * cosla + LSXYZ["Y"] * sinla)
+        / lunisolar_radius**2
     )
-    dn_lunar = (
-        -L1
-        * sinphi**2
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * cosla + LXYZ["Y"] * sinla)
-        / lunar_radius**2
-    )
-    de_solar = (
-        L1
+    DE = (
+        (3.0 * L1)
         * sinphi
         * (cosphi**2 - sinphi**2)
-        * F2_solar
-        * SXYZ["Z"]
-        * (SXYZ["X"] * sinla - SXYZ["Y"] * cosla)
-        / solar_radius**2
+        * F2
+        * LSXYZ["Z"]
+        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
+        / lunisolar_radius**2
     )
-    de_lunar = (
-        L1
-        * sinphi
-        * (cosphi**2 - sinphi**2)
-        * F2_lunar
-        * LXYZ["Z"]
-        * (LXYZ["X"] * sinla - LXYZ["Y"] * cosla)
-        / lunar_radius**2
-    )
-    # add solar and lunar offsets
-    DN = 3.0 * (dn_solar + dn_lunar)
-    DE = 3.0 * (de_solar + de_lunar)
     # output corrections
     D = xr.Dataset()
     # compute corrections in cartesian coordinates
@@ -1934,10 +1829,8 @@ def _latitude_dependence_diurnal(
 
 def _latitude_dependence_semidiurnal(
     XYZ: xr.Dataset,
-    SXYZ: xr.Dataset,
-    LXYZ: xr.Dataset,
-    F2_solar: np.ndarray,
-    F2_lunar: np.ndarray,
+    LSXYZ: xr.Dataset,
+    F2: np.ndarray,
 ):
     r"""
     Computes the corrections induced by the latitudinal
@@ -1947,19 +1840,15 @@ def _latitude_dependence_semidiurnal(
     ----------
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
-    SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
-    LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
-    F2_solar: np.ndarray
-        Factors for the sun
-    F2_lunar: np.ndarray
-        Factors for the moon
+    LSXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+    F2: np.ndarray
+        Factors for the sun or moon
     """
     # Love/Shida number corrections (semi-diurnal)
     L1 = 0.0024
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
@@ -1967,56 +1856,30 @@ def _latitude_dependence_semidiurnal(
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
     # Compute the normalized position vector of the Sun/Moon
-    solar_radius = np.sqrt(SXYZ["X"] ** 2 + SXYZ["Y"] ** 2 + SXYZ["Z"] ** 2)
-    lunar_radius = np.sqrt(LXYZ["X"] ** 2 + LXYZ["Y"] ** 2 + LXYZ["Z"] ** 2)
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets for the semi-diurnal band
-    dn_solar = (
-        (-L1 / 2.0)
+    DN = (
+        (-3.0 * L1 / 2.0)
         * sinphi
         * cosphi
-        * F2_solar
+        * F2
         * (
-            (SXYZ["X"] ** 2 - SXYZ["Y"] ** 2) * cos2la
-            + 2.0 * SXYZ["X"] * SXYZ["Y"] * sin2la
+            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * cos2la
+            + 2.0 * LSXYZ["X"] * LSXYZ["Y"] * sin2la
         )
-        / solar_radius**2
+        / lunisolar_radius**2
     )
-    dn_lunar = (
-        (-L1 / 2.0)
-        * sinphi
-        * cosphi
-        * F2_lunar
-        * (
-            (LXYZ["X"] ** 2 - LXYZ["Y"] ** 2) * cos2la
-            + 2.0 * LXYZ["X"] * LXYZ["Y"] * sin2la
-        )
-        / lunar_radius**2
-    )
-    de_solar = (
-        (-L1 / 2.0)
+    DE = (
+        (-3.0 * L1 / 2.0)
         * sinphi**2
         * cosphi
-        * F2_solar
+        * F2
         * (
-            (SXYZ["X"] ** 2 - SXYZ["Y"] ** 2) * sin2la
-            - 2.0 * SXYZ["X"] * SXYZ["Y"] * cos2la
+            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
+            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
         )
-        / solar_radius**2
+        / lunisolar_radius**2
     )
-    de_lunar = (
-        (-L1 / 2.0)
-        * sinphi**2
-        * cosphi
-        * F2_lunar
-        * (
-            (LXYZ["X"] ** 2 - LXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LXYZ["X"] * LXYZ["Y"] * cos2la
-        )
-        / lunar_radius**2
-    )
-    # add solar and lunar offsets
-    DN = 3.0 * (dn_solar + dn_lunar)
-    DE = 3.0 * (de_solar + de_lunar)
     # output corrections
     D = xr.Dataset()
     # compute corrections in cartesian coordinates
@@ -2137,7 +2000,7 @@ def _frequency_dependence_diurnal(
         coords=dict(time=np.atleast_1d(MJD)),
     )
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
@@ -2245,7 +2108,7 @@ def _frequency_dependence_long_period(
         coords=dict(time=np.atleast_1d(MJD)),
     )
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
@@ -2309,7 +2172,7 @@ def _free_to_mean(
         Mean amplitude of the permanent tide (meters)
     """
     # Compute the normalized position vector of coordinates
-    radius = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2 + XYZ["Z"] ** 2)
+    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
