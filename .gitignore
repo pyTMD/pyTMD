@@ -33,7 +33,6 @@ octave-workspace
 __pycache__
 build/
 _build/
-doc/source/_assets/*.csv
 dist/
 develop-eggs/
 run/
@@ -50,6 +49,7 @@ venv/
 setup-miniconda-patched-environment.yml
 pytest.xml
 coverage.xml
+**/_assets/*.csv
 # OS generated files #
 ######################
 .DS_Store

@@ -12,8 +12,8 @@ keywords:
   - Solid Earth Tides
   - Tidal Prediction
 license: MIT
-version: "3.0.3"
-date-released: "2026-02-20"
+version: "3.0.4"
+date-released: "2026-03-04"
 message: If you use this software, please consider citing our article
   in the Journal of Open Source Software.
 
