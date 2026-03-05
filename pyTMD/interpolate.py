@@ -15,7 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 02/2026: output data from extrapolate as an xarray DataArray
-        where there are no valid points within the cutoff distance 
+        where there are no valid points within the cutoff distance
     Updated 01/2026: output data from extrapolate as an xarray DataArray
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
