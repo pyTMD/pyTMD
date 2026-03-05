@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (02/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 02/2026: output data from extrapolate as an xarray DataArray
+        where there are no valid points within the cutoff distance
     Updated 01/2026: output data from extrapolate as an xarray DataArray
     Updated 11/2025: calculate lambda function after nearest-neighbors
         set default data type for interpolation functions as input data type
@@ -289,7 +291,7 @@ def extrapolate(
         # check if there are any valid points within the input bounds
         if not np.any(valid_mask & valid_bounds):
             # return filled masked array
-            return data
+            return xr.DataArray(data)
         # find where input grid is valid and close to output points
         indy, indx = np.nonzero(valid_mask & valid_bounds)
         # create KD-tree of valid points
@@ -316,7 +318,7 @@ def extrapolate(
         # check if there are any valid points within the input bounds
         if not np.any(valid_mask & valid_bounds):
             # return filled masked array
-            return data
+            return xr.DataArray(data)
         # find where input grid is valid and close to output points
         indy, indx = np.nonzero(valid_mask & valid_bounds)
         # flattened model coordinates

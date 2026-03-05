@@ -200,7 +200,7 @@ def test_extrapolation_checks(N=324):
     # in case where there are no valid grid points
     test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
         is_geographic=True)
-    assert(np.all(test.mask))
+    assert(np.all(test.isnull()))
     # use nearest neighbors extrapolation
     # in case where there are no points to be extrapolated
     test = pyTMD.interpolate.extrapolate(LON, LAT, FI, [], [])
