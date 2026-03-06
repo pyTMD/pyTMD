@@ -17,25 +17,23 @@ bibtex_contents = response.read().decode("utf8").strip()
 entry_regex = r"[?<=\@](article)[\s]?\{(.*?)[\s]?,[\s]?"
 R1 = re.compile(entry_regex, flags=re.IGNORECASE)
 # bibtex fields to be printed in the output file
-bibtex_field_types = [
-    "author",
-    "doi",
-    "issn",
-    "journal",
-    "month",
-    "number",
-    "pages",
-    "publisher",
-    "title",
-    "url",
-    "volume",
-    "year",
-]
-field_regex = (
-    r"[\s]?("
-    + r"|".join(bibtex_field_types)
-    + r")\=[\{]?[\{]?[\s]?(.*?)[\s+]?[\}]?[\}]?[\s]?[\,]"
+bibtex_field_types = r"|".join(
+    [
+        "author",
+        "doi",
+        "issn",
+        "journal",
+        "month",
+        "number",
+        "pages",
+        "publisher",
+        "title",
+        "url",
+        "volume",
+        "year",
+    ]
 )
+field_regex = r"[\s]?(" + bibtex_field_types + r")\=[\{](.*?)[\}][\,]"
 R2 = re.compile(field_regex, flags=re.IGNORECASE)
 # extract bibtex entry type and bibtex cite key
 bibtype, bibkey = R1.findall(bibtex_contents).pop()
