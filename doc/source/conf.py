@@ -42,7 +42,7 @@ if on_rtd:
     warnings.filterwarnings("ignore")
 
 # create tables
-for module_name in ["model_table", "constituent_table"]:
+for module_name in ["model_table", "constituent_table", "write_bibtex"]:
     spec = importlib.util.spec_from_file_location(
         module_name, f"{module_name}.py"
     )
