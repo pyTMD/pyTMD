@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 03/2026: break up extrapolation into separate functions to allow
+        for caching of the kd-tree when interpolating multiple variables
     Updated 02/2026: output data from extrapolate as an xarray DataArray
         where there are no valid points within the cutoff distance
     Updated 01/2026: output data from extrapolate as an xarray DataArray
@@ -200,7 +202,7 @@ def extrapolate(
     **kwargs,
 ):
     """
-    Nearest-neighbor (`NN`) extrapolation of valid model data using `kd-trees
+    Nearest-neighbor (NN) extrapolation of valid model data using `KD-trees
     <https://docs.scipy.org/doc/scipy/reference/generated/
     scipy.spatial.cKDTree.html>`_
 
@@ -232,17 +234,20 @@ def extrapolate(
     DATA: np.ndarray
         interpolated data
     """
-    # set default data type
-    dtype = kwargs.get("dtype", zs.dtype)
-    # verify that input data is masked array
-    if not isinstance(zs, np.ma.MaskedArray):
-        zs = np.ma.array(
-            zs, dtype=zs.dtype, fill_value=np.ma.default_fill_value(zs.dtype)
-        )
-        zs.mask = np.isnan(zs)
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
         is_geographic = True
+    # calculate meshgrid of model coordinates
+    gridx, gridy = np.meshgrid(xs, ys)
+    # find valid values
+    if isinstance(zs, np.ma.MaskedArray):
+        indy, indx = np.nonzero(np.logical_not(zs.mask))
+    else:
+        indy, indx = np.nonzero(np.isfinite(zs))
+    # reduce to valid original values
+    x0 = gridx[indy, indx]
+    y0 = gridy[indy, indx]
+    z0 = zs[indy, indx]
     # verify output dimensions
     X = np.atleast_1d(X)
     Y = np.atleast_1d(Y)
@@ -251,87 +256,112 @@ def extrapolate(
     # return none if no invalid points
     if npts == 0:
         return
+    # calculate coordinates for nearest-neighbors
+    p_in = _to_cartesian(x0, y0, is_geographic=is_geographic)
+    p_out = _to_cartesian(X, Y, is_geographic=is_geographic)
+    # create KD-tree of valid points
+    tree = _build_tree(p_in)
+    # query output data points and find nearest neighbor within cutoff
+    data = _nearest_neighbors(
+        tree, p_out, z0, cutoff=cutoff, fill_value=fill_value, **kwargs
+    )
+    return data
 
+
+def _to_cartesian(
+    x: np.ndarray,
+    y: np.ndarray,
+    is_geographic: bool = True,
+):
+    """
+    Convert input coordinates to an array of points in a
+    Cartesian coordinate system
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates to be converted
+    y: np.ndarray
+        y-coordinates to be converted
+    is_geographic: bool, default True
+        coordinates are geographic
+
+    Returns
+    -------
+    points: np.ndarray
+        output points in Cartesian coordinates
+    """
+    # verify output dimensions
+    x = np.atleast_1d(x)
+    y = np.atleast_1d(y)
+    # calculate coordinates for nearest-neighbors
+    if is_geographic:
+        # global or regional equirectangular model
+        # ellipsoidal major axis in kilometers
+        a_axis = 6378.137
+        # calculate Cartesian coordinates of input grid
+        xi, yi, zi = pyTMD.spatial.to_cartesian(x, y, a_axis=a_axis)
+        # calculate Cartesian coordinates of output coordinates
+        points = np.c_[xi, yi, zi]
+    else:
+        points = np.c_[x, y]
+    # return the output points in Cartesian coordinates
+    return points
+
+
+def _build_tree(points: np.ndarray, **kwargs):
+    """
+    Build a KD-tree to search for the nearest-neighbors (NN)
+
+    Parameters
+    ----------
+    points: np.ndarray
+        input points in Cartesian coordinates
+    kwargs: dict
+        additional keyword arguments for scipy.spatial.cKDTree
+    """
+    # create KD-tree of points for nearest-neighbor extrapolation
+    tree = scipy.spatial.cKDTree(points, **kwargs)
+    return tree
+
+
+def _nearest_neighbors(
+    tree: scipy.spatial.cKDTree,
+    points: np.ndarray,
+    flattened: np.ndarray,
+    cutoff: int | float = np.inf,
+    fill_value: float = None,
+    **kwargs,
+):
+    """
+    Nearest-neighbor (NN) extrapolation of valid model data using KD-trees
+
+    Parameters
+    ----------
+    tree: scipy.spatial.cKDTree
+        KD-tree of valid points for nearest-neighbor extrapolation
+    points: np.ndarray
+        output points in Cartesian coordinates
+    flattened: np.ndarray
+        valid data array to be extrapolated
+    cutoff: float, default np.inf
+        return only neighbors within distance [km]
+    fill_value: float, default np.nan
+        invalid value
+    dtype: np.dtype, default np.float64
+        output data type
+    """
+    # set default data type
+    dtype = kwargs.get("dtype", flattened.dtype)
+    # number of data points
+    npts, _ = points.shape
+    # query output data points and find nearest neighbor within cutoff
+    dd, ii = tree.query(points, k=1, distance_upper_bound=cutoff)
     # allocate to output extrapolate data array
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
     # initially set all data to fill value
-    data.data[:] = zs.fill_value
-
-    # create combined valid mask
-    valid_mask = (~zs.mask) & np.isfinite(zs.data)
-    # reduce to model points within bounds of input points
-    valid_bounds = np.ones_like(zs.mask, dtype=bool)
-
-    # calculate coordinates for nearest-neighbors
-    if is_geographic:
-        # global or regional equirectangular model
-        # calculate meshgrid of model coordinates
-        gridlon, gridlat = np.meshgrid(xs, ys)
-        # ellipsoidal major axis in kilometers
-        a_axis = 6378.137
-        # calculate Cartesian coordinates of input grid
-        gridx, gridy, gridz = pyTMD.spatial.to_cartesian(
-            gridlon, gridlat, a_axis=a_axis
-        )
-        # calculate Cartesian coordinates of output coordinates
-        XI, YI, ZI = pyTMD.spatial.to_cartesian(X, Y, a_axis=a_axis)
-        # range of output points in cartesian coordinates
-        xmin, xmax = (np.min(XI), np.max(XI))
-        ymin, ymax = (np.min(YI), np.max(YI))
-        zmin, zmax = (np.min(ZI), np.max(ZI))
-        # reduce to model points within bounds of input points
-        valid_bounds = np.ones_like(zs.mask, dtype=bool)
-        valid_bounds &= gridx >= (xmin - 2.0 * cutoff)
-        valid_bounds &= gridx <= (xmax + 2.0 * cutoff)
-        valid_bounds &= gridy >= (ymin - 2.0 * cutoff)
-        valid_bounds &= gridy <= (ymax + 2.0 * cutoff)
-        valid_bounds &= gridz >= (zmin - 2.0 * cutoff)
-        valid_bounds &= gridz <= (zmax + 2.0 * cutoff)
-        # check if there are any valid points within the input bounds
-        if not np.any(valid_mask & valid_bounds):
-            # return filled masked array
-            return xr.DataArray(data)
-        # find where input grid is valid and close to output points
-        indy, indx = np.nonzero(valid_mask & valid_bounds)
-        # create KD-tree of valid points
-        tree = scipy.spatial.cKDTree(
-            np.c_[gridx[indy, indx], gridy[indy, indx], gridz[indy, indx]]
-        )
-        # flattened valid data array
-        flattened = zs.data[indy, indx]
-        # output coordinates
-        points = np.c_[XI, YI, ZI]
-    else:
-        # projected model
-        # calculate meshgrid of model coordinates
-        gridx, gridy = np.meshgrid(xs, ys)
-        # range of output points
-        xmin, xmax = (np.min(X), np.max(X))
-        ymin, ymax = (np.min(Y), np.max(Y))
-        # reduce to model points within bounds of input points
-        valid_bounds = np.ones_like(zs.mask, dtype=bool)
-        valid_bounds &= gridx >= (xmin - 2.0 * cutoff)
-        valid_bounds &= gridx <= (xmax + 2.0 * cutoff)
-        valid_bounds &= gridy >= (ymin - 2.0 * cutoff)
-        valid_bounds &= gridy <= (ymax + 2.0 * cutoff)
-        # check if there are any valid points within the input bounds
-        if not np.any(valid_mask & valid_bounds):
-            # return filled masked array
-            return xr.DataArray(data)
-        # find where input grid is valid and close to output points
-        indy, indx = np.nonzero(valid_mask & valid_bounds)
-        # flattened model coordinates
-        tree = scipy.spatial.cKDTree(
-            np.c_[gridx[indy, indx], gridy[indy, indx]]
-        )
-        # flattened valid data array
-        flattened = zs.data[indy, indx]
-        # output coordinates
-        points = np.c_[X, Y]
-
-    # query output data points and find nearest neighbor within cutoff
-    dd, ii = tree.query(points, k=1, distance_upper_bound=cutoff)
+    data.data[:] = data.fill_value
     # spatially extrapolate using nearest neighbors
     if np.any(np.isfinite(dd)):
         (ind,) = np.nonzero(np.isfinite(dd))

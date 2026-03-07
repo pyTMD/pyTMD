@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 03/2026: allow caching of the kd-tree for extrapolation
     Updated 02/2026: create subaccessor registration functions
         add functions to test if units are compatible with known groups
     Updated 01/2026: handle scalar inputs for coordinate transformations
@@ -459,6 +460,108 @@ class Dataset:
         # return the cropped dataset
         return ds
 
+    def extrap_like(self, other: xr.Dataset, **kwargs):
+        """
+        Extrapolate missing values in ``Dataset`` using nearest-neighbors
+
+        Parameters
+        ----------
+        other: xarray.Dataset
+            dataset with missing values to be extrapolated
+        kwargs: keyword arguments
+            keyword arguments for ``pyTMD.interpolate.extrapolate``
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            dataset with extrapolated values
+        """
+        # import extrapolate functions
+        from pyTMD.interpolate import (
+            _to_cartesian,
+            _build_tree,
+            _nearest_neighbors,
+        )
+
+        # get extrapolation cutoff distance
+        cutoff = kwargs.get("cutoff", np.inf)
+        bounds = [
+            other.x.values.min(),
+            other.x.values.max(),
+            other.y.values.min(),
+            other.y.values.max(),
+        ]
+        # crop dataset to bounding box of other dataset plus buffer
+        if np.isfinite(cutoff) and self.crs.is_geographic:
+            # use twice the cutoff distance as a buffer
+            cutoff_km = cutoff * __ureg__.parse_units("km")
+            a_axis = 6378.137 * __ureg__.parse_units("km")
+            buffer = 2.0 * (cutoff_km / a_axis).to(self.axis_units).magnitude
+            # crop dataset to bounding box of other dataset plus buffer
+            ds = self.crop(bounds=bounds, buffer=buffer)
+        elif np.isfinite(cutoff):
+            # use twice the cutoff distance as a buffer
+            cutoff_km = cutoff * __ureg__.parse_units("km")
+            buffer = 2.0 * cutoff_km.to(self.axis_units).magnitude
+            # crop dataset to bounding box of other dataset plus buffer
+            ds = self.crop(bounds=bounds, buffer=buffer)
+        else:
+            # copy dataset without cropping
+            ds = self._ds.copy()
+        # calculate meshgrid of croppped model coordinates
+        gridx, gridy = np.meshgrid(ds.x.values, ds.y.values)
+        # initialize valid mask for building tree
+        valid_mask = np.ones_like(gridx, dtype=bool)
+        # iterate over variables in dataset
+        for i, v in enumerate(other.data_vars.keys()):
+            # check for missing values
+            invalid = other[v].isnull()
+            if not invalid.any():
+                # no missing values
+                continue
+            # find valid values
+            mask = ds[v].notnull().values
+            # build tree if on the first iteration
+            # or if the valid mask has changed
+            if (i == 0) | (mask != valid_mask).any():
+                # get indices of valid points
+                indy, indx = np.nonzero(mask)
+                # reduce to valid original values
+                p_in = _to_cartesian(
+                    gridx[indy, indx],
+                    gridy[indy, indx],
+                    is_geographic=self.crs.is_geographic,
+                )
+                # build kd-tree for valid points
+                tree = _build_tree(p_in)
+                # copy valid mask for next iteration
+                valid_mask = np.copy(mask)
+            # reduce model to valid original values
+            flattened = ds[v].values[indy, indx]
+            # extrapolate missing values using nearest-neighbors
+            if other[v].ndim == 0:
+                # single point extrapolation
+                p_out = _to_cartesian(
+                    other.x.values,
+                    other.y.values,
+                    is_geographic=self.crs.is_geographic,
+                )
+                (other[v].values,) = _nearest_neighbors(
+                    tree, p_out, flattened, **kwargs
+                )
+            else:
+                # only extrapolate invalid points
+                p_out = _to_cartesian(
+                    other.x.values[invalid],
+                    other.y.values[invalid],
+                    is_geographic=self.crs.is_geographic,
+                )
+                other[v].values[invalid] = _nearest_neighbors(
+                    tree, p_out, flattened, **kwargs
+                )
+        # return xarray dataset
+        return other
+
     def infer(self, t: float | np.ndarray, **kwargs):
         """
         Infer minor tides from ``Dataset`` at times
@@ -533,9 +636,6 @@ class Dataset:
         ds: xarray.Dataset
             interpolated tidal constants
         """
-        # import extrapolate function
-        from pyTMD.interpolate import extrapolate
-
         # set default keyword arguments
         kwargs.setdefault("extrapolate", False)
         kwargs.setdefault("cutoff", np.inf)
@@ -559,34 +659,7 @@ class Dataset:
         ds = self._ds.interp(x=x, y=y, method=method)
         # extrapolate missing values using nearest-neighbors
         if kwargs["extrapolate"]:
-            for v in ds.data_vars.keys():
-                # check for missing values
-                invalid = ds[v].isnull()
-                if not invalid.any():
-                    # no missing values
-                    continue
-                elif ds[v].ndim == 0:
-                    # single point extrapolation
-                    (ds[v].values,) = extrapolate(
-                        self._x,
-                        self._y,
-                        self._ds[v].values,
-                        x,
-                        y,
-                        is_geographic=self.crs.is_geographic,
-                        **kwargs,
-                    )
-                else:
-                    # only extrapolate invalid points
-                    ds[v].values[invalid] = extrapolate(
-                        self._x,
-                        self._y,
-                        self._ds[v].values,
-                        x.values[invalid],
-                        y.values[invalid],
-                        is_geographic=self.crs.is_geographic,
-                        **kwargs,
-                    )
+            ds = self.extrap_like(ds, cutoff=kwargs["cutoff"])
         # return xarray dataset
         return ds
 
@@ -810,6 +883,11 @@ class Dataset:
         """Area of use from the dataset CRS"""
         if self.crs.area_of_use is not None:
             return self.crs.area_of_use.name.replace(".", "").lower()
+
+    @property
+    def axis_units(self) -> dict:
+        """Axis information from the dataset CRS"""
+        return self.crs.axis_info[0].unit_name
 
     @property
     def _x(self):
