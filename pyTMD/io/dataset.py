@@ -636,9 +636,6 @@ class Dataset:
         ds: xarray.Dataset
             interpolated tidal constants
         """
-        # import extrapolate function
-        from pyTMD.interpolate import extrapolate
-
         # set default keyword arguments
         kwargs.setdefault("extrapolate", False)
         kwargs.setdefault("cutoff", np.inf)
