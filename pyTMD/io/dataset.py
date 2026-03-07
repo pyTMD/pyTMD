@@ -525,7 +525,7 @@ class Dataset:
             # or if the valid mask has changed
             if (i == 0) | (mask != valid_mask).any():
                 # get indices of valid points
-                indy, indx = np.nonzero(valid_mask)
+                indy, indx = np.nonzero(mask)
                 # reduce to valid original values
                 p_in = _to_cartesian(
                     gridx[indy, indx],
