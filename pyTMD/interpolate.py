@@ -273,6 +273,24 @@ def _to_cartesian(
     y: np.ndarray,
     is_geographic: bool = True,
 ):
+    """
+    Convert input coordinates to Cartesian coordinates for nearest-neighbor
+    extrapolation
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates to be converted
+    y: np.ndarray
+        y-coordinates to be converted
+    is_geographic: bool, default True
+        coordinates are geographic
+
+    Returns
+    -------
+    points: np.ndarray
+        output points in Cartesian coordinates
+    """
     # verify output dimensions
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
@@ -292,6 +310,16 @@ def _to_cartesian(
 
 
 def _build_tree(points: np.ndarray, **kwargs):
+    """
+    Build a KD-tree of valid points for nearest-neighbor extrapolation
+
+    Parameters
+    ----------
+    points: np.ndarray
+        input points in Cartesian coordinates
+    kwargs: dict
+        additional keyword arguments for scipy.spatial.cKDTree
+    """
     # create KD-tree of points for nearest-neighbor extrapolation
     tree = scipy.spatial.cKDTree(points, **kwargs)
     return tree
@@ -300,13 +328,31 @@ def _build_tree(points: np.ndarray, **kwargs):
 def _nearest_neighbors(
     tree: scipy.spatial.cKDTree,
     points: np.ndarray,
-    z0: np.ndarray,
+    flattened: np.ndarray,
     cutoff: int | float = np.inf,
     fill_value: float = None,
     **kwargs,
 ):
+    """
+    Nearest-neighbor extrapolation of valid model data using `kd-trees
+
+    Parameters
+    ----------
+    tree: scipy.spatial.cKDTree
+        KD-tree of valid points for nearest-neighbor extrapolation
+    points: np.ndarray
+        output points in Cartesian coordinates
+    flattened: np.ndarray
+        valid data array to be extrapolated
+    cutoff: float, default np.inf
+        return only neighbors within distance [km]
+    fill_value: float, default np.nan
+        invalid value
+    dtype: np.dtype, default np.float64
+        output data type
+    """
     # set default data type
-    dtype = kwargs.get("dtype", z0.dtype)
+    dtype = kwargs.get("dtype", flattened.dtype)
     # number of data points
     npts, _ = points.shape
     # query output data points and find nearest neighbor within cutoff
@@ -319,7 +365,7 @@ def _nearest_neighbors(
     # spatially extrapolate using nearest neighbors
     if np.any(np.isfinite(dd)):
         (ind,) = np.nonzero(np.isfinite(dd))
-        data.data[ind] = z0[ii[ind]]
+        data.data[ind] = flattened[ii[ind]]
         data.mask[ind] = False
     # return extrapolated values
     return xr.DataArray(data)
