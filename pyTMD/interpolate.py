@@ -202,7 +202,7 @@ def extrapolate(
     **kwargs,
 ):
     """
-    Nearest-neighbor (`NN`) extrapolation of valid model data using `kd-trees
+    Nearest-neighbor (NN) extrapolation of valid model data using `KD-trees
     <https://docs.scipy.org/doc/scipy/reference/generated/
     scipy.spatial.cKDTree.html>`_
 
@@ -274,8 +274,8 @@ def _to_cartesian(
     is_geographic: bool = True,
 ):
     """
-    Convert input coordinates to Cartesian coordinates for nearest-neighbor
-    extrapolation
+    Convert input coordinates to an array of points in a
+    Cartesian coordinate system
 
     Parameters
     ----------
@@ -311,7 +311,7 @@ def _to_cartesian(
 
 def _build_tree(points: np.ndarray, **kwargs):
     """
-    Build a KD-tree of valid points for nearest-neighbor extrapolation
+    Build a KD-tree to search for the nearest-neighbors (NN)
 
     Parameters
     ----------
@@ -334,7 +334,7 @@ def _nearest_neighbors(
     **kwargs,
 ):
     """
-    Nearest-neighbor extrapolation of valid model data using `kd-trees
+    Nearest-neighbor (NN) extrapolation of valid model data using KD-trees
 
     Parameters
     ----------

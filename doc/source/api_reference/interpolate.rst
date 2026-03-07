@@ -13,3 +13,9 @@ interpolate
 .. autofunction:: pyTMD.interpolate.inpaint
 
 .. autofunction:: pyTMD.interpolate.extrapolate
+
+.. autofunction:: pyTMD.interpolate._to_cartesian
+
+.. autofunction:: pyTMD.interpolate._build_tree
+
+.. autofunction:: pyTMD.interpolate._nearest_neighbors
