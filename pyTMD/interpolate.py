@@ -321,10 +321,10 @@ def _build_tree(points: np.ndarray, **kwargs):
     kwargs: dict
         additional keyword arguments for scipy.spatial.cKDTree
 
-    Returns  
-    -------  
-    tree: scipy.spatial.cKDTree  
-        KD-tree from input points  
+    Returns
+    -------
+    tree: scipy.spatial.cKDTree
+        KD-tree from input points
     """
     # create KD-tree of points for nearest-neighbor extrapolation
     tree = scipy.spatial.cKDTree(points, **kwargs)
