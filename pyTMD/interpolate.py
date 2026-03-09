@@ -265,6 +265,7 @@ def extrapolate(
     data = _nearest_neighbors(
         tree, p_out, z0, cutoff=cutoff, fill_value=fill_value, **kwargs
     )
+    # return the extrapolated data
     return data
 
 
@@ -319,6 +320,11 @@ def _build_tree(points: np.ndarray, **kwargs):
         input points in Cartesian coordinates
     kwargs: dict
         additional keyword arguments for scipy.spatial.cKDTree
+
+    Returns  
+    -------  
+    tree: scipy.spatial.cKDTree  
+        KD-tree from input points  
     """
     # create KD-tree of points for nearest-neighbor extrapolation
     tree = scipy.spatial.cKDTree(points, **kwargs)
@@ -346,7 +352,7 @@ def _nearest_neighbors(
         valid data array to be extrapolated
     cutoff: float, default np.inf
         return only neighbors within distance [km]
-    fill_value: float, default np.nan
+    fill_value: float, default None
         invalid value
     dtype: np.dtype, default np.float64
         output data type

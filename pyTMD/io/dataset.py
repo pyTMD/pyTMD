@@ -447,6 +447,9 @@ class Dataset:
             ds = self.pad(n=(0, n))
         else:
             ds = self._ds.copy()
+        # check if chunks are present
+        if ds.chunks is not None:
+            ds = ds.chunk(-1).compute()
         # unpack bounds and buffer
         xmin = bounds[0] - buffer
         xmax = bounds[1] + buffer
@@ -485,6 +488,10 @@ class Dataset:
 
         # get extrapolation cutoff distance
         cutoff = kwargs.get("cutoff", np.inf)
+        # check if chunks are present
+        if other.chunks is not None:
+            other = other.chunk(-1).compute()
+        # bounds of other dataset
         bounds = [
             other.x.values.min(),
             other.x.values.max(),
@@ -508,10 +515,11 @@ class Dataset:
         else:
             # copy dataset without cropping
             ds = self._ds.copy()
-        # calculate meshgrid of croppped model coordinates
+        # calculate meshgrid of cropped model coordinates
         gridx, gridy = np.meshgrid(ds.x.values, ds.y.values)
         # initialize valid mask for building tree
-        valid_mask = np.ones_like(gridx, dtype=bool)
+        valid_mask = np.zeros_like(gridx, dtype=bool)
+        tree = None
         # iterate over variables in dataset
         for i, v in enumerate(other.data_vars.keys()):
             # check for missing values
@@ -523,7 +531,7 @@ class Dataset:
             mask = ds[v].notnull().values
             # build tree if on the first iteration
             # or if the valid mask has changed
-            if (i == 0) | (mask != valid_mask).any():
+            if (tree is None) or (mask != valid_mask).any():
                 # get indices of valid points
                 indy, indx = np.nonzero(mask)
                 # reduce to valid original values
@@ -885,7 +893,7 @@ class Dataset:
             return self.crs.area_of_use.name.replace(".", "").lower()
 
     @property
-    def axis_units(self) -> dict:
+    def axis_units(self) -> str:
         """Axis information from the dataset CRS"""
         return self.crs.axis_info[0].unit_name
 

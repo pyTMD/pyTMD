@@ -17,7 +17,7 @@ It is currently supported under the NASA Cryospheric Sciences Program
     "pyTMD: Python-based tidal prediction software," 
     *Journal of Open Source Software*, 10(116), 8566 (2025).
     `doi: 10.21105/joss.08566 <https://doi.org/10.21105/joss.08566>`_
-    :download:`BibTeX <../_assets/Sutterley-2025.bib>`
+    :download:`BibTeX <./Sutterley-2025ko.bib>`
 
 .. _80NSSC22K0379: https://app.dimensions.ai/details/grant/grant.13212262
 .. _80NSSC21K0911: https://app.dimensions.ai/details/grant/grant.13210572
