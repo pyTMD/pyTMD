@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (03/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 03/2026: try multiple providers for fetching data
     Updated 12/2025: use URL class to build and operate on URLs
         add function to download from a zenodo article
         change default provider for test data to zenodo
@@ -254,7 +255,8 @@ def arguments():
         "-P",
         metavar="PROVIDER",
         type=str,
-        default="zenodo",
+        nargs="+",
+        default=("zenodo", "figshare"),
         choices=("figshare", "zenodo"),
         help="Data provider",
     )
@@ -285,12 +287,22 @@ def main():
     args, _ = parser.parse_known_args()
 
     # fetch test data
-    fetch_test_data(
-        directory=args.directory,
-        provider=args.provider,
-        timeout=args.timeout,
-        mode=args.mode,
-    )
+    for provider in args.provider:
+        # try to fetch data from provider
+        try:
+            fetch_test_data(
+                directory=args.directory,
+                provider=provider,
+                timeout=args.timeout,
+                mode=args.mode,
+            )
+        except Exception as exc:
+            # output error message and continue to next provider
+            logging.error(f"Error fetching data from {provider}: {exc}")
+            continue
+        else:
+            # break loop if successful
+            break
 
 
 # run main program

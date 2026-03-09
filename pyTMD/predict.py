@@ -201,6 +201,9 @@ def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         darr.real * arguments.f * arguments.theta.real
         - darr.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
+    # check if chunks are present
+    if tpred.chunks is not None:
+        tpred = tpred.chunk(-1).compute()
     # copy units attribute
     tpred.attrs["units"] = ds[constituents[0]].attrs.get("units", None)
     tpred.attrs["constituents"] = constituents
@@ -262,6 +265,9 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         tinfer += result
         if hasattr(result, "constituents"):
             constituents.extend(result.constituents)
+    # check if chunks are present
+    if hasattr(tinfer, "chunks") and tinfer.chunks is not None:
+        tinfer = tinfer.chunk(-1).compute()
     # update attributes for inferred constituents
     if hasattr(tinfer, "constituents"):
         tinfer.attrs["constituents"] = constituents
