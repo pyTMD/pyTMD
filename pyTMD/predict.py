@@ -265,6 +265,9 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
         tinfer += result
         if hasattr(result, "constituents"):
             constituents.extend(result.constituents)
+    # check if chunks are present
+    if hasattr(tinfer, "chunks") and tinfer.chunks is not None:
+        tinfer = tinfer.chunk(-1).compute()
     # update attributes for inferred constituents
     if hasattr(tinfer, "constituents"):
         tinfer.attrs["constituents"] = constituents

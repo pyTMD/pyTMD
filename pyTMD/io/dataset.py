@@ -894,7 +894,7 @@ class Dataset:
 
     @property
     def axis_units(self) -> str:
-        """Axis information from the dataset CRS"""
+        """Units of the coordinate axes from the dataset CRS"""
         return self.crs.axis_info[0].unit_name
 
     @property

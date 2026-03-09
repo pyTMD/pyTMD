@@ -241,7 +241,7 @@ def extrapolate(
     gridx, gridy = np.meshgrid(xs, ys)
     # find valid values
     if isinstance(zs, np.ma.MaskedArray):
-        indy, indx = np.nonzero(np.logical_not(zs.mask))
+        indy, indx = np.nonzero(np.logical_not(zs.mask) & np.isfinite(zs.data))
     else:
         indy, indx = np.nonzero(np.isfinite(zs))
     # reduce to valid original values
@@ -354,8 +354,13 @@ def _nearest_neighbors(
         return only neighbors within distance [km]
     fill_value: float, default None
         invalid value
-    dtype: np.dtype, default np.float64
+    dtype: np.dtype, default from input data
         output data type
+
+    Returns
+    -------
+    data: xr.DataArray
+        extrapolated data
     """
     # set default data type
     dtype = kwargs.get("dtype", flattened.dtype)
