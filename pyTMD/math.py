@@ -292,9 +292,9 @@ def legendre(
     # ignore divide by zero and invalid value warnings
     with np.errstate(divide="ignore", invalid="ignore"):
         dPlm = (l * x * Plm - (l + m) * Pm1) / u
-    # handle singularity at the poles for m == 1
+    # handle singularity at the poles (x = +/-1) for order 1 terms
     pole = -0.5 * np.power(x, l) * l * (l + 1) if m == 1 else 0.0
-    dPlm = np.where(np.abs(x) == 1.0, pole, dPlm)
+    dPlm = np.where(np.isclose(u, 0.0), pole, dPlm)
     # return the associated legendre functions
     return Plm, dPlm
 
