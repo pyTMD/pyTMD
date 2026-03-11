@@ -30,4 +30,6 @@ math
 
 .. autofunction:: pyTMD.math.legendre
 
+.. autofunction:: pyTMD.math._assoc_legendre
+
 .. autofunction:: pyTMD.math.sph_harm

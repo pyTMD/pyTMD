@@ -27,6 +27,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 03/2026: simplify structure by spliting up IERS corrections
         and adding wrapper functions where appropriate
+        set the maximum degree and order for the HW1995 catalog to 6
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -1151,7 +1152,7 @@ def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
     # degree dependent normalization (4-pi)
     dfactor = np.sqrt((2.0 * l + 1.0) / (4.0 * np.pi))
     # 2nd degree Legendre polynomials
-    Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m)
+    Plm = pyTMD.math._assoc_legendre(l, m, np.cos(theta))
     P20 = dfactor * Plm.real
 
     # calculate tilt factors for each constituent
@@ -2341,19 +2342,22 @@ def body_tide(
     zeta = xr.Dataset()
 
     # check if tide catalog includes planetary contributions
-    if catalog in (
-        "HW1995",
-        "T1987",
-    ):
-        # catalogs include planetary contributions
+    if catalog == "HW1995":
+        # catalog includes planetary contributions
+        # and harmonics up to degree and order 6
         include_planets = True
-        # current maximum degree supported for body tides
+        lmax = 6
+    elif catalog == "T1987":
+        # catalog includes planetary contributions
+        # and harmonics up to degree and order 4
+        include_planets = True
         lmax = 4
     else:
         # older catalogs without planetary contributions
+        # and harmonics up to degree and order 3
         include_planets = False
-        # maximum degree within older tide potential catalogs
         lmax = 3
+
     # parse tide potential table for constituents
     table = _tide_potential_table[catalog]
     CTE = pyTMD.constituents._parse_tide_potential_table(
