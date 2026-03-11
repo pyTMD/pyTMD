@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 03/2026: add radius and scalar product functions
+        calculate Legendre polynomials using Hofmann-Wellenhof (2006) eq. 1.67
     Updated 02/2026: add inverse functions for converting radians to arcseconds
     Updated 11/2025: legendre now returns both polynomials and derivatives
     Updated 09/2025: added degree 4 to legendre polynomials function
@@ -44,6 +45,7 @@ __all__ = [
     "aliasing",
     "legendre",
     "sph_harm",
+    "_assoc_legendre",
 ]
 
 
@@ -254,6 +256,9 @@ def legendre(
     for a particular degree and order
     :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
+    .. note::
+        The first derivative will have a singularity at the poles (-1 and 1)
+
     Parameters
     ----------
     l: int
@@ -272,71 +277,81 @@ def legendre(
     dPlm: np.ndarray
         first derivative of Legendre polynomials with respect to ``theta``
     """
-    # maximum degree and order
-    lmax = 4
     # verify values are integers
     l = np.int64(l)
     m = np.int64(m)
     # assert values
-    assert (l >= 0) and (l <= lmax), f"Degree must be between 0 and {lmax}"
     assert (m >= 0) and (m <= l), "Order must be between 0 and l"
+    # verify x is array
+    if isinstance(x, list):
+        x = np.atleast_1d(x)
+    # function 1.67 from Hofmann-Wellenhof (2006)
+    Plm = _assoc_legendre(l, m, x)
+    # if x is the cos of colatitude, u is the sine
+    u = np.sqrt(1.0 - x**2)
+    # calculate first derivative
+    # this will have a singularity at the poles
+    Pm1 = _assoc_legendre(l - 1, m, x)
+    dPlm = (l * x * Plm - (l + m) * Pm1) / u
+    # return the associated legendre functions
+    return Plm, dPlm
+
+
+def _assoc_legendre(
+    l: int,
+    m: int,
+    x: np.ndarray,
+):
+    """
+    Computes associated Legendre polynomials using equation 1.67
+    from :cite:t:`HofmannWellenhof:2006hy`
+
+    Parameters
+    ----------
+    l: int
+        degree of the Legendre polynomials
+    m: int
+        order of the Legendre polynomials (0 to ``l``)
+    x: np.ndarray
+        elements ranging from -1 to 1
+
+        Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
+
+    Returns
+    -------
+    Plm: np.ndarray
+        Legendre polynomials of degree ``l`` and order ``m``
+    """
+    # verify values are integers
+    l = np.int64(l)
+    m = np.int64(m)
+    # return 0 for invalid values
+    if m > l:
+        return 0.0
     # verify x is array
     if isinstance(x, list):
         x = np.atleast_1d(x)
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
-    # since tides only use low-degree harmonics:
-    # functions are hard coded rather than using a recursion relation
-    if (l == 0) and (m == 0):
-        Plm = 1.0
-        dPlm = 0.0
-    elif (l == 1) and (m == 0):
-        Plm = x
-        dPlm = -u
-    elif (l == 1) and (m == 1):
-        Plm = u
-        dPlm = x
-    elif (l == 2) and (m == 0):
-        Plm = 0.5 * (3.0 * x**2 - 1.0)
-        dPlm = -3.0 * u * x
-    elif (l == 2) and (m == 1):
-        Plm = 3.0 * x * u
-        dPlm = 3.0 * (1.0 - 2.0 * u**2)
-    elif (l == 2) and (m == 2):
-        Plm = 3.0 * u**2
-        dPlm = 6.0 * u * x
-    elif (l == 3) and (m == 0):
-        Plm = 0.5 * (5.0 * x**2 - 3.0) * x
-        dPlm = u * (1.5 - 7.5 * x**2)
-    elif (l == 3) and (m == 1):
-        Plm = 1.5 * (5.0 * x**2 - 1.0) * u
-        dPlm = -1.5 * x * (10.0 * u**2 - 5.0 * x**2 + 1.0)
-    elif (l == 3) and (m == 2):
-        Plm = 15.0 * x * u**2
-        dPlm = 15.0 * u * (3.0 * x**2 - 1.0)
-    elif (l == 3) and (m == 3):
-        Plm = 15.0 * u**3
-        dPlm = 45.0 * x * u**2
-    elif (l == 4) and (m == 0):
-        Plm = 0.125 * (35.0 * x**4 - 30.0 * x**2 + 3.0)
-        dPlm = -2.5 * (7.0 * x**2 - 3.0) * u * x
-    elif (l == 4) and (m == 1):
-        Plm = 2.5 * (7.0 * x**2 - 3.0) * u * x
-        dPlm = 2.5 * (28.0 * x**4 - 27.0 * x**2 + 3.0)
-    elif (l == 4) and (m == 2):
-        Plm = 7.5 * (7.0 * x**2 - 1.0) * u**2
-        dPlm = (105 * x**2 - 105 * u**2 - 15.0) * u * x
-    elif (l == 4) and (m == 3):
-        Plm = 105.0 * x * u**3
-        dPlm = (420.0 * x**3 - 105.0) * u**2
-    elif (l == 4) and (m == 4):
-        Plm = 105.0 * u**4
-        dPlm = 420.0 * x * u**3
+    # calculate un-normalized polynomials
+    # function 1.67 from Hofmann-Wellenhof (2006)
+    P = 0.0
+    r = int((l - m) // 2)
+    for k in range(r + 1):
+        P += (
+            np.power(-1.0, k)
+            * factorial(2.0 * l - 2.0 * k)
+            / factorial(k)
+            / factorial(l - k)
+            / factorial(l - m - 2.0 * k)
+            * np.power(x, l - m - 2.0 * k)
+        )
+    # calculate for degree l and order m
+    Plm = P * np.power(2.0, -l) * np.power(u, m)
     # apply Condon-Shortley phase
     Plm *= np.power(-1.0, m)
-    dPlm *= np.power(-1.0, m)
-    # return the associated legendre functions
-    return Plm, dPlm
+    # return the associated legendre polynomials
+    return Plm
 
 
 def sph_harm(

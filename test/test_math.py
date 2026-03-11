@@ -73,14 +73,16 @@ def test_aliasing():
     assert np.all(exp == test)
 
 @pytest.mark.parametrize("l", [1, 2, 3])
-def test_legendre(l, x=[-1.0, -0.9, -0.8]):
+def test_assoc_legendre(l, x=[-1.0, -0.9, -0.8]):
     """test the calculation of unnormalized Legendre polynomials
     """
     # calculate Legendre polynomials
     nx = len(x)
     obs = np.zeros((l+1, nx))
+    test = np.zeros((l+1, nx))
     for m in range(l+1):
-        obs[m,:], dobs = pyTMD.math.legendre(l, x, m=m)
+        obs[m,:], _ = pyTMD.math.legendre(l, x, m=m)
+        test[m,:] = pyTMD.math._assoc_legendre(l, m, x)
     # expected values for each spherical harmonic degree
     if (l == 1):
         expected = np.array([
@@ -102,6 +104,74 @@ def test_legendre(l, x=[-1.0, -0.9, -0.8]):
         ])
     # check with expected values
     assert np.allclose(obs, expected, atol=1e-05)
+    # check that the two methods give the same values
+    assert np.allclose(obs, test)
+
+@pytest.mark.parametrize("l", [1, 2, 3, 4])
+def test_legendre(l):
+    """test the calculation of unnormalized Legendre polynomials
+    """
+    # avoid singularities at the poles
+    lat = np.arange(-89, 90, 1)
+    th = np.radians(90.0 - lat)
+    # test values for x
+    x = np.cos(th)
+    u = np.sqrt(1.0 - x**2)
+    for m in range(l+1):
+        obs, dobs = pyTMD.math.legendre(l, x, m=m)
+        # since tides only use low-degree harmonics:
+        # functions are hard coded rather than using a recursion relation
+        if (l == 0) and (m == 0):
+            Plm = 1.0
+            dPlm = 0.0
+        elif (l == 1) and (m == 0):
+            Plm = x
+            dPlm = -u
+        elif (l == 1) and (m == 1):
+            Plm = u
+            dPlm = x
+        elif (l == 2) and (m == 0):
+            Plm = 0.5 * (3.0 * x**2 - 1.0)
+            dPlm = -3.0 * u * x
+        elif (l == 2) and (m == 1):
+            Plm = 3.0 * x * u
+            dPlm = 3.0 * (1.0 - 2.0 * u**2)
+        elif (l == 2) and (m == 2):
+            Plm = 3.0 * u**2
+            dPlm = 6.0 * u * x
+        elif (l == 3) and (m == 0):
+            Plm = 0.5 * (5.0 * x**2 - 3.0) * x
+            dPlm = u * (1.5 - 7.5 * x**2)
+        elif (l == 3) and (m == 1):
+            Plm = 1.5 * (5.0 * x**2 - 1.0) * u
+            dPlm = -1.5 * x * (10.0 * u**2 - 5.0 * x**2 + 1.0)
+        elif (l == 3) and (m == 2):
+            Plm = 15.0 * x * u**2
+            dPlm = 15.0 * u * (3.0 * x**2 - 1.0)
+        elif (l == 3) and (m == 3):
+            Plm = 15.0 * u**3
+            dPlm = 45.0 * x * u**2
+        elif (l == 4) and (m == 0):
+            Plm = 0.125 * (35.0 * x**4 - 30.0 * x**2 + 3.0)
+            dPlm = -2.5 * (7.0 * x**2 - 3.0) * u * x
+        elif (l == 4) and (m == 1):
+            Plm = 2.5 * (7.0 * x**2 - 3.0) * u * x
+            dPlm = 2.5 * (28.0 * x**4 - 27.0 * x**2 + 3.0)
+        elif (l == 4) and (m == 2):
+            Plm = 7.5 * (7.0 * x**2 - 1.0) * u**2
+            dPlm = (105 * x**2 - 105 * u**2 - 15.0) * u * x
+        elif (l == 4) and (m == 3):
+            Plm = 105.0 * x * u**3
+            dPlm = (420.0 * x**3 - 105.0) * u**2
+        elif (l == 4) and (m == 4):
+            Plm = 105.0 * u**4
+            dPlm = 420.0 * x * u**3
+        # apply Condon-Shortley phase
+        Plm *= np.power(-1.0, m)
+        dPlm *= np.power(-1.0, m)
+    # check with expected values
+    assert np.allclose(obs, Plm, atol=1e-05)
+    assert np.allclose(dobs, dPlm, atol=1e-05)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():
