@@ -292,7 +292,9 @@ def legendre(
     # calculate first derivative
     # this will have a singularity at the poles
     Pm1 = _assoc_legendre(l - 1, m, x)
-    dPlm = (l * x * Plm - (l + m) * Pm1) / u
+    # ignore divide by zero and invalid value warnings
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dPlm = (l * x * Plm - (l + m) * Pm1) / u
     # return the associated legendre functions
     return Plm, dPlm
 

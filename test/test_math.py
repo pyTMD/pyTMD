@@ -162,16 +162,16 @@ def test_legendre(l):
             dPlm = (105 * x**2 - 105 * u**2 - 15.0) * u * x
         elif (l == 4) and (m == 3):
             Plm = 105.0 * x * u**3
-            dPlm = (420.0 * x**3 - 105.0) * u**2
+            dPlm = (420.0 * x**2 - 105.0) * u**2
         elif (l == 4) and (m == 4):
             Plm = 105.0 * u**4
             dPlm = 420.0 * x * u**3
         # apply Condon-Shortley phase
         Plm *= np.power(-1.0, m)
         dPlm *= np.power(-1.0, m)
-    # check with expected values
-    assert np.allclose(obs, Plm, atol=1e-05)
-    assert np.allclose(dobs, dPlm, atol=1e-05)
+        # check with expected values
+        assert np.allclose(obs, Plm, atol=1e-05)
+        assert np.allclose(dobs, dPlm, atol=1e-05)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():
