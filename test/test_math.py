@@ -111,8 +111,8 @@ def test_assoc_legendre(l, x=[-1.0, -0.9, -0.8]):
 def test_legendre(l):
     """test the calculation of unnormalized Legendre polynomials
     """
-    # avoid singularities at the poles
-    lat = np.arange(-89, 90, 1)
+    # test over the range of latitudes
+    lat = np.arange(-90, 91, 1)
     th = np.radians(90.0 - lat)
     # test values for x
     x = np.cos(th)

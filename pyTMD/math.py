@@ -256,13 +256,10 @@ def legendre(
     for a particular degree and order
     :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
-    .. note::
-        The first derivative will have a singularity at the poles (-1 and 1)
-
     Parameters
     ----------
     l: int
-        degree of the Legendre polynomials (0 to 4)
+        degree of the Legendre polynomials
     x: np.ndarray
         elements ranging from -1 to 1
 
@@ -290,11 +287,14 @@ def legendre(
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
     # calculate first derivative
-    # this will have a singularity at the poles
+    # this will initially have a singularity at the poles
     Pm1 = _assoc_legendre(l - 1, m, x)
     # ignore divide by zero and invalid value warnings
     with np.errstate(divide="ignore", invalid="ignore"):
         dPlm = (l * x * Plm - (l + m) * Pm1) / u
+    # handle singularity at the poles for m == 1
+    pole = -0.5 * np.power(x, l) * l * (l + 1) if m == 1 else 0.0
+    dPlm = np.where(np.abs(x) == 1.0, pole, dPlm)
     # return the associated legendre functions
     return Plm, dPlm
 
@@ -370,7 +370,7 @@ def sph_harm(
     Parameters
     ----------
     l: int
-        degree of the spherical harmonics (0 to 4)
+        degree of the spherical harmonics
     theta: np.ndarray
         colatitude in radians
     phi: np.ndarray
