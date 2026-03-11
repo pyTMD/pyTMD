@@ -17,7 +17,7 @@ Global asymmetry in the tide potential can lead to a dependence on higher degree
 These terms are small compared to those of degree 2, but have been detected at both local and global scales :cite:p:`Ray:2020gn`.
 Both GNSS stations and superconducting gravimeters can be sensitive enough to detect the signals from these higher degree terms :cite:p:`Hartmann:1995jp,Petit:2010tp`.
 The formalism for computing solid Earth tides within the IERS Conventions include the component of deformation induced by the degree 3 terms :cite:p:`Petit:2010tp,Mathews:1997js`.
-Catalogs of tide potential, such as ``HW1995`` [see :ref:`tab-catalogs`], can include even higher degree terms, as well as the potentials induced by planetary motion :cite:p:`Hartmann:1995jp`. 
+Catalogs of tide potential, such as ``HW1995`` [see :ref:`tab-catalogs`], can include even higher degree terms, as well as the potentials related to planetary motion :cite:p:`Hartmann:1995jp`.
 
 .. plot:: ./background/sphharm34.py
     :show-source-link: False
