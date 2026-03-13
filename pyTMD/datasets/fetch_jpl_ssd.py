@@ -2,7 +2,7 @@
 """
 fetch_jpl_ssd.py
 Written by Tyler Sutterley (12/2025)
-Download planetary ephemeride kernels from the
+Download planetary ephemerides kernels from the
     JPL Solar System Dynamics server
 
 CALLING SEQUENCE:
@@ -43,7 +43,7 @@ def fetch_jpl_ssd(
     mode: oct = 0o775,
 ):
     """
-    Download `planetary ephemeride kernels`__ from the JPL Solar
+    Download `planetary ephemerides kernels`__ from the JPL Solar
     System Dynamics server
 
     .. __: https://ssd.jpl.nasa.gov/planets/eph_export.html
@@ -73,7 +73,7 @@ def fetch_jpl_ssd(
     url = ["https://ssd.jpl.nasa.gov", "ftp", "eph", "planets", "bsp", kernel]
     URL = pyTMD.utilities.URL.from_parts(url)
     # get kernel file from remote host
-    logger.info("Downloading JPL Planetary Ephemeride Kernel File")
+    logger.info("Downloading JPL planetary ephemerides kernel file")
     logger.info(URL)
     URL.get(local=local, timeout=timeout)
     # get last modified time from remote host
@@ -90,7 +90,7 @@ def fetch_jpl_ssd(
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Download planetary ephemeride kernels from the
+        description="""Download planetary ephemerides kernels from the
             JPL Solar System Dynamics server
             """,
         fromfile_prefix_chars="@",

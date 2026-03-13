@@ -189,7 +189,7 @@ def test_mean_obliquity():
     assert np.isclose(expected, mean_obliquity)
 
 def test_solar_ecef():
-    """Test solar ECEF coordinates with ephemeride predictions
+    """Test solar ECEF coordinates with ephemerides predictions
     """
     MJD = 55414.0
     # calculate approximate solar ephemerides
@@ -210,7 +210,7 @@ def test_solar_ecef():
     assert np.allclose(rad1, rad2, atol=1e9)
 
 def test_lunar_ecef():
-    """Test lunar ECEF coordinates with ephemeride predictions
+    """Test lunar ECEF coordinates with ephemerides predictions
     """
     MJD = 55414.0
     # calculate approximate lunar ephemerides

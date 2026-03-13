@@ -29,9 +29,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up pixi environment
-      uses: prefix-dev/setup-pixi@v0.9.1
+      uses: prefix-dev/setup-pixi@v0.9.4
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -39,7 +39,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         pixi run lint "--exit-zero --max-complexity=10 --max-line-length=127"
     - name: Checkout Matlab TMD Toolbox
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5
         path: TMD_Matlab_Toolbox
@@ -54,14 +54,14 @@ jobs:
       run: |
         pixi run coverage
     - name: Create coverage comment
-      uses: MishaKav/pytest-coverage-comment@main
+      uses: MishaKav/pytest-coverage-comment@v1
       with:
         pytest-xml-coverage-path: coverage.xml
         junitxml-path: pytest.xml
         unique-id-for-comment: ${{ matrix.os }}
         title: Coverage for Python on ${{ matrix.os }}
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: code-coverage-report-${{ matrix.os }}
         path: coverage.xml

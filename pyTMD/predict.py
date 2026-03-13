@@ -28,7 +28,7 @@ UPDATE HISTORY:
     Updated 03/2026: simplify structure by spliting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
-        clean up the ephemeride method of calculating solid earth tides
+        clean up the ephemerides method of calculating solid earth tides
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition

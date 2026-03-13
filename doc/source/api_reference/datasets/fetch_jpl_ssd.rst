@@ -2,7 +2,7 @@
 fetch_jpl_ssd
 =============
 
-- Download planetary ephemeride kernels from the JPL Solar System Dynamics server
+- Download planetary ephemerides kernels from the JPL Solar System Dynamics server
 
 `Source code`__
 
