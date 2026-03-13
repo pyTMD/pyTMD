@@ -60,6 +60,9 @@ jobs:
         junitxml-path: pytest.xml
         unique-id-for-comment: ${{ matrix.os }}
         title: Coverage for Python on ${{ matrix.os }}
+        hide-report: true
+        remove-links-to-files: true
+        remove-links-to-lines: true
     - name: Archive code coverage results
       uses: actions/upload-artifact@v6
       with:
