@@ -35,7 +35,7 @@ UPDATE HISTORY:
         make urs a keyword argument in CCDIS list and download functions
         add case for JPL kernel file download where local path is defined
     Updated 04/2023: using pathlib to define and expand paths
-        added function to download ephemeride files from JPL SSD server
+        added function to download ephemerides files from JPL SSD server
     Updated 03/2023: add basic variable typing to function inputs
     Updated 01/2023: updated SSL context to fix some deprecation warnings
     Updated 11/2022: added list program for IERS Bulletin-A https server

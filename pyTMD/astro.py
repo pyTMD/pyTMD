@@ -45,9 +45,9 @@ UPDATE HISTORY:
         added function with more phase angles of the sun and moon
         functions to calculate solar and lunar positions with ephemerides
         add jplephem documentation to Spacecraft and Planet Kernel segments
-        fix solar ephemeride function to include SSB to sun segment
+        fix solar ephemerides function to include SSB to sun segment
         use a higher resolution estimate of the Greenwich hour angle
-        use ITRS reference frame for high-resolution ephemeride calculations
+        use ITRS reference frame for high-resolution ephemerides calculations
     Updated 03/2023: add basic variable typing to function inputs
     Updated 10/2022: fix MEEUS solar perigee rate
     Updated 04/2022: updated docstrings to numpy documentation format

@@ -25,9 +25,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up pixi environment
-      uses: prefix-dev/setup-pixi@v0.9.1
+      uses: prefix-dev/setup-pixi@v0.9.4
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

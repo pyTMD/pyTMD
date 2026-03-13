@@ -28,6 +28,7 @@ UPDATE HISTORY:
     Updated 03/2026: simplify structure by spliting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
+        clean up the ephemerides method of calculating solid earth tides
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -1488,10 +1489,13 @@ def solid_earth_tide(
     assert tide_system.lower() in ("tide_free", "mean_tide")
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
-    # scalar product of input coordinates with sun/moon vectors
+    # radius of the point on the Earth's surface
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    sinphi = XYZ["Z"] / radius
+    # distance between the Earth and the sun/moon
     solar_radius = pyTMD.math.radius(SXYZ["X"], SXYZ["Y"], SXYZ["Z"])
     lunar_radius = pyTMD.math.radius(LXYZ["X"], LXYZ["Y"], LXYZ["Z"])
+    # cosine of angles between vectors of the point and the sun/moon
     solar_scalar = pyTMD.math.scalar_product(
         XYZ["X"], XYZ["Y"], XYZ["Z"], SXYZ["X"], SXYZ["Y"], SXYZ["Z"]
     ) / (radius * solar_radius)
@@ -1499,55 +1503,52 @@ def solid_earth_tide(
         XYZ["X"], XYZ["Y"], XYZ["Z"], LXYZ["X"], LXYZ["Y"], LXYZ["Z"]
     ) / (radius * lunar_radius)
     # compute new h2 and l2 (Mathews et al., 1997)
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
-    h2 = kwargs["h2"] - 0.0006 * (1.0 - 3.0 / 2.0 * cosphi**2)
-    l2 = kwargs["l2"] + 0.0002 * (1.0 - 3.0 / 2.0 * cosphi**2)
-    # compute P2 terms
-    P2_solar = 3.0 * (h2 / 2.0 - l2) * solar_scalar**2 - h2 / 2.0
-    P2_lunar = 3.0 * (h2 / 2.0 - l2) * lunar_scalar**2 - h2 / 2.0
-    # compute P3 terms
-    P3_solar = (
-        5.0 / 2.0 * (kwargs["h3"] - 3.0 * kwargs["l3"]) * solar_scalar**3
-        + 3.0 / 2.0 * (kwargs["l3"] - kwargs["h3"]) * solar_scalar
-    )
-    P3_lunar = (
-        5.0 / 2.0 * (kwargs["h3"] - 3.0 * kwargs["l3"]) * lunar_scalar**3
-        + 3.0 / 2.0 * (kwargs["l3"] - kwargs["h3"]) * lunar_scalar
-    )
-    # compute terms in direction of sun/moon vectors
-    X2_solar = 3.0 * l2 * solar_scalar
-    X2_lunar = 3.0 * l2 * lunar_scalar
-    X3_solar = 3.0 * kwargs["l3"] / 2.0 * (5.0 * solar_scalar**2 - 1.0)
-    X3_lunar = 3.0 * kwargs["l3"] / 2.0 * (5.0 * lunar_scalar**2 - 1.0)
+    # from equations 5 and 6
+    h2 = kwargs["h2"] - 0.0006 * (1.5 * sinphi**2 - 0.5)
+    l2 = kwargs["l2"] + 0.0002 * (1.5 * sinphi**2 - 0.5)
+    # compute degree-2 terms (Mathews equation 9)
+    P2h_solar = 0.5 * h2 * (3.0 * solar_scalar**2 - 1.0)
+    P2l_solar = 3.0 * l2 * solar_scalar
+    P2h_lunar = 0.5 * h2 * (3.0 * lunar_scalar**2 - 1.0)
+    P2l_lunar = 3.0 * l2 * lunar_scalar
+    # get degree-3 Love and Shida numbers
+    h3 = kwargs.get("h3")
+    l3 = kwargs.get("l3")
+    # compute degree-3 terms (Mathews equation 12)
+    P3h_solar = 0.5 * h3 * solar_scalar * (5.0 * solar_scalar**2 - 3.0)
+    P3l_solar = 0.5 * l3 * (15.0 * solar_scalar**2 - 3.0)
+    P3h_lunar = 0.5 * h3 * lunar_scalar * (5.0 * lunar_scalar**2 - 3.0)
+    P3l_lunar = 0.5 * l3 * (15.0 * lunar_scalar**2 - 3.0)
     # factors for sun and moon using IAU estimates of mass ratios
-    F2_solar = (
-        kwargs["mass_ratio_solar"] * a_axis * (a_axis / solar_radius) ** 3
-    )
-    F2_lunar = (
-        kwargs["mass_ratio_lunar"] * a_axis * (a_axis / lunar_radius) ** 3
-    )
-    F3_solar = (
-        kwargs["mass_ratio_solar"] * a_axis * (a_axis / solar_radius) ** 4
-    )
-    F3_lunar = (
-        kwargs["mass_ratio_lunar"] * a_axis * (a_axis / lunar_radius) ** 4
-    )
+    F2_solar = kwargs["mass_ratio_solar"] * a_axis**4 / solar_radius**3
+    F2_lunar = kwargs["mass_ratio_lunar"] * a_axis**4 / lunar_radius**3
+    F3_solar = F2_solar * (a_axis / solar_radius)
+    F3_lunar = F2_lunar * (a_axis / lunar_radius)
     # compute total displacement (Mathews et al. 1997)
+    # from the tide-generating potentials
     dxt = xr.Dataset()
     for d in ("X", "Y", "Z"):
+        # unit vectors for dimension
+        unit_vector = XYZ[d] / radius
+        solar_unit_vector = SXYZ[d] / solar_radius
+        lunar_unit_vector = LXYZ[d] / lunar_radius
         # degree 2 solar and lunar terms
         S2 = F2_solar * (
-            X2_solar * SXYZ[d] / solar_radius + P2_solar * XYZ[d] / radius
+            (P2h_solar - P2l_solar * solar_scalar) * unit_vector
+            + P2l_solar * solar_unit_vector
         )
         L2 = F2_lunar * (
-            X2_lunar * LXYZ[d] / lunar_radius + P2_lunar * XYZ[d] / radius
+            (P2h_lunar - P2l_lunar * lunar_scalar) * unit_vector
+            + P2l_lunar * lunar_unit_vector
         )
         # degree 3 solar and lunar terms
         S3 = F3_solar * (
-            X3_solar * SXYZ[d] / solar_radius + P3_solar * XYZ[d] / radius
+            (P3h_solar - P3l_solar * solar_scalar) * unit_vector
+            + P3l_solar * solar_unit_vector
         )
         L3 = F3_lunar * (
-            X3_lunar * LXYZ[d] / lunar_radius + P3_lunar * XYZ[d] / radius
+            (P3h_lunar - P3l_lunar * lunar_scalar) * unit_vector
+            + P3l_lunar * lunar_unit_vector
         )
         # sum degree 2 and degree 3 displacements
         dxt[d] = S2 + L2 + S3 + L3
@@ -1625,14 +1626,14 @@ def _out_of_phase_diurnal(
     dl2: float, default -0.0007
         Shida number correction for the diurnal band
     """
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     cos2phi = cosphi**2 - sinphi**2
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
-    # Compute the normalized position vector of the Sun/Moon
+    # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets
     DR = (
@@ -1697,7 +1698,7 @@ def _out_of_phase_semidiurnal(
     dl2: float, default -0.0007
         Shida number correction for the semi-diurnal band
     """
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
@@ -1705,7 +1706,7 @@ def _out_of_phase_semidiurnal(
     cosla = XYZ["X"] / cosphi / radius
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
-    # Compute the normalized position vector of the Sun/Moon
+    # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets
     DR = (
@@ -1808,13 +1809,13 @@ def _latitude_dependence_diurnal(
     L1: float, default 0.0012
          Love/Shida number correction for the diurnal band
     """
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
-    # Compute the normalized position vector of the Sun/Moon
+    # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets for the diurnal band
     DN = (
@@ -1865,7 +1866,7 @@ def _latitude_dependence_semidiurnal(
     L1: float, default 0.0024
          Love/Shida number correction for the semi-diurnal band
     """
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
@@ -1873,7 +1874,7 @@ def _latitude_dependence_semidiurnal(
     cosla = XYZ["X"] / cosphi / radius
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
-    # Compute the normalized position vector of the Sun/Moon
+    # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # calculate offsets for the semi-diurnal band
     DN = (
@@ -2017,7 +2018,7 @@ def _frequency_dependence_diurnal(
         ),
         coords=dict(time=np.atleast_1d(MJD)),
     )
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
@@ -2125,7 +2126,7 @@ def _frequency_dependence_long_period(
         ),
         coords=dict(time=np.atleast_1d(MJD)),
     )
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
@@ -2189,7 +2190,7 @@ def _free_to_mean(
     H0: float, default -0.31460
         Mean amplitude of the permanent tide (meters)
     """
-    # Compute the normalized position vector of coordinates
+    # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
