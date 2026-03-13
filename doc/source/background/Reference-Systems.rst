@@ -39,12 +39,24 @@ The transformation from ellipsoidal coordinates of a point in space to Cartesian
     :label: 2.4
     :name: eq:2.4
 
-    e = 2f - f^2
+    e^2 = 2f - f^2
 
 where :math:`N` is the radius of curvature in the prime vertical [:ref:`Equation 2.3 <eq:2.3>`], :math:`e` is the ellipsoidal eccentricity [:ref:`Equation 2.4 <eq:2.4>`], :math:`a` is the semi-major axis of the ellipsoid, and :math:`f` is the ellipsoidal flattening :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`.
 Ellipsoid definitions typically specify the semi-major axis (:math:`a`) and flattening (:math:`f`), and datum definitions additionally include the coordinate system origin :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`.
 In general, objects move with respect to the coordinate system, and the coordinate system itself moves and rotates in space :cite:p:`Urban:2013vl`.
 Coordinate system definitions, such as the International Terrestrial Reference Frame (ITRF), will often include a time component to account for these changes.
+
+Geocentric Coordinates
+----------------------
+
+Similar to ECEF cartesian coordinates, geocentric coordinates are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
+Geocentric coordinates are used to estimate :ref:`fig-sphharm` coefficients, and for performing coordinate system rotations.
+Geocentric longitudes are identical to geodetic longitudes, but geocentric latitudes can differ from geodetic latitudes by approximately 0.2 degrees.
+
+.. plot:: ./background/geocentric-latitude.py
+    :show-source-link: False
+    :caption: Difference between Geodetic and Geocentric Latitude
+    :align: center
 
 Celestial Reference Systems
 ---------------------------
