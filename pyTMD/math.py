@@ -29,7 +29,6 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import numpy as np
-import xarray as xr
 from scipy.special import factorial
 
 __all__ = [
@@ -58,7 +57,7 @@ def asec2rad(
     Parameters
     ----------
     x: float or np.ndarray
-        Input angle in arcseconds
+        Input angle (arcseconds)
     """
     return np.radians(x / 3600.0)
 
@@ -72,7 +71,7 @@ def masec2rad(
     Parameters
     ----------
     x: float or np.ndarray
-        Input angle in microarcseconds
+        Input angle (microarcseconds)
     """
     return np.radians(x / 3.6e9)
 
@@ -86,7 +85,7 @@ def rad2asec(
     Parameters
     ----------
     x: float or np.ndarray
-        Input angle in radians
+        Input angle (radians)
     """
     return 3600.0 * np.degrees(x)
 
@@ -100,7 +99,7 @@ def rad2masec(
     Parameters
     ----------
     x: float or np.ndarray
-        Input angle in radians
+        Input angle (radians)
     """
     return 3.6e9 * np.degrees(x)
 
@@ -116,7 +115,7 @@ def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
     coefficients: list or np.ndarray
         leading coefficient of polynomials of increasing order
     t: np.ndarray
-        delta time in units for a given astronomical longitudes calculation
+        time for a given astronomical longitudes calculation
     """
     # convert time to array if importing a single value
     t = np.atleast_1d(t)
@@ -164,7 +163,7 @@ def rotate(theta: float | np.ndarray, axis: str = "x"):
     Parameters
     ----------
     theta: float or np.ndarray
-        Angle of rotation in radians
+        Angle of rotation (radians)
     axis: str, default 'x'
         Axis of rotation (``'x'``, ``'y'``, or ``'z'``)
     """
@@ -251,7 +250,7 @@ def legendre(
     x: np.ndarray,
     m: int = 0,
 ):
-    """
+    r"""
     Computes associated Legendre functions and their first-derivatives
     for a particular degree and order
     :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
@@ -263,16 +262,18 @@ def legendre(
     x: np.ndarray
         elements ranging from -1 to 1
 
-        Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
+        Typically :math:`\cos(\theta)`, where :math:`\theta`
+        is the colatitude
     m: int, default 0
-        order of the Legendre polynomials (0 to ``l``)
+        order of the Legendre polynomials (:math:`0` to :math:`l`)
 
     Returns
     -------
     Plm: np.ndarray
-        Legendre polynomials of degree ``l`` and order ``m``
+        Legendre polynomials of degree :math:`l` and order :math:`m`
     dPlm: np.ndarray
-        first derivative of Legendre polynomials with respect to ``theta``
+        first derivative of spherical harmonics with respect to
+        :math:`\theta`
     """
     # verify values are integers
     l = np.int64(l)
@@ -296,6 +297,7 @@ def legendre(
     pole = -0.5 * np.power(x, l) * l * (l + 1) if m == 1 else 0.0
     dPlm = np.where(np.isclose(u, 0.0), pole, dPlm)
     # return the associated legendre functions
+    # and their first derivatives with respect to theta
     return Plm, dPlm
 
 
@@ -304,7 +306,7 @@ def _assoc_legendre(
     m: int,
     x: np.ndarray,
 ):
-    """
+    r"""
     Computes associated Legendre polynomials using equation 1.67
     from :cite:t:`HofmannWellenhof:2006hy`
 
@@ -313,16 +315,17 @@ def _assoc_legendre(
     l: int
         degree of the Legendre polynomials
     m: int
-        order of the Legendre polynomials (0 to ``l``)
+        order of the Legendre polynomials (:math:`0` to :math:`l`)
     x: np.ndarray
         elements ranging from -1 to 1
 
-        Typically ``cos(theta)``, where ``theta`` is the colatitude in radians
+        Typically :math:`\cos(\theta)`, where :math:`\theta`
+        is the colatitude
 
     Returns
     -------
     Plm: np.ndarray
-        Legendre polynomials of degree ``l`` and order ``m``
+        Legendre polynomials of degree :math:`l` and order :math:`m`
     """
     # verify values are integers
     l = np.int64(l)
@@ -363,7 +366,7 @@ def sph_harm(
     m: int = 0,
     phase: float = 0.0,
 ):
-    """
+    r"""
     Computes the spherical harmonics for a particular degree
     and order :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
@@ -372,20 +375,21 @@ def sph_harm(
     l: int
         degree of the spherical harmonics
     theta: np.ndarray
-        colatitude in radians
+        colatitude (radians)
     phi: np.ndarray
-        longitude in radians
+        longitude (radians)
     m: int, default 0
-        order of the spherical harmonics (0 to ``l``)
+        order of the spherical harmonics (:math:`0` to :math:`l`)
     phase: float, default 0.0
-        phase shift in radians
+        phase shift (radians)
 
     Returns
     -------
     Ylm: np.ndarray
-        complex spherical harmonics of degree ``l`` and order ``m``
+        complex spherical harmonics of degree :math:`l` and order :math:`m`
     dYlm: np.ndarray
-        first derivative of spherical harmonics with respect to ``theta``
+        first derivative of spherical harmonics with respect to
+        :math:`\theta`
     """
     # calculate associated Legendre functions and derivatives
     Plm, dPlm = legendre(l, np.cos(theta), m=m)

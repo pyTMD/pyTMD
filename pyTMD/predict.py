@@ -29,6 +29,7 @@ UPDATE HISTORY:
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
         clean up the ephemerides method of calculating solid earth tides
+        calculate the tidal generating forces following Tamura (1987)
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -133,6 +134,7 @@ __all__ = [
     "_frequency_dependence_long_period",
     "_free_to_mean",
     "body_tide",
+    "generating_force",
     "earth_orientation",
     "length_of_day",
 ]
@@ -1209,7 +1211,7 @@ def load_pole_tide(
     l2: float = 0.0836,
     convention: str = "2018",
 ):
-    """
+    r"""
     Estimate load pole tide displacements in Cartesian coordinates
     :cite:p:`Petit:2010tp`
 
@@ -1222,7 +1224,7 @@ def load_pole_tide(
     deltat: float or np.ndarray, default 0.0
         time correction for converting to Ephemeris Time (days)
     gamma_0: float, default 9.80665
-        Normal gravity (m/s^2)
+        Normal gravity (m s\ :sup:`-2`)
     omega: float, default 7.2921151467e-5
         Earth's rotation rate (radians/second)
     h2: float, default 0.6207
@@ -1339,7 +1341,7 @@ def ocean_pole_tide(
     g2: complex = 0.6870 + 0.0036j,
     convention: str = "2018",
 ):
-    """
+    r"""
     Estimate ocean pole tide displacements in Cartesian coordinates
     :cite:p:`Desai:2002ev,Desai:2015jr,Petit:2010tp`
 
@@ -1354,13 +1356,13 @@ def ocean_pole_tide(
     a_axis: float, default 6378136.3
         Semi-major axis of the Earth (meters)
     gamma_0: float, default 9.780325
-        Normal gravity (m/s^2)
+        Normal gravity (m s\ :sup:`-2`)
     GM: float, default 3.986004418e14
-        Earth's gravitational constant [m^3/s^2]
+        Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
     omega: float, default 7.2921151467e-5
         Earth's rotation rate (radians/second)
     rho_w: float, default 1025.0
-        Density of sea water [kg/m^3]
+        Density of sea water  (kg m\ :sup:`-3`)
     g2: complex, default 0.6870 + 0.0036j
         Degree-2 Love number differential (1 + k2 - h2)
     convention: str, default '2018'
@@ -1401,7 +1403,7 @@ def ocean_pole_tide(
         coords=dict(time=np.atleast_1d(MJD)),
     )
 
-    # universal gravitational constant [N*m^2/kg^2]
+    # universal gravitational constant (N*m^2 kg^-2)
     G = 6.67430e-11
     # pole tide displacement factors
     Hp = np.sqrt(8.0 * np.pi / 15.0) * (omega**2 * a_axis**4) / GM
@@ -1458,6 +1460,8 @@ def solid_earth_tide(
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
+    lmax: int, default 3
+        maximum degree of spherical harmonic expansion
     h2: float, default 0.6078
         Degree-2 Love number of vertical displacement
     l2: float, default 0.0847
@@ -1477,11 +1481,15 @@ def solid_earth_tide(
         Solid Earth tide (meters)
     """
     # set default keyword arguments
-    # nominal Love and Shida numbers for degrees 2 and 3
+    # maximum degree of spherical harmonic expansion
+    kwargs.setdefault("lmax", 3)
+    # nominal Love and Shida numbers for degrees 2 through 4
     kwargs.setdefault("h2", 0.6078)
     kwargs.setdefault("l2", 0.0847)
     kwargs.setdefault("h3", 0.292)
     kwargs.setdefault("l3", 0.015)
+    kwargs.setdefault("h4", 0.18)
+    kwargs.setdefault("l4", 0.014)
     # mass ratios between earth and sun/moon
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
@@ -1502,56 +1510,60 @@ def solid_earth_tide(
     lunar_scalar = pyTMD.math.scalar_product(
         XYZ["X"], XYZ["Y"], XYZ["Z"], LXYZ["X"], LXYZ["Y"], LXYZ["Z"]
     ) / (radius * lunar_radius)
+    # unit vectors for dimensions
+    unit_vector = XYZ / radius
+    solar_unit_vector = SXYZ / solar_radius
+    lunar_unit_vector = LXYZ / lunar_radius
     # compute new h2 and l2 (Mathews et al., 1997)
     # from equations 5 and 6
     h2 = kwargs["h2"] - 0.0006 * (1.5 * sinphi**2 - 0.5)
     l2 = kwargs["l2"] + 0.0002 * (1.5 * sinphi**2 - 0.5)
-    # compute degree-2 terms (Mathews equation 9)
-    P2h_solar = 0.5 * h2 * (3.0 * solar_scalar**2 - 1.0)
-    P2l_solar = 3.0 * l2 * solar_scalar
-    P2h_lunar = 0.5 * h2 * (3.0 * lunar_scalar**2 - 1.0)
-    P2l_lunar = 3.0 * l2 * lunar_scalar
-    # get degree-3 Love and Shida numbers
-    h3 = kwargs.get("h3")
-    l3 = kwargs.get("l3")
-    # compute degree-3 terms (Mathews equation 12)
-    P3h_solar = 0.5 * h3 * solar_scalar * (5.0 * solar_scalar**2 - 3.0)
-    P3l_solar = 0.5 * l3 * (15.0 * solar_scalar**2 - 3.0)
-    P3h_lunar = 0.5 * h3 * lunar_scalar * (5.0 * lunar_scalar**2 - 3.0)
-    P3l_lunar = 0.5 * l3 * (15.0 * lunar_scalar**2 - 3.0)
     # factors for sun and moon using IAU estimates of mass ratios
-    F2_solar = kwargs["mass_ratio_solar"] * a_axis**4 / solar_radius**3
-    F2_lunar = kwargs["mass_ratio_lunar"] * a_axis**4 / lunar_radius**3
-    F3_solar = F2_solar * (a_axis / solar_radius)
-    F3_lunar = F2_lunar * (a_axis / lunar_radius)
-    # compute total displacement (Mathews et al. 1997)
-    # from the tide-generating potentials
+    K_solar = kwargs["mass_ratio_solar"] * a_axis**3 / solar_radius**2
+    K_lunar = kwargs["mass_ratio_lunar"] * a_axis**3 / lunar_radius**2
+    # factors for degree 2
+    F2_solar = K_solar * (a_axis / solar_radius)
+    F2_lunar = K_lunar * (a_axis / lunar_radius)
+    # allocate for output displacements
     dxt = xr.Dataset()
     for d in ("X", "Y", "Z"):
-        # unit vectors for dimension
-        unit_vector = XYZ[d] / radius
-        solar_unit_vector = SXYZ[d] / solar_radius
-        lunar_unit_vector = LXYZ[d] / lunar_radius
-        # degree 2 solar and lunar terms
-        S2 = F2_solar * (
-            (P2h_solar - P2l_solar * solar_scalar) * unit_vector
-            + P2l_solar * solar_unit_vector
+        dxt[d] = xr.zeros_like(solar_scalar)
+    # compute total displacement (Mathews et al. 1997)
+    # from the tide-generating potentials
+    # for each spherical harmonic degree
+    for l in range(2, kwargs["lmax"] + 1):
+        # use calculated love numbers or nominal
+        if l == 2:
+            hl = np.copy(h2)
+            ll = np.copy(l2)
+        else:
+            # use nominal Love numbers for all other degrees
+            hl = kwargs.get(f"h{l}", 0)
+            ll = kwargs.get(f"l{l}", 0)
+        # update gravitational parameters for degree
+        K_solar *= a_axis / solar_radius
+        K_lunar *= a_axis / lunar_radius
+        # legendre polynomial for degree
+        Pl_solar, dPl_solar = pyTMD.math.legendre(l, solar_scalar)
+        Pl_lunar, dPl_lunar = pyTMD.math.legendre(l, lunar_scalar)
+        # divide differential by u
+        # ignore divide by zero and invalid value warnings
+        with np.errstate(divide="ignore", invalid="ignore"):
+            dPl_solar /= np.sqrt(1 - solar_scalar**2)
+            dPl_lunar /= np.sqrt(1 - lunar_scalar**2)
+        # calculate solar and lunar terms for degree
+        S = K_solar * (
+            hl * Pl_solar * unit_vector
+            + ll * dPl_solar * solar_scalar * unit_vector
+            - ll * dPl_solar * solar_unit_vector
         )
-        L2 = F2_lunar * (
-            (P2h_lunar - P2l_lunar * lunar_scalar) * unit_vector
-            + P2l_lunar * lunar_unit_vector
+        L = K_lunar * (
+            hl * Pl_lunar * unit_vector
+            + ll * dPl_lunar * lunar_scalar * unit_vector
+            - ll * dPl_lunar * lunar_unit_vector
         )
-        # degree 3 solar and lunar terms
-        S3 = F3_solar * (
-            (P3h_solar - P3l_solar * solar_scalar) * unit_vector
-            + P3l_solar * solar_unit_vector
-        )
-        L3 = F3_lunar * (
-            (P3h_lunar - P3l_lunar * lunar_scalar) * unit_vector
-            + P3l_lunar * lunar_unit_vector
-        )
-        # sum degree 2 and degree 3 displacements
-        dxt[d] = S2 + L2 + S3 + L3
+        # add displacements for degree
+        dxt += S + L
     # corrections for out-of-phase portions of the Love and Shida numbers
     dxt += _out_of_phase(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
     # corrections for the latitudinal dependence (diurnal and semi-diurnal)
@@ -1807,7 +1819,7 @@ def _latitude_dependence_diurnal(
     F2: np.ndarray
         Factors for the sun or moon
     L1: float, default 0.0012
-         Love/Shida number correction for the diurnal band
+        Love/Shida number correction for the diurnal band
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -1864,7 +1876,7 @@ def _latitude_dependence_semidiurnal(
     F2: np.ndarray
         Factors for the sun or moon
     L1: float, default 0.0024
-         Love/Shida number correction for the semi-diurnal band
+        Love/Shida number correction for the semi-diurnal band
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -2270,6 +2282,8 @@ def body_tide(
             - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
             - ``'T1987'``: :cite:t:`Tamura:1987tp`
             - ``'W1990'``: Woodworth updates to ``'CTE1973'``
+    lmax: int, default 3
+        maximum degree of spherical harmonic expansion
     include_planets: bool, default False
         Include tide potentials from planetary bodies
     h2: float or None, default None
@@ -2291,6 +2305,9 @@ def body_tide(
         Solid Earth tide (meters)
     """
     # set default keyword arguments
+    # maximum degree of spherical harmonic expansion
+    kwargs.setdefault("lmax", 6)
+    # include contributions from planets
     kwargs.setdefault("include_planets", False)
     # nominal Love and Shida numbers for degrees 2, 3, and 4
     kwargs.setdefault("h2", None)
@@ -2347,17 +2364,17 @@ def body_tide(
         # catalog includes planetary contributions
         # and harmonics up to degree and order 6
         include_planets = True
-        lmax = 6
+        lmax = np.minimum(6, kwargs["lmax"])
     elif catalog == "T1987":
         # catalog includes planetary contributions
         # and harmonics up to degree and order 4
         include_planets = True
-        lmax = 4
+        lmax = np.minimum(4, kwargs["lmax"])
     else:
         # older catalogs without planetary contributions
         # and harmonics up to degree and order 3
         include_planets = False
-        lmax = 3
+        lmax = np.minimum(3, kwargs["lmax"])
 
     # parse tide potential table for constituents
     table = _tide_potential_table[catalog]
@@ -2381,14 +2398,13 @@ def body_tide(
     # initialize phase array
     phase = xr.DataArray(np.zeros_like(MJD), dims=dict(time=np.atleast_1d(MJD)))
     # initialize output body tides
-    zeta["N"] = xr.zeros_like(th * phase)
-    zeta["E"] = xr.zeros_like(th * phase)
-    zeta["R"] = xr.zeros_like(th * phase)
+    for key in ["R", "N", "E"]:
+        zeta[key] = xr.zeros_like(th * phase)
     # for each line in the table
     for i, line in enumerate(CTE):
         # spherical harmonic degree
         l = line["l"]
-        # currently only calculating for low-degree harmonics
+        # skip if degree is above the specified expansion limit
         if l > lmax:
             continue
         # spherical harmonic dependence (order)
@@ -2466,6 +2482,199 @@ def body_tide(
     return zeta
 
 
+def generating_force(
+    t: np.ndarray,
+    XYZ: xr.Dataset,
+    deltat: float | np.ndarray = 0.0,
+    **kwargs,
+):
+    r"""
+    Compute the tide-generating force due to the gravitational
+    attraction of the moon and sun :cite:p:`Tamura:1982wx,Tamura:1987tp`
+
+    Parameters
+    ----------
+    t: np.ndarray
+        days relative to 1992-01-01T00:00:00
+    XYZ: xr.Dataset
+        Dataset with cartesian coordinates
+    deltat: float or np.ndarray, default 0.0
+        time correction for converting to Ephemeris Time (days)
+    method: str, default 'Meeus'
+        Method for calculating solar and lunar positions
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+    lmax: int, default 4
+        maximum degree of spherical harmonic expansion
+    AU: float, default 149597870700.0
+        distance of 1 Astronomical Unit (meters)
+    GM: float, default 3.986004418e14
+        Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
+    mass_ratio_solar: float, default 332946.0482
+        Mass ratio between Earth and Sun
+    mass_ratio_lunar: float, default 0.0123000371
+        Mass ratio between Earth and Moon
+
+    Returns
+    -------
+    F: np.ndarray
+        Tide-generating force (m s\ :sup:`-2`)
+    """
+    # set default keyword arguments
+    # maximum degree of spherical harmonic expansion
+    kwargs.setdefault("lmax", 4)
+    # method for calculating solar and lunar positions
+    kwargs.setdefault("method", "Meeus")
+    # distance of 1 Astronomical Unit (meters)
+    kwargs.setdefault("AU", 149597870700.0)
+    # gravitational constants (m^3 s^-2)
+    kwargs.setdefault("GM", 3.986004418e14)
+    # mass ratios between earth and sun/moon
+    kwargs.setdefault("mass_ratio_solar", 332946.0482)
+    kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
+
+    # Julian centuries from J2000.0 (UT1)
+    T = xr.DataArray(
+        (t + _mjd_tide - _mjd_j2000) / _century,
+        dims=("time"),
+        coords=dict(time=(t + _mjd_tide)),
+    )
+    # convert dates to Modified Julian Days in Ephemeris time
+    MJD = (T * _century) + _mjd_j2000 + deltat
+
+    # geocentric colatitude and longitude (radians)
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+    # Earth's radius at the given latitude (meters)
+    rad_e = pyTMD.math.radius(XYZ.X, XYZ.Y, XYZ.Z)
+
+    # obliquity of the ecliptic
+    epsilon = pyTMD.astro.mean_obliquity(MJD)
+    # correct obliquity for nutation
+    if kwargs["method"].lower() in ("kubo", "meeus"):
+        # simple correction for principal nutation (radians)
+        omega = np.radians(1934.136 * T + 235.0)
+        epsilon += np.radians(0.00256 * np.cos(omega))
+    else:
+        # calculate nutation rotation angles using IERS tables
+        dpsi, deps = pyTMD.astro._nutation_angles(T)
+        epsilon += deps
+
+    # get phase angles and distances for the sun
+    solar_latitude = xr.DataArray(
+        pyTMD.astro.solar_latitude(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+    solar_longitude = xr.DataArray(
+        pyTMD.astro.solar_longitude(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+    solar_radius = xr.DataArray(
+        pyTMD.astro.solar_distance(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+    # get phase angles and distances for the moon
+    lunar_latitude = xr.DataArray(
+        pyTMD.astro.lunar_latitude(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+    lunar_longitude = xr.DataArray(
+        pyTMD.astro.lunar_longitude(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+    lunar_radius = xr.DataArray(
+        pyTMD.astro.lunar_distance(MJD, **kwargs), dims=T.dims, coords=T.coords
+    )
+
+    # calculate the right ascensions and declinations of the sun
+    # Meeus equations 25.6 and 25.7
+    solar_right_ascension = np.arctan2(
+        np.cos(epsilon) * np.sin(solar_longitude) * np.cos(solar_latitude)
+        - np.sin(epsilon) * np.sin(solar_latitude),
+        np.cos(solar_longitude) * np.cos(solar_latitude),
+    )
+    solar_declination = np.arcsin(
+        np.sin(epsilon) * np.sin(solar_longitude) * np.cos(solar_latitude)
+        + np.cos(epsilon) * np.sin(solar_latitude)
+    )
+    # calculate the right ascensions and declinations of the moon
+    lunar_right_ascension = np.arctan2(
+        np.cos(epsilon) * np.sin(lunar_longitude) * np.cos(lunar_latitude)
+        - np.sin(epsilon) * np.sin(lunar_latitude),
+        np.cos(lunar_longitude) * np.cos(lunar_latitude),
+    )
+    lunar_declination = np.arcsin(
+        np.sin(epsilon) * np.sin(lunar_longitude) * np.cos(lunar_latitude)
+        + np.cos(epsilon) * np.sin(lunar_latitude)
+    )
+    # local hour angles in radians
+    gast = 2.0 * np.pi * pyTMD.astro.gast(T)
+    local_hour_angle = gast + phi
+    solar_hour_angle = local_hour_angle - solar_right_ascension
+    lunar_hour_angle = local_hour_angle - lunar_right_ascension
+
+    # cosine of geocentric zenith distances
+    solar_zenith = np.sin(theta) * np.sin(solar_declination) + (
+        np.cos(theta) * np.cos(solar_declination) * np.cos(solar_hour_angle)
+    )
+    lunar_zenith = np.sin(theta) * np.sin(lunar_declination) + (
+        np.cos(theta) * np.cos(lunar_declination) * np.cos(lunar_hour_angle)
+    )
+    # differential of zenith angle with respect to theta
+    solar_dtheta = np.cos(theta) * np.sin(solar_declination) - (
+        np.sin(theta) * np.cos(solar_declination) * np.cos(solar_hour_angle)
+    )
+    lunar_dtheta = np.cos(theta) * np.sin(lunar_declination) - (
+        np.sin(theta) * np.cos(lunar_declination) * np.cos(lunar_hour_angle)
+    )
+    # differential of zenith angle with respect to phi
+    solar_dphi = np.cos(solar_declination) * np.sin(solar_hour_angle)
+    lunar_dphi = np.cos(lunar_declination) * np.sin(lunar_hour_angle)
+    # factors for sun and moon using IAU estimates of mass ratios
+    GM_solar = kwargs["mass_ratio_solar"] * kwargs["GM"]
+    GM_lunar = kwargs["mass_ratio_lunar"] * kwargs["GM"]
+    # gravitational parameters
+    K_solar = GM_solar * rad_e / np.power(solar_radius, 2)
+    K_lunar = GM_lunar * rad_e / np.power(lunar_radius, 2)
+
+    # components of attraction for the sun and moon
+    F_solar = xr.Dataset()
+    F_lunar = xr.Dataset()
+    # initialize output generating forces
+    for key in ["R", "N", "E"]:
+        F_solar[key] = xr.zeros_like(solar_zenith)
+        F_lunar[key] = xr.zeros_like(lunar_zenith)
+
+    # for each spherical harmonic degree
+    for l in range(2, kwargs["lmax"] + 1):
+        # update gravitational parameter for degree
+        K_solar *= rad_e / solar_radius
+        K_lunar *= rad_e / lunar_radius
+        # legendre polynomial for degree
+        Pl_solar, dPl_solar = pyTMD.math.legendre(l, solar_zenith)
+        Pl_lunar, dPl_lunar = pyTMD.math.legendre(l, lunar_zenith)
+        # divide differential by u
+        # ignore divide by zero and invalid value warnings
+        with np.errstate(divide="ignore", invalid="ignore"):
+            dPl_solar /= np.sqrt(1 - solar_zenith**2)
+            dPl_lunar /= np.sqrt(1 - lunar_zenith**2)
+        # radial (up)
+        F_solar["R"] += (K_solar * l / rad_e) * Pl_solar
+        F_lunar["R"] += (K_lunar * l / rad_e) * Pl_lunar
+        # north
+        F_solar["N"] -= (K_solar / rad_e) * dPl_solar * solar_dtheta
+        F_lunar["N"] -= (K_lunar / rad_e) * dPl_lunar * lunar_dtheta
+        # east
+        F_solar["E"] += (K_solar / rad_e) * dPl_solar * solar_dphi
+        F_lunar["E"] += (K_lunar / rad_e) * dPl_lunar * lunar_dphi
+
+    # sum solar and lunar components
+    # add units attributes to output dataset
+    F = xr.Dataset()
+    for key in ["R", "N", "E"]:
+        F[key] = F_solar[key] + F_lunar[key]
+        F[key].attrs["units"] = "m/s^2"
+
+    # return the tide generating force
+    return F
+
+
 def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     """
     Compute the variations in earth rotation caused by diurnal
@@ -2491,10 +2700,8 @@ def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     MJD = t + _mjd_tide
     # convert to centuries relative to 2000-01-01T12:00:00
     T = (MJD + deltat - _mjd_j2000) / _century
-    # 360 degrees
+    # 360 degrees in arcseconds
     circle = 1296000
-    # 90 degrees in arcseconds
-    K = circle / 4.0
     # compute the Delaunay arguments (IERS conventions)
     l, lp, F, D, omega = pyTMD.astro.delaunay_arguments(MJD + deltat)
     # convert from radians to arcseconds
@@ -2503,93 +2710,158 @@ def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     F = pyTMD.math.rad2asec(F)
     D = pyTMD.math.rad2asec(D)
     omega = pyTMD.math.rad2asec(omega)
-    # angle of Greenwich Mean Standard Time (arcseconds)
-    gmst_angle = np.array(
-        [67310.54841, 876600 * 3600 + 8640184.812866, 0.093104, 6.2e-6]
+    # angle of Greenwich Mean Standard Time (fractions of day)
+    GMST = np.array([24110.54841, 8640184.812866, 9.3104e-2, -6.2e-6])
+    gmst = (1.0 / 86400.0) * pyTMD.math.normalize_angle(
+        pyTMD.math.polynomial_sum(GMST, T), circle=86400.0
     )
-    theta = 648000.0 + 15.0 * pyTMD.math.polynomial_sum(gmst_angle, T)
-    # additional arguments (arcseconds)
-    arg1 = np.mod((-2.0 * F - 2.0 * omega + theta), circle) - K
-    arg2 = np.mod((-2.0 * F + 2.0 * D - 2.0 * omega + theta), circle) - K
-    arg3 = np.mod(theta, circle) + K
-    arg4 = np.mod((-l - 2.0 * F - 2.0 * omega + 2.0 * theta), circle)
-    arg5 = np.mod((-2.0 * F - 2.0 * omega + 2.0 * theta), circle)
-    arg6 = np.mod((-2.0 * F + 2.0 * D - 2.0 * omega + 2.0 * theta), circle)
-    arg7 = np.mod((-l - 2.0 * F - 2.0 * omega + theta), circle) - K
-    arg8 = np.mod(2.0 * theta, circle)
-    # convert from arcseconds to radians
-    arg1 = pyTMD.math.asec2rad(arg1)
-    arg2 = pyTMD.math.asec2rad(arg2)
-    arg3 = pyTMD.math.asec2rad(arg3)
-    arg4 = pyTMD.math.asec2rad(arg4)
-    arg5 = pyTMD.math.asec2rad(arg5)
-    arg6 = pyTMD.math.asec2rad(arg6)
-    arg7 = pyTMD.math.asec2rad(arg7)
-    arg8 = pyTMD.math.asec2rad(arg8)
-    # calculate corrections
-    dX = (
-        -0.026 * np.sin(arg7)
-        + 0.006 * np.cos(arg7)
-        - 0.133 * np.sin(arg1)
-        + 0.049 * np.cos(arg1)
-        - 0.050 * np.sin(arg2)
-        + 0.025 * np.cos(arg2)
-        - 0.152 * np.sin(arg3)
-        + 0.078 * np.cos(arg3)
-        - 0.057 * np.sin(arg4)
-        - 0.013 * np.cos(arg4)
-        - 0.330 * np.sin(arg5)
-        - 0.028 * np.cos(arg5)
-        - 0.145 * np.sin(arg6)
-        + 0.064 * np.cos(arg6)
-        - 0.036 * np.sin(arg8)
-        + 0.017 * np.cos(arg8)
+    # Greenwich Hour Angle (GHA) in arcseconds
+    gha = circle * (gmst + _century * T + 0.5)
+    # IERS convensions: gamma = GHA + 180 degrees
+    gamma = gha + circle / 2.0
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    K = circle / 4.0 + np.zeros_like((MJD))
+    # data array of arguments
+    arguments = xr.DataArray(
+        np.c_[l, lp, F, D, omega, gamma, K],
+        dims=["time", "argument"],
+        coords=dict(
+            time=np.atleast_1d(MJD),
+            argument=["l", "lp", "F", "D", "omega", "gamma", "k"],
+        ),
     )
-    dY = (
-        -0.006 * np.sin(arg7)
-        - 0.026 * np.cos(arg7)
-        - 0.049 * np.sin(arg1)
-        - 0.133 * np.cos(arg1)
-        - 0.025 * np.sin(arg2)
-        - 0.050 * np.cos(arg2)
-        - 0.078 * np.sin(arg3)
-        - 0.152 * np.cos(arg3)
-        + 0.011 * np.sin(arg4)
-        + 0.033 * np.cos(arg4)
-        + 0.037 * np.sin(arg5)
-        + 0.196 * np.cos(arg5)
-        + 0.059 * np.sin(arg6)
-        + 0.087 * np.cos(arg6)
-        + 0.018 * np.sin(arg8)
-        + 0.022 * np.cos(arg8)
+    # major constituents in Ray (1994) and latest IERS conventions
+    constituents = [
+        "2q1",
+        "sigma1",
+        "q1",
+        "rho1",
+        "o1",
+        "tau1",
+        "m1",
+        "chi1",
+        "pi1",
+        "p1",
+        "s1",
+        "k1",
+        "psi1",
+        "phi1",
+        "theta1",
+        "j1",
+        "so1",
+        "oo1",
+        "ups1",
+        "2n2",
+        "mu2",
+        "n2",
+        "nu2",
+        "m2",
+        "lambda2",
+        "l2",
+        "t2",
+        "s2",
+        "r2",
+        "k2",
+    ]
+    # table of coefficients [l, lp, F, D, omega, gamma, K]
+    delaunay_table = np.zeros((7, 30))
+    delaunay_table[:, 0] = [-2, 0, -2, 0, -2, 1, -1]  # 2q1
+    delaunay_table[:, 1] = [0, 0, -2, -2, -2, 1, -1]  # sigma1
+    delaunay_table[:, 2] = [-1, 0, -2, 0, -2, 1, -1]  # q1
+    delaunay_table[:, 3] = [1, 0, -2, -2, -2, 1, -1]  # rho1
+    delaunay_table[:, 4] = [0, 0, -2, 0, -2, 1, -1]  # o1
+    delaunay_table[:, 5] = [0, 0, 0, -2, 0, 1, 1]  # tau1
+    delaunay_table[:, 6] = [-1, 0, 0, 0, 0, 1, 1]  # m1
+    delaunay_table[:, 7] = [1, 0, 0, -2, 0, 1, 1]  # chi1
+    delaunay_table[:, 8] = [0, -1, -2, 2, -2, 1, -1]  # pi1
+    delaunay_table[:, 9] = [0, 0, -2, 2, -2, 1, -1]  # p1
+    delaunay_table[:, 10] = [0, -1, 0, 0, 0, 1, 2]  # s1
+    delaunay_table[:, 11] = [0, 0, 0, 0, 0, 1, 1]  # k1
+    delaunay_table[:, 12] = [0, 1, 0, 0, 0, 1, 1]  # psi1
+    delaunay_table[:, 13] = [0, 0, 2, -2, 2, 1, 1]  # phi1
+    delaunay_table[:, 14] = [-1, 0, 0, 2, 0, 1, 1]  # theta1
+    delaunay_table[:, 15] = [1, 0, 0, 0, 0, 1, 1]  # j1
+    delaunay_table[:, 16] = [0, 0, 0, 2, 0, 1, 1]  # so1
+    delaunay_table[:, 17] = [0, 0, 2, 0, 2, 1, 1]  # oo1
+    delaunay_table[:, 18] = [1, 0, 2, 0, 2, 1, 1]  # ups1
+    delaunay_table[:, 19] = [-2, 0, -2, 0, -2, 2, 0]  # 2n2
+    delaunay_table[:, 20] = [0, 0, -2, -2, -2, 0, 0]  # mu2
+    delaunay_table[:, 21] = [-1, 0, -2, 0, -2, 2, 0]  # n2
+    delaunay_table[:, 22] = [1, 0, -2, -2, -2, 2, 0]  # nu2
+    delaunay_table[:, 23] = [0, 0, -2, 0, -2, 2, 0]  # m2
+    delaunay_table[:, 24] = [-1, 0, -2, 2, -2, 2, 2]  # lambda2
+    delaunay_table[:, 25] = [1, 0, -2, 0, -2, 2, 2]  # l2
+    delaunay_table[:, 26] = [0, -1, -2, 2, -2, 2, 0]  # t2
+    delaunay_table[:, 27] = [0, 0, -2, 2, -2, 2, 0]  # s2
+    delaunay_table[:, 28] = [0, 1, -2, 2, -2, 2, 2]  # r2
+    delaunay_table[:, 29] = [0, 0, 0, 0, 0, 2, 0]  # k2
+    # convert to data array of coefficients
+    delaunay_table = xr.DataArray(
+        delaunay_table,
+        dims=["argument", "constituent"],
+        coords=dict(
+            argument=["l", "lp", "F", "D", "omega", "gamma", "k"],
+            constituent=constituents,
+        ),
     )
-    dUT = (
-        +0.0245 * np.sin(arg7)
-        + 0.0503 * np.cos(arg7)
-        + 0.1210 * np.sin(arg1)
-        + 0.1605 * np.cos(arg1)
-        + 0.0286 * np.sin(arg2)
-        + 0.0516 * np.cos(arg2)
-        + 0.0864 * np.sin(arg3)
-        + 0.1771 * np.cos(arg3)
-        - 0.0380 * np.sin(arg4)
-        - 0.0154 * np.cos(arg4)
-        - 0.1617 * np.sin(arg5)
-        - 0.0720 * np.cos(arg5)
-        - 0.0759 * np.sin(arg6)
-        - 0.0004 * np.cos(arg6)
-        - 0.0196 * np.sin(arg8)
-        - 0.0038 * np.cos(arg8)
+    # EOP corrections table [dX, dY, dUT]
+    dEOP = np.zeros((3, 30), dtype=np.complex128)
+    dEOP[:, 0] = [0.0003 - 0.0034j, -0.0034 - 0.0003j, 0.0103 + 0.0031j]
+    dEOP[:, 1] = [0.0005 - 0.0042j, -0.0041 - 0.0005j, 0.0119 + 0.0039j]
+    dEOP[:, 2] = [0.0062 - 0.0263j, -0.0263 - 0.0062j, 0.0512 + 0.0250j]
+    dEOP[:, 3] = [0.0013 - 0.0050j, -0.0050 - 0.0013j, 0.0097 + 0.0047j]
+    dEOP[:, 4] = [0.0488 - 0.1329j, -0.1329 - 0.0488j, 0.1602 + 0.1207j]
+    dEOP[:, 5] = [-0.0007 + 0.0017j, 0.0017 + 0.0007j, -0.0019 - 0.0007j]
+    dEOP[:, 6] = [-0.0045 + 0.0096j, 0.0096 + 0.0045j, -0.0086 - 0.0075j]
+    dEOP[:, 7] = [-0.0009 + 0.0018j, 0.0018 + 0.0009j, -0.0016 - 0.0014j]
+    dEOP[:, 8] = [0.0015 - 0.0030j, -0.0030 - 0.0015j, 0.0031 + 0.0019j]
+    dEOP[:, 9] = [0.0261 - 0.0512j, -0.0512 - 0.0261j, 0.0551 + 0.0310j]
+    dEOP[:, 10] = [0.0006 + 0.0012j, -0.0012 + 0.0006j, 0.0007 + 0.0013j]
+    dEOP[:, 11] = [-0.0775 + 0.1517j, -0.1517 - 0.0775j, 0.1762 + 0.0855j]
+    dEOP[:, 12] = [-0.0006 + 0.0012j, 0.0012 + 0.0006j, -0.0014 - 0.0006j]
+    dEOP[:, 13] = [-0.0011 + 0.0021j, 0.0021 + 0.0011j, -0.0027 - 0.0011j]
+    dEOP[:, 14] = [-0.0007 + 0.0014j, 0.0014 + 0.0007j, -0.0029 - 0.0004j]
+    dEOP[:, 15] = [-0.0035 + 0.0073j, 0.0073 + 0.0035j, -0.0019 - 0.0161j]
+    dEOP[:, 16] = [-0.0004 + 0.0011j, 0.0011 + 0.0004j, -0.0041 + 0.0001j]
+    dEOP[:, 17] = [-0.0011 + 0.0034j, 0.0034 + 0.0011j, -0.0144 + 0.0004j]
+    dEOP[:, 18] = [0.0000 + 0.0006j, 0.0006 + 0.0000j, -0.0040 + 0.0002j]
+    dEOP[:, 19] = [-0.0016 - 0.0061j, 0.0034 + 0.0031j, -0.0018 - 0.0064j]
+    dEOP[:, 20] = [-0.0020 - 0.0076j, 0.0042 + 0.0034j, -0.0022 - 0.0074j]
+    dEOP[:, 21] = [-0.0129 - 0.0569j, 0.0329 + 0.0111j, -0.0156 - 0.0379j]
+    dEOP[:, 22] = [-0.0024 - 0.0110j, 0.0064 + 0.0019j, -0.0030 - 0.0070j]
+    dEOP[:, 23] = [-0.0270 - 0.3302j, 0.1959 + 0.0376j, -0.0725 - 0.1619j]
+    dEOP[:, 24] = [0.0003 - 0.0025j, 0.0015 + 0.0004j, -0.0003 - 0.0011j]
+    dEOP[:, 25] = [0.0014 - 0.0094j, 0.0056 + 0.0019j, -0.0012 - 0.0042j]
+    dEOP[:, 26] = [0.0035 - 0.0085j, 0.0051 + 0.0033j, -0.0002 - 0.0044j]
+    dEOP[:, 27] = [0.0636 - 0.1441j, 0.0866 + 0.0592j, -0.0016 - 0.0755j]
+    dEOP[:, 28] = [0.0006 - 0.0012j, 0.0007 + 0.0005j, -0.0000 - 0.0006j]
+    dEOP[:, 29] = [0.0191 - 0.0385j, 0.0231 + 0.0177j, -0.0004 - 0.0210j]
+    # convert to data array of EOP corrections
+    dEOP = xr.DataArray(
+        dEOP,
+        dims=["EOP", "constituent"],
+        coords=dict(
+            EOP=["dX", "dY", "dUT"],
+            constituent=constituents,
+        ),
     )
-    # create output dataset
-    ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
-    ds["dX"] = ("time", 1e-3 * dX)
+    # calculate phase of arguments (arcseconds)
+    G = arguments.dot(delaunay_table)
+    # convert from arcseconds to complex phase in radians
+    phase = np.exp(1j * pyTMD.math.asec2rad(G))
+    # calculate EOP corrections
+    corrections = (dEOP.real * phase.real + dEOP.imag * phase.imag).sum(
+        dim="constituent"
+    )
+    # create output dataset from data arrays
+    ds = xr.Dataset()
+    ds["dX"] = 1e-3 * corrections.sel(EOP="dX")
     ds["dX"].attrs["units"] = "arcseconds"
     ds["dX"].attrs["long_name"] = "anomaly in polar motion in X"
-    ds["dY"] = ("time", 1e-3 * dY)
+    ds["dY"] = 1e-3 * corrections.sel(EOP="dY")
     ds["dY"].attrs["units"] = "arcseconds"
     ds["dY"].attrs["long_name"] = "anomaly in polar motion in Y"
-    ds["dUT"] = ("time", 1e-4 * dUT)
+    ds["dUT"] = 1e-4 * corrections.sel(EOP="dUT")
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
     # return the variations in earth rotation
@@ -2661,16 +2933,16 @@ def length_of_day(t: np.ndarray, deltat: float | np.ndarray = 0.0):
         coords=dict(argument=["tau", "s", "h", "p", "n", "pp", "k"]),
     )
     # equilibrium phase converted to radians
-    arg = np.radians(arguments.dot(coefficients))
+    G = np.radians(arguments.dot(coefficients))
     # create output dataset
     ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
     # compute delta UT1-TAI (seconds)
-    dUT = ZROT["UTc"] * np.cos(arg) + ZROT["UTs"] * np.sin(arg)
+    dUT = ZROT["UTc"] * np.cos(G) + ZROT["UTs"] * np.sin(G)
     ds["dUT"] = 1e-6 * dUT
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
     # compute delta LOD (seconds per day)
-    dLOD = ZROT["dLODc"] * np.cos(arg) + ZROT["dLODs"] * np.sin(arg)
+    dLOD = ZROT["dLODc"] * np.cos(G) + ZROT["dLODs"] * np.sin(G)
     ds["dLOD"] = 1e-6 * dLOD
     ds["dLOD"].attrs["units"] = "seconds per day"
     ds["dLOD"].attrs["long_name"] = "excess length of day"

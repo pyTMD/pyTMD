@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 compute.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -64,6 +64,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 03/2026: added function for computing tide-generating forces
     Updated 02/2026: added attributes for constituents to output DataArrays
     Updated 12/2025: use coords functions to convert x and y to DataArrays
         no longer subclassing pathlib.Path for working directories
@@ -172,6 +173,9 @@ __all__ = [
     "LPT_displacements",
     "OPT_displacements",
     "SET_displacements",
+    "_ephemerides_SET",
+    "_catalog_SET",
+    "TG_forces",
 ]
 
 # default working data directory for tide models
@@ -192,11 +196,11 @@ def corrections(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     correction: str, default 'ocean'
         Correction type to compute
 
@@ -206,6 +210,7 @@ def corrections(
             - ``'LPT'``: solid earth load pole tide
             - ``'OPT'``: ocean pole tide
             - ``'SET'``: solid earth tide
+            - ``'TGF'``: tide-generating forces
     **kwargs: dict
         keyword arguments for correction functions
 
@@ -224,6 +229,8 @@ def corrections(
         return OPT_displacements(x, y, delta_time, **kwargs)
     elif correction.upper() == "SET":
         return SET_displacements(x, y, delta_time, **kwargs)
+    elif correction.upper() == "TGF":
+        return TG_forces(x, y, delta_time, **kwargs)
     else:
         raise ValueError(f"Unrecognized correction type: {correction}")
 
@@ -255,11 +262,11 @@ def tide_elevations(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     directory: str or NoneType, default None
         working data directory for tide models
     model: str or NoneType, default None
@@ -300,9 +307,9 @@ def tide_elevations(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        Extrapolate with nearest-neighbors
+        spatially extrapolate model with nearest-neighbors
     cutoff: int or float, default 10.0
-        Extrapolation cutoff in kilometers
+        Extrapolation cutoff (kilometers)
 
         Set to ``np.inf`` to extrapolate for all points
     corrections: str or None, default None
@@ -449,18 +456,18 @@ def tide_currents(
     cutoff: int | float = 10.0,
     **kwargs,
 ):
-    """
+    r"""
     Compute ocean tide currents at points and times from
     model constituents
 
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     directory: str or NoneType, default None
         working data directory for tide models
     model: str or NoneType, default None
@@ -501,9 +508,9 @@ def tide_currents(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        Extrapolate with nearest-neighbors
+        spatially extrapolate model with nearest-neighbors
     cutoff: int or float, default 10.0
-        Extrapolation cutoff in kilometers
+        Extrapolation cutoff (kilometers)
 
         Set to ``np.inf`` to extrapolate for all points
     corrections: str or None, default None
@@ -518,7 +525,7 @@ def tide_currents(
     Returns
     -------
     tpred: xr.DataTree
-        predicted tidal currents in cm/s
+        predicted tidal currents (cm s\ :sup:`-1`)
 
         u: xr.Dataset
             zonal velocities
@@ -645,9 +652,9 @@ def tide_masks(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     directory: str or NoneType, default None
         working data directory for tide models
     model: str or NoneType, default None
@@ -718,11 +725,11 @@ def LPET_elevations(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -803,11 +810,11 @@ def LPT_displacements(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -958,11 +965,11 @@ def OPT_displacements(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     crs: str | int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1038,9 +1045,9 @@ def OPT_displacements(
 
     # earth and physical parameters for ellipsoid
     units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
-    # mean equatorial gravitational acceleration [m/s^2]
+    # mean equatorial gravitational acceleration (m s^-2)
     ge = 9.7803278
-    # density of sea water [kg/m^3]
+    # density of sea water (kg m^-3)
     rho_w = 1025.0
     # tidal love number differential (1 + kl - hl) for pole tide frequencies
     gamma = 0.6870 + 0.0036j
@@ -1123,19 +1130,19 @@ def SET_displacements(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
-    method: str, default 'IERS'
+        time coordinates
+    method: str, default 'ephemerides'
         method for calculating solid earth tidal elevations
 
             - ``'ephemerides'``: following :cite:t:`Petit:2010tp` guidelines
             - ``'catalog'``: using tide potential catalogs
     """
     if method.lower() == "ephemerides":
-        return _ephemeride_SET(x, y, delta_time, **kwargs)
+        return _ephemerides_SET(x, y, delta_time, **kwargs)
     elif method.lower() == "catalog":
         return _catalog_SET(x, y, delta_time, **kwargs)
     else:
@@ -1143,7 +1150,7 @@ def SET_displacements(
 
 
 # PURPOSE: compute solid earth tides following IERS conventions
-def _ephemeride_SET(
+def _ephemerides_SET(
     x: np.ndarray,
     y: np.ndarray,
     delta_time: np.ndarray,
@@ -1164,11 +1171,11 @@ def _ephemeride_SET(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1206,6 +1213,8 @@ def _ephemeride_SET(
             - ``'N'``: north displacement
             - ``'E'``: east displacement
             - ``'R'``: radial displacement
+    kwargs: dict, optional
+        Additional keyword arguments to pass to the prediction function
 
     Returns
     -------
@@ -1221,6 +1230,8 @@ def _ephemeride_SET(
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ("grid", "drift", "time series")
+    # earth and physical parameters for ellipsoid
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1238,9 +1249,6 @@ def _ephemeride_SET(
         ts = timescale.from_deltatime(
             delta_time, epoch=epoch, standard=standard
         )
-
-    # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
 
     # convert input coordinates to cartesian
     X, Y, Z = pyTMD.spatial.to_cartesian(
@@ -1298,6 +1306,7 @@ def _ephemeride_SET(
         deltat=ts.tt_ut1,
         a_axis=units.a_axis,
         tide_system=tide_system,
+        **kwargs,
     )
     # rotate displacements from cartesian coordinates
     SE = xr.Dataset()
@@ -1334,11 +1343,11 @@ def _catalog_SET(
     Parameters
     ----------
     x: np.ndarray
-        x-coordinates in projection EPSG
+        x-coordinates
     y: np.ndarray
-        y-coordinates in projection EPSG
+        y-coordinates
     delta_time: np.ndarray
-        seconds since EPOCH or datetime array
+        time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1385,6 +1394,8 @@ def _catalog_SET(
             - ``'N'``: north displacement
             - ``'E'``: east displacement
             - ``'R'``: radial displacement
+    kwargs: dict, optional
+        Additional keyword arguments to pass to the prediction function
 
     Returns
     -------
@@ -1435,3 +1446,139 @@ def _catalog_SET(
 
     # return the solid earth tide displacements for variable(s)
     return SE[variable]
+
+
+# PURPOSE: compute tide generating forces
+def TG_forces(
+    x: np.ndarray,
+    y: np.ndarray,
+    delta_time: np.ndarray,
+    h: float | np.ndarray = 0.0,
+    crs: str | int = 4326,
+    epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+    type: str | None = "drift",
+    standard: str = "UTC",
+    ellipsoid: str = "WGS84",
+    ephemerides: str = "Meeus",
+    variable: str | list = "R",
+    **kwargs,
+):
+    r"""
+    Compute tide-generating forces at points and times
+    following :cite:t:`Tamura:1987tp,Hartmann:1995jp`
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates
+    y: np.ndarray
+        y-coordinates
+    delta_time: np.ndarray
+        time coordinates
+    h: float or np.ndarray, default 0.0
+        Height of the point above the ellipsoid (meters)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
+        Input coordinate system
+    epoch: tuple, default (2000,1,1,0,0,0)
+        Time period for calculating delta times
+    type: str or NoneType, default 'drift'
+        Input data type
+
+            - ``None``: determined from input variable dimensions
+            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'grid'``: spatial grids or images
+            - ``'time series'``: time series at a single point
+    standard: str, default 'UTC'
+        Time standard of input temporal data
+
+            - ``'GPS'``: leap seconds needed
+            - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
+            - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
+            - ``'UTC'``: no leap seconds needed
+            - ``'datetime'``: numpy datatime array in UTC
+    ellipsoid: str, default 'WGS84'
+        Ellipsoid name for calculating Earth parameters
+    ephemerides: str, default 'Meeus'
+        Method for calculating solar and lunar positions
+
+            - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+            - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+    variable: str | list, default 'R'
+        Output variable(s) to extract from dataset
+
+            - ``'N'``: generating force in the north direction
+            - ``'E'``: generating force in the east direction
+            - ``'R'``: generating force in the radial direction
+    kwargs: dict, optional
+        Additional keyword arguments to pass to the prediction function
+
+    Returns
+    -------
+    TGF: xr.DataArray
+        Tide-generating forces (m s\ :sup:`-2`)
+    """
+
+    # validate input arguments
+    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
+    assert ephemerides.lower() in ("kubo", "meeus")
+    # determine input data type based on variable dimensions
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ("grid", "drift", "time series")
+
+    # earth and physical parameters for ellipsoid
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    # convert coordinates to xarray DataArrays
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(
+        x, y, type=type, source_crs=crs, target_crs=4326
+    )
+    # create dataset
+    ds = xr.Dataset(coords={"x": longitude, "y": latitude})
+
+    # verify that delta time is an array
+    delta_time = np.atleast_1d(delta_time)
+    # convert delta times or datetimes objects to timescale
+    if standard.lower() == "datetime":
+        ts = timescale.from_datetime(delta_time)
+    else:
+        ts = timescale.from_deltatime(
+            delta_time, epoch=epoch, standard=standard
+        )
+
+    # convert input coordinates to cartesian
+    X, Y, Z = pyTMD.spatial.to_cartesian(
+        ds.x, ds.y, h=h, a_axis=units.a_axis, flat=units.flat
+    )
+    XYZ = xr.Dataset(
+        data_vars={"X": (ds.dims, X), "Y": (ds.dims, Y), "Z": (ds.dims, Z)},
+        coords=ds.coords,
+    )
+    # geocentric latitude (degrees)
+    latitude_geocentric = pyTMD.spatial.geocentric_latitude(
+        latitude,
+        flat=units.flat,
+    )
+    # difference between geodetic and geocentric coordinates (radians)
+    alpha = np.radians(latitude - latitude_geocentric)
+
+    # calculate tide generating forces
+    F = pyTMD.predict.generating_force(
+        ts.tide,
+        XYZ,
+        deltat=ts.tt_ut1,
+        method=ephemerides,
+        **kwargs,
+    )
+
+    # convert to ellipsoidal coordinates
+    TGF = xr.Dataset()
+    TGF["R"] = np.sin(alpha) * F["N"] + np.cos(alpha) * F["R"]
+    TGF["N"] = np.cos(alpha) * F["N"] - np.sin(alpha) * F["R"]
+    TGF["E"] = F["E"]
+    # set attributes for output variables
+    for var in TGF.data_vars:
+        TGF[var].attrs["units"] = F[var].attrs.get("units", "m/s^2")
+
+    # return the tide generating forces for variable(s)
+    return TGF[variable]

@@ -1737,7 +1737,7 @@ def frequency(constituents: list | np.ndarray, **kwargs):
     Returns
     -------
     omega: np.ndarray
-        angular frequency in radians per second
+        angular frequency (radians per second)
     """
     # set default keyword arguments
     kwargs.setdefault("corrections", "OTIS")
@@ -2238,7 +2238,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     Returns
     -------
     omega: np.ndarray
-        angular frequency in radians per second
+        angular frequency (radians per second)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Cartwright")

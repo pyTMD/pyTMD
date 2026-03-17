@@ -1014,6 +1014,8 @@ class DataArray:
             return "current"
         elif self.units.is_compatible_with("m^2/s"):
             return "transport"
+        elif self.units.is_compatible_with("m/s^2"):
+            return "acceleration"
         elif self.units.is_compatible_with("degrees"):
             return "angle"
         else:

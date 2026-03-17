@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 astro.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (03/2026)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,8 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 03/2026: added functions to compute the geocentric positions
+        of the sun and moon (latitude, longitude and distance)
     Updated 10/2025: change default directory for JPL SSD kernels to cache
     Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
@@ -102,9 +104,15 @@ __all__ = [
     "solar_ecef",
     "solar_approximate",
     "solar_ephemerides",
+    "solar_latitude",
+    "solar_longitude",
+    "solar_distance",
     "lunar_ecef",
     "lunar_approximate",
     "lunar_ephemerides",
+    "lunar_latitude",
+    "lunar_longitude",
+    "lunar_distance",
     "gast",
     "itrs",
     "_eqeq_complement",
@@ -115,6 +123,8 @@ __all__ = [
     "_polar_motion_matrix",
     "_precession_matrix",
     "_correct_aberration",
+    "_meeus_table_47A",
+    "_meeus_table_47B",
     "_parse_table_5_2e",
     "_parse_table_5_3a",
     "_parse_table_5_3b",
@@ -131,6 +141,8 @@ _mjd_j2000 = 51544.5
 _jd_j2000 = _jd_mjd + _mjd_j2000
 # Julian century
 _century = 36525.0
+# Julian millennia
+_millennia = 10.0 * _century
 
 
 # PURPOSE: compute the basic astronomical mean longitudes
@@ -285,7 +297,7 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
 def planetary_longitudes(MJD: np.ndarray):
     r"""
     Computes the astronomical mean longitudes of the 5 closest planets
-    :cite:p:`Meeus:1991vh,Simon:1994vo`
+    :cite:p:`Bretagnon:1988wg,Meeus:1991vh,Simon:1994vo`
 
     Parameters
     ----------
@@ -766,7 +778,7 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     # Earth_to_Sun = Earth_to_EMB + EMB_to_SSB + SSB_to_Sun
     #              = -EMB_to_Earth - SSB_to_EMB + SSB_to_Sun
     if kwargs["include_aberration"]:
-        # astronomical unit in kilometers
+        # distance of 1 Astronomical Unit (kilometers)
         AU = 149597870.700
         # position in astronomical units
         position = (xyz_10 - xyz_399 - xyz_3) / AU
@@ -784,6 +796,498 @@ def solar_ephemerides(MJD: np.ndarray, **kwargs):
     Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
+
+def solar_latitude(
+    MJD: np.ndarray,
+    **kwargs,
+):
+    """
+    Calculates the geocentric latitude of the sun
+    :cite:p:`Meeus:1991vh,Bretagnon:1988wg`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+
+    Returns
+    -------
+    beta: np.ndarray
+        latitude of the sun (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    if kwargs["method"].lower() == "vsop87":
+        # convert from MJD to millennia relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _millennia
+        # calculate the geocentric latitude of the sun
+        # using the terms in Appendix III of Meeus (1991)
+        # beta0 terms
+        beta0 = np.array(
+            [
+                [280e-8, 3.199, 84334.662],
+                [102e-8, 5.422, 5507.553],
+                [80e-8, 3.88, 5223.69],
+                [44e-8, 3.70, 2352.87],
+                [32e-8, 4.00, 1577.34],
+            ]
+        )
+        # beta1 terms
+        beta1 = np.array(
+            [
+                [9e-8, 3.90, 5507.55],
+                [6e-8, 1.73, 5223.69],
+            ]
+        )
+        # list of coefficients for each power
+        coefficients = [beta0, beta1]
+        # latitude in degrees
+        beta = 0.0
+        # iterate over each power and coefficients
+        for p, B in enumerate(coefficients):
+            for i, (a, b, c) in enumerate(B):
+                beta -= np.degrees(a) * np.cos(b + c * T) * np.power(T, p)
+        # take the modulus and convert to radians
+        beta = np.radians(normalize_angle(beta, circle=360.0))
+    else:
+        # latitude of the sun is equal to 0 within 1 arcminute
+        beta = np.zeros_like(MJD)
+    # return the latitude of the sun
+    return beta
+
+
+def solar_longitude(
+    MJD: np.ndarray,
+    include_aberration: bool = False,
+    **kwargs,
+):
+    """
+    Calculates the apparent longitude of the sun
+    :cite:p:`Kubo:1980ut,Meeus:1991vh,Bretagnon:1988wg`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    include_aberration: bool, default False
+        Correct for aberration effects
+    method: str, default 'Meeus'
+        Method of calculating the longitude
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+        - ``'VSOP87'``: :cite:t:`Bretagnon:1988wg`
+
+    Returns
+    -------
+    H: np.ndarray
+        longitude of the sun (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    if kwargs["method"].lower() == "meeus":
+        # convert from MJD to centuries relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _century
+        # mean longitude of sun (degrees)
+        solar_longitude = np.array([280.46646, 36000.76983, 0.0003032])
+        H0 = polynomial_sum(solar_longitude, T)
+        # mean anomaly of the sun (radians)
+        solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
+        M = np.radians(polynomial_sum(solar_anomaly, T))
+        # equation of center
+        C = (
+            polynomial_sum([1.914602, -0.004817, -0.000014], T) * np.sin(M)
+            + polynomial_sum([0.019993, -0.000101], T) * np.sin(2.0 * M)
+            + 0.000289 * np.sin(3.0 * M)
+        )
+        # true longitude of the sun (degrees)
+        H = H0 + C
+        # correct for aberration of light
+        if include_aberration:
+            # convert to apparent longitude
+            omega = np.radians(125.04 - 1934.136 * T)
+            H += -0.00569 - 0.00478 * np.sin(omega)
+    elif kwargs["method"].lower() == "kubo":
+        # convert from MJD to centuries relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _century
+        # coefficients for calculating the longitude of the sun
+        coefficients = np.array(
+            [
+                [19147e-4, 267.52, 35999.05],
+                [200e-4, 265.10, 71998.10],
+                [20e-4, 158.0, 32964.0],
+                [18e-4, 159.0, 19.0],
+                [18e-4, 208.0, 445267.0],
+                [15e-4, 254.0, 45038.0],
+                [13e-4, 352.0, 22519.0],
+                [7e-4, 45.0, 65929.0],
+                [7e-4, 110.0, 3035.0],
+                [7e-4, 64.0, 9038.0],
+                [6e-4, 316.0, 33718.0],
+                [5e-4, 118.0, 155.0],
+                [5e-4, 221.0, 2281.0],
+                [4e-4, 48.0, 29930.0],
+                [4e-4, 161.0, 31557.0],
+            ]
+        )
+        # calculate the longitude of the sun
+        H = 280.4659 + 36000.7695 * T
+        # calculate the true longitude of the sun (degrees)
+        for i, (a, b, c) in enumerate(coefficients):
+            if i == 0:
+                a -= 48e-4 * T
+            H += a * np.cos(np.radians(b + c * T))
+        # correct for aberration of light
+        if include_aberration:
+            # convert to apparent longitude
+            omega = np.radians(145.0 + 1934.0 * T)
+            H += -0.0057 + 0.0048 * np.cos(np.radians(omega))
+    elif kwargs["method"].lower() == "vsop87":
+        # convert from MJD to millennia relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _millennia
+        # calculate the longitude of the sun
+        # using the terms in Appendix III of Meeus (1991)
+        # L0 terms
+        L0 = np.array(
+            [
+                [175347046e-8, 0.0, 0.0],
+                [3341656e-8, 4.6692568, 6283.0758500],
+                [34894e-8, 4.62610, 12566.15170],
+                [3497e-8, 2.7441, 5753.3849],
+                [3418e-8, 2.8289, 3.5231],
+                [3136e-8, 3.6277, 77713.7715],
+                [2676e-8, 4.4181, 7860.4194],
+                [2343e-8, 6.1352, 3930.2097],
+                [1324e-8, 0.7425, 11506.7698],
+                [1273e-8, 2.0371, 529.6910],
+                [1199e-8, 1.1096, 1577.3435],
+                [990e-8, 5.233, 5884.927],
+                [902e-8, 2.045, 26.298],
+                [857e-8, 3.508, 398.149],
+                [780e-8, 1.179, 5223.694],
+                [753e-8, 2.533, 5507.553],
+                [505e-8, 4.583, 18849.228],
+                [492e-8, 4.205, 775.523],
+                [357e-8, 2.92, 0.067],
+                [317e-8, 5.849, 11790.629],
+                [284e-8, 1.899, 796.298],
+                [271e-8, 0.315, 10977.079],
+                [243e-8, 0.345, 5486.778],
+                [206e-8, 4.806, 2544.314],
+                [205e-8, 1.869, 5573.143],
+                [202e-8, 2.458, 6069.777],
+                [156e-8, 0.833, 213.299],
+                [132e-8, 3.411, 2942.463],
+                [126e-8, 1.083, 20.775],
+                [115e-8, 0.645, 0.980],
+                [103e-8, 0.636, 4694.003],
+                [102e-8, 0.976, 15720.839],
+                [102e-8, 4.267, 7.114],
+                [99e-8, 6.21, 2146.17],
+                [98e-8, 0.68, 155.42],
+                [86e-8, 5.98, 161000.69],
+                [85e-8, 1.30, 6275.96],
+                [85e-8, 3.67, 71430.70],
+                [80e-8, 1.81, 17260.15],
+                [79e-8, 3.04, 12036.46],
+                [75e-8, 1.76, 5088.63],
+                [74e-8, 3.50, 3154.69],
+                [74e-8, 4.68, 801.82],
+                [70e-8, 0.83, 9437.76],
+                [62e-8, 3.98, 8827.39],
+                [61e-8, 1.82, 7084.90],
+                [57e-8, 2.78, 6286.60],
+                [56e-8, 4.39, 14143.50],
+                [56e-8, 3.47, 6279.55],
+                [52e-8, 0.19, 12139.55],
+                [52e-8, 1.33, 1748.02],
+                [51e-8, 0.28, 5856.48],
+                [49e-8, 0.49, 1194.45],
+                [41e-8, 5.37, 8429.24],
+                [41e-8, 2.40, 19651.05],
+                [39e-8, 6.17, 10447.39],
+                [37e-8, 6.04, 10213.29],
+                [37e-8, 2.57, 1059.38],
+                [36e-8, 1.71, 2352.87],
+                [36e-8, 1.78, 6812.77],
+                [33e-8, 0.59, 17789.85],
+                [30e-8, 0.44, 83996.85],
+                [30e-8, 2.74, 1349.87],
+                [25e-8, 3.16, 4690.48],
+            ]
+        )
+        # L1 terms
+        L1 = np.array(
+            [
+                [628331996747e-8, 0.0, 0.0],
+                [206059e-8, 2.678235, 6283.075850],
+                [4303e-8, 2.6351, 12566.1517],
+                [425e-8, 1.590, 3.523],
+                [119e-8, 5.796, 26.298],
+                [109e-8, 2.966, 1577.344],
+                [93e-8, 2.59, 18849.23],
+                [72e-8, 1.14, 529.69],
+                [68e-8, 1.87, 398.15],
+                [67e-8, 4.41, 5507.55],
+                [59e-8, 2.89, 5223.69],
+                [56e-8, 2.17, 155.42],
+                [45e-8, 0.40, 796.30],
+                [36e-8, 0.47, 775.52],
+                [29e-8, 2.65, 7.11],
+                [21e-8, 5.34, 0.98],
+                [19e-8, 1.85, 5498.78],
+                [19e-8, 4.97, 213.30],
+                [17e-8, 2.99, 6275.96],
+                [16e-8, 0.03, 2544.31],
+                [16e-8, 1.43, 2146.17],
+                [15e-8, 1.21, 10977.08],
+                [12e-8, 2.83, 1748.02],
+                [12e-8, 3.26, 5088.63],
+                [12e-8, 5.27, 1194.45],
+                [12e-8, 2.08, 4694.00],
+                [11e-8, 0.77, 553.57],
+                [10e-8, 1.30, 6286.60],
+                [10e-8, 4.24, 1349.87],
+                [9e-8, 2.70, 242.73],
+                [9e-8, 5.64, 951.72],
+                [8e-8, 5.30, 2352.87],
+                [6e-8, 2.65, 9437.76],
+                [6e-8, 4.67, 4690.48],
+            ]
+        )
+        # L2 terms
+        L2 = np.array(
+            [
+                [52919e-8, 0.0, 0.0],
+                [8270e-8, 1.0721, 6283.0758],
+                [309e-8, 0.867, 12566.152],
+                [27e-8, 0.05, 3.52],
+                [16e-8, 5.19, 26.30],
+                [16e-8, 3.68, 155.42],
+                [10e-8, 0.76, 18849.23],
+                [9e-8, 2.06, 77713.77],
+                [7e-8, 0.83, 775.52],
+                [5e-8, 4.66, 1577.34],
+                [4e-8, 1.03, 7.11],
+                [4e-8, 3.44, 5573.14],
+                [3e-8, 5.14, 796.30],
+                [3e-8, 6.05, 5507.55],
+                [3e-8, 1.19, 242.73],
+                [3e-8, 6.12, 529.69],
+                [3e-8, 0.31, 398.15],
+                [3e-8, 2.28, 553.57],
+                [2e-8, 4.38, 5223.69],
+                [2e-8, 3.75, 0.98],
+            ]
+        )
+        # L3 terms
+        L3 = np.array(
+            [
+                [289e-8, 5.844, 6283.076],
+                [35e-8, 0.0, 0.0],
+                [17e-8, 5.49, 12566.15],
+                [3e-8, 5.20, 155.42],
+                [1e-8, 4.72, 3.52],
+                [1e-8, 5.30, 18849.23],
+                [1e-8, 5.97, 242.73],
+            ]
+        )
+        # L4 terms
+        L4 = np.array(
+            [
+                [114e-8, 3.142, 0.0],
+                [8e-8, 4.13, 6283.08],
+                [1e-8, 3.84, 12566.15],
+            ]
+        )
+        # L5 terms
+        L5 = np.array([[1e-8, 3.14, 0.0]])
+        # list of coefficients for each power
+        coefficients = [L0, L1, L2, L3, L4, L5]
+        # longitude in degrees
+        H = 180.0
+        # iterate over each power and coefficients
+        for p, L in enumerate(coefficients):
+            for i, (a, b, c) in enumerate(L):
+                H += np.degrees(a) * np.cos(b + c * T) * np.power(T, p)
+        # correct for aberration of light
+        if include_aberration:
+            # convert to apparent longitude
+            omega = np.radians(125.04 - 1934.136 * T)
+            H += -0.00569 - 0.00478 * np.sin(omega)
+    # take the modulus and convert to radians
+    H = np.radians(normalize_angle(H, circle=360.0))
+    # return the longitude of the sun
+    return H
+
+
+def solar_distance(
+    MJD: np.ndarray,
+    AU: float = 1.495978707e11,
+    **kwargs,
+):
+    """
+    Calculates the distance from the sun to the Earth
+    :cite:p:`Kubo:1980ut,Meeus:1991vh,Bretagnon:1988wg`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    AU: float, default 1.495978707e11
+        distance of 1 Astronomical Unit (meters)
+    method: str, default 'Meeus'
+        Method of calculating the distance
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+        - ``'VSOP87'``: :cite:t:`Bretagnon:1988wg`
+
+    Returns
+    -------
+    R: np.ndarray
+        distance from the sun to the Earth (meters)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    if kwargs["method"].lower() == "meeus":
+        # convert from MJD to centuries relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _century
+        # mean anomaly of the sun (radians)
+        solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
+        M = np.radians(polynomial_sum(solar_anomaly, T))
+        # eccentricity of the Earth's orbit
+        earth_eccentricity = np.array([16708.634e-6, -42.037e-6, -1.267e-7])
+        ee = polynomial_sum(earth_eccentricity, T)
+        # equation of center
+        C = (
+            polynomial_sum([1.914602, -0.004817, -0.000014], T) * np.sin(M)
+            + polynomial_sum([0.019993, -0.000101], T) * np.sin(2.0 * M)
+            + 0.000289 * np.sin(3.0 * M)
+        )
+        nu = M + np.radians(C)
+        solar_au = 1.000001018 * (1.0 - ee**2) / (1.0 + ee * np.cos(nu))
+    elif kwargs["method"].lower() == "kubo":
+        # convert from MJD to centuries relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _century
+        # coefficients for calculating the distance to the sun
+        coefficients = np.array(
+            [
+                [16706e-6, 177.53, 35999.05],
+                [139e-6, 175.0, 71998.0],
+                [31e-6, 298.0, 445267.0],
+                [16e-6, 68.0, 32964.0],
+                [16e-6, 164.0, 45038.0],
+                [5e-6, 233.0, 22519.0],
+                [5e-6, 226.0, 33718.0],
+            ]
+        )
+        # calculate the distance from the sun to the Earth
+        solar_au = 1000140e-6
+        for i, (a, b, c) in enumerate(coefficients):
+            if i == 0:
+                a -= 42e-6 * T
+            solar_au += a * np.cos(np.radians(b + c * T))
+    elif kwargs["method"].lower() == "vsop87":
+        # convert from MJD to millennia relative to 2000-01-01T12:00:00
+        T = (MJD - _mjd_j2000) / _millennia
+        # calculate the distance from the sun to the Earth
+        # using the terms in Appendix III of Meeus (1991)
+        solar_au = 100013989e-8
+        # R0 terms
+        R0 = np.array(
+            [
+                [1670700e-8, 3.098463, 6283.075850],
+                [13956e-8, 3.05525, 12566.15170],
+                [3084e-8, 5.1985, 77713.7715],
+                [1628e-8, 1.1739, 5753.3849],
+                [1576e-8, 2.8469, 7860.4194],
+                [925e-8, 5.453, 11506.770],
+                [542e-8, 4.564, 3930.210],
+                [472e-8, 3.661, 5884.927],
+                [346e-8, 0.964, 5507.553],
+                [329e-8, 5.900, 5223.694],
+                [307e-8, 0.299, 5573.143],
+                [243e-8, 4.273, 11790.629],
+                [212e-8, 5.847, 1577.344],
+                [186e-8, 5.022, 10977.079],
+                [175e-8, 3.012, 18849.228],
+                [110e-8, 5.055, 5486.778],
+                [98e-8, 0.89, 6069.78],
+                [86e-8, 5.69, 15720.84],
+                [86e-8, 1.27, 161000.69],
+                [65e-8, 0.27, 17260.15],
+                [63e-8, 0.92, 529.69],
+                [57e-8, 2.01, 83996.85],
+                [56e-8, 5.24, 71430.70],
+                [49e-8, 3.25, 2544.31],
+                [47e-8, 2.58, 775.52],
+                [45e-8, 5.54, 9437.76],
+                [43e-8, 6.01, 6275.96],
+                [39e-8, 5.36, 4694.00],
+                [38e-8, 2.39, 8827.39],
+                [37e-8, 0.83, 19651.05],
+                [37e-8, 4.90, 12139.46],
+                [36e-8, 1.67, 12036.46],
+                [35e-8, 1.84, 2942.46],
+                [33e-8, 0.24, 7084.90],
+                [32e-8, 0.18, 5088.63],
+                [32e-8, 1.78, 398.15],
+                [28e-8, 1.21, 6286.60],
+                [28e-8, 1.90, 6279.55],
+                [26e-8, 4.59, 10447.39],
+            ]
+        )
+        # R1 terms
+        R1 = np.array(
+            [
+                [103019e-8, 1.10749, 6283.07585],
+                [1721e-8, 1.0644, 12566.1517],
+                [702e-8, 3.142, 0.000],
+                [32e-8, 1.02, 18849.23],
+                [31e-8, 2.84, 5507.55],
+                [25e-8, 1.32, 5223.69],
+                [18e-8, 1.42, 1577.34],
+                [10e-8, 5.91, 10977.08],
+                [9e-8, 1.42, 6275.96],
+                [9e-8, 0.27, 5486.78],
+            ]
+        )
+        # R2 terms
+        R2 = np.array(
+            [
+                [4359e-8, 5.7846, 6283.0758],
+                [124e-8, 5.5790, 12566.1520],
+                [12e-8, 3.14, 0.00],
+                [9e-8, 3.63, 77713.77],
+                [6e-8, 1.87, 5573.14],
+                [3e-8, 5.47, 18849.23],
+            ]
+        )
+        # R3 terms
+        R3 = np.array(
+            [
+                [145e-8, 4.273, 6283.076],
+                [7e-8, 3.92, 12566.15],
+            ]
+        )
+        # R4 terms
+        R4 = np.array(
+            [
+                [4e-8, 2.56, 6283.08],
+            ]
+        )
+        # list of coefficients for each power
+        coefficients = [R0, R1, R2, R3, R4]
+        # iterate over each power and coefficient
+        for p, R in enumerate(coefficients):
+            for i, (a, b, c) in enumerate(R):
+                solar_au += a * np.cos(b + c * T) * np.power(T, p)
+    # convert from AU to meters
+    R = solar_au * AU
+    # return the distance from the sun to the Earth
+    return R
 
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
@@ -983,6 +1487,484 @@ def lunar_ephemerides(MJD: np.ndarray, **kwargs):
     Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
+
+def lunar_latitude(
+    MJD: np.ndarray,
+    **kwargs,
+):
+    """
+    Calculate the apparent latitude of the moon
+    :cite:p:`Kubo:1980ut,Meeus:1991vh`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+        Method of calculating the latitude
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+
+    Returns
+    -------
+    beta: np.ndarray
+        latitude of the moon (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
+    # coefficients for calculating the latitude of the moon
+    if kwargs["method"].lower() == "meeus":
+        # mean longitude of the moon (degrees)
+        lunar_longitude = np.array(
+            [
+                218.3164477,
+                481267.88123421,
+                -0.0015786,
+                1.0 / 538841.0,
+                -1.0 / 65194000.0,
+            ]
+        )
+        Lp = polynomial_sum(lunar_longitude, T)
+        # mean elongation of the moon (degrees)
+        lunar_elongation = np.array(
+            [
+                297.8501921,
+                445267.1114034,
+                -0.0018819,
+                1.0 / 545868.0,
+                -1.0 / 113065000.0,
+            ]
+        )
+        D = polynomial_sum(lunar_elongation, T)
+        # mean anomaly of the sun (degrees)
+        solar_anomaly = np.array(
+            [357.5291092, 35999.0502909, -0.0001536, 1.0 / 24490000.0]
+        )
+        M = polynomial_sum(solar_anomaly, T)
+        # mean anomaly of the moon (degrees)
+        lunar_anomaly = np.array(
+            [
+                134.9633964,
+                477198.8675055,
+                0.0087414,
+                1.0 / 69699.0,
+                1.0 / 14712000.0,
+            ]
+        )
+        Mp = polynomial_sum(lunar_anomaly, T)
+        # mean argument of latitude of the moon (degrees)
+        # (angular distance from the ascending node)
+        lunar_argument = np.array(
+            [
+                93.2720950,
+                483202.0175233,
+                -0.0036539,
+                -1.0 / 3526000.0,
+                1.0 / 863310000.0,
+            ]
+        )
+        F = polynomial_sum(lunar_argument, T)
+        # eccentricity of the Earth's orbit
+        earth_eccentricity = np.array([1.0, -0.002516, -0.0000074])
+        ee = polynomial_sum(earth_eccentricity, T)
+        # additional arguments (actions of Venus and Jupiter)
+        A1 = 119.75 + 131.849 * T
+        A2 = 53.09 + 479264.290 * T
+        A3 = 313.45 + 481266.484 * T
+        # calculate latitude
+        beta = 0.0
+        # add additional arguments to latitude
+        beta -= 2235e-6 * np.sin(np.radians(Lp))
+        beta += 382e-6 * np.sin(np.radians(A3))
+        beta += 175e-6 * np.sin(np.radians(A1 - F))
+        beta += 175e-6 * np.sin(np.radians(A1 + F))
+        beta += 127e-6 * np.sin(np.radians(Lp - Mp))
+        beta -= 115e-6 * np.sin(np.radians(Lp + Mp))
+        # calculate the lunar latitude
+        table_47B = _meeus_table_47B()
+        for i, line in enumerate(table_47B):
+            d, m, mp, f, coeff = line
+            delta_b = np.radians(d * D + m * M + mp * Mp + f * F)
+            beta += 1e-6 * coeff * np.power(ee, np.abs(m)) * np.sin(delta_b)
+    elif kwargs["method"].lower() == "kubo":
+        # coefficients for calculating the latitude of the moon
+        coefficients = np.array(
+            [
+                [51281e-4, 3.273, 483202.019],
+                [2806e-4, 138.24, 960400.89],
+                [2777e-4, 48.31, 6003.15],
+                [1733e-4, 52.34, 407332.2],
+                [554e-4, 104.0, 896537.4],
+                [463e-4, 82.5, 69866.7],
+                [326e-4, 239.0, 1373736.2],
+                [172e-4, 273.2, 1437599.8],
+                [93e-4, 187.0, 884531.0],
+                [88e-4, 87.0, 471196.0],
+                [82e-4, 55.0, 371333.0],
+                [43e-4, 217.0, 547066.0],
+                [42e-4, 14.0, 1850935.0],
+                [34e-4, 230.0, 443331.0],
+                [25e-4, 106.0, 860538.0],
+                [22e-4, 308.0, 481268.0],
+                [22e-4, 241.0, 1337737.0],
+                [21e-4, 80.0, 105866.0],
+                [19e-4, 141.0, 924402.0],
+                [18e-4, 153.0, 820668.0],
+                [18e-4, 181.0, 519201.0],
+                [18e-4, 10.0, 1449606.0],
+                [15e-4, 46.0, 42002.0],
+                [15e-4, 121.0, 928469.0],
+                [15e-4, 316.0, 996400.0],
+                [14e-4, 129.0, 29996.0],
+                [13e-4, 6.0, 447203.0],
+                [13e-4, 65.0, 37935.0],
+                [11e-4, 48.0, 1914799.0],
+                [10e-4, 288.0, 1297866.0],
+                [9e-4, 340.0, 1787072.0],
+                [8e-4, 235.0, 972407.0],
+                [7e-4, 205.0, 1309873.0],
+                [6e-4, 134.0, 559072.0],
+                [6e-4, 322.0, 1361730.0],
+                [5e-4, 190.0, 848532.0],
+                [5e-4, 149.0, 419339.0],
+                [5e-4, 222.0, 948395.0],
+                [4e-4, 149.0, 2328134.0],
+                [4e-4, 352.0, 1024264.0],
+                [3e-4, 282.0, 932536.0],
+                [3e-4, 57.0, 1409735.0],
+                [3e-4, 115.0, 2264270.0],
+                [3e-4, 16.0, 1814936.0],
+                [3e-4, 57.0, 335334.0],
+            ]
+        )
+        # calculate the latitude of the moon
+        beta = 0.0
+        for i, (a, b, c) in enumerate(coefficients):
+            beta += a * np.cos(np.radians(b + c * T))
+
+    # take the modulus and convert to radians
+    beta = np.radians(normalize_angle(beta, circle=360.0))
+    # return the latitude of the moon
+    return beta
+
+
+def lunar_longitude(
+    MJD: np.ndarray,
+    **kwargs,
+):
+    """
+    Calculates the geocentric longitude of the moon
+    :cite:p:`Kubo:1980ut,Meeus:1991vh`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    method: str, default 'Meeus'
+        Method of calculating the longitude
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+
+    Returns
+    -------
+    S: np.ndarray
+        longitude of the moon (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
+    if kwargs["method"].lower() == "meeus":
+        # mean longitude of the moon (degrees)
+        lunar_longitude = np.array(
+            [
+                218.3164477,
+                481267.88123421,
+                -0.0015786,
+                1.0 / 538841.0,
+                -1.0 / 65194000.0,
+            ]
+        )
+        Lp = polynomial_sum(lunar_longitude, T)
+        # mean elongation of the moon (degrees)
+        lunar_elongation = np.array(
+            [
+                297.8501921,
+                445267.1114034,
+                -0.0018819,
+                1.0 / 545868.0,
+                -1.0 / 113065000.0,
+            ]
+        )
+        D = polynomial_sum(lunar_elongation, T)
+        # mean anomaly of the sun (degrees)
+        solar_anomaly = np.array(
+            [357.5291092, 35999.0502909, -0.0001536, 1.0 / 24490000.0]
+        )
+        M = polynomial_sum(solar_anomaly, T)
+        # mean anomaly of the moon (degrees)
+        lunar_anomaly = np.array(
+            [
+                134.9633964,
+                477198.8675055,
+                0.0087414,
+                1.0 / 69699.0,
+                1.0 / 14712000.0,
+            ]
+        )
+        Mp = polynomial_sum(lunar_anomaly, T)
+        # mean argument of latitude of the moon (degrees)
+        # (angular distance from the ascending node)
+        lunar_argument = np.array(
+            [
+                93.2720950,
+                483202.0175233,
+                -0.0036539,
+                -1.0 / 3526000.0,
+                1.0 / 863310000.0,
+            ]
+        )
+        F = polynomial_sum(lunar_argument, T)
+        # eccentricity of the Earth's orbit
+        earth_eccentricity = np.array([1.0, -0.002516, -0.0000074])
+        ee = polynomial_sum(earth_eccentricity, T)
+        # additional arguments (actions of Venus and Jupiter)
+        A1 = 119.75 + 131.849 * T
+        A2 = 53.09 + 479264.290 * T
+        # calculate longitude
+        S = np.copy(Lp)
+        # add additional arguments to longitude
+        S += 3958e-6 * np.sin(np.radians(A1))
+        S += 1962e-6 * np.sin(np.radians(Lp - F))
+        S += 318e-6 * np.sin(np.radians(A2))
+        # calculate the lunar longitude
+        table_47A = _meeus_table_47A()
+        for i, line in enumerate(table_47A):
+            d, m, mp, f, coeff, _ = line
+            delta_S = np.radians(d * D + m * M + mp * Mp + f * F)
+            S += 1e-6 * coeff * np.power(ee, np.abs(m)) * np.sin(delta_S)
+    elif kwargs["method"].lower() == "kubo":
+        # coefficients for calculating the longitude of the moon
+        coefficients = np.array(
+            [
+                [62888e-4, 44.963, 477198.868],
+                [12740e-4, 10.74, 413335.35],
+                [6583e-4, 145.70, 890534.22],
+                [2136e-4, 179.93, 954397.74],
+                [1851e-4, 87.53, 35999.05],
+                [1144e-4, 276.5, 966404.0],
+                [588e-4, 124.2, 63863.5],
+                [571e-4, 13.2, 377336.3],
+                [533e-4, 280.7, 1367733.1],
+                [458e-4, 148.2, 854535.2],
+                [409e-4, 47.4, 441199.8],
+                [347e-4, 27.9, 445267.1],
+                [304e-4, 222.5, 513197.9],
+                [154e-4, 41.0, 75870.0],
+                [125e-4, 52.0, 1443603.0],
+                [110e-4, 142.0, 489205.0],
+                [107e-4, 246.0, 1303870.0],
+                [100e-4, 315.0, 1431597.0],
+                [85e-4, 111.0, 826671.0],
+                [79e-4, 188.0, 449334.0],
+                [68e-4, 323.0, 926533.0],
+                [52e-4, 107.0, 31932.0],
+                [50e-4, 205.0, 481266.0],
+                [40e-4, 283.0, 1331734.0],
+                [40e-4, 56.0, 1844932.0],
+                [40e-4, 29.0, 133.0],
+                [38e-4, 21.0, 1781068.0],
+                [37e-4, 259.0, 541062.0],
+                [28e-4, 145.0, 1934.0],
+                [27e-4, 182.0, 918399.0],
+                [26e-4, 17.0, 1379739.0],
+                [24e-4, 122.0, 99863.0],
+                [23e-4, 163.0, 922466.0],
+                [22e-4, 151.0, 818536.0],
+                [21e-4, 357.0, 990397.0],
+                [21e-4, 85.0, 71998.0],
+                [21e-4, 16.0, 341337.0],
+                [18e-4, 274.0, 401329.0],
+                [16e-4, 152.0, 1856938.0],
+                [12e-4, 249.0, 1267871.0],
+                [11e-4, 186.0, 1920802.0],
+                [9e-4, 129.0, 858602.0],
+                [8e-4, 98.0, 1403732.0],
+                [7e-4, 114.0, 790672.0],
+                [7e-4, 50.0, 405201.0],
+                [7e-4, 186.0, 485333.0],
+                [7e-4, 127.0, 27864.0],
+                [6e-4, 38.0, 111869.0],
+                [6e-4, 156.0, 2258267.0],
+                [5e-4, 90.0, 1908795.0],
+                [5e-4, 24.0, 1745069.0],
+                [5e-4, 242.0, 509131.0],
+                [4e-4, 223.0, 39871.0],
+                [4e-4, 187.0, 12006.0],
+                [3e-4, 340.0, 958465.0],
+                [3e-4, 354.0, 381404.0],
+                [3e-4, 337.0, 349472.0],
+                [3e-4, 58.0, 1808933.0],
+                [3e-4, 220.0, 549197.0],
+                [3e-4, 70.0, 4067.0],
+                [3e-4, 191.0, 2322131.0],
+            ]
+        )
+        # calculate the longitude of the moon
+        S = 218.3162 + 481267.8809 * T
+        for i, (a, b, c) in enumerate(coefficients):
+            S += a * np.cos(np.radians(b + c * T))
+
+    # take the modulus and convert to radians
+    S = np.radians(normalize_angle(S, circle=360.0))
+    # return the longitude of the moon
+    return S
+
+
+def lunar_distance(
+    MJD: np.ndarray,
+    a_axis: float = 6378137.0,
+    **kwargs,
+):
+    """
+    Calculate the geocentric distance from the moon to the Earth
+    :cite:p:`Kubo:1980ut,Meeus:1991vh`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    a_axis: float, default 6378137.0
+        Semi-major axis of the Earth (meters)
+    method: str, default 'Meeus'
+        Method of calculating the distance
+
+        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+
+    Returns
+    -------
+    R: np.ndarray
+        distance from the moon to the Earth (meters)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "Meeus")
+    # convert from MJD to centuries relative to 2000-01-01T12:00:00
+    T = (MJD - _mjd_j2000) / _century
+    if kwargs["method"].lower() == "meeus":
+        # mean elongation of the moon (degrees)
+        lunar_elongation = np.array(
+            [
+                297.8501921,
+                445267.1114034,
+                -0.0018819,
+                1.0 / 545868.0,
+                -1.0 / 113065000.0,
+            ]
+        )
+        D = polynomial_sum(lunar_elongation, T)
+        # mean anomaly of the sun (degrees)
+        solar_anomaly = np.array(
+            [357.5291092, 35999.0502909, -0.0001536, 1.0 / 24490000.0]
+        )
+        M = polynomial_sum(solar_anomaly, T)
+        # mean anomaly of the moon (degrees)
+        lunar_anomaly = np.array(
+            [
+                134.9633964,
+                477198.8675055,
+                0.0087414,
+                1.0 / 69699.0,
+                1.0 / 14712000.0,
+            ]
+        )
+        Mp = polynomial_sum(lunar_anomaly, T)
+        # mean argument of latitude of the moon (degrees)
+        # (angular distance from the ascending node)
+        lunar_argument = np.array(
+            [
+                93.2720950,
+                483202.0175233,
+                -0.0036539,
+                -1.0 / 3526000.0,
+                1.0 / 863310000.0,
+            ]
+        )
+        F = polynomial_sum(lunar_argument, T)
+        # eccentricity of the Earth's orbit
+        earth_eccentricity = np.array([1.0, -0.002516, -0.0000074])
+        ee = polynomial_sum(earth_eccentricity, T)
+        # calculate the distance from the moon to the Earth
+        R = 385000560.0
+        table_47A = _meeus_table_47A()
+        for i, line in enumerate(table_47A):
+            d, m, mp, f, _, coeff = line
+            delta_R = np.radians(d * D + m * M + mp * Mp + f * F)
+            R += coeff * np.power(ee, np.abs(m)) * np.cos(delta_R)
+    elif kwargs["method"].lower() == "kubo":
+        # horizontal parallax of the moon (degrees)
+        parallax = 0.950725
+        # coefficients for calculating the distance to the moon
+        coefficients = np.array(
+            [
+                [51820e-6, 134.963, 477198.868],
+                [9530e-6, 100.74, 413335.35],
+                [7842e-6, 235.70, 890534.22],
+                [2824e-6, 269.93, 954397.74],
+                [858e-6, 10.7, 1367733.1],
+                [531e-6, 238.2, 854535.2],
+                [400e-6, 103.2, 377336.3],
+                [319e-6, 137.4, 441199.8],
+                [271e-6, 118.0, 445267.0],
+                [263e-6, 312.0, 513198.0],
+                [197e-6, 232.0, 489205.0],
+                [173e-6, 45.0, 1431597.0],
+                [167e-6, 336.0, 1303870.0],
+                [111e-6, 178.0, 35999.0],
+                [103e-6, 201.0, 826671.0],
+                [84e-6, 214.0, 63864.0],
+                [83e-6, 53.0, 926533.0],
+                [78e-6, 146.0, 1844932.0],
+                [73e-6, 111.0, 1781068.0],
+                [64e-6, 13.0, 1331734.0],
+                [63e-6, 278.0, 449334.0],
+                [41e-6, 295.0, 481266.0],
+                [34e-6, 272.0, 918399.0],
+                [33e-6, 349.0, 541062.0],
+                [31e-6, 253.0, 922466.0],
+                [30e-6, 131.0, 75870.0],
+                [29e-6, 87.0, 990397.0],
+                [26e-6, 241.0, 818536.0],
+                [23e-6, 266.0, 553069.0],
+                [19e-6, 339.0, 1267871.0],
+                [13e-6, 188.0, 1403732.0],
+                [13e-6, 106.0, 341337.0],
+                [13e-6, 4.0, 401329.0],
+                [12e-6, 246.0, 2258267.0],
+                [11e-6, 180.0, 1908795.0],
+                [11e-6, 219.0, 858602.0],
+                [10e-6, 144.0, 1745069.0],
+                [9e-6, 204.0, 790672.0],
+                [7e-6, 281.0, 2322131.0],
+                [7e-6, 148.0, 1808933.0],
+                [6e-6, 276.0, 485333.0],
+                [6e-6, 212.0, 99863.0],
+                [5e-6, 140.0, 405201.0],
+            ]
+        )
+        # calculate the distance from the moon to the Earth
+        for i, (a, b, c) in enumerate(coefficients):
+            parallax += a * np.cos(np.radians(b + c * T))
+        # convert parallax to radians
+        p = np.radians(parallax)
+        # convert to meters
+        R = a_axis / (p * (1.0 - p * p / 6.0))
+    # return the distance from the moon to the Earth
+    return R
 
 
 def gast(T: float | np.ndarray):
@@ -1412,15 +2394,15 @@ def _correct_aberration(position, velocity):
     Parameters
     ----------
     position: np.ndarray
-        Position vector in astronomical units
+        Position vector (astronomical units)
     velocity: np.ndarray
-        Velocity vector in astronomical units per day
+        Velocity vector (astronomical units per day)
     """
     # number of seconds per day
     day = 86400.0
-    # speed of light in meters per second
+    # speed of light (meters per second)
     c = 299792458.0
-    # astronomical unit in meters
+    # distance of 1 Astronomical Unit (meters)
     AU = 149597870700.0
     # speed of light in AU/day (i.e. one light day)
     c_prime = c * day / AU
@@ -1442,6 +2424,168 @@ def _correct_aberration(position, velocity):
     # return corrected position converted to meters
     x, y, z = u * AU
     return (x, y, z)
+
+
+def _meeus_table_47A():
+    """
+    Coefficients for the periodic terms in lunar longitude
+    and distance from Table 47.A of :cite:t:`Meeus:1991vh`
+    """
+    # table 47.A from Meeus (1991)
+    # column 1: mean elongation of the moon
+    # column 2: suns mean anomaly
+    # column 3: moons mean anomaly
+    # column 4: moons argument of latitude
+    # column 5: coefficient of the sine term for lunar longitude
+    #     units: microdegrees (1e-6 degrees)
+    # column 6: coefficient of the cosine term for lunar distance
+    #     units: meters (1e-3 kilometers)
+    table_47A = np.array(
+        [
+            [0, 0, 1, 0, 6288774.0, -20905355.0],
+            [2, 0, -1, 0, 1274027.0, -3699111.0],
+            [2, 0, 0, 0, 658314.0, -2955968.0],
+            [0, 0, 2, 0, 213618.0, -569925.0],
+            [0, 1, 0, 0, -185116.0, 48888.0],
+            [0, 0, 0, 2, -114332.0, -3149.0],
+            [2, 0, -2, 0, 58793.0, 246158.0],
+            [2, -1, -1, 0, 57066.0, -152138.0],
+            [2, 0, 1, 0, 53322.0, -170733.0],
+            [2, -1, 0, 0, 45758.0, -204586.0],
+            [0, 1, -1, 0, -40923.0, -129620.0],
+            [1, 0, 0, 0, -34720.0, 108743.0],
+            [0, 1, 1, 0, -30383.0, 104755.0],
+            [2, 0, 0, -2, 15327.0, 10321.0],
+            [0, 0, 1, 2, -12528.0, 0.0],
+            [0, 0, 1, -2, 10980.0, 79661.0],
+            [4, 0, -1, 0, 10675.0, -34782.0],
+            [0, 0, 3, 0, 10034.0, -23210.0],
+            [4, 0, -2, 0, 8548.0, -21636.0],
+            [2, 1, -1, 0, -7888.0, 24208.0],
+            [2, 1, 0, 0, -6766.0, 30824.0],
+            [1, 0, -1, 0, -5163.0, -8379.0],
+            [1, 1, 0, 0, 4987.0, -16675.0],
+            [2, -1, 1, 0, 4036.0, -12831.0],
+            [2, 0, 2, 0, 3994.0, -10445.0],
+            [4, 0, 0, 0, 3861.0, -11650.0],
+            [2, 0, -3, 0, 3665.0, 14403.0],
+            [0, 1, -2, 0, -2689.0, -7003.0],
+            [2, 0, -1, 2, -2602.0, 0.0],
+            [2, -1, -2, 0, 2390.0, 10056.0],
+            [1, 0, 1, 0, -2348.0, 6322.0],
+            [2, -2, 0, 0, 2236.0, -9884.0],
+            [0, 1, 2, 0, -2120.0, 5751.0],
+            [0, 2, 0, 0, -2069.0, 0.0],
+            [2, -2, -1, 0, 2048.0, -4950.0],
+            [2, 0, 1, -2, -1773.0, 4130.0],
+            [2, 0, 0, 2, -1595.0, 0.0],
+            [4, -1, -1, 0, 1215.0, -3958.0],
+            [0, 0, 2, 2, -1110.0, 0.0],
+            [3, 0, -1, 0, -892.0, 3258.0],
+            [2, 1, 1, 0, -810.0, 2616.0],
+            [4, -1, -2, 0, 759.0, -1897.0],
+            [0, 2, -1, 0, -713.0, -2117.0],
+            [2, 2, -1, 0, -700.0, 2354.0],
+            [2, 1, -2, 0, 691.0, 0.0],
+            [2, -1, 0, -2, 596.0, 0.0],
+            [4, 0, 1, 0, 549.0, -1423.0],
+            [0, 0, 4, 0, 537.0, -1117.0],
+            [4, -1, 0, 0, 520.0, -1571.0],
+            [1, 0, -2, 0, -487.0, -1739.0],
+            [2, 1, 0, -2, -399.0, 0.0],
+            [0, 0, 2, -2, -381.0, -4421.0],
+            [1, 1, 1, 0, 351.0, 0.0],
+            [3, 0, -2, 0, -340.0, 0.0],
+            [4, 0, -3, 0, 330.0, 0.0],
+            [2, -1, 2, 0, 327.0, 0.0],
+            [0, 2, 1, 0, -323.0, 1165.0],
+            [1, 1, -1, 0, 299.0, 0.0],
+            [2, 0, 3, 0, 394.0, 0.0],
+            [2, 0, -1, -2, 0.0, 8752.0],
+        ]
+    )
+    # return the table of coefficients
+    return table_47A
+
+
+def _meeus_table_47B():
+    """
+    Coefficients for the sine and cosine terms in lunar latitude
+    from Table 47.B of :cite:t:`Meeus:1991vh`
+    """
+    # table 47.A from Meeus (1991)
+    # column 1: mean elongation of the moon
+    # column 2: suns mean anomaly
+    # column 3: moons mean anomaly
+    # column 4: moons argument of latitude
+    # column 5: coefficient of the sine term for lunar latitude
+    #     units: microdegrees (1e-6 degrees)
+    table_47B = np.array(
+        [
+            [0, 0, 0, 1, 5128122.0],
+            [0, 0, 1, 1, 280602.0],
+            [0, 0, 1, -1, 277693.0],
+            [2, 0, 0, -1, 173237.0],
+            [2, 0, -1, 1, 55413.0],
+            [2, 0, -1, -1, 46271.0],
+            [2, 0, 0, 1, 32573.0],
+            [0, 0, 2, 1, 17198.0],
+            [2, 0, 1, -1, 9266.0],
+            [0, 0, 2, -1, 8822.0],
+            [2, -1, 0, -1, 8216.0],
+            [2, 0, -2, -1, 4324.0],
+            [2, 0, 1, -1, 4200.0],
+            [2, 1, 0, -1, -3359.0],
+            [2, -1, -1, 1, 2463.0],
+            [2, -1, 0, 1, 2211.0],
+            [2, -1, -1, -1, 2065.0],
+            [0, 1, -1, -1, -1870.0],
+            [4, 0, -1, -1, 1828.0],
+            [0, 1, 0, 1, -1794.0],
+            [0, 0, 0, 3, -1749.0],
+            [0, 1, -1, 1, -1565.0],
+            [1, 0, 0, 1, -1491.0],
+            [0, 1, 1, 1, -1475.0],
+            [0, 1, 1, -1, -1410.0],
+            [0, 1, 0, -1, -1344.0],
+            [1, 0, 0, -1, -1335.0],
+            [0, 0, 3, 1, 1107.0],
+            [4, 0, 0, -1, 1021.0],
+            [4, 0, -1, 1, 833.0],
+            [0, 0, 1, -3, 777.0],
+            [4, 0, -2, 1, 671.0],
+            [2, 0, 0, -3, 607.0],
+            [2, 0, 2, -1, 596.0],
+            [2, -1, 1, -1, 491.0],
+            [2, 0, -2, 1, -451.0],
+            [0, 0, 3, -1, 439.0],
+            [2, 0, 2, 1, 422.0],
+            [2, 0, -3, -1, 421.0],
+            [2, 1, -1, -1, -366.0],
+            [2, 1, 0, 1, -351.0],
+            [4, 0, 0, 1, 331.0],
+            [2, -1, 1, 1, 315.0],
+            [2, -2, 0, -1, 302.0],
+            [0, 0, 1, 3, -283.0],
+            [2, 1, 1, -1, -229.0],
+            [1, 1, 0, -1, 223.0],
+            [1, 1, 0, 1, 223.0],
+            [0, 1, -2, -1, -220.0],
+            [2, 1, -1, 1, -220.0],
+            [1, 0, 1, 1, -185.0],
+            [2, -1, -2, -1, 181.0],
+            [0, 1, 2, 1, -177.0],
+            [4, 0, -2, -1, 176.0],
+            [4, -1, -1, -1, 166.0],
+            [1, 0, 1, -1, -164.0],
+            [4, 0, 1, -1, 132.0],
+            [1, 0, -1, -1, -119.0],
+            [4, -1, 0, -1, 115.0],
+            [2, -2, 0, 1, 107.0],
+        ]
+    )
+    # return the table of coefficients
+    return table_47B
 
 
 def _parse_table_5_2e():
