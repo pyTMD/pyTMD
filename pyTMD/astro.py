@@ -1501,6 +1501,7 @@ def lunar_latitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    method: str, default 'Meeus'
         Method of calculating the latitude
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -2513,7 +2514,7 @@ def _meeus_table_47B():
     Coefficients for the sine and cosine terms in lunar latitude
     from Table 47.B of :cite:t:`Meeus:1991vh`
     """
-    # table 47.A from Meeus (1991)
+    # table 47.B from Meeus (1991)
     # column 1: mean elongation of the moon
     # column 2: suns mean anomaly
     # column 3: moons mean anomaly

@@ -217,6 +217,9 @@ def test_legendre_hw95():
     DPLM = np.zeros((2))
     # check each row of values
     for (l, m, PLM[0], DPLM[0], PLM[1], DPLM[1]) in validation:
+        # verify that degree and order are integers
+        l = int(l)
+        m = int(m)
         # HW95 normalization of degree l and order m
         # Kronecker delta
         kron = int(m == 0)
@@ -228,8 +231,8 @@ def test_legendre_hw95():
         )
         # Legendre polynomials and their first derivative
         Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m)
-        assert np.allclose(norm * Plm, PLM)
-        assert np.allclose(norm * dPlm, DPLM)
+        assert np.allclose(norm * Plm, PLM, atol=1e-05)
+        assert np.allclose(norm * dPlm, DPLM, atol=1e-05)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():

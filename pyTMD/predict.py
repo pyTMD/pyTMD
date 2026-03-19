@@ -29,7 +29,7 @@ UPDATE HISTORY:
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
         clean up the ephemerides method of calculating solid earth tides
-        calculate the tidal generating forces following Tamura (1987)
+        calculate tidal generating forces following Tamura (1982 and 1987)
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -241,7 +241,7 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: np.ndarray
+    dh: xr.DataArray
         tidal time series for minor constituents
     """
     # set default keyword arguments
@@ -303,7 +303,7 @@ def _infer_short_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: np.ndarray
+    dh: xr.DataArray
         tidal time series for minor constituents
     """
     # set default keyword arguments
@@ -462,7 +462,7 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: np.ndarray
+    dh: xr.DataArray
         tidal time series for minor constituents
     """
     # set default keyword arguments
@@ -646,7 +646,7 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: np.ndarray
+    dh: xr.DataArray
         tidal time series for minor constituents
     """
     # set default keyword arguments
@@ -855,7 +855,7 @@ def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: np.ndarray
+    dh: xr.DataArray
         tidal time series for minor constituents
     """
     # set default keyword arguments
@@ -1241,7 +1241,7 @@ def load_pole_tide(
 
     Returns
     -------
-    dxt: np.ndarray
+    dxt: xr.Dataset
         Load pole tide displacements (meters)
     """
     # convert time to nominal years (Terrestrial Time)
@@ -1375,7 +1375,7 @@ def ocean_pole_tide(
 
     Returns
     -------
-    dxt: np.ndarray
+    dxt: xr.Dataset
         Ocean pole tide displacements (meters)
     """
     # convert time to nominal years (Terrestrial Time)
@@ -1470,6 +1470,10 @@ def solid_earth_tide(
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
         Degree-3 Love (Shida) number of horizontal displacement
+    h4: float, default 0.18
+        Degree-4 Love number of vertical displacement
+    l4: float, default 0.014
+        Degree-4 Love (Shida) number of horizontal displacement
     mass_ratio_solar: float, default 332946.0482
         Mass ratio between the Earth and the Sun
     mass_ratio_lunar: float, default 0.0123000371
@@ -1477,7 +1481,7 @@ def solid_earth_tide(
 
     Returns
     -------
-    dxt: np.ndarray
+    dxt: xr.Dataset
         Solid Earth tide (meters)
     """
     # set default keyword arguments
@@ -2301,7 +2305,7 @@ def body_tide(
 
     Returns
     -------
-    zeta: np.ndarray
+    zeta: xr.Dataset
         Solid Earth tide (meters)
     """
     # set default keyword arguments
@@ -2518,7 +2522,7 @@ def generating_force(
 
     Returns
     -------
-    F: np.ndarray
+    F: xr.Dataset
         Tide-generating force (m s\ :sup:`-2`)
     """
     # set default keyword arguments
