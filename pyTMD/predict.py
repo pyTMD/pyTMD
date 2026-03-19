@@ -2717,7 +2717,7 @@ def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     )
     # Greenwich Hour Angle (GHA) in arcseconds
     gha = circle * (gmst + _century * T + 0.5)
-    # IERS convensions: gamma = GHA + 180 degrees
+    # IERS conventions: gamma = GHA + 180 degrees
     gamma = gha + circle / 2.0
     # variable for multiples of 90 degrees (Ray technical note 2017)
     K = circle / 4.0 + np.zeros_like((MJD))

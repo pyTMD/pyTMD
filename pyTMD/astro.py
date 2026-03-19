@@ -848,11 +848,11 @@ def solar_latitude(
         for p, B in enumerate(coefficients):
             for i, (a, b, c) in enumerate(B):
                 beta -= np.degrees(a) * np.cos(b + c * T) * np.power(T, p)
-        # take the modulus and convert to radians
-        beta = np.radians(normalize_angle(beta, circle=360.0))
     else:
         # latitude of the sun is equal to 0 within 1 arcminute
         beta = np.zeros_like(MJD)
+    # convert to radians
+    beta = np.radians(beta)
     # return the latitude of the sun
     return beta
 
@@ -1645,8 +1645,8 @@ def lunar_latitude(
         for i, (a, b, c) in enumerate(coefficients):
             beta += a * np.cos(np.radians(b + c * T))
 
-    # take the modulus and convert to radians
-    beta = np.radians(normalize_angle(beta, circle=360.0))
+    # convert to radians
+    beta = np.radians(beta)
     # return the latitude of the moon
     return beta
 

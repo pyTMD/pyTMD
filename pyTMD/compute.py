@@ -852,7 +852,7 @@ def LPT_displacements(
 
     Returns
     -------
-    S: xr.DataArray
+    S: xr.DataArray or xr.Dataset
         solid earth pole tide (meters)
     """
 
@@ -1012,7 +1012,7 @@ def OPT_displacements(
 
     Returns
     -------
-    U: xr.DataArray
+    U: xr.DataArray or xr.Dataset
         ocean pole tide (meters)
     """
 
@@ -1218,7 +1218,7 @@ def _ephemerides_SET(
 
     Returns
     -------
-    SE: xr.DataArray
+    SE: xr.DataArray or xr.Dataset
         solid earth tide (meters)
     """
 
@@ -1399,7 +1399,7 @@ def _catalog_SET(
 
     Returns
     -------
-    SE: xr.DataArray
+    SE: xr.DataArray or xr.Dataset
         solid earth tide (meters)
     """
 
@@ -1514,7 +1514,7 @@ def TG_forces(
 
     Returns
     -------
-    TGF: xr.DataArray
+    TGF: xr.DataArray or xr.Dataset
         Tide-generating forces (m s\ :sup:`-2`)
     """
 
