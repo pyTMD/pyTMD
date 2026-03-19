@@ -859,7 +859,7 @@ def solar_latitude(
 
 def solar_longitude(
     MJD: np.ndarray,
-    include_aberration: bool = False,
+    include_aberration: bool = True,
     **kwargs,
 ):
     """
@@ -870,7 +870,7 @@ def solar_longitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    include_aberration: bool, default False
+    include_aberration: bool, default True
         Correct for aberration effects
     method: str, default 'Meeus'
         Method of calculating the longitude
@@ -890,8 +890,8 @@ def solar_longitude(
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _century
         # mean longitude of sun (degrees)
-        solar_longitude = np.array([280.46646, 36000.76983, 0.0003032])
-        H0 = polynomial_sum(solar_longitude, T)
+        solar_mean_longitude = np.array([280.46646, 36000.76983, 0.0003032])
+        H0 = polynomial_sum(solar_mean_longitude, T)
         # mean anomaly of the sun (radians)
         solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
         M = np.radians(polynomial_sum(solar_anomaly, T))
@@ -1518,7 +1518,7 @@ def lunar_latitude(
     # coefficients for calculating the latitude of the moon
     if kwargs["method"].lower() == "meeus":
         # mean longitude of the moon (degrees)
-        lunar_longitude = np.array(
+        lunar_mean_longitude = np.array(
             [
                 218.3164477,
                 481267.88123421,
@@ -1527,7 +1527,7 @@ def lunar_latitude(
                 -1.0 / 65194000.0,
             ]
         )
-        Lp = polynomial_sum(lunar_longitude, T)
+        Lp = polynomial_sum(lunar_mean_longitude, T)
         # mean elongation of the moon (degrees)
         lunar_elongation = np.array(
             [
@@ -1680,7 +1680,7 @@ def lunar_longitude(
     T = (MJD - _mjd_j2000) / _century
     if kwargs["method"].lower() == "meeus":
         # mean longitude of the moon (degrees)
-        lunar_longitude = np.array(
+        lunar_mean_longitude = np.array(
             [
                 218.3164477,
                 481267.88123421,
@@ -1689,7 +1689,7 @@ def lunar_longitude(
                 -1.0 / 65194000.0,
             ]
         )
-        Lp = polynomial_sum(lunar_longitude, T)
+        Lp = polynomial_sum(lunar_mean_longitude, T)
         # mean elongation of the moon (degrees)
         lunar_elongation = np.array(
             [
