@@ -158,7 +158,7 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
     method: str, default 'Cartwright'
-        method for calculating mean longitudes
+        Method for calculating mean longitudes
 
             - ``'Cartwright'``: use coefficients from David Cartwright
             - ``'Meeus'``: use coefficients from Meeus Astronomical Algorithms
@@ -168,15 +168,15 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
     Returns
     -------
     S: np.ndarray
-        mean longitude of moon (degrees)
+        Mean longitude of moon (degrees)
     H: np.ndarray
-        mean longitude of sun (degrees)
+        Mean longitude of sun (degrees)
     P: np.ndarray
-        mean longitude of lunar perigee (degrees)
+        Mean longitude of lunar perigee (degrees)
     N: np.ndarray
-        mean longitude of ascending lunar node (degrees)
+        Mean longitude of ascending lunar node (degrees)
     Ps: np.ndarray
-        longitude of solar perigee (degrees)
+        Longitude of solar perigee (degrees)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Cartwright")
@@ -307,15 +307,15 @@ def planetary_longitudes(MJD: np.ndarray):
     Returns
     -------
     LMe: np.ndarray
-        mean longitude of Mercury (degrees)
+        Mean longitude of Mercury (degrees)
     LVe: np.ndarray
-        mean longitude of Venus (degrees)
+        Mean longitude of Venus (degrees)
     LMa: np.ndarray
-        mean longitude of Mars (degrees)
+        Mean longitude of Mars (degrees)
     LJu: np.ndarray
-        mean longitude of Jupiter (degrees)
+        Mean longitude of Jupiter (degrees)
     LSa: np.ndarray
-        mean longitude of Saturn (degrees)
+        Mean longitude of Saturn (degrees)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
@@ -369,17 +369,17 @@ def doodson_arguments(
     Returns
     -------
     TAU: np.ndarray
-        mean lunar time (radians)
+        Mean lunar time (radians)
     S: np.ndarray
-        mean longitude of the moon (radians)
+        Mean longitude of the moon (radians)
     H: np.ndarray
-        mean longitude of the sun (radians)
+        Mean longitude of the sun (radians)
     P: np.ndarray
-        mean longitude of lunar perigee (radians)
+        Mean longitude of lunar perigee (radians)
     Np: np.ndarray
-        negative mean longitude of the ascending node (radians)
+        Negative mean longitude of the ascending node (radians)
     Ps: np.ndarray
-        mean longitude of solar perigee (radians)
+        Mean longitude of solar perigee (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
@@ -458,15 +458,15 @@ def delaunay_arguments(MJD: np.ndarray):
     Returns
     -------
     l: np.ndarray
-        mean anomaly of moon (radians)
+        Nean anomaly of moon (radians)
     lp: np.ndarray
-        mean anomaly of the sun (radians)
+        Mean anomaly of the sun (radians)
     F: np.ndarray
-        mean argument of the moon (radians)
+        Mean argument of the moon (radians)
     D: np.ndarray
-        mean elongation of the moon from the sun (radians)
+        Mean elongation of the moon from the sun (radians)
     N: np.ndarray
-        mean longitude of ascending lunar node (radians)
+        Mean longitude of ascending lunar node (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
@@ -526,23 +526,23 @@ def schureman_arguments(P: np.ndarray, N: np.ndarray):
     Returns
     -------
     I: np.ndarray
-        obliquity of lunar orbit with respect to Earth's equator (radians)
+        Obliquity of lunar orbit with respect to Earth's equator (radians)
     xi: np.ndarray
-        longitude in the moon's orbit of lunar intersection (radians)
+        Longitude in the moon's orbit of lunar intersection (radians)
     nu: np.ndarray
-        right ascension of lunar intersection (radians)
+        Right ascension of lunar intersection (radians)
     Qa: np.ndarray
-        factor in amplitude for m1 constituent (radians)
+        Factor in amplitude for m1 constituent (radians)
     Qu: np.ndarray
-        term in argument for m1 constituent (radians)
+        Term in argument for m1 constituent (radians)
     Ra: np.ndarray
-        factor in amplitude for l2 constituent (radians)
+        Factor in amplitude for l2 constituent (radians)
     Ru: np.ndarray
-        term in argument for l2 constituent (radians)
+        Term in argument for l2 constituent (radians)
     nu_p: np.ndarray
-        term in argument for k1 constituent (radians)
+        Term in argument for k1 constituent (radians)
     nu_s: np.ndarray
-        term in argument for k2 constituent (radians)
+        Term in argument for k2 constituent (radians)
     """
     # additional astronomical terms for FES models
     # inclination of the moon's orbit to Earth's equator
@@ -597,7 +597,7 @@ def mean_obliquity(MJD: np.ndarray):
     Returns
     -------
     epsilon: np.ndarray
-        mean obliquity of the ecliptic (radians)
+        Mean obliquity of the ecliptic (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
@@ -620,7 +620,7 @@ def equation_of_time(MJD: np.ndarray):
     Returns
     -------
     E: np.ndarray
-        equation of time (radians)
+        Equation of time (radians)
     """
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
@@ -814,7 +814,7 @@ def solar_latitude(
     Returns
     -------
     beta: np.ndarray
-        latitude of the sun (radians)
+        Latitude of the sun (radians)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")
@@ -882,7 +882,7 @@ def solar_longitude(
     Returns
     -------
     H: np.ndarray
-        longitude of the sun (radians)
+        Longitude of the sun (radians)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")
@@ -1136,7 +1136,7 @@ def solar_distance(
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
     AU: float, default 1.495978707e11
-        distance of 1 Astronomical Unit (meters)
+        Distance of 1 Astronomical Unit (meters)
     method: str, default 'Meeus'
         Method of calculating the distance
 
@@ -1147,7 +1147,7 @@ def solar_distance(
     Returns
     -------
     R: np.ndarray
-        distance from the sun to the Earth (meters)
+        Distance from the sun to the Earth (meters)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")
@@ -1510,7 +1510,7 @@ def lunar_latitude(
     Returns
     -------
     beta: np.ndarray
-        latitude of the moon (radians)
+        Latitude of the moon (radians)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")
@@ -1673,7 +1673,7 @@ def lunar_longitude(
     Returns
     -------
     S: np.ndarray
-        longitude of the moon (radians)
+        Longitude of the moon (radians)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")
@@ -1850,7 +1850,7 @@ def lunar_distance(
     Returns
     -------
     R: np.ndarray
-        distance from the moon to the Earth (meters)
+        Distance from the moon to the Earth (meters)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Meeus")

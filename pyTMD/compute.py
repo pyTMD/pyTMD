@@ -200,7 +200,7 @@ def corrections(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     correction: str, default 'ocean'
         Correction type to compute
 
@@ -212,7 +212,7 @@ def corrections(
             - ``'SET'``: solid earth tide
             - ``'TGF'``: tide-generating forces
     **kwargs: dict
-        keyword arguments for correction functions
+        Keyword arguments for correction functions
 
     Returns
     -------
@@ -266,7 +266,7 @@ def tide_elevations(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     directory: str or NoneType, default None
         working data directory for tide models
     model: str or NoneType, default None
@@ -274,7 +274,7 @@ def tide_elevations(
     definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list, np.ndarray or NoneType, default None
@@ -307,7 +307,7 @@ def tide_elevations(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        spatially extrapolate model with nearest-neighbors
+        Spatially extrapolate model with nearest-neighbors
     cutoff: int or float, default 10.0
         Extrapolation cutoff (kilometers)
 
@@ -330,7 +330,7 @@ def tide_elevations(
     Returns
     -------
     tpred: xarray.DataArray
-        predicted tide elevation (meters)
+        Predicted tide elevation (meters)
     """
     # default keyword arguments
     kwargs.setdefault("chunks", None)
@@ -467,15 +467,15 @@ def tide_currents(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     directory: str or NoneType, default None
-        working data directory for tide models
+        Working data directory for tide models
     model: str or NoneType, default None
         Tide model to use in correction
     definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list, np.ndarray or NoneType, default None
@@ -508,7 +508,7 @@ def tide_currents(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        spatially extrapolate model with nearest-neighbors
+        Spatially extrapolate model with nearest-neighbors
     cutoff: int or float, default 10.0
         Extrapolation cutoff (kilometers)
 
@@ -525,12 +525,10 @@ def tide_currents(
     Returns
     -------
     tpred: xr.DataTree
-        predicted tidal currents (cm s\ :sup:`-1`)
+        Predicted tidal currents (cm s\ :sup:`-1`)
 
-        u: xr.Dataset
-            zonal velocities
-        v: xr.Dataset
-            meridional velocities
+        - ``u``: Zonal velocities
+        - ``v``: Meridional velocities
     """
     # default keyword arguments
     kwargs.setdefault("chunks", None)
@@ -656,7 +654,7 @@ def tide_masks(
     y: np.ndarray
         y-coordinates
     directory: str or NoneType, default None
-        working data directory for tide models
+        Working data directory for tide models
     model: str or NoneType, default None
         Tide model to use
     definition_file: str or NoneType, default None
@@ -672,7 +670,7 @@ def tide_masks(
     Returns
     -------
     mask: xr.DataArray
-        ocean tide mask
+        Ocean tide mask
     """
 
     # check that tide directory is accessible
@@ -729,7 +727,7 @@ def LPET_elevations(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -753,7 +751,7 @@ def LPET_elevations(
     Returns
     -------
     LPET: xr.DataArray
-        long-period equilibrium tide (meters)
+        Long-period equilibrium tide (meters)
     """
 
     # validate input arguments
@@ -814,7 +812,7 @@ def LPT_displacements(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -853,7 +851,7 @@ def LPT_displacements(
     Returns
     -------
     S: xr.DataArray or xr.Dataset
-        solid earth pole tide (meters)
+        Solid earth pole tide (meters)
     """
 
     # validate input arguments
@@ -969,7 +967,7 @@ def OPT_displacements(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     crs: str | int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1013,7 +1011,7 @@ def OPT_displacements(
     Returns
     -------
     U: xr.DataArray or xr.Dataset
-        ocean pole tide (meters)
+        Ocean pole tide (meters)
     """
 
     # validate input arguments
@@ -1134,9 +1132,9 @@ def SET_displacements(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     method: str, default 'ephemerides'
-        method for calculating solid earth tidal elevations
+        Method for calculating solid earth tidal elevations
 
             - ``'ephemerides'``: following :cite:t:`Petit:2010tp` guidelines
             - ``'catalog'``: using tide potential catalogs
@@ -1175,7 +1173,7 @@ def _ephemerides_SET(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1219,7 +1217,7 @@ def _ephemerides_SET(
     Returns
     -------
     SE: xr.DataArray or xr.Dataset
-        solid earth tide (meters)
+        Solid earth tide (meters)
     """
 
     # validate input arguments
@@ -1347,7 +1345,7 @@ def _catalog_SET(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     crs: int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
@@ -1400,7 +1398,7 @@ def _catalog_SET(
     Returns
     -------
     SE: xr.DataArray or xr.Dataset
-        solid earth tide (meters)
+        Solid earth tide (meters)
     """
 
     # validate input arguments
@@ -1474,7 +1472,7 @@ def TG_forces(
     y: np.ndarray
         y-coordinates
     delta_time: np.ndarray
-        time coordinates
+        Time coordinates
     h: float or np.ndarray, default 0.0
         Height of the point above the ellipsoid (meters)
     crs: int, default: 4326 (WGS84 Latitude and Longitude)

@@ -156,16 +156,16 @@ def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing tidal harmonic constants
     kwargs: keyword arguments
-        additional keyword arguments
+        Additional keyword arguments
 
     Returns
     -------
     darr: xarray.DataArray
-        predicted tides
+        Predicted tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("corrections", "OTIS")
@@ -225,24 +225,24 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
+        Use nodal corrections from OTIS/ATLAS or GOT/FES models
     minor: list or None, default None
-        tidal constituent IDs of minor constituents for inference
+        Tidal constituent IDs of minor constituents for inference
     infer_long_period, bool, default True
-        try to infer long period tides from constituents
+        Try to infer long period tides from constituents
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
     Returns
     -------
-    dh: xr.DataArray
-        tidal time series for minor constituents
+    tinfer: xr.DataArray
+        Tidal time series for minor constituents
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -289,22 +289,22 @@ def _infer_short_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
+        Use nodal corrections from OTIS/ATLAS or GOT/FES models
     minor: list or None, default None
-        tidal constituent IDs of minor constituents for inference
+        Tidal constituent IDs of minor constituents for inference
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
     Returns
     -------
-    dh: xr.DataArray
-        tidal time series for minor constituents
+    tinfer: xr.DataArray
+        Tidal time series for minor constituents
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -445,15 +445,15 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
-        tidal constituent IDs of minor constituents for inference
+        Tidal constituent IDs of minor constituents for inference
     method: str, default 'linear'
-        method for interpolating between major constituents
+        Method for interpolating between major constituents
 
             * 'linear': linear interpolation
             * 'admittance': Munk-Cartwright admittance interpolation
@@ -462,8 +462,8 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: xr.DataArray
-        tidal time series for minor constituents
+    tinfer: xr.DataArray
+        Tidal time series for minor constituents
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -629,15 +629,15 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
-        tidal constituent IDs of minor constituents for inference
+        Tidal constituent IDs of minor constituents for inference
     method: str, default 'linear'
-        method for interpolating between major constituents
+        Method for interpolating between major constituents
 
             * 'linear': linear interpolation
             * 'admittance': Munk-Cartwright admittance interpolation
@@ -646,8 +646,8 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
     Returns
     -------
-    dh: xr.DataArray
-        tidal time series for minor constituents
+    tinfer: xr.DataArray
+        Tidal time series for minor constituents
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -841,22 +841,22 @@ def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing major tidal harmonic constants
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     minor: list or None, default None
-        tidal constituent IDs of minor constituents for inference
+        Tidal constituent IDs of minor constituents for inference
     include_anelasticity: bool, default False
-        compute Love numbers taking into account mantle anelasticity
+        Compute Love numbers taking into account mantle anelasticity
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
     Returns
     -------
-    dh: xr.DataArray
-        tidal time series for minor constituents
+    tinfer: xr.DataArray
+        Tidal time series for minor constituents
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -1028,22 +1028,22 @@ def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset with spatial coordinates
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
+        Use nodal corrections from OTIS/ATLAS or GOT/FES models
     include_anelasticity: bool, default False
-        compute Love numbers taking into account mantle anelasticity
+        Compute Love numbers taking into account mantle anelasticity
     constituents: list
-        long-period tidal constituent IDs
+        Long-period tidal constituent IDs
 
     Returns
     -------
-    lpet: xr.DataArray
-        long-period equilibrium tide (meters)
+    tpred: xr.DataArray
+        Predicted tidal time series (meters)
     """
     # set default keyword arguments
     cindex = [
@@ -1218,11 +1218,11 @@ def load_pole_tide(
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     XYZ: xarray.Dataset
         Dataset with cartesian coordinates
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     gamma_0: float, default 9.80665
         Normal gravity (m s\ :sup:`-2`)
     omega: float, default 7.2921151467e-5
@@ -1348,11 +1348,11 @@ def ocean_pole_tide(
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     UXYZ: np.ndarray
         Ocean pole tide values from Desai (2002)
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
         Semi-major axis of the Earth (meters)
     gamma_0: float, default 9.780325
@@ -1444,7 +1444,7 @@ def solid_earth_tide(
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
@@ -1452,7 +1452,7 @@ def solid_earth_tide(
     LXYZ: xr.Dataset
         Dataset with Earth-centered Earth-fixed coordinates of the moon
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
         Semi-major axis of the Earth (meters)
     tide_system: str, default 'tide_free'
@@ -1461,7 +1461,7 @@ def solid_earth_tide(
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
     lmax: int, default 3
-        maximum degree of spherical harmonic expansion
+        Maximum degree of spherical harmonic expansion
     h2: float, default 0.6078
         Degree-2 Love number of vertical displacement
     l2: float, default 0.0847
@@ -1482,7 +1482,7 @@ def solid_earth_tide(
     Returns
     -------
     dxt: xr.Dataset
-        Solid Earth tide (meters)
+        Solid Earth tide displacements (meters)
     """
     # set default keyword arguments
     # maximum degree of spherical harmonic expansion
@@ -1607,6 +1607,11 @@ def _out_of_phase(
         Factors for the sun
     F2_lunar: np.ndarray
         Factors for the moon
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute diurnal and semi-diurnal corrections separately
     # for both the sun and moon
@@ -1641,6 +1646,11 @@ def _out_of_phase_diurnal(
         Love number correction for the diurnal band
     dl2: float, default -0.0007
         Shida number correction for the diurnal band
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -1713,6 +1723,11 @@ def _out_of_phase_semidiurnal(
         Love number correction for the semi-diurnal band
     dl2: float, default -0.0007
         Shida number correction for the semi-diurnal band
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -1793,6 +1808,11 @@ def _latitude_dependence(
         Factors for the sun
     F2_lunar: np.ndarray
         Factors for the moon
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute diurnal and semi-diurnal corrections separately
     # for both the sun and moon
@@ -1824,6 +1844,11 @@ def _latitude_dependence_diurnal(
         Factors for the sun or moon
     L1: float, default 0.0012
         Love/Shida number correction for the diurnal band
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -1881,6 +1906,11 @@ def _latitude_dependence_semidiurnal(
         Factors for the sun or moon
     L1: float, default 0.0024
         Love/Shida number correction for the semi-diurnal band
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -1939,7 +1969,12 @@ def _frequency_dependence(
     MJD: np.ndarray
         Modified Julian Day (MJD)
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # Love/Shida number corrections (diurnal and long-period)
     # compute diurnal and long-period corrections separately
@@ -1963,7 +1998,12 @@ def _frequency_dependence_diurnal(
     MJD: np.ndarray
         Modified Julian Day (MJD)
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # Corrections to Diurnal Tides for Frequency Dependence
     # of Love and Shida Number Parameters
@@ -2097,7 +2137,12 @@ def _frequency_dependence_long_period(
     MJD: np.ndarray
         Modified Julian Day (MJD)
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
+
+    Returns
+    -------
+    D: xr.Dataset
+        Solid Earth tide corrections
     """
     # Corrections to Long-Period Tides for Frequency Dependence
     # of Love and Shida Number Parameters
@@ -2205,6 +2250,11 @@ def _free_to_mean(
         Degree-2 Love (Shida) number of horizontal displacement
     H0: float, default -0.31460
         Mean amplitude of the permanent tide (meters)
+
+    Returns
+    -------
+    D: xr.Dataset
+        free-to-mean tide offset
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
@@ -2262,11 +2312,11 @@ def body_tide(
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset with spatial coordinates
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     method: str, default 'ASTRO5'
         Method for computing the mean longitudes
 
@@ -2286,8 +2336,10 @@ def body_tide(
             - ``'HW1995'``: :cite:t:`Hartmann:1995jp`
             - ``'T1987'``: :cite:t:`Tamura:1987tp`
             - ``'W1990'``: Woodworth updates to ``'CTE1973'``
-    lmax: int, default 3
-        maximum degree of spherical harmonic expansion
+    lmax: int, default 6
+        Maximum degree of spherical harmonic expansion
+
+        Will be based on the maximum degree available in the catalog
     include_planets: bool, default False
         Include tide potentials from planetary bodies
     h2: float or None, default None
@@ -2499,20 +2551,20 @@ def generating_force(
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     method: str, default 'Meeus'
         Method for calculating solar and lunar positions
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
         - ``'Meeus'``: :cite:t:`Meeus:1991vh`
     lmax: int, default 4
-        maximum degree of spherical harmonic expansion
+        Maximum degree of spherical harmonic expansion
     AU: float, default 149597870700.0
-        distance of 1 Astronomical Unit (meters)
+        Distance of 1 Astronomical Unit (meters)
     GM: float, default 3.986004418e14
         Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
     mass_ratio_solar: float, default 332946.0482
@@ -2687,9 +2739,9 @@ def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
 
     Returns
     -------
@@ -2881,9 +2933,9 @@ def length_of_day(t: np.ndarray, deltat: float | np.ndarray = 0.0):
     Parameters
     ----------
     t: np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
 
     Returns
     -------

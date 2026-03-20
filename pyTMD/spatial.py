@@ -120,7 +120,7 @@ def data_type(x: np.ndarray, y: np.ndarray, t: np.ndarray) -> str:
 
     Returns
     -------
-    string denoting input data type
+    String denoting input data type
 
         - ``'time series'``
         - ``'drift'``
@@ -251,24 +251,24 @@ class datum:
         # set parameters for ellipsoid
         if self.name in ("CLK66", "NAD27"):
             # Clarke 1866
-            self.a_axis = 6378206.4  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378206.4  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 294.9786982  # flattening of the ellipsoid
 
         elif self.name == "CLK80":
             # Clarke 1880
-            self.a_axis = 6378249.145  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378249.145  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 293.465  # flattening of the ellipsoid
 
         elif self.name in ("GRS80", "NAD83"):
             # Geodetic Reference System 1980
             # North American Datum 1983
-            self.a_axis = 6378135.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378135.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.26  # flattening of the ellipsoid
             self.GM = 3.986005e14  # [m^3/s^2] Geocentric Gravitational Constant
 
         elif self.name == "GRS67":
             # Geodetic Reference System 1967
-            self.a_axis = 6378160.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378160.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.247167427  # flattening of the ellipsoid
             self.GM = 3.98603e14  # [m^3/s^2] Geocentric Gravitational Constant
             self.omega = (
@@ -277,109 +277,109 @@ class datum:
 
         elif self.name == "WGS60":
             # World Geodetic System 1960
-            self.a_axis = 6378165.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378165.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.30  # flattening of the ellipsoid
 
         elif self.name == "WGS66":
             # World Geodetic System 1966
-            self.a_axis = 6378145.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378145.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.25  # flattening of the ellipsoid
 
         elif self.name == "WGS72":
             # World Geodetic System 1972
-            self.a_axis = 6378135.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378135.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.26  # flattening of the ellipsoid
 
         elif self.name == "WGS84":
             # World Geodetic System 1984
-            self.a_axis = 6378137.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378137.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257223563  # flattening of the ellipsoid
 
         elif self.name == "ATS77":
             # Quasi-earth centred ellipsoid for ATS77
-            self.a_axis = 6378135.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378135.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
 
         elif self.name == "KRASS":
             # Krassovsky (USSR)
-            self.a_axis = 6378245.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378245.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.3  # flattening of the ellipsoid
 
         elif self.name == "SGS90":
             # Soviet Geodetic System 1990
-            self.a_axis = 6378136.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378136.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.2578393  # flattening of the ellipsoid
 
         elif self.name == "INTER":
             # International 1924
-            self.a_axis = 6378388.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378388.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1 / 297.0  # flattening of the ellipsoid
 
         elif self.name == "AIRY":
             # Airy 1830 Ellipsoid
-            self.a_axis = 6377563.396  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6377563.396  # [m] semi-major axis of the ellipsoid
             self.flat = 1 / 299.3249646  # flattening of the ellipsoid
 
         elif self.name == "MAIRY":
             # Modified Airy 1849 Ellipsoid
-            self.a_axis = 6377340.189  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6377340.189  # [m] semi-major axis of the ellipsoid
             self.flat = 1 / 299.3249646  # flattening of the ellipsoid
 
         elif self.name == "HLMRT":
             # Helmert 1906 Ellipsoid
-            self.a_axis = 6378200.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378200.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.3  # flattening of the ellipsoid
 
         elif self.name == "HOUGH":
             # Hough 1960 Ellipsoid
-            self.a_axis = 6378270.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378270.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 297.0  # flattening of the ellipsoid
 
         elif self.name == "HGH80":
             # Hughes 1980 Ellipsoid
-            self.a_axis = 6378273.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378273.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.279411123064  # flattening of the ellipsoid
 
         elif self.name == "MERIT":
             # MERIT 1983 ellipsoid
-            self.a_axis = 6378137.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378137.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
 
         elif self.name == "TOPEX":
             # TOPEX/POSEIDON ellipsoid
-            self.a_axis = 6378136.3  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378136.3  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
             self.GM = 3.986004415e14  # [m^3/s^2]
 
         elif self.name == "EGM96":
             # EGM 1996 gravity model
-            self.a_axis = 6378136.3  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378136.3  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.256415099  # flattening of the ellipsoid
             self.GM = 3.986004415e14  # [m^3/s^2]
 
         elif self.name == "IAG75":
             # International Association of Geodesy (IAG 1975)
-            self.a_axis = 6378140.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378140.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
 
         elif self.name == "IAU64":
             # International Astronomical Union (IAU 1964)
-            self.a_axis = 6378160.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378160.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.25  # flattening of the ellipsoid
 
         elif self.name == "IAU76":
             # International Astronomical Union (IAU 1964)
-            self.a_axis = 6378140.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378140.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
 
         elif self.name == "IERS89":
             # IERS Numerical Standards (1989)
-            self.a_axis = 6378136.0  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378136.0  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.257  # flattening of the ellipsoid
 
         elif self.name == "IERS":
             # IERS Numerical Standards (2010)
-            self.a_axis = 6378136.6  # [m] semimajor axis of the ellipsoid
+            self.a_axis = 6378136.6  # [m] semi-major axis of the ellipsoid
             self.flat = 1.0 / 298.25642  # flattening of the ellipsoid
 
         elif self.name == "user_defined":
@@ -663,29 +663,29 @@ def convert_ellipsoid(
     Parameters
     ----------
     lat1: np.ndarray
-        latitude of input ellipsoid (degrees)
+        Latitude of input ellipsoid (degrees)
     h1: np.ndarray
-        height above input ellipsoid (meters)
+        Height above input ellipsoid (meters)
     a1: float
-        semi-major axis of input ellipsoid
+        Semi-major axis of input ellipsoid
     f1: float
-        flattening of input ellipsoid
+        Flattening of input ellipsoid
     a2: float
-        semi-major axis of output ellipsoid
+        Semi-major axis of output ellipsoid
     f2: float
-        flattening of output ellipsoid
+        Flattening of output ellipsoid
     eps: float, default 1e-12
-        tolerance to prevent division by small numbers and
+        Tolerance to prevent division by small numbers and
         to determine convergence
     itmax: int, default 10
-        maximum number of iterations to use in Newton-Raphson
+        Maximum number of iterations to use in Newton-Raphson
 
     Returns
     -------
     lat2: np.ndarray
-        latitude of output ellipsoid (degrees)
+        Latitude of output ellipsoid (degrees)
     h2: np.ndarray
-        height above output ellipsoid (meters)
+        Height above output ellipsoid (meters)
     """
     if len(lat1) != len(h1):
         raise ValueError("lat and h have incompatible dimensions")
@@ -802,20 +802,20 @@ def compute_delta_h(
     Parameters
     ----------
     lat: np.ndarray
-        latitudes (degrees north)
+        Latitudes (degrees north)
     a1: float
-        semi-major axis of input ellipsoid
+        Semi-major axis of input ellipsoid
     f1: float
-        flattening of input ellipsoid
+        Flattening of input ellipsoid
     a2: float
-        semi-major axis of output ellipsoid
+        Semi-major axis of output ellipsoid
     f2: float
-        flattening of output ellipsoid
+        Flattening of output ellipsoid
 
     Returns
     -------
     delta_h: np.ndarray
-        difference in elevation for two ellipsoids
+        Difference in elevation for two ellipsoids
     """
     # force latitudes to be within -90 to 90 and convert to radians
     phi = np.radians(np.clip(lat, -90.0, 90.0))
@@ -838,7 +838,7 @@ def wrap_longitudes(lon: float | np.ndarray):
     Parameters
     ----------
     lon: float or np.ndarray
-        longitude (degrees east)
+        Longitude (degrees east)
     """
     phi = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
     # convert phi from radians to degrees
@@ -852,16 +852,16 @@ def to_dms(d: np.ndarray):
     Parameters
     ----------
     d: np.ndarray
-        angle (decimal degrees)
+        Angle (decimal degrees)
 
     Returns
     -------
     degree: np.ndarray
-        degrees
+        Degrees
     minute: np.ndarray
-        minutes (arcminutes)
+        Minutes (arcminutes)
     second: np.ndarray
-        seconds (arcseconds)
+        Seconds (arcseconds)
     """
     sign = np.sign(d)
     minute, second = np.divmod(np.abs(d) * 3600.0, 60.0)
@@ -876,16 +876,16 @@ def from_dms(degree: np.ndarray, minute: np.ndarray, second: np.ndarray):
     Parameters
     ----------
     degree: np.ndarray
-        degrees
+        Degrees
     minute: np.ndarray
-        minutes (arcminutes)
+        Minutes (arcminutes)
     second: np.ndarray
-        seconds (arcseconds)
+        Seconds (arcseconds)
 
     Returns
     -------
     d: np.ndarray
-        angle (decimal degrees)
+        Angle (decimal degrees)
     """
     sign = np.sign(degree)
     d = np.abs(degree) + minute / 60.0 + second / 3600.0
@@ -909,28 +909,28 @@ def to_cartesian(
     Parameters
     ----------
     lon: np.ndarray
-        longitude (degrees east)
+        Longitude (degrees east)
     lat: np.ndarray
-        latitude (degrees north)
+        Latitude (degrees north)
     h: float or np.ndarray, default 0.0
-        height above ellipsoid (or sphere)
+        Height above ellipsoid (or sphere)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
 
-        for spherical coordinates set to radius of the Earth
+        For spherical coordinates set to radius of the Earth
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
 
-        for spherical coordinates set to 0
+        For spherical coordinates set to 0
 
     Returns
     -------
     x: np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y: np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z: np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(lon) == 0
@@ -965,20 +965,20 @@ def to_sphere(x: np.ndarray, y: np.ndarray, z: np.ndarray):
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
 
     Returns
     -------
     lon: np.ndarray
-        longitude (degrees east)
+        Longitude (degrees east)
     lat: np.ndarray
-        latitude (degrees north)
+        Latitude (degrees north)
     rad: np.ndarray
-        radius (meters)
+        Radius (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1025,34 +1025,34 @@ def to_geodetic(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
     method: str, default 'bowring'
-        method to use for conversion
+        Method to use for conversion
 
             - ``'moritz'``: iterative solution
             - ``'bowring'``: iterative solution
             - ``'zhu'``: closed-form solution
     eps: float, default np.finfo(np.float64).eps
-        tolerance for iterative methods
+        Tolerance for iterative methods
     iterations: int, default 10
-        maximum number of iterations
+        Maximum number of iterations
 
     Returns
     -------
     lon: np.ndarray
-        longitude (degrees east)
+        Longitude (degrees east)
     lat: np.ndarray
-        latitude (degrees north)
+        Latitude (degrees north)
     h: np.ndarray
-        height above ellipsoid (meters)
+        Height above ellipsoid (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1096,19 +1096,19 @@ def _moritz_iterative(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
     eps: float, default np.finfo(np.float64).eps
-        tolerance for iterative method
+        Tolerance for iterative method
     iterations: int, default 10
-        maximum number of iterations
+        Maximum number of iterations
     """
     # Linear eccentricity and first numerical eccentricity
     lin_ecc = np.sqrt((2.0 * flat - flat**2) * a_axis**2)
@@ -1157,19 +1157,19 @@ def _bowring_iterative(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
     eps: float, default np.finfo(np.float64).eps
-        tolerance for iterative method
+        Tolerance for iterative method
     iterations: int, default 10
-        maximum number of iterations
+        Maximum number of iterations
     """
     # semiminor axis of the WGS84 ellipsoid [m]
     b_axis = (1.0 - flat) * a_axis
@@ -1228,15 +1228,15 @@ def _zhu_closed_form(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
     """
     # semiminor axis of the WGS84 ellipsoid [m]
     b_axis = (1.0 - flat) * a_axis
@@ -1298,30 +1298,30 @@ def to_ENU(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     lon0: float or np.ndarray, default 0.0
-        reference longitude (degrees east)
+        Reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
-        reference latitude (degrees north)
+        Reference latitude (degrees north)
     h0: float or np.ndarray, default 0.0
-        reference height (meters)
+        Reference height (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
 
     Returns
     -------
     E: np.ndarray
-        east coordinates (meters)
+        East coordinates (meters)
     N: np.ndarray
-        north coordinates (meters)
+        North coordinates (meters)
     U: np.ndarray
-        up coordinates (meters)
+        Up coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(x) == 0
@@ -1371,30 +1371,30 @@ def from_ENU(
     Parameters
     ----------
     E, np.ndarray
-        east coordinates (meters)
+        East coordinates (meters)
     N, np.ndarray
-        north coordinates (meters)
+        North coordinates (meters)
     U, np.ndarray
-        up coordinates (meters)
+        Up coordinates (meters)
     lon0: float or np.ndarray, default 0.0
-        reference longitude (degrees east)
+        Reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
-        reference latitude (degrees north)
+        Reference latitude (degrees north)
     h0: float or np.ndarray, default 0.0
-        reference height (meters)
+        Reference height (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
 
     Returns
     -------
     x, float
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, float
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, float
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     """
     # verify axes and copy to not modify inputs
     singular_values = np.ndim(E) == 0
@@ -1443,19 +1443,20 @@ def to_horizontal(
     Parameters
     ----------
     E: np.ndarray
-        east coordinates (meters)
+        East coordinates (meters)
     N: np.ndarray
-        north coordinates (meters)
+        North coordinates (meters)
     U: np.ndarray
-        up coordinates (meters)
+        Up coordinates (meters)
+
     Returns
     -------
     alpha: np.ndarray
-        altitude (elevation) angle (degrees)
+        Altitude (elevation) angle (degrees)
     phi: np.ndarray
-        azimuth angle (degrees)
+        Azimuth angle (degrees)
     D: np.ndarray
-        distance from observer to object (meters)
+        Distance from observer to object (meters)
     """
     # calculate distance to object
     # convert coordinates to unit vectors
@@ -1484,21 +1485,21 @@ def to_zenith(
     Parameters
     ----------
     x, np.ndarray
-        cartesian x-coordinates (meters)
+        Cartesian x-coordinates (meters)
     y, np.ndarray
-        cartesian y-coordinates (meters)
+        Cartesian y-coordinates (meters)
     z, np.ndarray
-        cartesian z-coordinates (meters)
+        Cartesian z-coordinates (meters)
     lon0: float or np.ndarray, default 0.0
-        reference longitude (degrees east)
+        Reference longitude (degrees east)
     lat0: float or np.ndarray, default 0.0
-        reference latitude (degrees north)
+        Reference latitude (degrees north)
     h0: float or np.ndarray, default 0.0
-        reference height (meters)
+        Reference height (meters)
     a_axis: float, default 6378137.0
-        semimajor axis of the ellipsoid
+        Semi-major axis of the ellipsoid
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
 
     Returns
     -------
@@ -1528,14 +1529,14 @@ def geocentric_latitude(
     Parameters
     ----------
     lat: np.ndarray
-        geodetic latitudes (degrees north)
+        Geodetic latitudes (degrees north)
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
 
     Returns
     -------
     geolat: np.ndarray
-        geocentric latitude (degrees)
+        Geocentric latitude (degrees)
     """
     # convert latitude to radians
     phi = np.radians(lat)
@@ -1568,13 +1569,13 @@ def scale_factors(
     Parameters
     ----------
     lat: np.ndarray
-        latitude (degrees north)
+        Latitude (degrees north)
     flat: float, default 1.0/298.257223563
-        ellipsoidal flattening
+        Ellipsoidal flattening
     reference_latitude: float, default 70.0
-        reference latitude (true scale latitude)
+        Reference latitude (true scale latitude)
     metric: str, default 'area'
-        metric to calculate scaling factors
+        Metric to calculate scaling factors
 
             - ``'distance'``: scale factors for distance
             - ``'area'``: scale factors for area
@@ -1582,7 +1583,7 @@ def scale_factors(
     Returns
     -------
     scale: np.ndarray
-        scaling factors at input latitudes
+        Scaling factors at input latitudes
     """
     assert metric.lower() in ["distance", "area"], "Unknown metric"
     # convert latitude from degrees to positive radians

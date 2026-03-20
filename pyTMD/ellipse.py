@@ -36,20 +36,20 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     Parameters
     ----------
     u: np.ndarray
-        zonal current (EW)
+        Zonal current (EW)
     v: np.ndarray
-        meridional current (NS)
+        Meridional current (NS)
 
     Returns
     -------
     major: np.ndarray
-        amplitude of the semi-major axis
+        Amplitude of the semi-major axis
     minor: np.ndarray
-        amplitude of the semi-minor axis
+        Amplitude of the semi-minor axis
     incl: np.ndarray
-        angle of inclination of the northern semi-major axis
+        Angle of inclination of the northern semi-major axis
     phase: np.ndarray
-        phase lag of the maximum current behind the maximum tidal potential
+        Phase lag of the maximum current behind the maximum tidal potential
     """
     # validate inputs
     u = np.atleast_1d(u)
@@ -63,7 +63,7 @@ def ellipse(u: np.ndarray, v: np.ndarray):
     # ep, em: phases of positively and negatively rotating vectors
     ep = np.angle(wp, deg=True)
     em = np.angle(wm, deg=True)
-    # determine the amplitudes of the semimajor and semiminor axes
+    # determine the amplitudes of the semi-major and semiminor axes
     # using Foreman's formula
     major = ap + am
     minor = ap - am
@@ -87,20 +87,20 @@ def inverse(
     Parameters
     ----------
     major: np.ndarray
-        amplitude of the semi-major axis
+        Amplitude of the semi-major axis
     minor: np.ndarray
-        amplitude of the semi-minor axis
+        Amplitude of the semi-minor axis
     incl: np.ndarray
-        angle of inclination of the northern semi-major axis
+        Angle of inclination of the northern semi-major axis
     phase: np.ndarray
-        phase lag of the maximum current behind the maximum tidal potential
+        Phase lag of the maximum current behind the maximum tidal potential
 
     Returns
     -------
     u: np.ndarray
-        zonal current (EW)
+        Zonal current (EW)
     v: np.ndarray
-        meridional current (NS)
+        Meridional current (NS)
     """
     # validate inputs
     major = np.atleast_1d(major)
