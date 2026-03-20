@@ -86,6 +86,7 @@ def reduce_otis(
     bounds: list = 4 * [None],
     crs: str | int = "4326",
     mode: oct = 0o775,
+    **kwargs,
 ):
     """
     Reads OTIS-format tidal files and reduces to a regional subset
@@ -103,6 +104,8 @@ def reduce_otis(
     mode: oct, default 0o775
         Permission mode of the output files
     """
+    # check if using old projection keyword argument and update crs
+    crs = kwargs.get('projection', crs)
     # get parameters for tide model grid
     m = pyTMD.io.model(directory=directory).from_database(model)
 
