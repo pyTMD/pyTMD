@@ -133,17 +133,17 @@ def arguments(MJD: np.ndarray, constituents: list | np.ndarray, **kwargs):
     Parameters
     ----------
     MJD: np.ndarray
-        modified Julian day of input date
+        Modified Julian day of input date
     constituents: list
-        tidal constituent IDs
+        Tidal constituent IDs
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS, FES or GOT models
+        Use nodal corrections from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
-        compute climatologically affected terms without p'
+        Compute climatologically affected terms without :math:`P_s`
     M1: str, default 'perth5'
-        coefficients to use for M1 tides
+        Coefficients to use for M1 tides
 
                 - ``'Doodson'``
                 - ``'Ray'``
@@ -153,11 +153,11 @@ def arguments(MJD: np.ndarray, constituents: list | np.ndarray, **kwargs):
     Returns
     -------
     pu: np.ndarray
-        nodal correction angle (radians)
+        Nodal correction angle (radians)
     pf: np.ndarray
-        nodal modulation factor
+        Nodal modulation factor
     G: np.ndarray
-        phase correction (degrees)
+        Phase correction (degrees)
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -212,20 +212,20 @@ def minor_arguments(MJD: np.ndarray, **kwargs):
     Parameters
     ----------
     MJD: np.ndarray
-        modified Julian day of input date
+        Modified Julian day of input date
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS, FES or GOT models
+        Use nodal corrections from OTIS, FES or GOT models
 
     Returns
     -------
     pu: np.ndarray
-        nodal correction angle (radians)
+        Nodal correction angle (radians)
     pf: np.ndarray
-        nodal modulation factor
+        Nodal modulation factor
     G: np.ndarray
-        phase correction (degrees)
+        Phase correction (degrees)
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -368,13 +368,13 @@ def coefficients_table(constituents: list | tuple | np.ndarray | str, **kwargs):
     Parameters
     ----------
     constituents: list, tuple, np.ndarray or str
-        tidal constituent IDs
+        Tidal constituent IDs
     corrections: str, default 'OTIS'
-        use coefficients from OTIS, FES or GOT models
+        Use coefficients from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
-        compute climatologically affected terms without p'
+        Compute climatologically affected terms without :math:`P_s`
     file: str or pathlib.Path, default `coefficients.json`
-        JSON file of Doodson coefficients
+        ``JSON`` file of Doodson coefficients
 
     Returns
     -------
@@ -434,17 +434,17 @@ def doodson_number(constituents: str | list | np.ndarray, **kwargs):
     Parameters
     ----------
     constituents: str, list or np.ndarray
-        tidal constituent ID(s)
+        Tidal constituent ID(s)
     corrections: str, default 'OTIS'
-        use arguments from OTIS, FES or GOT models
+        Use arguments from OTIS, FES or GOT models
     formalism: str, default 'Doodson'
-        constituent identifier formalism
+        Constituent identifier formalism
 
             - ``'Cartwright'``
             - ``'Doodson'``
             - ``'Extended'``
     raise_error: bool, default True
-        Raise exception if constituent is unsupported
+        Raise ``ValueError`` if constituent is unsupported
 
     Returns
     -------
@@ -532,15 +532,15 @@ def nodal_modulation(
     Parameters
     ----------
     n: np.ndarray
-        mean longitude of ascending lunar node (degrees)
+        Mean longitude of ascending lunar node (degrees)
     p: np.ndarray
-        mean longitude of lunar perigee (degrees)
+        Mean longitude of lunar perigee (degrees)
     constituents: list, tuple, np.ndarray or str
-        tidal constituent IDs
+        Tidal constituent IDs
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS, FES or GOT models
+        Use nodal corrections from OTIS, FES or GOT models
     M1: str, default 'perth5'
-        coefficients to use for M1 tides
+        Coefficients to use for M1 tides
 
                 - ``'Doodson'``
                 - ``'Ray'``
@@ -550,9 +550,9 @@ def nodal_modulation(
     Returns
     -------
     u: np.ndarray
-        nodal correction angle (radians)
+        Nodal correction angle (radians)
     f: np.ndarray
-        nodal modulation factor
+        Nodal modulation factor
     """
     # set default keyword arguments
     kwargs.setdefault("corrections", "OTIS")
@@ -1359,22 +1359,22 @@ def group_modulation(
     Parameters
     ----------
     h: np.ndarray
-        mean longitude of sun (degrees)
+        Mean longitude of sun (degrees)
     n: np.ndarray
-        mean longitude of ascending lunar node (degrees)
+        Mean longitude of ascending lunar node (degrees)
     p: np.ndarray
-        mean longitude of lunar perigee (degrees)
+        Mean longitude of lunar perigee (degrees)
     ps: np.ndarray
-        mean longitude of solar perigee (degrees)
+        Mean longitude of solar perigee (degrees)
     constituents: list, tuple, np.ndarray or str
-        tidal constituent IDs
+        Tidal constituent IDs
 
     Returns
     -------
     f: np.ndarray
-        modulation factor
+        Modulation factor
     u: np.ndarray
-        angle correction (radians)
+        Angle correction (radians)
     """
 
     # convert longitudes to radians
@@ -1723,11 +1723,11 @@ def frequency(constituents: list | np.ndarray, **kwargs):
     Parameters
     ----------
     constituents: list
-        tidal constituent IDs
+        Tidal constituent IDs
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS, FES or GOT models
+        Use nodal corrections from OTIS, FES or GOT models
     M1: str, default 'perth5'
-        coefficients to use for M1 tides
+        Coefficients to use for M1 tides
 
                 - ``'Doodson'``
                 - ``'Ray'``
@@ -1737,7 +1737,7 @@ def frequency(constituents: list | np.ndarray, **kwargs):
     Returns
     -------
     omega: np.ndarray
-        angular frequency (radians per second)
+        Angular frequency (radians per second)
     """
     # set default keyword arguments
     kwargs.setdefault("corrections", "OTIS")
@@ -1764,13 +1764,13 @@ def aliasing_period(
     Parameters
     ----------
     constituents: list
-        tidal constituent IDs
+        Tidal constituent IDs
     sampling: float
-        sampling repeat period in seconds
+        Sampling repeat period (seconds)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS, FES or GOT models
+        Use nodal corrections from OTIS, FES or GOT models
     M1: str, default 'perth5'
-        coefficients to use for M1 tides
+        Coefficients to use for M1 tides
 
                 - ``'Doodson'``
                 - ``'Ray'``
@@ -1780,7 +1780,7 @@ def aliasing_period(
     Returns
     -------
     period: np.ndarray
-        tidal aliasing period in seconds
+        Tidal aliasing period (seconds)
     """
     # get the angular frequency for tidal constituents
     omega = frequency(constituents, **kwargs)
@@ -1802,9 +1802,9 @@ def _arguments_table(**kwargs):
     Parameters
     ----------
     corrections: str, default 'OTIS'
-        use arguments from OTIS, FES or GOT models
+        Use arguments from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
-        compute climatologically affected terms without p'
+        Compute climatologically affected terms without :math:`P_s`
 
     Returns
     -------
@@ -1945,22 +1945,22 @@ def _constituent_parameters(c: str, **kwargs):
     Parameters
     ----------
     c: str
-        tidal constituent ID
+        Tidal constituent ID
     raise_error: bool, default False
-        Raise exception if constituent is unsupported
+        Raise ``ValueError`` if constituent is unsupported
 
     Returns
     -------
     amplitude: float
-        amplitude of equilibrium tide for tidal constituent (meters)
+        Amplitude of equilibrium tide for tidal constituent (meters)
     phase: float
-        phase of tidal constituent (radians)
+        Phase of tidal constituent (radians)
     omega: float
-        angular frequency of constituent (radians)
+        Angular frequency of constituent (radians)
     alpha: float
-        load love number of tidal constituent
+        Load Love number of tidal constituent
     species: float
-        spherical harmonic dependence of quadrupole potential
+        Spherical harmonic dependence
     """
     # default keyword arguments
     kwargs.setdefault("raise_error", False)
@@ -2238,7 +2238,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     Returns
     -------
     omega: np.ndarray
-        angular frequency (radians per second)
+        Angular frequency (radians per second)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "Cartwright")
@@ -2282,7 +2282,7 @@ def _love_numbers(omega: np.ndarray, model: str = "PREM", **kwargs):
     Parameters
     ----------
     omega: np.ndarray
-        angular frequency (radians per second)
+        Angular frequency (radians per second)
     model: str, default 'PREM'
         Earth model to use for Love numbers
 
@@ -2293,7 +2293,7 @@ def _love_numbers(omega: np.ndarray, model: str = "PREM", **kwargs):
             - 'C2'
             - 'PREM'
     astype: np.dtype, default np.float64
-        data type for the output Love numbers
+        Data type for the output Love numbers
 
     Returns
     -------
@@ -2379,9 +2379,9 @@ def _complex_love_numbers(omega: np.ndarray, **kwargs):
     Parameters
     ----------
     omega: np.ndarray
-        angular frequency (radians per second)
+        Angular frequency (radians per second)
     kwargs: dict
-        additional keyword arguments for Love number calculation
+        Additional keyword arguments for Love number calculation
 
     Returns
     -------
@@ -2502,15 +2502,15 @@ def _parse_tide_potential_table(
     Parameters
     ----------
     table: str or pathlib.Path
-        table of tide-generating potentials
+        Table of tide-generating potentials
     skiprows: int, default 1
-        number of header rows to skip in the table
+        Number of header rows to skip in the table
     columns: int, default 1
-        number of amplitude columns in the table
+        Number of amplitude columns in the table
     include_degree: bool, default True
-        table includes spherical harmonic degree
+        Table includes spherical harmonic degree
     include_planets: bool, default False
-        table includes coefficients for mean longitudes of planets
+        Table includes coefficients for mean longitudes of planets
 
     Returns
     -------
@@ -2575,7 +2575,7 @@ def _parse_rotation_rate_table():
     Returns
     -------
     ZROT: np.ndarray
-        rotation rate table values
+        Rotation rate table values
     """
     table = get_data_path(["data", "re14_tab3.txt"])
     with table.open(mode="r", encoding="utf8") as f:
@@ -2796,20 +2796,20 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
     coef: list or np.ndarray
         Doodson coefficients (Cartwright numbers) for constituent
     corrections: str, default 'GOT'
-        use coefficients from OTIS, FES or GOT models
+        Use coefficients from OTIS, FES or GOT models
     climate_solar_perigee: bool, default False
-        use climatologically affected terms without p'
+        Use climatologically affected terms without :math:`P_s`
     arguments: int, default 7
         Number of astronomical arguments to use
     file: str or pathlib.Path, default `coefficients.json`
-        JSON file of Doodson coefficients
+        ``JSON`` file of Doodson coefficients
     raise_error: bool, default True
-        Raise exception if constituent is unsupported
+        Raise ``ValueError`` if constituent is unsupported
 
     Returns
     -------
     c: str
-        tidal constituent ID
+        Tidal constituent ID
     """
     # set default keyword arguments
     kwargs.setdefault("corrections", "GOT")
@@ -2873,7 +2873,7 @@ def _to_doodson_number(coef: list | np.ndarray, **kwargs):
     astype: type, default float
         Output data type for default case
     raise_error: bool, default True
-        Raise exception if constituent is unsupported
+        Raise ``ValueError`` if constituent is unsupported
 
     Returns
     -------

@@ -113,9 +113,9 @@ def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
     Parameters
     ----------
     coefficients: list or np.ndarray
-        leading coefficient of polynomials of increasing order
+        Leading coefficient of polynomials of increasing order
     t: np.ndarray
-        time for a given astronomical longitudes calculation
+        Time for a given astronomical longitudes calculation
     """
     # convert time to array if importing a single value
     t = np.atleast_1d(t)
@@ -258,21 +258,21 @@ def legendre(
     Parameters
     ----------
     l: int
-        degree of the Legendre polynomials
+        Degree of the Legendre polynomials
     x: np.ndarray
-        elements ranging from -1 to 1
+        Elements ranging from -1 to 1
 
         Typically :math:`\cos(\theta)`, where :math:`\theta`
         is the colatitude
     m: int, default 0
-        order of the Legendre polynomials (:math:`0` to :math:`l`)
+        Order of the Legendre polynomials (:math:`0` to :math:`l`)
 
     Returns
     -------
     Plm: np.ndarray
         Legendre polynomials of degree :math:`l` and order :math:`m`
     dPlm: np.ndarray
-        first derivative of spherical harmonics with respect to
+        First derivative of spherical harmonics with respect to
         :math:`\theta`
     """
     # verify values are integers
@@ -313,11 +313,11 @@ def _assoc_legendre(
     Parameters
     ----------
     l: int
-        degree of the Legendre polynomials
+        Degree of the Legendre polynomials
     m: int
-        order of the Legendre polynomials (:math:`0` to :math:`l`)
+        Order of the Legendre polynomials (:math:`0` to :math:`l`)
     x: np.ndarray
-        elements ranging from -1 to 1
+        Elements ranging from -1 to 1
 
         Typically :math:`\cos(\theta)`, where :math:`\theta`
         is the colatitude
@@ -373,22 +373,22 @@ def sph_harm(
     Parameters
     ----------
     l: int
-        degree of the spherical harmonics
+        Degree of the spherical harmonics
     theta: np.ndarray
-        colatitude (radians)
+        Colatitude (radians)
     phi: np.ndarray
-        longitude (radians)
+        Longitude (radians)
     m: int, default 0
-        order of the spherical harmonics (:math:`0` to :math:`l`)
+        Order of the spherical harmonics (:math:`0` to :math:`l`)
     phase: float, default 0.0
-        phase shift (radians)
+        Phase shift (radians)
 
     Returns
     -------
     Ylm: np.ndarray
-        complex spherical harmonics of degree :math:`l` and order :math:`m`
+        Complex spherical harmonics of degree :math:`l` and order :math:`m`
     dYlm: np.ndarray
-        first derivative of spherical harmonics with respect to
+        First derivative of spherical harmonics with respect to
         :math:`\theta`
     """
     # calculate associated Legendre functions and derivatives

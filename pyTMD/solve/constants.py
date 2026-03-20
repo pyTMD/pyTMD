@@ -74,17 +74,17 @@ def constants(
     Parameters
     ----------
     t: float or np.ndarray
-        days relative to 1992-01-01T00:00:00
+        Days relative to 1992-01-01T00:00:00
     ht: np.ndarray
-        input time series (elevation or currents)
+        Input time series (elevation or currents)
     constituents: str, list or np.ndarray
-        tidal constituent ID(s)
+        Tidal constituent ID(s)
     deltat: float or np.ndarray, default 0.0
-        time correction for converting to Ephemeris Time (days)
+        Time correction for converting to Ephemeris Time (days)
     corrections: str, default 'OTIS'
-        use nodal corrections from OTIS/ATLAS or GOT/FES models
+        Use nodal corrections from OTIS/ATLAS or GOT/FES models
     solver: str, default 'lstsq'
-        least squares solver to use
+        Least squares solver to use
 
         - ``'lstsq'``: least squares solution
         - ``'gelsy'``: complete orthogonal factorization
@@ -92,9 +92,9 @@ def constants(
         - ``'gelsd'``: SVD with divide and conquer method
         - ``'bvls'``: bounded-variable least-squares
     order: int, default 0
-        degree of the polynomial to add to fit
+        Degree of the polynomial to add to fit
     infer_minor: bool, default False
-        infer minor tidal constituents
+        Infer minor tidal constituents
     minor_constituents: list or None, default None
         Specify constituents to infer
     bounds: tuple, default (None, None)
@@ -107,7 +107,7 @@ def constants(
     Returns
     -------
     ds: xr.Dataset
-        xarray dataset of complex harmonic constants
+        ``Dataset`` of complex harmonic constants
     """
     # check if input constituents is a string
     if isinstance(constituents, str):

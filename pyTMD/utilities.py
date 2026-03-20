@@ -153,7 +153,7 @@ def get_data_path(relpath: list | str | pathlib.Path):
     Parameters
     ----------
     relpath: list, str or pathlib.Path
-        relative path
+        Relative path
     """
     # current file path
     filename = inspect.getframeinfo(inspect.currentframe()).filename
@@ -175,9 +175,9 @@ def get_cache_path(
     Parameters
     ----------
     relpath: list, str, pathlib.Path or None
-        relative path
+        Relative path
     appname: str, default 'pytmd'
-        application name
+        Application name
     """
     # get platform-specific cache directory
     filepath = platformdirs.user_cache_path(appname=appname, ensure_exists=True)
@@ -281,7 +281,7 @@ def Path(filename: str | pathlib.Path, *args, **kwargs):
     Parameters
     ----------
     filename: str or pathlib.Path
-        file path or URL
+        File path or URL
     """
     if is_valid_url(filename):
         return URL(filename, *args, **kwargs)
@@ -350,7 +350,7 @@ class URL:
         return self._headers
 
     def load(self, *args, **kwargs):
-        """Load JSON response from URL"""
+        """Load ``JSON`` response from URL"""
         return from_json(self.urlname, headers=self._headers, *args, **kwargs)
 
     def ping(self, *args, **kwargs) -> bool:
@@ -439,19 +439,19 @@ def detect_format(filename: str | pathlib.Path) -> str:
     Parameters
     ----------
     filename: str or pathlib.Path
-        model file
+        Model file
 
     Returns
     -------
     format: str
         Model format
 
-            - ``'ascii'``: ascii format
+            - ``'ascii'``: ASCII format
             - ``'netcdf'``: netCDF4 format
     """
     filename = Path(filename).resolve()
     if re.search(r"(\.asc|\.d)(\.gz)?$", filename.name, re.IGNORECASE):
-        # FES or GOT ascii formats
+        # FES or GOT ASCII formats
         return "ascii"
     elif re.search(r"\.nc(\.gz)?$", filename.name, re.IGNORECASE):
         # FES or GOT netCDF4 formats
@@ -467,12 +467,12 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
     Parameters
     ----------
     filename: str or pathlib.Path
-        model file
+        Model file
 
     Returns
     -------
     compressed: bool
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
     """
     filename = Path(filename).resolve()
     return bool(re.search(r"\.gz$", filename.name, re.IGNORECASE))
@@ -485,7 +485,7 @@ def compressuser(filename: str | pathlib.Path):
     Parameters
     ----------
     filename: str or pathlib.Path
-        input filename to compress
+        Input filename to tilde-compress
     """
     # attempt to compress filename relative to home directory
     filename = pathlib.Path(filename).expanduser().absolute()
@@ -505,9 +505,9 @@ def get_hash(local: str | io.IOBase | pathlib.Path, algorithm: str = "md5"):
     Parameters
     ----------
     local: obj, str or pathlib.Path
-        BytesIO object or path to file
+        ``BytesIO`` object or path to file
     algorithm: str, default 'md5'
-        hashing algorithm for checksum validation
+        Hashing algorithm for checksum validation
     """
     # check if open file object or if local file exists
     if isinstance(local, io.IOBase):
@@ -574,12 +574,12 @@ def get_git_status():
 # PURPOSE: recursively split a url path
 def url_split(s: str):
     """
-    Recursively split a url path into a list
+    Recursively split a URL path into a list
 
     Parameters
     ----------
     s: str
-        url string
+        URL string
     """
     head, tail = posixpath.split(str(s))
     if head in ("http:", "https:", "ftp:", "s3:"):
@@ -597,7 +597,7 @@ def convert_arg_line_to_args(arg_line):
     Parameters
     ----------
     arg_line: str
-        line string containing a single argument and/or comments
+        Line string containing a single argument and/or comments
     """
     # remove commented lines and after argument comments
     for arg in re.sub(r"\#(.*?)$", r"", arg_line).split():
@@ -614,15 +614,15 @@ def build_logger(name: str, **kwargs):
     Parameters
     ----------
     name: str
-        name of the logger
+        Name of the logger
     format: str
-        event description message format
+        Event description message format
     level: int, default logging.CRITICAL
-        lowest-severity log message logger will handle
+        Lowest-severity log message logger will handle
     propagate: bool, default False
-        events logged will be passed to higher level handlers
+        Events logged will be passed to higher level handlers
     stream: obj or NoneType, default None
-        specified stream to initialize StreamHandler
+        Specified stream to initialize ``StreamHandler``
     """
     # set default arguments
     kwargs.setdefault("format", "%(levelname)s:%(name)s:%(message)s")
@@ -652,9 +652,9 @@ def get_unix_time(time_string: str, format: str = "%Y-%m-%d %H:%M:%S"):
     Parameters
     ----------
     time_string: str
-        formatted time string to parse
+        Formatted time string to parse
     format: str, default '%Y-%m-%d %H:%M:%S'
-        format for input time string
+        Format for input time string
     """
     try:
         parsed_time = time.strptime(time_string.rstrip(), format)
@@ -672,7 +672,7 @@ def even(value: float):
     Parameters
     ----------
     value: float
-        number to be rounded
+        Number to be rounded
     """
     return 2 * int(value // 2)
 
@@ -690,11 +690,11 @@ def copy(
     Parameters
     ----------
     source: str
-        source file
+        Source file
     destination: str
-        copied destination file
+        Copied destination file
     move: bool, default False
-        remove the source file
+        Remove the source file
     """
     source = pathlib.Path(source).expanduser().absolute()
     destination = pathlib.Path(destination).expanduser().absolute()
@@ -712,16 +712,16 @@ def check_ftp_connection(
     HOST: str, username: str | None = None, password: str | None = None
 ):
     """
-    Check internet connection with ftp host
+    Check internet connection with ``ftp`` host
 
     Parameters
     ----------
     HOST: str
-        remote ftp host
+        Remote ftp host
     username: str or NoneType
-        ftp username
+        ``ftp`` username
     password: str or NoneType
-        ftp password
+        ``ftp`` password
     """
     # attempt to connect to ftp host
     try:
@@ -747,31 +747,31 @@ def ftp_list(
     sort: bool = False,
 ):
     """
-    List a directory on a ftp host
+    List a directory on a ``ftp`` host
 
     Parameters
     ----------
     HOST: str or list
-        remote ftp host path split as list
+        Remote ``ftp`` host path split as list
     username: str or NoneType
-        ftp username
+        ``ftp`` username
     password: str or NoneType
-        ftp password
+        ``ftp`` password
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     basename: bool, default False
-        return the file or directory basename instead of the full path
+        Return the file or directory basename instead of the full path
     pattern: str or NoneType, default None
-        regular expression pattern for reducing list
+        Regular expression pattern for reducing list
     sort: bool, default False
-        sort output list
+        Sort output list
 
     Returns
     -------
     output: list
-        items in a directory
+        Items in a directory
     mtimes: list
-        last modification times for items in the directory
+        Last modification times for items in the directory
     """
     # verify inputs for remote ftp host
     if isinstance(HOST, str):
@@ -833,35 +833,35 @@ def from_ftp(
     mode: oct = 0o775,
 ):
     """
-    Download a file from a ftp host
+    Download a file from a ``ftp`` host
 
     Parameters
     ----------
     HOST: str or list
-        remote ftp host path
+        Remote ``ftp`` host path
     username: str or NoneType
-        ftp username
+        ``ftp`` username
     password: str or NoneType
-        ftp password
+        ``ftp`` password
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     local: str, pathlib.Path or NoneType, default None
-        path to local file
+        Path to local file
     hash: str, default ''
         MD5 hash of local file
     chunk: int, default 8192
-        chunk size for transfer encoding
+        Chunk size for transfer encoding
     verbose: bool, default False
-        print file transfer information
+        Print file transfer information
     fid: obj, default sys.stdout
-        open file object to print if verbose
+        Open file object to print if verbose
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
 
     Returns
     -------
     remote_buffer: obj
-        BytesIO representation of file
+        ``BytesIO`` representation of file
     """
     # create logger
     loglevel = logging.INFO if verbose else logging.CRITICAL
@@ -917,7 +917,7 @@ def from_ftp(
 
 
 def _create_default_ssl_context() -> ssl.SSLContext:
-    """Creates the default SSL context"""
+    """Creates the default ``SSL`` context"""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     _set_ssl_context_options(context)
     context.options |= ssl.OP_NO_COMPRESSION
@@ -925,7 +925,7 @@ def _create_default_ssl_context() -> ssl.SSLContext:
 
 
 def _create_ssl_context_no_verify() -> ssl.SSLContext:
-    """Creates an SSL context for unverified connections"""
+    """Creates an ``SSL`` context for unverified connections"""
     context = _create_default_ssl_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
@@ -933,7 +933,7 @@ def _create_ssl_context_no_verify() -> ssl.SSLContext:
 
 
 def _set_ssl_context_options(context: ssl.SSLContext) -> None:
-    """Sets the default options for the SSL context"""
+    """Sets the default options for the ``SSL`` context"""
     if sys.version_info >= (3, 10) or ssl.OPENSSL_VERSION_INFO >= (1, 1, 0, 7):
         context.minimum_version = ssl.TLSVersion.TLSv1_2
     else:
@@ -954,16 +954,16 @@ def check_connection(
     timeout: int = 20,
 ):
     """
-    Check internet connection with http host
+    Check internet connection with ``http`` host
 
     Parameters
     ----------
     HOST: str
-        remote http host
+        Remote ``http`` host
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     timeout: int, default 20
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     """
     # attempt to connect to http host
     try:
@@ -991,31 +991,31 @@ def http_list(
     **kwargs,
 ):
     """
-    List a directory on an Apache http Server
+    List a directory on an Apache ``http`` Server
 
     Parameters
     ----------
     HOST: str or list
-        remote http host path
+        Remote ``http`` host path
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
     format: str, default '%Y-%m-%d %H:%M'
-        format for input time string
+        Format for input time string
     pattern: str, default ''
-        regular expression pattern for reducing list
+        Regular expression pattern for reducing list
     sort: bool, default False
-        sort output list
+        Sort output list
 
     Returns
     -------
     colnames: list
-        column names in a directory
+        Column names in a directory
     collastmod: list
-        last modification times for items in the directory
+        Last modification times for items in the directory
     """
     # verify inputs for remote http host
     if isinstance(HOST, str):
@@ -1072,35 +1072,35 @@ def from_http(
     **kwargs,
 ):
     """
-    Download a file from a http host
+    Download a file from a ``http`` host
 
     Parameters
     ----------
     HOST: str or list
-        remote http host path split as list
+        Remote ``http`` host path split as list
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     local: str, pathlib.Path or NoneType, default None
-        path to local file
+        Path to local file
     hash: str, default ''
-        MD5 hash of local file
+        ``MD5`` hash of local file
     chunk: int, default 16384
-        chunk size for transfer encoding
+        Chunk size for transfer encoding
     headers: dict, default {}
-        dictionary of headers to append from url request
+        Dictionary of headers to append from URL request
     verbose: bool, default False
-        print file transfer information
+        Print file transfer information
     fid: obj, default sys.stdout
-        open file object to print if verbose
+        Open file object to print if verbose
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
 
     Returns
     -------
     remote_buffer: obj
-        BytesIO representation of file
+        ``BytesIO`` representation of file
     """
     # create logger
     loglevel = logging.INFO if verbose else logging.CRITICAL
@@ -1159,18 +1159,23 @@ def from_json(
     headers: dict = {},
 ) -> dict:
     """
-    Load a JSON response from a http host
+    Load a ``JSON`` response from a ``http`` host
 
     Parameters
     ----------
     HOST: str or list
-        remote http host path split as list
+        Remote ``http`` host path split as list
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     headers: dict, default {}
-        dictionary of headers to append from url request
+        Dictionary of headers to append from URL request
+
+    Returns
+    -------
+    json_response: dict
+        ``JSON`` response
     """
     # verify inputs for remote http host
     if isinstance(HOST, str):
@@ -1192,7 +1197,8 @@ def from_json(
         # copy headers from response
         headers.update({k.lower(): v for k, v in response.getheaders()})
         # load JSON response
-        return json.loads(response.read())
+        json_response = json.loads(response.read())
+        return json_response
 
 
 # PURPOSE: list a directory on IERS https Server
@@ -1203,25 +1209,25 @@ def iers_list(
     parser=lxml.etree.HTMLParser(),
 ):
     """
-    List a directory on IERS Bulletin-A https server
+    List a directory on IERS Bulletin-A ``https`` server
 
     Parameters
     ----------
     HOST: str or list
-        remote http host path
+        Remote ``http`` host path
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
 
     Returns
     -------
     colnames: list
-        column names in a directory
+        Column names in a directory
     collastmod: list
-        last modification times for items in the directory
+        Last modification times for items in the directory
     """
     # verify inputs for remote http host
     if isinstance(HOST, str):
@@ -1267,22 +1273,22 @@ def uhslc_list(
     Parameters
     ----------
     HOST: str or list
-        remote http host path
+        Remote ``http`` host path
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
     pattern: str, default ''
-        regular expression pattern for reducing list
+        Regular expression pattern for reducing list
     sort: bool, default False
-        sort output list
+        Sort output list
 
     Returns
     -------
     colnames: list
-        column names in a directory
+        Column names in a directory
     """
     # verify inputs for remote http host
     if isinstance(HOST, str):

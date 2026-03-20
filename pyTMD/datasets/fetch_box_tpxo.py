@@ -85,9 +85,9 @@ def build_opener(
     token: str
         box user access token
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     redirect: bool, default True
-        create redirect handler object
+        Create redirect handler object
     """
     # https://docs.python.org/3/howto/urllib2.html#id5
     handler = []
@@ -129,17 +129,17 @@ def fetch_box_tpxo(
     folder_id: str
         box folder id for model
     directory: str or pathlib.Path
-        download directory
+        Download directory
     currents: bool, default False
-        download tidal current files
+        Download tidal current files
     compressed: bool, default False
         Compress output binary or netCDF4 tide files
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     chunk: int, default 16384
-        chunk size for transfer encoding
+        Chunk size for transfer encoding
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
     """
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)

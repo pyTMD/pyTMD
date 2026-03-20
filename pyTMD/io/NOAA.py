@@ -82,9 +82,9 @@ def build_query(api, **kwargs):
     Returns
     -------
     url: str
-        The complete URL for the API request
+        Complete URL for API request
     namespaces: dict
-        A dictionary of namespaces for parsing XML responses
+        Namespaces for parsing ``XML`` responses
     """
     # NOAA webservices hosts
     HOST = "https://tidesandcurrents.noaa.gov/axis/webservices"
@@ -116,7 +116,7 @@ def from_xml(url, **kwargs):
     Returns
     -------
     df: pandas.DataFrame
-        The ``DataFrame`` containing the parsed XML data
+        Data from NOAA webservices
     """
     # query the NOAA webservices API
     assert pandas_available, "pandas is required for accessing NOAA webservices"
@@ -148,7 +148,7 @@ def active_stations(api: str = "activestations", **kwargs):
     Returns
     -------
     df: pandas.DataFrame
-        A ``DataFrame`` containing the station information
+        Table of currently active stations
     """
     # get list of active tide stations
     xpath = _xpaths[api]
@@ -186,7 +186,7 @@ def prediction_stations(
     Returns
     -------
     df: pandas.DataFrame
-        A ``DataFrame`` containing the station information
+        Table of tide prediction stations
     """
     # get list of tide prediction stations
     xpath = _xpaths[api]
@@ -221,7 +221,7 @@ def harmonic_constituents(api: str = "harmonicconstituents", **kwargs):
     Returns
     -------
     df: pandas.DataFrame
-        ``DataFrame`` containing the harmonic constituent information
+        Table of tide constituents
     """
     # set default query parameters
     kwargs.setdefault("unit", 0)
@@ -252,7 +252,7 @@ def water_level(api: str = "waterlevelrawsixmin", **kwargs):
     Returns
     -------
     df: pandas.DataFrame
-        ``DataFrame`` containing the water level data
+        Table of water level data
     """
     # set default query parameters
     kwargs.setdefault("unit", 0)
@@ -288,7 +288,7 @@ class DataFrame(Dataset):
         Returns
         -------
         ds: xarray.Dataset
-            Tide constituent dataset
+            Tide constituent ``Dataset``
         """
         # complex constituent oscillation(s)
         hc = self._df.amplitude * np.exp(-1j * np.radians(self._df.phase))

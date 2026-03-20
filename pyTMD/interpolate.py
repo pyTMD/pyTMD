@@ -70,7 +70,7 @@ def interp1d(x: float | np.ndarray, xp: np.ndarray, fp: np.ndarray, **kwargs):
     Returns
     -------
     f: np.ndarray
-        Interpolated values at x
+        Interpolated values at new coordinates
     """
     # get extrapolation method
     extrapolate = kwargs.get("extrapolate", "linear").lower()
@@ -112,25 +112,30 @@ def inpaint(
 ):
     """
     Inpaint over missing data in a two-dimensional array using a
-    penalized least square method based on discrete cosine transforms
+    penalized least-squares method based on discrete cosine transforms
     :cite:p:`Garcia:2010hn,Wang:2012ei`
 
     Parameters
     ----------
     xs: np.ndarray
-        input x-coordinates
+        x-coordinates
     ys: np.ndarray
-        input y-coordinates
+        y-coordinates
     zs: np.ndarray
-        input data
+        Data with masked values
     N: int, default 0
         Number of iterations (0 for nearest neighbors)
     s0: int, default 3
-        Smoothing
+        Smoothing factor
     power: int, default 2
-        power for lambda function
+        Power for lambda function
     epsilon: float, default 2.0
-        relaxation factor
+        Relaxation factor
+
+    Returns
+    -------
+    z0: np.ndarray
+        Data with inpainted (filled) values
     """
     # find masked values
     if isinstance(zs, np.ma.MaskedArray):
@@ -213,26 +218,26 @@ def extrapolate(
     ys: np.ndarray
         y-coordinates of tidal model
     zs: np.ndarray
-        tide model data
+        Tide model data
     X: np.ndarray
-        output x-coordinates
+        Output x-coordinates
     Y: np.ndarray
-        output y-coordinates
+        Output y-coordinates
     fill_value: float, default np.nan
-        invalid value
+        Invalid value
     dtype: np.dtype, default np.float64
-        output data type
+        Output data type
     cutoff: float, default np.inf
-        return only neighbors within distance (kilometers)
+        Return only neighbors within distance (kilometers)
 
         Set to ``np.inf`` to extrapolate for all points
     is_geographic: bool, default True
-        input grid is in geographic coordinates
+        Input grid is in geographic coordinates
 
     Returns
     -------
-    DATA: np.ndarray
-        interpolated data
+    data: xr.DataArray
+        Interpolated data
     """
     # set geographic flag if using old EPSG projection keyword
     if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
@@ -285,12 +290,12 @@ def _to_cartesian(
     y: np.ndarray
         y-coordinates to be converted
     is_geographic: bool, default True
-        coordinates are geographic
+        Coordinates are geographic
 
     Returns
     -------
     points: np.ndarray
-        output points in Cartesian coordinates
+        Output points in Cartesian coordinates
     """
     # verify output dimensions
     x = np.atleast_1d(x)
@@ -317,9 +322,9 @@ def _build_tree(points: np.ndarray, **kwargs):
     Parameters
     ----------
     points: np.ndarray
-        input points in Cartesian coordinates
+        Input points in Cartesian coordinates
     kwargs: dict
-        additional keyword arguments for scipy.spatial.cKDTree
+        Additional keyword arguments for ``scipy.spatial.cKDTree``
 
     Returns
     -------
@@ -347,20 +352,20 @@ def _nearest_neighbors(
     tree: scipy.spatial.cKDTree
         KD-tree of valid points for nearest-neighbor extrapolation
     points: np.ndarray
-        output points in Cartesian coordinates
+        Output points in Cartesian coordinates
     flattened: np.ndarray
-        valid data array to be extrapolated
+        Valid data array to be extrapolated
     cutoff: float, default np.inf
-        return only neighbors within distance (kilometers)
+        Return only neighbors within distance (kilometers)
     fill_value: float, default None
-        invalid value
+        Invalid value
     dtype: np.dtype, default from input data
-        output data type
+        Output data type
 
     Returns
     -------
     data: xr.DataArray
-        extrapolated data
+        Extrapolated data
     """
     # set default data type
     dtype = kwargs.get("dtype", flattened.dtype)

@@ -85,18 +85,18 @@ class DataTree:
         Parameters
         ----------
         x: np.ndarray
-            New x-coordinates
+            Updated x-coordinates
         y: np.ndarray
-            New y-coordinates
+            Updated y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of coordinates
         kwargs: keyword arguments
-            keyword arguments for ``xarray.Dataset.assign_coords``
+            Keyword arguments for ``xarray.Dataset.assign_coords``
 
         Returns
         -------
-        ds: xarray.Dataset
-            dataset with new coordinates
+        dtree: xarray.DataTree
+            ``DataTree`` with updated coordinates
         """
         # assign new coordinates to each dataset
         dtree = self._dtree.copy()
@@ -168,14 +168,14 @@ class DataTree:
 
     def interp(self, x, y, **kwargs):
         """
-        Interpolate ``DataTree`` to input coordinates
+        Interpolate ``DataTree`` to new coordinates
 
         Parameters
         ----------
         x: np.ndarray
-            input x-coordinates
+            Interpolation x-coordinates
         y: np.ndarray
-            input y-coordinates
+            Interpolation y-coordinates
         """
         # create copy of datatree
         dtree = self._dtree.copy()
@@ -238,10 +238,15 @@ class DataTree:
         """
         Expresses tidal currents in terms of four ellipse parameters
 
-        - ``major``: amplitude of the semi-major axis
-        - ``minor``: amplitude of the semi-minor axis
-        - ``incl``: angle of inclination of the northern semi-major axis
-        - ``phase``: phase lag of the current behind the tidal potential
+        Returns
+        -------
+        dtree: xr.DataTree
+            ``DataTree`` containing:
+
+            - ``major``: amplitude of the semi-major axis
+            - ``minor``: amplitude of the semi-minor axis
+            - ``incl``: angle of inclination of the northern semi-major axis
+            - ``phase``: phase lag of the current behind the tidal potential
         """
         from pyTMD.ellipse import ellipse
 
@@ -294,6 +299,11 @@ class DataTree:
         - ``minor``: amplitude of the semi-minor axis
         - ``incl``: angle of inclination of the northern semi-major axis
         - ``phase``: phase lag of the current behind the tidal potential
+
+        Returns
+        -------
+        dtree: xr.DataTree
+            ``DataTree`` containing transports or currents
         """
         from pyTMD.ellipse import inverse
 
@@ -374,18 +384,18 @@ class Dataset:
         Parameters
         ----------
         x: np.ndarray
-            New x-coordinates
+            Updated x-coordinates
         y: np.ndarray
-            New y-coordinates
+            Updated y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of coordinates
         kwargs: keyword arguments
-            keyword arguments for ``xarray.Dataset.assign_coords``
+            Keyword arguments for ``xarray.Dataset.assign_coords``
 
         Returns
         -------
         ds: xarray.Dataset
-            dataset with new coordinates
+            ``Dataset`` with updated coordinates
         """
         # assign new coordinates to dataset
         ds = self._ds.assign_coords(dict(x=x, y=y), **kwargs)
@@ -433,9 +443,9 @@ class Dataset:
         Parameters
         ----------
         bounds: list, tuple
-            bounding box [min_x, max_x, min_y, max_y]
+            Bounding box [min_x, max_x, min_y, max_y]
         buffer: int or float, default 0
-            buffer to add to bounds for cropping
+            Buffer to add to bounds for cropping
         """
         # number of points to pad for global grids
         n = int(180 // (self._x[1] - self._x[0]))
@@ -470,14 +480,14 @@ class Dataset:
         Parameters
         ----------
         other: xarray.Dataset
-            dataset with missing values to be extrapolated
+            ``Dataset`` with missing values to be extrapolated
         kwargs: keyword arguments
-            keyword arguments for ``pyTMD.interpolate.extrapolate``
+            Keyword arguments for extrapolation functions
 
         Returns
         -------
         ds: xarray.Dataset
-            dataset with extrapolated values
+            ``Dataset`` with extrapolated values
         """
         # import extrapolate functions
         from pyTMD.interpolate import (
@@ -577,14 +587,14 @@ class Dataset:
         Parameters
         ----------
         t: float or np.ndarray
-            days relative to 1992-01-01T00:00:00 UTC
+            Days relative to 1992-01-01T00:00:00 UTC
         kwargs: keyword arguments
-            additional keyword arguments
+            Additional keyword arguments for inference functions
 
         Returns
         -------
         darr: xarray.DataArray
-            predicted tides
+            Predicted tides
         """
         from pyTMD.predict import infer_minor
 
@@ -600,12 +610,12 @@ class Dataset:
         Parameters
         ----------
         kwargs: keyword arguments
-            keyword arguments for ``pyTMD.interpolate.inpaint``
+            Keyword arguments for ``pyTMD.interpolate.inpaint``
 
         Returns
         -------
         ds: xarray.Dataset
-            interpolated xarray Dataset
+            Interpolated ``Dataset``
         """
         # import inpaint function
         from pyTMD.interpolate import inpaint
@@ -622,14 +632,14 @@ class Dataset:
 
     def interp(self, x: np.ndarray, y: np.ndarray, method="linear", **kwargs):
         """
-        Interpolate ``Dataset`` to input coordinates
+        Interpolate ``Dataset`` to new coordinates
 
         Parameters
         ----------
         x: np.ndarray
-            input x-coordinates
+            Interpolation x-coordinates
         y: np.ndarray
-            input y-coordinates
+            Interpolation y-coordinates
         method: str, default 'linear'
             Interpolation method
         extrapolate: bool, default False
@@ -637,12 +647,12 @@ class Dataset:
         cutoff: int or float, default np.inf
             Maximum distance for extrapolation
         **kwargs: dict
-            Additional keyword arguments for reading the dataset
+            Additional keyword arguments for extrapolation functions
 
         Returns
         -------
         ds: xarray.Dataset
-            interpolated tidal constants
+            Interpolated ``Dataset``
         """
         # set default keyword arguments
         kwargs.setdefault("extrapolate", False)
@@ -715,12 +725,12 @@ class Dataset:
         Parameters
         ----------
         n: int, default 1
-            number of padding values to add on each side
+            Number of padding values to add on each side
 
         Returns
         -------
         ds: xarray.Dataset
-            padded dataset
+            Padded ``Dataset``
         """
         # (possibly) unchunk x-coordinates and pad to wrap at meridian
         x = xr.DataArray(self._x, dims="x").pad(
@@ -742,14 +752,14 @@ class Dataset:
         Parameters
         ----------
         t: float or np.ndarray
-            days relative to 1992-01-01T00:00:00 UTC
+            Days relative to 1992-01-01T00:00:00 UTC
         kwargs: keyword arguments
-            additional keyword arguments
+            Additional keyword arguments for prediction functions
 
         Returns
         -------
         darr: xarray.DataArray
-            predicted tides
+            Predicted tides
         """
         from pyTMD.predict import time_series
 
@@ -820,9 +830,9 @@ class Dataset:
         Parameters
         ----------
         units: str
-            output units
+            Output units
         value: float, default 1.0
-            scaling factor to apply
+            Scaling factor to apply
         """
         # create copy of dataset
         ds = self._ds.copy()
@@ -879,7 +889,7 @@ class Dataset:
 
     @property
     def is_global(self) -> bool:
-        """Determine if the dataset covers a global domain"""
+        """Determine if ``Dataset`` covers a global domain"""
         # grid spacing in x-direction
         dx = self._x[1] - self._x[0]
         # check if global grid
@@ -888,13 +898,13 @@ class Dataset:
 
     @property
     def area_of_use(self) -> str | None:
-        """Area of use from the dataset CRS"""
+        """Area of use from the ``Dataset`` CRS"""
         if self.crs.area_of_use is not None:
             return self.crs.area_of_use.name.replace(".", "").lower()
 
     @property
     def axis_units(self) -> str:
-        """Units of the coordinate axes from the dataset CRS"""
+        """Units of the coordinate axes from the ``Dataset`` CRS"""
         return self.crs.axis_info[0].unit_name
 
     @property
@@ -953,9 +963,9 @@ class DataArray:
         Parameters
         ----------
         units: str
-            output units
+            Output units
         value: float, default 1.0
-            scaling factor to apply
+            Scaling factor to apply
         """
         # convert to specified units
         conversion = value * self.quantity.to(units)
@@ -969,7 +979,7 @@ class DataArray:
         Parameters
         ----------
         value: float, default 1.0
-            scaling factor to apply
+            Scaling factor to apply
         """
         # convert to base units
         conversion = value * self.quantity.to_base_units()
@@ -983,7 +993,7 @@ class DataArray:
         Parameters
         ----------
         value: float, default 1.0
-            scaling factor to apply
+            Scaling factor to apply
         """
         # convert to default units
         default_units = _default_units.get(self.group, self.units)
@@ -1038,34 +1048,34 @@ class DataArray:
 
 
 def register_datatree_subaccessor(name):
-    """Register a subaccessor on ``DataTree`` objects
+    """Register a custom subaccessor on ``DataTree`` objects
 
     Parameters
     ----------
     name: str
-        subaccessor name
+        Name of the subaccessor
     """
     return xr.core.extensions._register_accessor(name, DataTree)
 
 
 def register_dataset_subaccessor(name):
-    """Register a subaccessor on ``Dataset`` objects
+    """Register a custom subaccessor on ``Dataset`` objects
 
     Parameters
     ----------
     name: str
-        subaccessor name
+        Name of the subaccessor
     """
     return xr.core.extensions._register_accessor(name, Dataset)
 
 
 def register_dataarray_subaccessor(name):
-    """Register a subaccessor on ``DataArray`` objects
+    """Register a custom subaccessor on ``DataArray`` objects
 
     Parameters
     ----------
     name: str
-        subaccessor name
+        Name of the subaccessor
     """
     return xr.core.extensions._register_accessor(name, DataArray)
 
