@@ -105,7 +105,7 @@ def reduce_otis(
         Permission mode of the output files
     """
     # check if using old projection keyword argument and update crs
-    crs = kwargs.get('projection', crs)
+    crs = kwargs.get("projection", crs)
     # get parameters for tide model grid
     m = pyTMD.io.model(directory=directory).from_database(model)
 
