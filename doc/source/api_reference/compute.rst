@@ -24,6 +24,7 @@ compute
 
   * Following `IERS Convention (2010) guidelines <https://iers-conventions.obspm.fr/chapter7.php>`_
   * Using a tide potential catalog following :cite:t:`Cartwright:1971iz`
+- Calculates tide-generating forces (TGF) at points and times :cite:p:`Tamura:1987tp`
 
 `Source code`__
 

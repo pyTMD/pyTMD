@@ -29,6 +29,7 @@ UPDATE HISTORY:
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
         clean up the ephemerides method of calculating solid earth tides
+        clean up all of the ephemerides corrections for solid earth tides
         calculate tidal generating forces following Tamura (1982 and 1987)
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
@@ -1654,41 +1655,36 @@ def _out_of_phase_diurnal(
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    sin2phi = 2.0 * sinphi * cosphi
     cos2phi = cosphi**2 - sinphi**2
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
+    # sine and cosine of Solar/Lunar latitude
+    lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
+    )
+    lunisolar_sin2phi = 2.0 * lunisolar_cosphi * lunisolar_sinphi
+    # sine and cosine of Solar/Lunar longitude
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
     # calculate offsets
-    DR = (
-        -3.0
-        * dh2
-        * sinphi
-        * cosphi
-        * F2
-        * LSXYZ["Z"]
-        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
-        / lunisolar_radius**2
+    # equation 19 from Mathews et al. (1997)
+    DR = (-0.75 * dh2 * F2 * sin2phi * lunisolar_sin2phi) * (
+        sinla * lunisolar_cosla - cosla * lunisolar_sinla
     )
-    DN = (
-        -3.0
-        * dl2
-        * cos2phi
-        * F2
-        * LSXYZ["Z"]
-        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
-        / lunisolar_radius**2
+    # equation 20 from Mathews et al. (1997)
+    DN = (-1.5 * dl2 * F2 * cos2phi * lunisolar_sin2phi) * (
+        sinla * lunisolar_cosla - cosla * lunisolar_sinla
     )
-    DE = (
-        -3.0
-        * dl2
-        * sinphi
-        * F2
-        * LSXYZ["Z"]
-        * (LSXYZ["X"] * cosla + LSXYZ["Y"] * sinla)
-        / lunisolar_radius**2
+    DE = (-1.5 * dl2 * F2 * sinphi * lunisolar_sin2phi) * (
+        cosla * lunisolar_cosla + sinla * lunisolar_sinla
     )
     # output corrections
     D = xr.Dataset()
@@ -1731,48 +1727,38 @@ def _out_of_phase_semidiurnal(
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
+    # double angle formulas of cos/sin longitude
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
+    # cosine of Solar/Lunar latitude
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
+    )
+    # sine and cosine of Solar/Lunar longitude
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
+    # double angle formulas of cos/sin longitude
+    lunisolar_cos2la = lunisolar_cosla**2 - lunisolar_sinla**2
+    lunisolar_sin2la = 2.0 * lunisolar_cosla * lunisolar_sinla
     # calculate offsets
-    DR = (
-        (-3.0 / 4.0)
-        * dh2
-        * cosphi**2
-        * F2
-        * (
-            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
-        )
-        / lunisolar_radius**2
+    # equation 21 from Mathews et al. (1997)
+    DR = (-0.75 * dh2 * F2 * cosphi**2 * lunisolar_cosphi**2) * (
+        sin2la * lunisolar_cos2la - cos2la * lunisolar_sin2la
     )
-    DN = (
-        (3.0 / 2.0)
-        * dl2
-        * sinphi
-        * cosphi
-        * F2
-        * (
-            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
-        )
-        / lunisolar_radius**2
+    # equation 22 from Mathews et al. (1997)
+    DN = (1.5 * dl2 * F2 * cosphi * sinphi * lunisolar_cosphi**2) * (
+        sin2la * lunisolar_cos2la - cos2la * lunisolar_sin2la
     )
-    DE = (
-        (-3.0 / 2.0)
-        * dl2
-        * cosphi
-        * F2
-        * (
-            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * cos2la
-            + 2.0 * LSXYZ["X"] * LSXYZ["Y"] * sin2la
-        )
-        / lunisolar_radius**2
+    DE = (-1.5 * dl2 * F2 * cosphi * lunisolar_cosphi**2) * (
+        cos2la * lunisolar_cos2la + sin2la * lunisolar_sin2la
     )
     # output corrections
     D = xr.Dataset()
@@ -1852,29 +1838,31 @@ def _latitude_dependence_diurnal(
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cos2phi = cosphi**2 - sinphi**2
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # calculate offsets for the diurnal band
-    DN = (
-        (-3.0 * L1)
-        * sinphi**2
-        * F2
-        * LSXYZ["Z"]
-        * (LSXYZ["X"] * cosla + LSXYZ["Y"] * sinla)
-        / lunisolar_radius**2
+    # sine and cosine of Solar/Lunar latitude
+    lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
-    DE = (
-        (3.0 * L1)
-        * sinphi
-        * (cosphi**2 - sinphi**2)
-        * F2
-        * LSXYZ["Z"]
-        * (LSXYZ["X"] * sinla - LSXYZ["Y"] * cosla)
-        / lunisolar_radius**2
+    lunisolar_sin2phi = 2.0 * lunisolar_sinphi * lunisolar_cosphi
+    # sine and cosine of Solar/Lunar longitude
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
+    # calculate offsets for the diurnal band
+    # equation 25 from Mathews et al. (1997)
+    DN = (-1.5 * L1 * F2 * sinphi**2 * lunisolar_sin2phi) * (
+        cosla * lunisolar_cosla + sinla * lunisolar_sinla
+    )
+    DE = (1.5 * L1 * F2 * sinphi * cos2phi * lunisolar_sin2phi) * (
+        sinla * lunisolar_cosla - cosla * lunisolar_sinla
     )
     # output corrections
     D = xr.Dataset()
@@ -1914,36 +1902,34 @@ def _latitude_dependence_semidiurnal(
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
+    # double angle formulas of cos/sin longitude
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # calculate offsets for the semi-diurnal band
-    DN = (
-        (-3.0 * L1 / 2.0)
-        * sinphi
-        * cosphi
-        * F2
-        * (
-            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * cos2la
-            + 2.0 * LSXYZ["X"] * LSXYZ["Y"] * sin2la
-        )
-        / lunisolar_radius**2
+    # cosine of Solar/Lunar latitude
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
-    DE = (
-        (-3.0 * L1 / 2.0)
-        * sinphi**2
-        * cosphi
-        * F2
-        * (
-            (LSXYZ["X"] ** 2 - LSXYZ["Y"] ** 2) * sin2la
-            - 2.0 * LSXYZ["X"] * LSXYZ["Y"] * cos2la
-        )
-        / lunisolar_radius**2
+    # sine and cosine of Solar/Lunar longitude
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
+    # double angle formulas of cos/sin longitude
+    lunisolar_cos2la = lunisolar_cosla**2 - lunisolar_sinla**2
+    lunisolar_sin2la = 2.0 * lunisolar_cosla * lunisolar_sinla
+    # calculate offsets for the semi-diurnal band
+    # equation 26 from Mathews et al. (1997)
+    DN = (-1.5 * L1 * F2 * sinphi * cosphi * lunisolar_cosphi**2) * (
+        cos2la * lunisolar_cos2la + sin2la * lunisolar_sin2la
+    )
+    DE = (-1.5 * L1 * F2 * sinphi**2 * cosphi * lunisolar_cosphi**2) * (
+        sin2la * lunisolar_cos2la - cos2la * lunisolar_sin2la
     )
     # output corrections
     D = xr.Dataset()
@@ -2076,12 +2062,14 @@ def _frequency_dependence_diurnal(
     )
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    sin2phi = 2.0 * sinphi * cosphi
+    cos2phi = cosphi**2 - sinphi**2
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
-    # compute longitude
-    zla = np.arctan2(XYZ["Y"], XYZ["X"])
     # compute phase angle of tide potential (Greenwich)
     thetaf = (
         arguments.tau * coef["tau"]
@@ -2091,19 +2079,14 @@ def _frequency_dependence_diurnal(
         + arguments.np * coef["np"]
         + arguments.ps * coef["ps"]
     )
-    # calculate complex phase (local hour angle)
-    cphase = np.exp(1j * thetaf + 1j * zla)
+    # calculate sine and cosine of phase (local hour angle)
+    sphase = np.sin(thetaf) * cosla + np.cos(thetaf) * sinla
+    cphase = np.cos(thetaf) * cosla - np.sin(thetaf) * sinla
     # calculate offsets in local coordinates
-    dr = (
-        2.0
-        * sinphi
-        * cosphi
-        * (coef["dR_ip"] * cphase.imag + coef["dR_op"] * cphase.real)
-    )
-    dn = (cosphi**2 - sinphi**2) * (
-        coef["dT_ip"] * cphase.imag + coef["dT_op"] * cphase.real
-    )
-    de = sinphi * (coef["dT_ip"] * cphase.real - coef["dT_op"] * cphase.imag)
+    # equations 27 and 28 from Mathews et al. (1997)
+    dr = sin2phi * (coef["dR_ip"] * sphase + coef["dR_op"] * cphase)
+    dn = cos2phi * (coef["dT_ip"] * sphase + coef["dT_op"] * cphase)
+    de = sinphi * (coef["dT_ip"] * cphase - coef["dT_op"] * sphase)
     # compute corrections (Mathews et al. 1997)
     # rotate to cartesian coordinates
     DX = (dr * cosla * cosphi - de * sinla - dn * cosla * sinphi).sum(
@@ -2189,8 +2172,11 @@ def _frequency_dependence_long_period(
     )
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    sin2phi = 2.0 * cosphi * sinphi
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # compute phase angle of tide potential (Greenwich)
@@ -2202,15 +2188,16 @@ def _frequency_dependence_long_period(
         + arguments.np * coef["np"]
         + arguments.ps * coef["ps"]
     )
-    # calculate complex phase (zonal harmonics have no longitude dependence)
-    cphase = np.exp(1j * thetaf)
+    # calculate sine and cosine of phase (local hour angle)
+    # note that zonal harmonics have no longitudinal dependence
+    sphase = np.sin(thetaf)
+    cphase = np.cos(thetaf)
     # calculate offsets in local coordinates
+    # equations 31 and 32 from Mathews et al. (1997)
     dr = (1.5 * sinphi**2 - 0.5) * (
-        coef["dT_ip"] * cphase.imag + coef["dR_ip"] * cphase.real
+        coef["dT_ip"] * sphase + coef["dR_ip"] * cphase
     )
-    dn = (2.0 * cosphi * sinphi) * (
-        coef["dT_op"] * cphase.imag + coef["dR_op"] * cphase.real
-    )
+    dn = sin2phi * (coef["dT_op"] * sphase + coef["dR_op"] * cphase)
     de = 0.0
     # compute corrections (Mathews et al. 1997)
     # rotate to cartesian coordinates
@@ -2258,20 +2245,24 @@ def _free_to_mean(
     """
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
-    # in Mathews et al. (1997): dR0=-0.1196 m with h2=0.6026
-    dR0 = np.sqrt(5.0 / (4.0 * np.pi)) * h2 * H0
-    # in Mathews et al. (1997): dN0=-0.0247 m with l2=0.0831
-    dN0 = np.sqrt(45.0 / (16.0 * np.pi)) * l2 * H0
-    # use double angle formula for sin(2*phi)
-    dr = dR0 * (3.0 / 2.0 * sinphi**2 - 1.0 / 2.0)
-    dn = 2.0 * dN0 * cosphi * sinphi
-    # compute corrections (Mathews et al. 1997)
-    D = xr.Dataset()
+    # spherical harmonic normalization of degree 2 (order 0)
+    dfactor = np.sqrt(5.0 / (4.0 * np.pi))
+    # in Mathews et al. (1997):
+    # dR0=-0.1196 m with h2=0.6026
+    # dN0=-0.0165 m with l2=0.0831
+    dR0 = dfactor * h2 * H0
+    dN0 = dfactor * l2 * H0
+    # calculate offsets in local coordinates
+    dr = 0.5 * dR0 * (3.0 * sinphi**2 - 1.0)
+    dn = 3.0 * dN0 * cosphi * sinphi
     # compute as an additive correction (Mathews et al. 1997)
+    D = xr.Dataset()
     D["X"] = -dr * cosla * cosphi + dn * cosla * sinphi
     D["Y"] = -dr * sinla * cosphi + dn * sinla * sinphi
     D["Z"] = -dr * sinphi - dn * cosphi
