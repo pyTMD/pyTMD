@@ -45,7 +45,8 @@ compute
 
 .. autofunction:: pyTMD.compute.SET_displacements
 
-.. autofunction:: pyTMD.compute._ephemeride_SET
+.. autofunction:: pyTMD.compute._ephemerides_SET
 
 .. autofunction:: pyTMD.compute._catalog_SET
 
+.. autofunction:: pyTMD.compute.TG_forces

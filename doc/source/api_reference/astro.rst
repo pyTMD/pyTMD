@@ -29,11 +29,23 @@ astro
 
 .. autofunction:: pyTMD.astro.solar_ephemerides
 
+.. autofunction:: pyTMD.astro.solar_latitude
+
+.. autofunction:: pyTMD.astro.solar_longitude
+
+.. autofunction:: pyTMD.astro.solar_distance
+
 .. autofunction:: pyTMD.astro.lunar_ecef
 
 .. autofunction:: pyTMD.astro.lunar_approximate
 
 .. autofunction:: pyTMD.astro.lunar_ephemerides
+
+.. autofunction:: pyTMD.astro.lunar_latitude
+
+.. autofunction:: pyTMD.astro.lunar_longitude
+
+.. autofunction:: pyTMD.astro.lunar_distance
 
 .. autofunction:: pyTMD.astro.gast
 
@@ -54,6 +66,10 @@ astro
 .. autofunction:: pyTMD.astro._precession_matrix
 
 .. autofunction:: pyTMD.astro._correct_aberration
+
+.. autofunction:: pyTMD.astro._meeus_table_47A
+
+.. autofunction:: pyTMD.astro._meeus_table_47B
 
 .. autofunction:: pyTMD.astro._parse_table_5_2e
 

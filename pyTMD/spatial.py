@@ -553,7 +553,7 @@ class datum:
         Parameters
         ----------
         theta: float
-            Colatitudes in radians
+            Colatitudes (radians)
         """
         return self.gamma_a * (
             1.0
@@ -569,7 +569,7 @@ class datum:
         Parameters
         ----------
         theta: float
-            Colatitudes in radians
+            Colatitudes (radians)
         height: float
             Height above ellipsoid
         """

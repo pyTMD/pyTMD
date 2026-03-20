@@ -54,6 +54,8 @@ predict
 
 .. autofunction:: pyTMD.predict.body_tide
 
+.. autofunction:: pyTMD.predict.generating_force
+
 .. autofunction:: pyTMD.predict.earth_orientation
 
 .. autofunction:: pyTMD.predict.length_of_day

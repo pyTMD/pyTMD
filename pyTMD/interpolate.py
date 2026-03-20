@@ -223,7 +223,7 @@ def extrapolate(
     dtype: np.dtype, default np.float64
         output data type
     cutoff: float, default np.inf
-        return only neighbors within distance [km]
+        return only neighbors within distance (kilometers)
 
         Set to ``np.inf`` to extrapolate for all points
     is_geographic: bool, default True
@@ -351,7 +351,7 @@ def _nearest_neighbors(
     flattened: np.ndarray
         valid data array to be extrapolated
     cutoff: float, default np.inf
-        return only neighbors within distance [km]
+        return only neighbors within distance (kilometers)
     fill_value: float, default None
         invalid value
     dtype: np.dtype, default from input data
