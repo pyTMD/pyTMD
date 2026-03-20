@@ -99,11 +99,11 @@ def open_mfdataset(
     Parameters
     ----------
     model_files: list of str or pathlib.Path
-        list of FES model files
+        List of FES model files
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
     kwargs: dict
-        additional keyword arguments for opening FES files
+        Additional keyword arguments for opening FES files
 
     Returns
     -------
@@ -134,14 +134,14 @@ def open_fes_dataset(input_file: str | pathlib.Path, **kwargs):
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input transport file
+        Input transport file
     format: str, default 'netcdf'
         Model format
 
             - ``'ascii'``: FES ascii format
             - ``'netcdf'``: FES netCDF4 format
     **kwargs: dict
-        additional keyword arguments for opening FES files
+        Additional keyword arguments for opening FES files
 
     Returns
     -------
@@ -179,11 +179,11 @@ def open_fes_ascii(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input ascii file
+        Input ascii file
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -276,7 +276,7 @@ def open_fes_netcdf(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        model file
+        Model file
     group: str or NoneType, default None
         Tidal variable to read
 
@@ -284,9 +284,9 @@ def open_fes_netcdf(
             - ``'u'``: zonal currents
             - ``'v'``: meridional currents
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -367,13 +367,13 @@ class FESDataset:
         Parameters
         ----------
         path: str | pathlib.Path
-            output directory for netCDF4 files
+            Output directory for netCDF4 files
         mode: str, default 'w'
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
-            additional keyword arguments for xarray netCDF4 writer
+            Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output path
         path = pyTMD.utilities.Path(path).resolve()

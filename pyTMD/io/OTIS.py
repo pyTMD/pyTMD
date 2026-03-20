@@ -214,9 +214,9 @@ def open_dataset(
     Parameters
     ----------
     model_file: str or pathlib.Path
-        input model file
+        Input model file
     grid_file: str, pathlib.Path or None, default None
-        input model grid file
+        Input model grid file
     format: str, default 'OTIS'
         Model format
 
@@ -232,12 +232,12 @@ def open_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     **kwargs: dict
-        additional keyword arguments for opening files
+        Additional keyword arguments for opening files
 
     Returns
     -------
     ds: xarray.Dataset
-        tide model data
+        Tide model data
     """
     # set default keyword arguments
     kwargs.setdefault("group", "z")
@@ -274,7 +274,7 @@ def open_mfdataset(
     Parameters
     ----------
     model_files: list of str or pathlib.Path
-        list of OTIS model files
+        List of OTIS model files
     group: str, default 'z'
         Tidal variable to read
 
@@ -286,7 +286,7 @@ def open_mfdataset(
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
     **kwargs: dict
-        additional keyword arguments for opening OTIS files
+        Additional keyword arguments for opening OTIS files
 
     Returns
     -------
@@ -338,9 +338,9 @@ def open_otis_dataset(
     Parameters
     ----------
     model_file: str, list or pathlib.Path
-        input model file(s)
+        Input model file(s)
     grid_file: str, pathlib.Path
-        input model grid file
+        Input model grid file
     group: str, default 'z'
         Tidal variable to read
 
@@ -350,14 +350,14 @@ def open_otis_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     crs: int, str or dict, default 4326
-        coordinate reference system for the model data
+        Coordinate reference system for the model data
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
     ds: xarray.Dataset
-        combined OTIS model data
+        OTIS tide model data
     """
     # default coordinate reference system
     crs = kwargs.get("crs", 4326)
@@ -400,9 +400,9 @@ def open_atlas_dataset(
     Parameters
     ----------
     model_file: str or pathlib.Path
-        input model file
+        Input model file
     grid_file: str, pathlib.Path
-        input model grid file
+        Input model grid file
     group: str, default 'z'
         Tidal variable to read
 
@@ -412,16 +412,16 @@ def open_atlas_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     crs: int, str or dict, default 4326
-        coordinate reference system for the model data
+        Coordinate reference system for the model data
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
     ds: xarray.Dataset
-        combined ATLAS model data
+        ATLAS tide model data
     """
     # default coordinate reference system
     crs = kwargs.get("crs", 4326)
@@ -464,7 +464,7 @@ def open_tmd3_dataset(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input TMD3 netCDF4 file
+        Input TMD3 netCDF4 file
     group: str, default 'z'
         Tidal variable to read
 
@@ -474,7 +474,7 @@ def open_tmd3_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
 
     Returns
     -------
@@ -534,11 +534,11 @@ def open_otis_grid(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input OTIS grid file
+        Input OTIS grid file
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
@@ -686,11 +686,11 @@ def open_otis_elevation(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input OTIS elevation file
+        Input OTIS elevation file
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
@@ -804,11 +804,11 @@ def open_otis_transport(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input OTIS transport file
+        Input OTIS transport file
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
@@ -934,16 +934,16 @@ def open_atlas_grid(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input ATLAS grid file
+        Input ATLAS grid file
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
     ds: xarray.Dataset
         ATLAS global grid data
     dtree: xarray.DataTree
-        local ATLAS grid solutions
+        Local ATLAS grid solutions
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
@@ -1199,16 +1199,16 @@ def open_atlas_elevation(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input ATLAS elevation file
+        Input ATLAS elevation file
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
     ds: xarray.Dataset
         ATLAS global tidal elevation data
     dtree: xarray.DataTree
-        local ATLAS tidal elevation solutions
+        Local ATLAS tidal elevation solutions
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
@@ -1437,9 +1437,9 @@ def open_atlas_transport(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input ATLAS transport file
+        Input ATLAS transport file
     use_mmap: bool, default False
-        use memory mapping to read data
+        Use memory mapping to read data
 
     Returns
     -------
@@ -1448,9 +1448,9 @@ def open_atlas_transport(
     dsv: xarray.Dataset
         ATLAS global meridional tidal transport data
     dtu: xarray.DataTree
-        local ATLAS zonal tidal transport solutions
+        Local ATLAS zonal tidal transport solutions
     dtv: xarray.DataTree
-        local ATLAS meridional tidal transport solutions
+        Local ATLAS meridional tidal transport solutions
     """
     # tilde-expand input file
     input_file = pyTMD.utilities.Path(input_file).resolve()
@@ -1753,22 +1753,22 @@ def read_raw_binary(
     Parameters
     ----------
     path: str or pathlib.Path
-        path to input file
+        Path to input file
     dtype: numpy.dtype or str
-        variable data type
+        Variable data type
     shape: tuple
-        shape of the data
+        Shape of the data
     use_mmap: bool, default False
-        create a memory-map of the variable
+        Create a memory-map of the variable
     offset: int, default 0
-        offset to apply on read
+        Offset to apply on read
     order: str, default 'C'
-        memory layout of array
+        Memory layout of array
 
     Returns
     -------
     var: numpy.ndarray
-        data variable
+        Data variable
     """
     # open the file and read the variable
     with open(path, mode="rb") as fid:
@@ -1808,18 +1808,15 @@ def write_raw_binary(
     Parameters
     ----------
     path: str or pathlib.Path
-        path to input file
+        Path to input file
     variable: numpy.ndarray
-        data variable to write
+        Data variable to write
     offset: int, default 0
-        offset to apply on read
+        Offset to apply on read
     order: str, default 'C'
-        memory layout of array
-
-    Returns
-    -------
-    var: numpy.ndarray
-        data variable
+        Memory layout of array
+    kwargs: dict
+        Additional keyword arguments for ``np.memmap``
     """
     # convert variable to array
     variable = np.array(variable)
@@ -1935,7 +1932,7 @@ class OTISDataTree:
         Parameters
         ----------
         path: str or pathlib.Path
-            output OTIS grid file name
+            Output OTIS grid file name
         """
         # tilde-expand output file
         path = pyTMD.utilities.Path(path).resolve()
@@ -2006,7 +2003,7 @@ class OTISDataTree:
         Parameters
         ----------
         path: str or pathlib.Path
-            output OTIS elevation file name
+            Output OTIS elevation file name
         """
         # tilde-expand output file
         path = pyTMD.utilities.Path(path).resolve()
@@ -2060,7 +2057,7 @@ class OTISDataTree:
         Parameters
         ----------
         path: str or pathlib.Path
-            output OTIS elevation file name
+            Output OTIS elevation file name
         """
         # tilde-expand output file
         path = pyTMD.utilities.Path(path).resolve()
@@ -2117,7 +2114,7 @@ class OTISDataTree:
         Parameters
         ----------
         directory: str or pathlib.Path
-            output directory for OTIS elevation files
+            Output directory for OTIS elevation files
         """
         # tilde-expand output directory
         directory = pyTMD.utilities.Path(directory).resolve()
@@ -2136,7 +2133,7 @@ class OTISDataTree:
         Parameters
         ----------
         directory: str or pathlib.Path
-            output directory for OTIS transport files
+            Output directory for OTIS transport files
         """
         # tilde-expand output directory
         directory = pyTMD.utilities.Path(directory).resolve()
@@ -2181,12 +2178,12 @@ class CompactDataset:
         dtree: xarray.DataTree
             Local ATLAS model solutions
         chunks: int, dict, str, or None, default None
-            coerce output to specified chunks
+            Coerce output to specified chunks
 
         Returns
         -------
         ds: xarray.Dataset
-            combined ATLAS tidal data
+            ATLAS tide model data
         """
         # create refined dataset
         ds = self.refine()

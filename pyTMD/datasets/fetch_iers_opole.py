@@ -57,9 +57,9 @@ def fetch_iers_opole(
     directory: str or pathlib.Path
         Directory to download the ocean pole tide map file
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
     """
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 reduce_otis.py
-Written by Tyler Sutterley (11/2025)
+Written by Tyler Sutterley (03/2026)
 Read OTIS-format tidal files and reduce to a regional subset
 
 COMMAND LINE OPTIONS:
@@ -29,6 +29,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 03/2026: use lower case for input function arguments
     Updated 12/2025: simplify function call signatures
     Updated 11/2025: use new xarray file access protocols for OTIS files
     Updated 10/2025: change default directory for tide models to cache
@@ -80,30 +81,30 @@ _default_directory = pyTMD.utilities.get_cache_path()
 
 # PURPOSE: reads OTIS-format tidal files and reduces to a regional subset
 def reduce_otis(
-    MODEL: str,
+    model: str,
     directory: str | pathlib.Path | None = _default_directory,
-    bounds=4 * [None],
-    projection="4326",
-    mode=0o775,
+    bounds: list = 4 * [None],
+    crs: str | int = "4326",
+    mode: oct = 0o775,
 ):
     """
     Reads OTIS-format tidal files and reduces to a regional subset
 
     Parameters
     ----------
-    MODEL: str
+    model: str
         Tide model to use
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    BOUNDS: list, default 4*[None]
+    bounds: list, default 4*[None]
         Grid bounds for reducing model [xmin,xmax,ymin,ymax]
-    PROJECTION: str, default '4326'
+    crs: str or int, default '4326'
         Spatial projection as EPSG code or PROJ4 string
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Permission mode of the output files
     """
     # get parameters for tide model grid
-    m = pyTMD.io.model(directory=directory).from_database(MODEL)
+    m = pyTMD.io.model(directory=directory).from_database(model)
 
     # read the OTIS-format tide grid file
     if m.format == "ATLAS-compact":
@@ -126,7 +127,7 @@ def reduce_otis(
 
     # convert bounds to model coordinates
     # bounds is in the form [xmin,xmax,ymin,ymax]
-    x, y = dsg.tmd.transform_as(bounds[:2], bounds[2:], crs=projection)
+    x, y = dsg.tmd.transform_as(bounds[:2], bounds[2:], crs=crs)
     # merge bathymetry and elevation datasets
     ds = xr.merge([dsg, dsz], compat="override")
     # crop datasets and create new datatree
@@ -150,7 +151,15 @@ def reduce_otis(
 
 
 # PURPOSE: create a unique filename adding a numerical instance if existing
-def _unique_filename(filename):
+def _unique_filename(filename: str | pathlib.Path):
+    """
+    Create a unique filename for output OTIS binary files
+
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        Filename to check and modify if existing
+    """
     # split filename into parts
     filename = pathlib.Path(filename)
     stem = filename.stem
@@ -269,7 +278,7 @@ def main():
             args.tide,
             directory=args.directory,
             bounds=args.bounds,
-            projection=args.projection,
+            crs=args.projection,
             mode=args.mode,
         )
     except Exception as exc:

@@ -86,11 +86,11 @@ def open_dataset(
     input_file: str or pathlib.Path
         Ocean pole tide file
     chunks: int | dict | str | None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     crs: str | int | dict, default 4326
         Coordinate reference system
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------

@@ -103,16 +103,16 @@ def open_mfdataset(
     Parameters
     ----------
     model_files: list of str or pathlib.Path
-        list of OTIS model files
+        List of OTIS model files
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
     **kwargs: dict
-        additional keyword arguments for opening GOT files
+        Additional keyword arguments for opening GOT files
 
     Returns
     -------
     ds: xarray.Dataset
-        combined GOT model data
+        GOT tide model data
     """
     # merge multiple granules
     if parallel and dask_available:
@@ -138,14 +138,14 @@ def open_got_dataset(input_file: str | pathlib.Path, **kwargs):
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input transport file
+        Input transport file
     format: str, default 'netcdf'
         Model format
 
-            - ``'ascii'``: traditional GOT ascii format
+            - ``'ascii'``: traditional GOT ASCII format
             - ``'netcdf'``: GOT netCDF4 format
     **kwargs: dict
-        additional keyword arguments for opening GOT files
+        Additional keyword arguments for opening GOT files
 
     Returns
     -------
@@ -185,9 +185,9 @@ def open_got_ascii(
     input_file: str or pathlib.Path
         Model file
     chunks: int, dict, str, or None, default None
-        coerce output to specified chunks
+        Coerce output to specified chunks
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -294,11 +294,11 @@ def open_got_netcdf(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        model file
+        Model file
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -362,13 +362,13 @@ class GOTDataset:
         Parameters
         ----------
         path: str | pathlib.Path
-            output directory for ASCII files
+            Output directory for ASCII files
         fill_value: float, default -999.0
-            fill value for missing data
+            Fill value for missing data
         mode: str, default 'w'
-            file mode
+            File mode
         **kwargs: dict
-            additional keyword arguments for ASCII writer
+            Additional keyword arguments for ASCII writer
         """
         # tilde-expand output path
         path = pyTMD.utilities.Path(path).resolve()
@@ -435,13 +435,13 @@ class GOTDataset:
         Parameters
         ----------
         path: str | pathlib.Path
-            output directory for netCDF4 files
+            Output directory for netCDF4 files
         mode: str, default 'w'
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
-            additional keyword arguments for xarray netCDF4 writer
+            Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output path
         path = pyTMD.utilities.Path(path).resolve()

@@ -95,11 +95,11 @@ def open_dataset(
     Parameters
     ----------
     model_files: list of str or pathlib.Path
-        list of ATLAS model files
+        List of ATLAS model files
     grid_file: str or pathlib.path
         ATLAS model grid file
     **kwargs: dict
-        additional keyword arguments for opening ATLAS files
+        Additional keyword arguments for opening ATLAS files
 
     Returns
     -------
@@ -136,11 +136,11 @@ def open_mfdataset(
     Parameters
     ----------
     model_files: list of str or pathlib.Path
-        list of ATLAS model files
+        List of ATLAS model files
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
     **kwargs: dict
-        additional keyword arguments for opening ATLAS files
+        Additional keyword arguments for opening ATLAS files
 
     Returns
     -------
@@ -180,7 +180,7 @@ def open_atlas_grid(grid_file: str | pathlib.Path, group: str = "z", **kwargs):
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -241,7 +241,7 @@ def open_atlas_dataset(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        input ATLAS file
+        Input ATLAS file
     group: str, default 'z'
         Tidal variable to read
 
@@ -251,9 +251,9 @@ def open_atlas_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     chunks: int, dict, str, or None, default None
-        variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
     compressed: bool, default False
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
 
     Returns
     -------
@@ -325,13 +325,13 @@ class ATLASDataset:
         Parameters
         ----------
         path: str or pathlib.Path
-            output ATLAS-netcdf grid file name
+            Output ATLAS-netcdf grid file name
         mode: str, default 'w'
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
-            additional keyword arguments for xarray netCDF4 writer
+            Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output file
         path = pyTMD.utilities.Path(path).resolve()
@@ -388,13 +388,13 @@ class ATLASDataset:
         Parameters
         ----------
         path: str or pathlib.Path
-            output directory for ATLAS-netcdf files
+            Output directory for ATLAS-netcdf files
         mode: str, default 'w'
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
         **kwargs: dict
-            additional keyword arguments for xarray netCDF4 writer
+            Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output directory
         path = pyTMD.utilities.Path(path).resolve()
@@ -488,11 +488,11 @@ class ATLASDataTree:
         Parameters
         ----------
         grid_file: str or pathlib.Path
-            output ATLAS-netcdf grid file
+            Output ATLAS-netcdf grid file
         directory: str or pathlib.Path
-            output directory for ATLAS-netcdf files
+            Output directory for ATLAS-netcdf files
         **kwargs: dict
-            additional keyword arguments for netCDF4 writer
+            Additional keyword arguments for netCDF4 writer
         """
         # tilde-expand grid file
         grid_file = pyTMD.utilities.Path(grid_file).resolve()

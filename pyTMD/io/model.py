@@ -145,13 +145,13 @@ class DataBase:
 # PURPOSE: load the JSON database of model files
 def load_database(extra_databases: list = []):
     """
-    Load the JSON database of model files
+    Load the ``JSON`` database of model files
 
     Parameters
     ----------
     extra_databases: list, default []
         A list of additional databases to load, as either
-        JSON file paths or dictionaries
+        ``JSON`` file paths or dictionaries
 
     Returns
     -------
@@ -192,7 +192,6 @@ class model:
 
     Attributes
     ----------
-
     compressed: bool
         Model files are gzip compressed
     directory: str, pathlib.Path or None, default None
@@ -225,12 +224,12 @@ class model:
 
     def from_database(self, m: str, group: tuple = ("z", "u", "v")):
         """
-        Create a model object from known tidal models
+        Create a model object from database of known tidal models
 
         Parameters
         ----------
         m: str
-            model name
+            Model name
         group: tuple, default ('z', 'u', 'v')
             List of model types to extract
         """
@@ -276,7 +275,7 @@ class model:
         Parameters
         ----------
         definition_file: str, pathlib.Path or io.IOBase
-            model definition file for creating model object
+            Model definition file for creating model object
         """
         # load and parse definition file
         if isinstance(definition_file, io.IOBase):
@@ -292,12 +291,12 @@ class model:
 
     def from_dict(self, d: dict):
         """
-        Create a model object from a python dictionary
+        Create a model object from a dictionary of parameters
 
         Parameters
         ----------
         d: dict
-            Python dictionary for creating model object
+            Model object parameters
         """
         for key, val in d.items():
             if isinstance(val, dict) and key not in ("projection",):
@@ -309,14 +308,14 @@ class model:
 
     def to_dict(self, **kwargs):
         """
-        Create a python dictionary from a model object
+        Create a dictionary from a model object
 
         Parameters
         ----------
         fields: list, default all
             List of model attributes to output
         serialize: bool, default False
-            Serialize dictionary for JSON output
+            Serialize dictionary for ``JSON`` output
         """
         # default fields
         keys = ["name", "format", "projection", "reference", "z", "u", "v"]
@@ -337,7 +336,7 @@ class model:
 
     @property
     def gzip(self) -> str:
-        """Returns suffix for gzip compression"""
+        """Returns suffix for ``gzip`` compression"""
         return ".gz" if self.compressed else ""
 
     @property
@@ -536,12 +535,12 @@ class model:
 
     def pathfinder(self, model_file: str | pathlib.Path | list):
         """
-        Completes file paths and appends gzip suffix
+        Completes file paths and appends ``gzip`` suffix
 
         Parameters
         ----------
         model_file: str, pathlib.Path or list
-            model file(s) to complete
+            Model file(s) to complete
         """
         # set working data directory if unset
         if self.directory is None:
@@ -572,7 +571,7 @@ class model:
         Parameters
         ----------
         fid: io.IOBase
-            open definition file object
+            Open definition file object
         """
         # attempt to read and parse a JSON file
         try:
@@ -586,12 +585,12 @@ class model:
 
     def _parse_json(self, fid: io.IOBase):
         """
-        Load and parse JSON definition file
+        Load and parse ``JSON`` definition file
 
         Parameters
         ----------
         fid: io.IOBase
-            open definition file object
+            Open definition file object
         """
         # load JSON file
         parameters = json.load(fid)
@@ -670,12 +669,12 @@ class model:
 
     def serialize(self, d: dict):
         """
-        Encodes dictionary to be JSON serializable
+        Encodes dictionary to be ``JSON`` serializable
 
         Parameters
         ----------
         d: dict
-            Python dictionary to serialize
+            Parameters to serialize
         """
         # iterate over keys
         for key, val in d.items():
@@ -730,7 +729,7 @@ class model:
         Returns
         -------
         constituent: str or list
-            constituent name
+            Constituent name
         """
         # import constituents parser
         from pyTMD.constituents import _parse_name
@@ -785,6 +784,19 @@ class model:
         return self
 
     def open_dataset(self, **kwargs):
+        """
+        Open model files
+
+        Parameters
+        ----------
+        **kwargs: dict
+            Additional keyword arguments for opening model files
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            Tide model data
+        """
         # import tide model functions
         from pyTMD.io import OTIS, ATLAS, GOT, FES
 
@@ -856,6 +868,13 @@ class model:
         ----------
         group: tuple, default ('z', 'u', 'v')
             List of model types to extract
+        **kwargs: dict
+            Additional keyword arguments for opening model files
+
+        Returns
+        -------
+        dtree: xr.DataTree
+            Tide model data
         """
         # output dictionary of xarray Datasets
         ds = {}

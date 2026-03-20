@@ -59,16 +59,16 @@ def fetch_test_data(
     Parameters
     ----------
     directory: str or pathlib.Path
-        download directory
+        Download directory
     provider: str, default 'zenodo'
-        data provider
+        Data provider
 
         - ``'figshare'``
         - ``'zenodo'``
     mode: oct, default 0o775
-        permissions mode of output local files
+        Permissions mode of output local files
     kwargs: dict
-        additional keyword arguments for data provider functions
+        Additional keyword arguments for data provider functions
     """
     # create download directory if it doesn't exist
     directory = pyTMD.utilities.Path(directory).resolve()
@@ -100,19 +100,19 @@ def _figshare(
     Parameters
     ----------
     directory: str or pathlib.Path
-        download directory
+        Download directory
     article: str, default '30260326'
         figshare article number
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
-        chunk size for transfer encoding
+        Chunk size for transfer encoding
     logger: logging.logger object
         Logger for outputting file transfer information
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
     """
     # figshare API host
     HOST = pyTMD.utilities.URL(_figshare_api_url)
@@ -172,19 +172,19 @@ def _zenodo(
     Parameters
     ----------
     directory: str or pathlib.Path
-        download directory
+        Download directory
     record: str, default '18091740'
-        zenodo record number
+        Zenodo record number
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
-        SSL context for ``urllib`` opener object
+        ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
-        chunk size for transfer encoding
+        Chunk size for transfer encoding
     logger: logging.logger object
         Logger for outputting file transfer information
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
     """
     # zenodo API host
     HOST = pyTMD.utilities.URL(_zenodo_api_url)

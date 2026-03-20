@@ -55,9 +55,9 @@ def fetch_jpl_ssd(
     local: str or pathlib.Path or NoneType, default None
         Local path to kernel file
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
+        Timeout in seconds for blocking operations
     mode: oct, default 0o775
-        permissions mode of output local file
+        Permissions mode of output local file
     """
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
