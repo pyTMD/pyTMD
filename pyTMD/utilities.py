@@ -350,7 +350,7 @@ class URL:
         return self._headers
 
     def load(self, *args, **kwargs):
-        """Load JSON response from URL"""
+        """Load ``JSON`` response from URL"""
         return from_json(self.urlname, headers=self._headers, *args, **kwargs)
 
     def ping(self, *args, **kwargs) -> bool:
@@ -439,19 +439,19 @@ def detect_format(filename: str | pathlib.Path) -> str:
     Parameters
     ----------
     filename: str or pathlib.Path
-        model file
+        Model file
 
     Returns
     -------
     format: str
         Model format
 
-            - ``'ascii'``: ascii format
+            - ``'ascii'``: ASCII format
             - ``'netcdf'``: netCDF4 format
     """
     filename = Path(filename).resolve()
     if re.search(r"(\.asc|\.d)(\.gz)?$", filename.name, re.IGNORECASE):
-        # FES or GOT ascii formats
+        # FES or GOT ASCII formats
         return "ascii"
     elif re.search(r"\.nc(\.gz)?$", filename.name, re.IGNORECASE):
         # FES or GOT netCDF4 formats
@@ -472,7 +472,7 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
     Returns
     -------
     compressed: bool
-        Input file is gzip compressed
+        Input file is ``gzip`` compressed
     """
     filename = Path(filename).resolve()
     return bool(re.search(r"\.gz$", filename.name, re.IGNORECASE))
@@ -917,7 +917,7 @@ def from_ftp(
 
 
 def _create_default_ssl_context() -> ssl.SSLContext:
-    """Creates the default SSL context"""
+    """Creates the default ``SSL`` context"""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     _set_ssl_context_options(context)
     context.options |= ssl.OP_NO_COMPRESSION
@@ -925,7 +925,7 @@ def _create_default_ssl_context() -> ssl.SSLContext:
 
 
 def _create_ssl_context_no_verify() -> ssl.SSLContext:
-    """Creates an SSL context for unverified connections"""
+    """Creates an ``SSL`` context for unverified connections"""
     context = _create_default_ssl_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
@@ -933,7 +933,7 @@ def _create_ssl_context_no_verify() -> ssl.SSLContext:
 
 
 def _set_ssl_context_options(context: ssl.SSLContext) -> None:
-    """Sets the default options for the SSL context"""
+    """Sets the default options for the ``SSL`` context"""
     if sys.version_info >= (3, 10) or ssl.OPENSSL_VERSION_INFO >= (1, 1, 0, 7):
         context.minimum_version = ssl.TLSVersion.TLSv1_2
     else:
@@ -1220,7 +1220,7 @@ def iers_list(
     context: obj, default pyTMD.utilities._default_ssl_context
         ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
 
     Returns
     -------
@@ -1279,7 +1279,7 @@ def uhslc_list(
     context: obj, default pyTMD.utilities._default_ssl_context
         ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
     pattern: str, default ''
         Regular expression pattern for reducing list
     sort: bool, default False

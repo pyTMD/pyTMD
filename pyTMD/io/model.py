@@ -187,8 +187,7 @@ def load_database(extra_databases: list = []):
 
 class model:
     """Retrieves tide model parameters for named models or
-    from a model definition file for use in the pyTMD tide
-    prediction programs
+    from a model definition file
 
     Attributes
     ----------
@@ -446,7 +445,7 @@ class model:
     @staticmethod
     def OTIS(**kwargs) -> list:
         """
-        Returns list of OTIS format models
+        Returns list of OTIS formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -461,7 +460,7 @@ class model:
     @staticmethod
     def ATLAS_compact(**kwargs) -> list:
         """
-        Returns list of ATLAS compact format models
+        Returns list of ATLAS-compact formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -476,7 +475,7 @@ class model:
     @staticmethod
     def TMD3(**kwargs) -> list:
         """
-        Returns list of TMD3 format models
+        Returns list of TMD3 formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -491,7 +490,7 @@ class model:
     @staticmethod
     def ATLAS(**kwargs) -> list:
         """
-        Returns list of ATLAS-netcdf format models
+        Returns list of ATLAS-netcdf formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -506,7 +505,7 @@ class model:
     @staticmethod
     def GOT(**kwargs) -> list:
         """
-        Returns list of GOT format models
+        Returns list of GOT formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -521,7 +520,7 @@ class model:
     @staticmethod
     def FES(**kwargs) -> list:
         """
-        Returns list of FES format models
+        Returns list of FES formatted models
         """
         # load the database of model parameters
         parameters = load_database(**kwargs)
@@ -724,7 +723,7 @@ class model:
         model_file: str or pathlib.Path
             Tide model file to parse
         raise_error: bool, default False
-            Raise exception if constituent is not found in file name
+            Raise ``ValueError`` if constituent is not found in file name
 
         Returns
         -------

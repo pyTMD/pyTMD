@@ -70,7 +70,7 @@ def interp1d(x: float | np.ndarray, xp: np.ndarray, fp: np.ndarray, **kwargs):
     Returns
     -------
     f: np.ndarray
-        Interpolated values at x
+        Interpolated values at new coordinates
     """
     # get extrapolation method
     extrapolate = kwargs.get("extrapolate", "linear").lower()
@@ -112,7 +112,7 @@ def inpaint(
 ):
     """
     Inpaint over missing data in a two-dimensional array using a
-    penalized least square method based on discrete cosine transforms
+    penalized least-squares method based on discrete cosine transforms
     :cite:p:`Garcia:2010hn,Wang:2012ei`
 
     Parameters
@@ -135,7 +135,7 @@ def inpaint(
     Returns
     -------
     z0: np.ndarray
-        data with inpainted (filled) values
+        Data with inpainted (filled) values
     """
     # find masked values
     if isinstance(zs, np.ma.MaskedArray):
@@ -236,7 +236,7 @@ def extrapolate(
 
     Returns
     -------
-    DATA: np.ndarray
+    data: np.ndarray
         Interpolated data
     """
     # set geographic flag if using old EPSG projection keyword
@@ -324,7 +324,7 @@ def _build_tree(points: np.ndarray, **kwargs):
     points: np.ndarray
         Input points in Cartesian coordinates
     kwargs: dict
-        Additional keyword arguments for scipy.spatial.cKDTree
+        Additional keyword arguments for ``scipy.spatial.cKDTree``
 
     Returns
     -------

@@ -589,7 +589,7 @@ class Dataset:
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
         kwargs: keyword arguments
-            Additional keyword arguments
+            Additional keyword arguments for inference functions
 
         Returns
         -------
@@ -730,7 +730,7 @@ class Dataset:
         Returns
         -------
         ds: xarray.Dataset
-            padded ``Dataset``
+            Padded ``Dataset``
         """
         # (possibly) unchunk x-coordinates and pad to wrap at meridian
         x = xr.DataArray(self._x, dims="x").pad(
@@ -754,12 +754,12 @@ class Dataset:
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
         kwargs: keyword arguments
-            Additional keyword arguments
+            Additional keyword arguments for prediction functions
 
         Returns
         -------
         darr: xarray.DataArray
-            predicted tides
+            Predicted tides
         """
         from pyTMD.predict import time_series
 

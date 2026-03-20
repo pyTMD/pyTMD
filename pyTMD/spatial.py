@@ -116,7 +116,7 @@ def data_type(x: np.ndarray, y: np.ndarray, t: np.ndarray) -> str:
     y: np.ndarray
         y-dimension coordinates
     t: np.ndarray
-        time-dimension coordinates
+        Time coordinates
 
     Returns
     -------
@@ -465,14 +465,14 @@ class datum:
     # p. 70, Eqn.(2-137)
     @property
     def m(self) -> float:
-        """m Parameter"""
+        """:math:`m` Parameter"""
         return self.omega**2 * ((1 - self.flat) * self.a_axis**3) / self.GM
 
     # flattening f2 component
     # p. 80, Eqn.(2-200)
     @property
     def f2(self) -> float:
-        """f2 component"""
+        """:math:`f_2` component"""
         return (
             -self.flat
             + (5.0 / 2.0) * self.m
@@ -485,14 +485,14 @@ class datum:
     # p. 80, Eqn.(2-200)
     @property
     def f4(self) -> float:
-        """f4 component"""
+        """:math:`f_4` component"""
         return -(1.0 / 2.0) * self.flat**2.0 + (5.0 / 2.0) * self.flat * self.m
 
     # q
     # p. 67, Eqn.(2-113)
     @property
     def q(self) -> float:
-        """q Parameter"""
+        """:math:`q` Parameter"""
         return 0.5 * (
             (1.0 + 3.0 / (self.ecc2**2)) * np.arctan(self.ecc2)
             - 3.0 / self.ecc2
@@ -502,7 +502,7 @@ class datum:
     # p. 67, Eqn.(2-113)
     @property
     def q0(self) -> float:
-        r"""q\ :sub:`0` Parameter"""
+        r""":math:`q_0` Parameter"""
         return (
             3
             * (1.0 + 1.0 / (self.ecc2**2))
@@ -513,7 +513,7 @@ class datum:
     # J_2 p. 75 Eqn.(2-167), p. 76 Eqn.(2-172)
     @property
     def J2(self) -> float:
-        """Oblateness coefficient"""
+        """Oblateness :math:`J_2` coefficient"""
         return (
             (self.ecc1**2)
             * (1.0 - 2.0 * self.m * self.ecc2 / (15.0 * self.q))
@@ -524,7 +524,7 @@ class datum:
     # p. 60, Eqn.(2-80)
     @property
     def C20(self) -> float:
-        r"""Normalized C\ :sub:`20` harmonic"""
+        r"""Normalized :math:`C_{20}` harmonic"""
         return -self.J2 / np.sqrt(5.0)
 
     # Normal gravity at the equator
@@ -571,7 +571,7 @@ class datum:
         theta: float
             Colatitudes (radians)
         height: float
-            Height above ellipsoid
+            Height above ellipsoid (same as ``units``)
         """
         return self.gamma_0(theta) * (
             1.0
@@ -1504,7 +1504,7 @@ def to_zenith(
     Returns
     -------
     zenith: np.ndarray
-        zenith angle of object (degrees)
+        Zenith angle of object (degrees)
     """
     # convert from ECEF to ENU
     E, N, U = to_ENU(

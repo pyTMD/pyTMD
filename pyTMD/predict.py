@@ -455,8 +455,8 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     method: str, default 'linear'
         Method for interpolating between major constituents
 
-            * 'linear': linear interpolation
-            * 'admittance': Munk-Cartwright admittance interpolation
+            * ``'linear'``: linear interpolation
+            * ``'admittance'``: Munk-Cartwright interpolation
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
@@ -639,8 +639,8 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
     method: str, default 'linear'
         Method for interpolating between major constituents
 
-            * 'linear': linear interpolation
-            * 'admittance': Munk-Cartwright admittance interpolation
+            * ``'linear'``: linear interpolation
+            * ``'admittance'``: Munk-Cartwright interpolation
     raise_exception: bool, default False
         Raise a ``ValueError`` if major constituents are not found
 
@@ -1364,7 +1364,7 @@ def ocean_pole_tide(
     rho_w: float, default 1025.0
         Density of sea water  (kg m\ :sup:`-3`)
     g2: complex, default 0.6870 + 0.0036j
-        Degree-2 Love number differential (1 + k2 - h2)
+        Degree-2 Love number tilt factor (1 + k2 - h2)
     convention: str, default '2018'
         IERS Mean or Secular Pole Convention
 

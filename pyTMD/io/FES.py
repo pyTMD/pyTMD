@@ -138,7 +138,7 @@ def open_fes_dataset(input_file: str | pathlib.Path, **kwargs):
     format: str, default 'netcdf'
         Model format
 
-            - ``'ascii'``: FES ascii format
+            - ``'ascii'``: FES ASCII format
             - ``'netcdf'``: FES netCDF4 format
     **kwargs: dict
         Additional keyword arguments for opening FES files
@@ -179,7 +179,7 @@ def open_fes_ascii(
     Parameters
     ----------
     input_file: str or pathlib.Path
-        Input ascii file
+        Input ASCII file
     chunks: int, dict, str, or None, default None
         Coerce output to specified chunks
     compressed: bool, default False

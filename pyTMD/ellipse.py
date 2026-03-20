@@ -136,24 +136,24 @@ def _xy(
     Parameters
     ----------
     major: np.ndarray
-        amplitude of the semi-major axis
+        Amplitude of the semi-major axis
     minor: np.ndarray
-        amplitude of the semi-minor axis
+        Amplitude of the semi-minor axis
     incl: np.ndarray
-        angle of inclination of the northern semi-major axis
+        Angle of inclination of the northern semi-major axis
     phase: np.ndarray or None, default None
-        phase lag of the maximum current behind the maximum tidal potential
+        Phase lag of the maximum current behind the maximum tidal potential
     xy: tuple, default (0.0, 0.0)
-        center of the ellipse (x, y)
+        Center of the ellipse (x, y)
     N: int or None, default None
-        number of points to calculate along the ellipse
+        Number of points to calculate along the ellipse
 
     Returns
     -------
     x: np.ndarray
-        x coordinates of the tidal ellipse
+        x-coordinates of the tidal ellipse
     y: np.ndarray
-        y coordinates of the tidal ellipse
+        y-coordinates of the tidal ellipse
     """
     # set default number of points
     kwargs.setdefault("phase", None)

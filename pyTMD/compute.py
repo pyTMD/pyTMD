@@ -213,11 +213,6 @@ def corrections(
             - ``'TGF'``: tide-generating forces
     **kwargs: dict
         Keyword arguments for correction functions
-
-    Returns
-    -------
-    values: np.ndarray
-        tidal correction (meters)
     """
     if correction.lower() in ("ocean", "load"):
         return tide_elevations(x, y, delta_time, **kwargs)
@@ -301,7 +296,7 @@ def tide_elevations(
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
     method: str = 'linear'
-        Interpolation method from xarray
+        Interpolation method from ``xarray``
 
             - ``'linear'``: linear interpolation for regular grids
             - ``'nearest'``: nearest-neighbor interpolation
@@ -502,7 +497,7 @@ def tide_currents(
             - ``'UTC'``: no leap seconds needed
             - ``'datetime'``: numpy datatime array in UTC
     method: str
-        Interpolation method from xarray
+        Interpolation method from ``xarray``
 
             - ``'linear'``: linear interpolation for regular grids
             - ``'nearest'``: nearest-neighbor interpolation
@@ -662,7 +657,7 @@ def tide_masks(
     crs: str or int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
     method: str, default 'linear'
-        interpolation method from xarray
+        Interpolation method from ``xarray``
 
             - ``'linear'``: linear interpolation for regular grids
             - ``'nearest'``: nearest-neighbor interpolation
@@ -1123,7 +1118,7 @@ def SET_displacements(
     **kwargs,
 ):
     """
-    Compute solid earth tidal elevations (body tides) at points and times
+    Compute solid Earth tidal elevations (body tides) at points and times
 
     Parameters
     ----------
@@ -1136,7 +1131,7 @@ def SET_displacements(
     method: str, default 'ephemerides'
         Method for calculating solid earth tidal elevations
 
-            - ``'ephemerides'``: following :cite:t:`Petit:2010tp` guidelines
+            - ``'ephemerides'``: following :cite:t:`Petit:2010tp`
             - ``'catalog'``: using tide potential catalogs
     """
     if method.lower() == "ephemerides":
@@ -1163,7 +1158,7 @@ def _ephemerides_SET(
     **kwargs,
 ):
     """
-    Compute solid earth tidal elevations at points and times
+    Compute solid Earth tidal elevations at points and times
     following IERS Convention (2010) guidelines
 
     Parameters
@@ -1217,7 +1212,7 @@ def _ephemerides_SET(
     Returns
     -------
     SE: xr.DataArray or xr.Dataset
-        Solid earth tide (meters)
+        Solid Earth tide (meters)
     """
 
     # validate input arguments
@@ -1335,7 +1330,7 @@ def _catalog_SET(
     **kwargs,
 ):
     """
-    Compute solid earth tidal elevations at points and times
+    Compute solid Earth tidal elevations at points and times
     using a tide-potential catalog following :cite:t:`Cartwright:1971iz`
 
     Parameters
@@ -1398,7 +1393,7 @@ def _catalog_SET(
     Returns
     -------
     SE: xr.DataArray or xr.Dataset
-        Solid earth tide (meters)
+        Solid Earth tide (meters)
     """
 
     # validate input arguments

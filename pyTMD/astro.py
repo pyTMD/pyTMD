@@ -458,7 +458,7 @@ def delaunay_arguments(MJD: np.ndarray):
     Returns
     -------
     l: np.ndarray
-        Nean anomaly of moon (radians)
+        Mean anomaly of moon (radians)
     lp: np.ndarray
         Mean anomaly of the sun (radians)
     F: np.ndarray
@@ -519,9 +519,9 @@ def schureman_arguments(P: np.ndarray, N: np.ndarray):
     Parameters
     ----------
     P: np.ndarray
-        mean longitude of lunar perigee (radians)
+        Mean longitude of lunar perigee (radians)
     N: np.ndarray
-        mean longitude of ascending lunar node (radians)
+        Mean longitude of ascending lunar node (radians)
 
     Returns
     -------

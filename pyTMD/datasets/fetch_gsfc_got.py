@@ -20,7 +20,7 @@ COMMAND LINE OPTIONS:
     --format: GOT tide model format to download
         ascii
         netCDF
-    -G, --gzip: compress output ascii and netCDF4 tide files
+    -G, --gzip: compress output ASCII and netCDF4 tide files
     -t X, --timeout X: timeout in seconds for blocking operations
     -M X, --mode X: Local permissions mode of the files downloaded
 
@@ -83,7 +83,7 @@ def fetch_gsfc_got(
     format: str, default 'netcdf'
         GOT tide model format to download
     compressed: bool, default False
-        Compress output ascii and netCDF4 tide files
+        Compress output ASCII and netCDF4 tide files
     timeout: int, default None
         Timeout in seconds for blocking operations
     mode: oct, default 0o775
@@ -227,7 +227,7 @@ def arguments():
         "-G",
         default=False,
         action="store_true",
-        help="Compress output ascii and netCDF tide files",
+        help="Compress output ASCII and netCDF tide files",
     )
     # connection timeout
     parser.add_argument(
