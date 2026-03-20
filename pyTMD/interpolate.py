@@ -236,7 +236,7 @@ def extrapolate(
 
     Returns
     -------
-    data: np.ndarray
+    data: xr.DataArray
         Interpolated data
     """
     # set geographic flag if using old EPSG projection keyword

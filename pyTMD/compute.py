@@ -213,6 +213,23 @@ def corrections(
             - ``'TGF'``: tide-generating forces
     **kwargs: dict
         Keyword arguments for correction functions
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        Tidal correction values evaluated at the input coordinates and
+        times. The exact return type, dimensions, and units are those of
+        the underlying helper function:
+
+        * ``correction in {'ocean', 'load'}`` → :func:`tide_elevations`
+        * ``correction == 'LPET'`` → :func:`LPET_elevations`
+        * ``correction == 'LPT'`` → :func:`LPT_displacements`
+        * ``correction == 'OPT'`` → :func:`OPT_displacements`
+        * ``correction == 'SET'`` → :func:`SET_displacements`
+        * ``correction == 'TGF'`` → :func:`TG_forces`
+
+        Refer to the respective helper function docstrings for details
+        on the variable names, units, and metadata of the returned object.
     """
     if correction.lower() in ("ocean", "load"):
         return tide_elevations(x, y, delta_time, **kwargs)
