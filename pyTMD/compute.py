@@ -1578,6 +1578,9 @@ def TG_forces(
         XYZ,
         deltat=ts.tt_ut1,
         method=ephemerides,
+        a_axis=units.a_axis,
+        flat=units.flat,
+        J2=units.J2,
         **kwargs,
     )
 
