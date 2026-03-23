@@ -1,5 +1,5 @@
 """
-test_astro.py (10/2025)
+test_astro.py (03/2026)
 Tests astronomical routines
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 03/2026: test all approximate ECEF methods for lunisolar XYZ
     Updated 10/2025: fetch data from pyTMD developers test data repository
     Updated 04/2025: added test for schureman arguments for FES models
     Updated 03/2025: added test for comparing mean longitudes
@@ -188,12 +189,14 @@ def test_mean_obliquity():
     mean_obliquity = pyTMD.astro.mean_obliquity(MJD)
     assert np.isclose(expected, mean_obliquity)
 
-def test_solar_ecef():
+# parametrize over approximate methods
+@pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus", "VSOP87"])
+def test_solar_ecef(method):
     """Test solar ECEF coordinates with ephemerides predictions
     """
     MJD = 55414.0
     # calculate approximate solar ephemerides
-    x1, y1, z1 = pyTMD.astro.solar_ecef(MJD, ephemerides='approximate')
+    x1, y1, z1 = pyTMD.astro.solar_ecef(MJD, ephemerides=method)
     r1 = np.sqrt(x1**2 + y1**2 + z1**2)
     rad1 = pyTMD.math.radius(x1, y1, z1)
     # predict solar ephemerides
@@ -209,12 +212,14 @@ def test_solar_ecef():
     assert np.allclose(r2, rad2)
     assert np.allclose(rad1, rad2, atol=1e9)
 
-def test_lunar_ecef():
+# parametrize over approximate methods
+@pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus"])
+def test_lunar_ecef(method):
     """Test lunar ECEF coordinates with ephemerides predictions
     """
     MJD = 55414.0
     # calculate approximate lunar ephemerides
-    x1, y1, z1 = pyTMD.astro.lunar_ecef(MJD, ephemerides='approximate')
+    x1, y1, z1 = pyTMD.astro.lunar_ecef(MJD, ephemerides=method)
     r1 = np.sqrt(x1**2 + y1**2 + z1**2)
     rad1 = pyTMD.math.radius(x1, y1, z1)
     # predict lunar ephemerides

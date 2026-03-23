@@ -929,7 +929,7 @@ def LPT_displacements(
     R[2, 2] = np.cos(theta)
 
     # calculate load pole tides in cartesian coordinates
-    dxi = pyTMD.predict.load_pole_tide(
+    S = pyTMD.predict.load_pole_tide(
         ts.tide,
         XYZ,
         deltat=ts.tt_ut1,
@@ -941,13 +941,12 @@ def LPT_displacements(
     )
 
     # rotate displacements from cartesian coordinates
-    S = xr.Dataset()
-    S["N"] = R[0, 0] * dxi["X"] + R[1, 0] * dxi["Y"] + R[2, 0] * dxi["Z"]
-    S["E"] = R[0, 1] * dxi["X"] + R[1, 1] * dxi["Y"] + R[2, 1] * dxi["Z"]
-    S["R"] = R[0, 2] * dxi["X"] + R[1, 2] * dxi["Y"] + R[2, 2] * dxi["Z"]
+    S["N"] = R[0, 0] * S["X"] + R[1, 0] * S["Y"] + R[2, 0] * S["Z"]
+    S["E"] = R[0, 1] * S["X"] + R[1, 1] * S["Y"] + R[2, 1] * S["Z"]
+    S["R"] = R[0, 2] * S["X"] + R[1, 2] * S["Y"] + R[2, 2] * S["Z"]
     # set attributes for output variables
     for var in S.data_vars:
-        S[var].attrs["units"] = dxi["X"].attrs.get("units", "meters")
+        S[var].attrs["units"] = S["X"].attrs.get("units", "meters")
     # return the load pole tide displacements for variable(s)
     return S[variable]
 
@@ -1101,7 +1100,7 @@ def OPT_displacements(
     UXYZ["Z"] = R[2, 0] * Umap["N"] + R[2, 1] * Umap["E"] + R[2, 2] * Umap["R"]
 
     # calculate ocean pole tides in cartesian coordinates
-    dxi = pyTMD.predict.ocean_pole_tide(
+    U = pyTMD.predict.ocean_pole_tide(
         ts.tide,
         UXYZ,
         deltat=ts.tt_ut1,
@@ -1115,13 +1114,12 @@ def OPT_displacements(
     )
 
     # rotate displacements from cartesian coordinates
-    U = xr.Dataset()
-    U["N"] = R[0, 0] * dxi["X"] + R[1, 0] * dxi["Y"] + R[2, 0] * dxi["Z"]
-    U["E"] = R[0, 1] * dxi["X"] + R[1, 1] * dxi["Y"] + R[2, 1] * dxi["Z"]
-    U["R"] = R[0, 2] * dxi["X"] + R[1, 2] * dxi["Y"] + R[2, 2] * dxi["Z"]
+    U["N"] = R[0, 0] * U["X"] + R[1, 0] * U["Y"] + R[2, 0] * U["Z"]
+    U["E"] = R[0, 1] * U["X"] + R[1, 1] * U["Y"] + R[2, 1] * U["Z"]
+    U["R"] = R[0, 2] * U["X"] + R[1, 2] * U["Y"] + R[2, 2] * U["Z"]
     # set attributes for output variables
     for var in U.data_vars:
-        U[var].attrs["units"] = dxi["X"].attrs.get("units", "meters")
+        U[var].attrs["units"] = U["X"].attrs.get("units", "meters")
     # return the ocean pole tide displacements for variable(s)
     return U[variable]
 
@@ -1212,11 +1210,13 @@ def _ephemerides_SET(
 
             - ``'tide_free'``: no permanent direct and indirect tidal potentials
             - ``'mean_tide'``: permanent tidal potentials (direct and indirect)
-    ephemerides: str, default 'approximate'
-        Ephemerides for calculating Earth parameters
+    ephemerides: str, default 'Montenbruck'
+        Method for calculating lunar and solar ephemerides
 
-            - ``'approximate'``: approximate lunisolar parameters
-            - ``'JPL'``: computed from JPL ephmerides kernel
+            - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+            - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+            - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
+            - ``'JPL'``: computed ephemerides from JPL kernels
     variable: str or list, default 'R'
         Output variable(s) to extract from dataset
 
@@ -1235,7 +1235,13 @@ def _ephemerides_SET(
     # validate input arguments
     assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
     assert tide_system.lower() in ("mean_tide", "tide_free")
-    assert ephemerides.lower() in ("approximate", "jpl")
+    assert ephemerides.lower() in (
+        "approximate",
+        "kubo",
+        "meeus",
+        "montenbruck",
+        "jpl",
+    )
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
@@ -1308,7 +1314,7 @@ def _ephemerides_SET(
 
     # calculate radial displacement at time
     # predict solid earth tides (cartesian)
-    dxi = pyTMD.predict.solid_earth_tide(
+    SE = pyTMD.predict.solid_earth_tide(
         ts.tide,
         XYZ,
         SXYZ,
@@ -1319,13 +1325,12 @@ def _ephemerides_SET(
         **kwargs,
     )
     # rotate displacements from cartesian coordinates
-    SE = xr.Dataset()
-    SE["N"] = R[0, 0] * dxi["X"] + R[1, 0] * dxi["Y"] + R[2, 0] * dxi["Z"]
-    SE["E"] = R[0, 1] * dxi["X"] + R[1, 1] * dxi["Y"] + R[2, 1] * dxi["Z"]
-    SE["R"] = R[0, 2] * dxi["X"] + R[1, 2] * dxi["Y"] + R[2, 2] * dxi["Z"]
+    SE["N"] = R[0, 0] * SE["X"] + R[1, 0] * SE["Y"] + R[2, 0] * SE["Z"]
+    SE["E"] = R[0, 1] * SE["X"] + R[1, 1] * SE["Y"] + R[2, 1] * SE["Z"]
+    SE["R"] = R[0, 2] * SE["X"] + R[1, 2] * SE["Y"] + R[2, 2] * SE["Z"]
     # set attributes for output variables
-    for var in SE.data_vars:
-        SE[var].attrs["units"] = dxi["X"].attrs.get("units", "meters")
+    for var in ["N", "E", "R"]:
+        SE[var].attrs["units"] = SE["X"].attrs.get("units", "meters")
     # return the solid earth tide displacements for variable(s)
     return SE[variable]
 
@@ -1469,7 +1474,7 @@ def TG_forces(
     type: str | None = "drift",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
-    ephemerides: str = "Meeus",
+    ephemerides: str = "Montenbruck",
     variable: str | list = "R",
     **kwargs,
 ):
@@ -1508,11 +1513,13 @@ def TG_forces(
             - ``'datetime'``: numpy datatime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
-    ephemerides: str, default 'Meeus'
-        Method for calculating solar and lunar positions
+    ephemerides: str, default 'Montenbruck'
+        Method for calculating lunar and solar ephemerides
 
             - ``'Kubo'``: :cite:t:`Kubo:1980ut`
             - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+            - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
+            - ``'JPL'``: computed ephemerides from JPL kernels
     variable: str | list, default 'R'
         Output variable(s) to extract from dataset
 
@@ -1530,7 +1537,13 @@ def TG_forces(
 
     # validate input arguments
     assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ephemerides.lower() in ("kubo", "meeus")
+    assert ephemerides.lower() in (
+        "approximate",
+        "kubo",
+        "meeus",
+        "montenbruck",
+        "jpl",
+    )
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
@@ -1571,19 +1584,60 @@ def TG_forces(
     )
     # difference between geodetic and geocentric coordinates (radians)
     alpha = np.radians(latitude - latitude_geocentric)
+    # geocentric colatitude (radians)
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+
+    # compute ephemerides for lunisolar coordinates
+    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
+    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=ephemerides)
+    # create datasets for lunisolar coordinates
+    SXYZ = xr.Dataset(
+        data_vars={
+            "X": (["time"], SX),
+            "Y": (["time"], SY),
+            "Z": (["time"], SZ),
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD)),
+    )
+    LXYZ = xr.Dataset(
+        data_vars={
+            "X": (["time"], LX),
+            "Y": (["time"], LY),
+            "Z": (["time"], LZ),
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD)),
+    )
+
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0, 0] = np.cos(phi) * np.cos(theta)
+    R[0, 1] = -np.sin(phi)
+    R[0, 2] = np.cos(phi) * np.sin(theta)
+    R[1, 0] = np.sin(phi) * np.cos(theta)
+    R[1, 1] = np.cos(phi)
+    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[2, 0] = -np.sin(theta)
+    R[2, 1] = xr.zeros_like(theta)
+    R[2, 2] = np.cos(theta)
 
     # calculate tide generating forces
     F = pyTMD.predict.generating_force(
         ts.tide,
         XYZ,
-        deltat=ts.tt_ut1,
-        method=ephemerides,
+        SXYZ,
+        LXYZ,
         a_axis=units.a_axis,
         flat=units.flat,
         J2=units.J2,
         **kwargs,
     )
 
+    # rotate forces from cartesian coordinates
+    F["N"] = R[0, 0] * F["X"] + R[1, 0] * F["Y"] + R[2, 0] * F["Z"]
+    F["E"] = R[0, 1] * F["X"] + R[1, 1] * F["Y"] + R[2, 1] * F["Z"]
+    F["R"] = R[0, 2] * F["X"] + R[1, 2] * F["Y"] + R[2, 2] * F["Z"]
     # convert to ellipsoidal coordinates
     TGF = xr.Dataset()
     TGF["R"] = np.sin(alpha) * F["N"] + np.cos(alpha) * F["R"]
@@ -1592,6 +1646,5 @@ def TG_forces(
     # set attributes for output variables
     for var in TGF.data_vars:
         TGF[var].attrs["units"] = F[var].attrs.get("units", "m/s^2")
-
     # return the tide generating forces for variable(s)
     return TGF[variable]
