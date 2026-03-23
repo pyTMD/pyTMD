@@ -1329,7 +1329,7 @@ def _ephemerides_SET(
     SE["E"] = R[0, 1] * SE["X"] + R[1, 1] * SE["Y"] + R[2, 1] * SE["Z"]
     SE["R"] = R[0, 2] * SE["X"] + R[1, 2] * SE["Y"] + R[2, 2] * SE["Z"]
     # set attributes for output variables
-    for var in ["N", "E", "R"]:
+    for var in SE.data_vars:
         SE[var].attrs["units"] = SE["X"].attrs.get("units", "meters")
     # return the solid earth tide displacements for variable(s)
     return SE[variable]
