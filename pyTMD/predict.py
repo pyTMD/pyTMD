@@ -30,7 +30,7 @@ UPDATE HISTORY:
         set the maximum degree and order for the HW1995 catalog to 6
         clean up the ephemerides method of calculating solid earth tides
         clean up all of the ephemerides corrections for solid earth tides
-        calculate tidal generating forces following Tamura (1982 and 1987)
+        calculate tide-generating forces following Tamura (1982 and 1987)
     Updated 02/2026: added attributes for constituents to output DataArrays
         do not infer minor constituents with frequencies equal to any major
         revert (again) load pole tides to a newer IERS convention definition
@@ -1424,6 +1424,7 @@ def ocean_pole_tide(
 
 # get ellipsoidal parameters
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
+_wgs84 = pyTMD.spatial.datum(ellipsoid="WGS84", units="MKS")
 
 
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
@@ -1504,6 +1505,7 @@ def solid_earth_tide(
     MJD = t + _mjd_tide
     # radius of the point on the Earth's surface
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
+    # sine of geocentric latitude
     sinphi = XYZ["Z"] / radius
     # distance between the Earth and the sun/moon
     solar_radius = pyTMD.math.radius(SXYZ["X"], SXYZ["Y"], SXYZ["Z"])
@@ -1530,9 +1532,11 @@ def solid_earth_tide(
     F2_solar = K_solar * (a_axis / solar_radius)
     F2_lunar = K_lunar * (a_axis / lunar_radius)
     # allocate for output displacements
-    dxt = xr.Dataset()
-    for d in ("X", "Y", "Z"):
-        dxt[d] = xr.zeros_like(solar_scalar)
+    dx_solar = xr.Dataset()
+    dx_lunar = xr.Dataset()
+    for var in ["X", "Y", "Z"]:
+        dx_solar[var] = xr.zeros_like(solar_scalar)
+        dx_lunar[var] = xr.zeros_like(lunar_scalar)
     # compute total displacement (Mathews et al. 1997)
     # from the tide-generating potentials
     # for each spherical harmonic degree
@@ -1556,19 +1560,19 @@ def solid_earth_tide(
         with np.errstate(divide="ignore", invalid="ignore"):
             dPl_solar /= np.sqrt(1 - solar_scalar**2)
             dPl_lunar /= np.sqrt(1 - lunar_scalar**2)
-        # calculate solar and lunar terms for degree
-        S = K_solar * (
+        # add solar and lunar terms for degree
+        dx_solar += K_solar * (
             hl * Pl_solar * unit_vector
             + ll * dPl_solar * solar_scalar * unit_vector
             - ll * dPl_solar * solar_unit_vector
         )
-        L = K_lunar * (
+        dx_lunar += K_lunar * (
             hl * Pl_lunar * unit_vector
             + ll * dPl_lunar * lunar_scalar * unit_vector
             - ll * dPl_lunar * lunar_unit_vector
         )
-        # add displacements for degree
-        dxt += S + L
+    # sum solar and lunar components
+    dxt = dx_solar + dx_lunar
     # corrections for out-of-phase portions of the Love and Shida numbers
     dxt += _out_of_phase(XYZ, SXYZ, LXYZ, F2_solar, F2_lunar)
     # corrections for the latitudinal dependence (diurnal and semi-diurnal)
@@ -1658,6 +1662,7 @@ def _out_of_phase_diurnal(
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # double angle formulas of cosine/sine latitude
     sin2phi = 2.0 * sinphi * cosphi
     cos2phi = cosphi**2 - sinphi**2
     # sine and cosine of longitude
@@ -1665,13 +1670,14 @@ def _out_of_phase_diurnal(
     cosla = XYZ["X"] / cosphi / radius
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # sine and cosine of Solar/Lunar latitude
+    # sine and cosine of Solar/Lunar declinations
     lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
     lunisolar_cosphi = (
         np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
+    # double angle formulas of sine Solar/Lunar declinations
     lunisolar_sin2phi = 2.0 * lunisolar_cosphi * lunisolar_sinphi
-    # sine and cosine of Solar/Lunar longitude
+    # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
     # calculate offsets
@@ -1733,19 +1739,19 @@ def _out_of_phase_semidiurnal(
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
-    # double angle formulas of cos/sin longitude
+    # double angle formulas of cosine/sine longitude
     cos2la = cosla**2 - sinla**2
     sin2la = 2.0 * cosla * sinla
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # cosine of Solar/Lunar latitude
+    # cosine of Solar/Lunar declinations
     lunisolar_cosphi = (
         np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
-    # sine and cosine of Solar/Lunar longitude
+    # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
-    # double angle formulas of cos/sin longitude
+    # double angle formulas of cosine/sine Solar/Lunar hour angles
     lunisolar_cos2la = lunisolar_cosla**2 - lunisolar_sinla**2
     lunisolar_sin2la = 2.0 * lunisolar_cosla * lunisolar_sinla
     # calculate offsets
@@ -1841,19 +1847,21 @@ def _latitude_dependence_diurnal(
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
     cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # double angle formulas of cosine latitude
     cos2phi = cosphi**2 - sinphi**2
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # sine and cosine of Solar/Lunar latitude
+    # sine and cosine of Solar/Lunar declinations
     lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
     lunisolar_cosphi = (
         np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
+    # double angle formulas of sin Solar/Lunar declinations
     lunisolar_sin2phi = 2.0 * lunisolar_sinphi * lunisolar_cosphi
-    # sine and cosine of Solar/Lunar longitude
+    # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
     # calculate offsets for the diurnal band
@@ -1913,14 +1921,14 @@ def _latitude_dependence_semidiurnal(
     sin2la = 2.0 * cosla * sinla
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
-    # cosine of Solar/Lunar latitude
+    # cosine of Solar/Lunar declinations
     lunisolar_cosphi = (
         np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
     )
-    # sine and cosine of Solar/Lunar longitude
+    # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
-    # double angle formulas of cos/sin longitude
+    # double angle formulas of cosine/sine Solar/Lunar hour angles
     lunisolar_cos2la = lunisolar_cosla**2 - lunisolar_sinla**2
     lunisolar_sin2la = 2.0 * lunisolar_cosla * lunisolar_sinla
     # calculate offsets for the semi-diurnal band
@@ -2532,7 +2540,8 @@ def body_tide(
 def generating_force(
     t: np.ndarray,
     XYZ: xr.Dataset,
-    deltat: float | np.ndarray = 0.0,
+    SXYZ: xr.Dataset,
+    LXYZ: xr.Dataset,
     **kwargs,
 ):
     r"""
@@ -2545,15 +2554,18 @@ def generating_force(
         Days relative to 1992-01-01T00:00:00
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
-    deltat: float or np.ndarray, default 0.0
-        Time correction for converting to Ephemeris Time (days)
-    method: str, default 'Meeus'
-        Method for calculating solar and lunar positions
-
-        - ``'Kubo'``: :cite:t:`Kubo:1980ut`
-        - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+    SXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the sun
+    LXYZ: xr.Dataset
+        Dataset with Earth-centered Earth-fixed coordinates of the moon
     lmax: int, default 4
         Maximum degree of spherical harmonic expansion
+    a_axis: float, default 6378137.0
+        Semi-major axis of the Earth (meters)
+    flat: float, default 1.0/298.257223563
+        Ellipsoidal flattening
+    J2: float, default 0.0010826298213129214
+        Oblateness :math:`J_2` coefficient
     AU: float, default 149597870700.0
         Distance of 1 Astronomical Unit (meters)
     GM: float, default 3.986004418e14
@@ -2581,142 +2593,70 @@ def generating_force(
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
 
-    # Julian centuries from J2000.0 (UT1)
-    T = xr.DataArray(
-        (t + _mjd_tide - _mjd_j2000) / _century,
-        dims=("time"),
-        coords=dict(time=(t + _mjd_tide)),
-    )
-    # convert dates to Modified Julian Days in Ephemeris time
-    MJD = (T * _century) + _mjd_j2000 + deltat
-
-    # geocentric colatitude and longitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    # convert dates to Modified Julian Days
+    MJD = t + _mjd_tide
     # Earth's radius at the given latitude (meters)
-    rad_e = pyTMD.math.radius(XYZ.X, XYZ.Y, XYZ.Z)
+    radius = pyTMD.math.radius(XYZ.X, XYZ.Y, XYZ.Z)
+    # distance between the Earth and the sun/moon
+    solar_radius = pyTMD.math.radius(SXYZ.X, SXYZ.Y, SXYZ.Z)
+    lunar_radius = pyTMD.math.radius(LXYZ.X, LXYZ.Y, LXYZ.Z)
+    # cosine of angles between vectors of the point and the sun/moon
+    solar_scalar = pyTMD.math.scalar_product(
+        XYZ.X, XYZ.Y, XYZ.Z, SXYZ.X, SXYZ.Y, SXYZ.Z
+    ) / (radius * solar_radius)
+    lunar_scalar = pyTMD.math.scalar_product(
+        XYZ.X, XYZ.Y, XYZ.Z, LXYZ.X, LXYZ.Y, LXYZ.Z
+    ) / (radius * lunar_radius)
+    # unit vectors for dimensions
+    unit_vector = XYZ / radius
+    solar_unit_vector = SXYZ / solar_radius
+    lunar_unit_vector = LXYZ / lunar_radius
 
-    # obliquity of the ecliptic
-    epsilon = pyTMD.astro.mean_obliquity(MJD)
-    # correct obliquity for nutation
-    if kwargs["method"].lower() in ("kubo", "meeus"):
-        # simple correction for principal nutation (radians)
-        omega = np.radians(1934.136 * T + 235.0)
-        epsilon += np.radians(0.00256 * np.cos(omega))
-    else:
-        # calculate nutation rotation angles using IERS tables
-        dpsi, deps = pyTMD.astro._nutation_angles(T)
-        epsilon += deps
-
-    # get phase angles and distances for the sun
-    solar_latitude = xr.DataArray(
-        pyTMD.astro.solar_latitude(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-    solar_longitude = xr.DataArray(
-        pyTMD.astro.solar_longitude(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-    solar_radius = xr.DataArray(
-        pyTMD.astro.solar_distance(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-    # get phase angles and distances for the moon
-    lunar_latitude = xr.DataArray(
-        pyTMD.astro.lunar_latitude(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-    lunar_longitude = xr.DataArray(
-        pyTMD.astro.lunar_longitude(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-    lunar_radius = xr.DataArray(
-        pyTMD.astro.lunar_distance(MJD, **kwargs), dims=T.dims, coords=T.coords
-    )
-
-    # calculate the right ascensions and declinations of the sun
-    # Meeus equations 25.6 and 25.7
-    solar_right_ascension = np.arctan2(
-        np.cos(epsilon) * np.sin(solar_longitude) * np.cos(solar_latitude)
-        - np.sin(epsilon) * np.sin(solar_latitude),
-        np.cos(solar_longitude) * np.cos(solar_latitude),
-    )
-    solar_declination = np.arcsin(
-        np.sin(epsilon) * np.sin(solar_longitude) * np.cos(solar_latitude)
-        + np.cos(epsilon) * np.sin(solar_latitude)
-    )
-    # calculate the right ascensions and declinations of the moon
-    lunar_right_ascension = np.arctan2(
-        np.cos(epsilon) * np.sin(lunar_longitude) * np.cos(lunar_latitude)
-        - np.sin(epsilon) * np.sin(lunar_latitude),
-        np.cos(lunar_longitude) * np.cos(lunar_latitude),
-    )
-    lunar_declination = np.arcsin(
-        np.sin(epsilon) * np.sin(lunar_longitude) * np.cos(lunar_latitude)
-        + np.cos(epsilon) * np.sin(lunar_latitude)
-    )
-    # local hour angles in radians
-    gast = 2.0 * np.pi * pyTMD.astro.gast(T)
-    local_hour_angle = gast + phi
-    solar_hour_angle = local_hour_angle - solar_right_ascension
-    lunar_hour_angle = local_hour_angle - lunar_right_ascension
-
-    # cosine of geocentric zenith distances
-    solar_zenith = np.sin(theta) * np.sin(solar_declination) + (
-        np.cos(theta) * np.cos(solar_declination) * np.cos(solar_hour_angle)
-    )
-    lunar_zenith = np.sin(theta) * np.sin(lunar_declination) + (
-        np.cos(theta) * np.cos(lunar_declination) * np.cos(lunar_hour_angle)
-    )
-    # differential of zenith angle with respect to theta
-    solar_dtheta = np.cos(theta) * np.sin(solar_declination) - (
-        np.sin(theta) * np.cos(solar_declination) * np.cos(solar_hour_angle)
-    )
-    lunar_dtheta = np.cos(theta) * np.sin(lunar_declination) - (
-        np.sin(theta) * np.cos(lunar_declination) * np.cos(lunar_hour_angle)
-    )
-    # differential of zenith angle with respect to phi
-    solar_dphi = np.cos(solar_declination) * np.sin(solar_hour_angle)
-    lunar_dphi = np.cos(lunar_declination) * np.sin(lunar_hour_angle)
     # factors for sun and moon using IAU estimates of mass ratios
     GM_solar = kwargs["mass_ratio_solar"] * kwargs["GM"]
     GM_lunar = kwargs["mass_ratio_lunar"] * kwargs["GM"]
     # gravitational parameters
-    K_solar = GM_solar * rad_e / np.power(solar_radius, 2)
-    K_lunar = GM_lunar * rad_e / np.power(lunar_radius, 2)
+    K_solar = GM_solar * radius / np.power(solar_radius, 2)
+    K_lunar = GM_lunar * radius / np.power(lunar_radius, 2)
 
-    # components of attraction for the sun and moon
+    # initialize output tide-generating forces
     F_solar = xr.Dataset()
     F_lunar = xr.Dataset()
-    # initialize output generating forces
-    for key in ["R", "N", "E"]:
-        F_solar[key] = xr.zeros_like(solar_zenith)
-        F_lunar[key] = xr.zeros_like(lunar_zenith)
+    for var in ["X", "Y", "Z"]:
+        F_solar[var] = xr.zeros_like(solar_scalar)
+        F_lunar[var] = xr.zeros_like(lunar_scalar)
 
+    # compute tide-generating forces
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
-        # update gravitational parameter for degree
-        K_solar *= rad_e / solar_radius
-        K_lunar *= rad_e / lunar_radius
+        # update gravitational parameters for degree
+        K_solar *= radius / solar_radius
+        K_lunar *= radius / lunar_radius
         # legendre polynomial for degree
-        Pl_solar, dPl_solar = pyTMD.math.legendre(l, solar_zenith)
-        Pl_lunar, dPl_lunar = pyTMD.math.legendre(l, lunar_zenith)
+        Pl_solar, dPl_solar = pyTMD.math.legendre(l, solar_scalar)
+        Pl_lunar, dPl_lunar = pyTMD.math.legendre(l, lunar_scalar)
         # divide differential by u
         # ignore divide by zero and invalid value warnings
         with np.errstate(divide="ignore", invalid="ignore"):
-            dPl_solar /= np.sqrt(1 - solar_zenith**2)
-            dPl_lunar /= np.sqrt(1 - lunar_zenith**2)
-        # radial (up)
-        F_solar["R"] += (K_solar * l / rad_e) * Pl_solar
-        F_lunar["R"] += (K_lunar * l / rad_e) * Pl_lunar
-        # north
-        F_solar["N"] -= (K_solar / rad_e) * dPl_solar * solar_dtheta
-        F_lunar["N"] -= (K_lunar / rad_e) * dPl_lunar * lunar_dtheta
-        # east
-        F_solar["E"] += (K_solar / rad_e) * dPl_solar * solar_dphi
-        F_lunar["E"] += (K_lunar / rad_e) * dPl_lunar * lunar_dphi
+            dPl_solar /= np.sqrt(1 - solar_scalar**2)
+            dPl_lunar /= np.sqrt(1 - lunar_scalar**2)
+        # add solar and lunar terms for degree
+        F_solar += (K_solar / radius) * (
+            l * Pl_solar * unit_vector
+            + dPl_solar * solar_scalar * unit_vector
+            - dPl_solar * solar_unit_vector
+        )
+        F_lunar += (K_lunar / radius) * (
+            l * Pl_lunar * unit_vector
+            + dPl_lunar * lunar_scalar * unit_vector
+            - dPl_lunar * lunar_unit_vector
+        )
 
     # sum solar and lunar components
+    F = F_solar + F_lunar
     # add units attributes to output dataset
-    F = xr.Dataset()
-    for key in ["R", "N", "E"]:
-        F[key] = F_solar[key] + F_lunar[key]
-        F[key].attrs["units"] = "m/s^2"
+    for var in F.data_vars:
+        F[var].attrs["units"] = "m/s^2"
 
     # return the tide generating force
     return F

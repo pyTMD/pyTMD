@@ -20,6 +20,7 @@ REFERENCES:
 UPDATE HISTORY:
     Updated 03/2026: added functions to compute the geocentric positions
         of the sun and moon (latitude, longitude and distance)
+        use geocentric positions as new options for lunisolar ECEF XYZ
     Updated 10/2025: change default directory for JPL SSD kernels to cache
     Updated 09/2025: added function to compute the planetary mean longitudes
     Updated 08/2025: convert angles with numpy radians and degrees functions
@@ -655,7 +656,7 @@ def equation_of_time(MJD: np.ndarray):
 
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
-def solar_ecef(MJD: np.ndarray, **kwargs):
+def solar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
     """
     Wrapper function for calculating the positional coordinates
     of the sun in an Earth-centric, Earth-Fixed (ECEF) frame
@@ -665,11 +666,14 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    ephemerides: str, default 'approximate'
+    ephemerides: str, default 'Montenbruck'
         Method for calculating solar ephemerides
 
-            - ``'approximate'``: low-resolution ephemerides
+            - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+            - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+            - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
             - ``'JPL'``: computed ephemerides from JPL kernels
+            - ``'VSOP87'``: :cite:t:`Bretagnon:1988wg`
     **kwargs: dict
         Keyword options for ephemeris calculation
 
@@ -678,12 +682,15 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
     X, Y, Z: np.ndarray
         ECEF coordinates of the sun (meters)
     """
-    kwargs.setdefault("ephemerides", "approximate")
-    if kwargs["ephemerides"].lower() == "approximate":
-        return solar_approximate(MJD, **kwargs)
-    elif kwargs["ephemerides"].upper() == "JPL":
+    # determine the solar positions
+    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
+    if ephemerides.lower() in methods:
+        return solar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL":
         assert jplephem_available, "jplephem is required for JPL ephemerides"
         return solar_ephemerides(MJD, **kwargs)
+    else:
+        raise ValueError("Invalid ephemerides method")
 
 
 def solar_approximate(MJD, **kwargs):
@@ -696,30 +703,60 @@ def solar_approximate(MJD, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    ephemerides: str, default 'Montenbruck'
+        Method for calculating solar ephemerides
 
     Returns
     -------
     X, Y, Z: np.ndarray
         ECEF coordinates of the sun (meters)
     """
+    # default keyword arguments
+    kwargs.setdefault("ephemerides", "Montenbruck")
+    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
+    assert kwargs["ephemerides"].lower() in methods
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
-    # mean longitude of solar perigee (radians)
-    Ps = np.radians(282.94 + 1.7192 * ts.T)
-    # mean anomaly of the sun (radians)
-    solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
-    M = np.radians(polynomial_sum(solar_anomaly, ts.T))
-    # series expansion for mean anomaly in solar radius (meters)
-    r_sun = 1e9 * (149.619 - 2.499 * np.cos(M) - 0.021 * np.cos(2.0 * M))
-    # series expansion for ecliptic longitude of the sun (radians)
-    lambda_sun = Ps + M + asec2rad(6892.0 * np.sin(M) + 72.0 * np.sin(2.0 * M))
-    # ecliptic latitude is equal to 0 within 1 arcminute
-    # obliquity of the J2000 ecliptic (radians)
-    epsilon_j2000 = np.radians(23.43929111)
-    # convert to position vectors
-    x = r_sun * np.cos(lambda_sun)
-    y = r_sun * np.sin(lambda_sun) * np.cos(epsilon_j2000)
-    z = r_sun * np.sin(lambda_sun) * np.sin(epsilon_j2000)
+    # calculate solar positions using the specified method
+    if kwargs["ephemerides"].lower() in ("approximate", "montenbruck"):
+        # mean longitude of solar perigee (radians)
+        Ps = np.radians(282.94 + 1.7192 * ts.T)
+        # mean anomaly of the sun (radians)
+        solar_anomaly = np.array([357.5256, 35999.049, -1.559e-4, -4.8e-7])
+        M = np.radians(polynomial_sum(solar_anomaly, ts.T))
+        # series expansion for mean anomaly in solar radius (meters)
+        r_sun = 1e9 * (149.619 - 2.499 * np.cos(M) - 0.021 * np.cos(2.0 * M))
+        # series expansion for ecliptic longitude of the sun (radians)
+        lambda_sun = (
+            Ps + M + asec2rad(6892.0 * np.sin(M) + 72.0 * np.sin(2.0 * M))
+        )
+        # ecliptic latitude is equal to 0 within 1 arcminute
+        # obliquity of the J2000 ecliptic (radians)
+        epsilon_j2000 = np.radians(23.43929111)
+        # convert to position vectors
+        x = r_sun * np.cos(lambda_sun)
+        y = r_sun * np.sin(lambda_sun) * np.cos(epsilon_j2000)
+        z = r_sun * np.sin(lambda_sun) * np.sin(epsilon_j2000)
+    else:
+        # calculate solar positions
+        beta_sun = solar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
+        lambda_sun = solar_longitude(ts.MJD + ts.tt_ut1, **kwargs)
+        r_sun = solar_distance(ts.MJD + ts.tt_ut1, **kwargs)
+        # obliquity of the ecliptic
+        epsilon = mean_obliquity(ts.MJD + ts.tt_ut1)
+        # simple correction for principal nutation (radians)
+        omega = np.radians(1934.136 * ts.T + 235.0)
+        epsilon += np.radians(0.00256 * np.cos(omega))
+        # convert to position vectors (Meeus equation 26.1)
+        x = r_sun * np.cos(beta_sun) * np.cos(lambda_sun)
+        y = r_sun * (
+            np.cos(beta_sun) * np.sin(lambda_sun) * np.cos(epsilon)
+            - np.sin(beta_sun) * np.sin(epsilon)
+        )
+        z = r_sun * (
+            np.cos(beta_sun) * np.sin(lambda_sun) * np.sin(epsilon)
+            + np.sin(beta_sun) * np.cos(epsilon)
+        )
     # Greenwich hour angle (radians)
     rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
@@ -810,6 +847,8 @@ def solar_latitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    ephemerides: str, default Meeus
+        Method for calculating the latitude
 
     Returns
     -------
@@ -817,8 +856,8 @@ def solar_latitude(
         Latitude of the sun (radians)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
-    if kwargs["method"].lower() == "vsop87":
+    kwargs.setdefault("ephemerides", "Meeus")
+    if kwargs["ephemerides"].lower() == "vsop87":
         # convert from MJD to millennia relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _millennia
         # calculate the geocentric latitude of the sun
@@ -872,7 +911,7 @@ def solar_longitude(
         Modified Julian Day (MJD) of input date
     include_aberration: bool, default True
         Correct for aberration effects
-    method: str, default 'Meeus'
+    ephemerides: str, default 'Meeus'
         Method of calculating the longitude
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -885,8 +924,8 @@ def solar_longitude(
         Longitude of the sun (radians)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
-    if kwargs["method"].lower() == "meeus":
+    kwargs.setdefault("ephemerides", "Meeus")
+    if kwargs["ephemerides"].lower() == "meeus":
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _century
         # mean longitude of sun (degrees)
@@ -908,7 +947,7 @@ def solar_longitude(
             # convert to apparent longitude
             omega = np.radians(125.04 - 1934.136 * T)
             H += -0.00569 - 0.00478 * np.sin(omega)
-    elif kwargs["method"].lower() == "kubo":
+    elif kwargs["ephemerides"].lower() == "kubo":
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _century
         # coefficients for calculating the longitude of the sun
@@ -943,7 +982,7 @@ def solar_longitude(
             # convert to apparent longitude
             omega = np.radians(145.0 + 1934.0 * T)
             H += -0.0057 + 0.0048 * np.cos(np.radians(omega))
-    elif kwargs["method"].lower() == "vsop87":
+    elif kwargs["ephemerides"].lower() == "vsop87":
         # convert from MJD to millennia relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _millennia
         # calculate the longitude of the sun
@@ -1116,6 +1155,8 @@ def solar_longitude(
             # convert to apparent longitude
             omega = np.radians(125.04 - 1934.136 * T)
             H += -0.00569 - 0.00478 * np.sin(omega)
+    else:
+        raise ValueError("Invalid ephemerides method")
     # take the modulus and convert to radians
     H = np.radians(normalize_angle(H, circle=360.0))
     # return the longitude of the sun
@@ -1137,7 +1178,7 @@ def solar_distance(
         Modified Julian Day (MJD) of input date
     AU: float, default 1.495978707e11
         Distance of 1 Astronomical Unit (meters)
-    method: str, default 'Meeus'
+    ephemerides: str, default 'Meeus'
         Method of calculating the distance
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -1150,8 +1191,8 @@ def solar_distance(
         Distance from the sun to the Earth (meters)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
-    if kwargs["method"].lower() == "meeus":
+    kwargs.setdefault("ephemerides", "Meeus")
+    if kwargs["ephemerides"].lower() == "meeus":
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _century
         # mean anomaly of the sun (radians)
@@ -1168,7 +1209,7 @@ def solar_distance(
         )
         nu = M + np.radians(C)
         solar_au = 1.000001018 * (1.0 - ee**2) / (1.0 + ee * np.cos(nu))
-    elif kwargs["method"].lower() == "kubo":
+    elif kwargs["ephemerides"].lower() == "kubo":
         # convert from MJD to centuries relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _century
         # coefficients for calculating the distance to the sun
@@ -1189,7 +1230,7 @@ def solar_distance(
             if i == 0:
                 a -= 42e-6 * T
             solar_au += a * np.cos(np.radians(b + c * T))
-    elif kwargs["method"].lower() == "vsop87":
+    elif kwargs["ephemerides"].lower() == "vsop87":
         # convert from MJD to millennia relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _millennia
         # calculate the distance from the sun to the Earth
@@ -1284,6 +1325,8 @@ def solar_distance(
         for p, R in enumerate(coefficients):
             for i, (a, b, c) in enumerate(R):
                 solar_au += a * np.cos(b + c * T) * np.power(T, p)
+    else:
+        raise ValueError("Invalid ephemerides method")
     # convert from AU to meters
     R = solar_au * AU
     # return the distance from the sun to the Earth
@@ -1291,7 +1334,7 @@ def solar_distance(
 
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
-def lunar_ecef(MJD: np.ndarray, **kwargs):
+def lunar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
     """
     Wrapper function for calculating the positional coordinates
     of the moon in an Earth-centric, Earth-Fixed (ECEF) frame
@@ -1301,10 +1344,12 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    ephemerides: str, default 'approximate'
+    ephemerides: str, default 'Montenbruck'
         Method for calculating lunar ephemerides
 
-            - ``'approximate'``: low-resolution ephemerides
+            - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+            - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+            - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
             - ``'JPL'``: computed ephemerides from JPL kernels
     **kwargs: dict
         Keyword options for ephemeris calculation
@@ -1314,12 +1359,15 @@ def lunar_ecef(MJD: np.ndarray, **kwargs):
     X, Y, Z: np.ndarray
         ECEF coordinates of the moon (meters)
     """
-    kwargs.setdefault("ephemerides", "approximate")
-    if kwargs["ephemerides"].lower() == "approximate":
-        return lunar_approximate(MJD, **kwargs)
-    elif kwargs["ephemerides"].upper() == "JPL":
+    # determine the lunar positions
+    methods = ["approximate", "montenbruck", "kubo", "meeus"]
+    if ephemerides.lower() in methods:
+        return lunar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL":
         assert jplephem_available, "jplephem is required for JPL ephemerides"
         return lunar_ephemerides(MJD, **kwargs)
+    else:
+        raise ValueError("Invalid ephemerides method")
 
 
 def lunar_approximate(MJD, **kwargs):
@@ -1332,84 +1380,112 @@ def lunar_approximate(MJD, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    ephemerides: str, default 'Montenbruck'
+        Method for calculating lunar positions
 
     Returns
     -------
     X, Y, Z: np.ndarray
         ECEF coordinates of the moon (meters)
     """
+    # default keyword arguments
+    kwargs.setdefault("ephemerides", "Montenbruck")
+    methods = ["approximate", "montenbruck", "kubo", "meeus"]
+    assert kwargs["ephemerides"].lower() in methods
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
-    # mean longitude of moon (p. 338)
-    lunar_longitude = np.array(
-        [218.3164477, 481267.88123421, -1.5786e-3, 1.855835e-6, -1.53388e-8]
-    )
-    s = np.radians(polynomial_sum(lunar_longitude, ts.T))
-    # difference between the mean longitude of sun and moon (p. 338)
-    lunar_elongation = np.array(
-        [297.8501921, 445267.1114034, -1.8819e-3, 1.83195e-6, -8.8445e-9]
-    )
-    D = np.radians(polynomial_sum(lunar_elongation, ts.T))
-    # mean longitude of ascending lunar node (p. 144)
-    lunar_node = np.array([125.04452, -1934.136261, 2.0708e-3, 2.22222e-6])
-    N = np.radians(polynomial_sum(lunar_node, ts.T))
-    F = s - N
-    # mean anomaly of the sun (radians)
-    M = np.radians((357.5256 + 35999.049 * ts.T))
-    # mean anomaly of the moon (radians)
-    l = np.radians((134.96292 + 477198.86753 * ts.T))
-    # series expansion for mean anomaly in moon radius (meters)
-    r_moon = 1e3 * (
-        385000.0
-        - 20905.0 * np.cos(l)
-        - 3699.0 * np.cos(2.0 * D - l)
-        - 2956.0 * np.cos(2.0 * D)
-        - 570.0 * np.cos(2.0 * l)
-        + 246.0 * np.cos(2.0 * l - 2.0 * D)
-        - 205.0 * np.cos(M - 2.0 * D)
-        - 171.0 * np.cos(l + 2.0 * D)
-        - 152.0 * np.cos(l + M - 2.0 * D)
-    )
-    # series expansion for ecliptic longitude of the moon (radians)
-    lambda_moon = s + asec2rad(
-        22640.0 * np.sin(l)
-        + 769.0 * np.sin(2.0 * l)
-        - 4586.0 * np.sin(l - 2.0 * D)
-        + 2370.0 * np.sin(2.0 * D)
-        - 668.0 * np.sin(M)
-        - 412.0 * np.sin(2.0 * F)
-        - 212.0 * np.sin(2.0 * l - 2.0 * D)
-        - 206.0 * np.sin(l + M - 2.0 * D)
-        + 192.0 * np.sin(l + 2.0 * D)
-        - 165.0 * np.sin(M - 2.0 * D)
-        - 148.0 * np.sin(l - M)
-        - 125.0 * np.sin(D)
-        - 110.0 * np.sin(l + M)
-        - 55.0 * np.sin(2.0 * F - 2.0 * D)
-    )
-    # series expansion for ecliptic latitude of the moon (radians)
-    q = asec2rad(412.0 * np.sin(2.0 * F) + 541.0 * np.sin(M))
-    beta_moon = asec2rad(
-        18520.0 * np.sin(F + lambda_moon - s + q)
-        - 526.0 * np.sin(F - 2 * D)
-        + 44.0 * np.sin(l + F - 2.0 * D)
-        - 31.0 * np.sin(-l + F - 2.0 * D)
-        - 25.0 * np.sin(-2.0 * l + F)
-        - 23.0 * np.sin(M + F - 2.0 * D)
-        + 21.0 * np.sin(-l + F)
-        + 11.0 * np.sin(-M + F - 2.0 * D)
-    )
-    # convert to position vectors
-    x = r_moon * np.cos(lambda_moon) * np.cos(beta_moon)
-    y = r_moon * np.sin(lambda_moon) * np.cos(beta_moon)
-    z = r_moon * np.sin(beta_moon)
-    # obliquity of the J2000 ecliptic (radians)
-    epsilon_j2000 = np.radians(23.43929111)
-    # rotate by ecliptic
-    rot_x = rotate(-epsilon_j2000, "x")
-    u = rot_x[0, 0, :] * x + rot_x[0, 1, :] * y + rot_x[0, 2, :] * z
-    v = rot_x[1, 0, :] * x + rot_x[1, 1, :] * y + rot_x[1, 2, :] * z
-    w = rot_x[2, 0, :] * x + rot_x[2, 1, :] * y + rot_x[2, 2, :] * z
+    # calculate lunar positions using the specified method
+    if kwargs["ephemerides"].lower() in ("approximate", "montenbruck"):
+        # mean longitude of moon (p. 338)
+        lunar_mean_longitude = np.array(
+            [218.3164477, 481267.88123421, -1.5786e-3, 1.855835e-6, -1.53388e-8]
+        )
+        s = np.radians(polynomial_sum(lunar_mean_longitude, ts.T))
+        # difference between the mean longitude of sun and moon (p. 338)
+        lunar_elongation = np.array(
+            [297.8501921, 445267.1114034, -1.8819e-3, 1.83195e-6, -8.8445e-9]
+        )
+        D = np.radians(polynomial_sum(lunar_elongation, ts.T))
+        # mean longitude of ascending lunar node (p. 144)
+        lunar_node = np.array([125.04452, -1934.136261, 2.0708e-3, 2.22222e-6])
+        N = np.radians(polynomial_sum(lunar_node, ts.T))
+        F = s - N
+        # mean anomaly of the sun (radians)
+        M = np.radians((357.5256 + 35999.049 * ts.T))
+        # mean anomaly of the moon (radians)
+        l = np.radians((134.96292 + 477198.86753 * ts.T))
+        # series expansion for mean anomaly in moon radius (meters)
+        r_moon = 1e3 * (
+            385000.0
+            - 20905.0 * np.cos(l)
+            - 3699.0 * np.cos(2.0 * D - l)
+            - 2956.0 * np.cos(2.0 * D)
+            - 570.0 * np.cos(2.0 * l)
+            + 246.0 * np.cos(2.0 * l - 2.0 * D)
+            - 205.0 * np.cos(M - 2.0 * D)
+            - 171.0 * np.cos(l + 2.0 * D)
+            - 152.0 * np.cos(l + M - 2.0 * D)
+        )
+        # series expansion for ecliptic longitude of the moon (radians)
+        lambda_moon = s + asec2rad(
+            22640.0 * np.sin(l)
+            + 769.0 * np.sin(2.0 * l)
+            - 4586.0 * np.sin(l - 2.0 * D)
+            + 2370.0 * np.sin(2.0 * D)
+            - 668.0 * np.sin(M)
+            - 412.0 * np.sin(2.0 * F)
+            - 212.0 * np.sin(2.0 * l - 2.0 * D)
+            - 206.0 * np.sin(l + M - 2.0 * D)
+            + 192.0 * np.sin(l + 2.0 * D)
+            - 165.0 * np.sin(M - 2.0 * D)
+            - 148.0 * np.sin(l - M)
+            - 125.0 * np.sin(D)
+            - 110.0 * np.sin(l + M)
+            - 55.0 * np.sin(2.0 * F - 2.0 * D)
+        )
+        # series expansion for ecliptic latitude of the moon (radians)
+        q = asec2rad(412.0 * np.sin(2.0 * F) + 541.0 * np.sin(M))
+        beta_moon = asec2rad(
+            18520.0 * np.sin(F + lambda_moon - s + q)
+            - 526.0 * np.sin(F - 2 * D)
+            + 44.0 * np.sin(l + F - 2.0 * D)
+            - 31.0 * np.sin(-l + F - 2.0 * D)
+            - 25.0 * np.sin(-2.0 * l + F)
+            - 23.0 * np.sin(M + F - 2.0 * D)
+            + 21.0 * np.sin(-l + F)
+            + 11.0 * np.sin(-M + F - 2.0 * D)
+        )
+        # convert to position vectors
+        x = r_moon * np.cos(lambda_moon) * np.cos(beta_moon)
+        y = r_moon * np.sin(lambda_moon) * np.cos(beta_moon)
+        z = r_moon * np.sin(beta_moon)
+        # obliquity of the J2000 ecliptic (radians)
+        epsilon_j2000 = np.radians(23.43929111)
+        # rotate by ecliptic
+        rot_x = rotate(-epsilon_j2000, "x")
+        u = rot_x[0, 0, :] * x + rot_x[0, 1, :] * y + rot_x[0, 2, :] * z
+        v = rot_x[1, 0, :] * x + rot_x[1, 1, :] * y + rot_x[1, 2, :] * z
+        w = rot_x[2, 0, :] * x + rot_x[2, 1, :] * y + rot_x[2, 2, :] * z
+    else:
+        # calculate lunar positions
+        beta_moon = lunar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
+        lambda_moon = lunar_longitude(ts.MJD + ts.tt_ut1, **kwargs)
+        r_moon = lunar_distance(ts.MJD + ts.tt_ut1, **kwargs)
+        # obliquity of the ecliptic
+        epsilon = mean_obliquity(ts.MJD + ts.tt_ut1)
+        # simple correction for principal nutation (radians)
+        omega = np.radians(1934.136 * ts.T + 235.0)
+        epsilon += np.radians(0.00256 * np.cos(omega))
+        # convert to position vectors rotated by ecliptic
+        u = r_moon * np.cos(beta_moon) * np.cos(lambda_moon)
+        v = r_moon * (
+            np.cos(beta_moon) * np.sin(lambda_moon) * np.cos(epsilon)
+            - np.sin(beta_moon) * np.sin(epsilon)
+        )
+        w = r_moon * (
+            np.cos(beta_moon) * np.sin(lambda_moon) * np.sin(epsilon)
+            + np.sin(beta_moon) * np.cos(epsilon)
+        )
     # Greenwich hour angle (radians)
     rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
@@ -1501,7 +1577,7 @@ def lunar_latitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    method: str, default 'Meeus'
+    ephemerides: str, default 'Meeus'
         Method of calculating the latitude
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -1513,11 +1589,11 @@ def lunar_latitude(
         Latitude of the moon (radians)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
+    kwargs.setdefault("ephemerides", "Meeus")
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
     # coefficients for calculating the latitude of the moon
-    if kwargs["method"].lower() == "meeus":
+    if kwargs["ephemerides"].lower() == "meeus":
         # mean longitude of the moon (degrees)
         lunar_mean_longitude = np.array(
             [
@@ -1590,7 +1666,7 @@ def lunar_latitude(
             d, m, mp, f, coeff = line
             delta_b = np.radians(d * D + m * M + mp * Mp + f * F)
             beta += 1e-6 * coeff * np.power(ee, np.abs(m)) * np.sin(delta_b)
-    elif kwargs["method"].lower() == "kubo":
+    elif kwargs["ephemerides"].lower() == "kubo":
         # coefficients for calculating the latitude of the moon
         coefficients = np.array(
             [
@@ -1645,7 +1721,8 @@ def lunar_latitude(
         beta = 0.0
         for i, (a, b, c) in enumerate(coefficients):
             beta += a * np.cos(np.radians(b + c * T))
-
+    else:
+        raise ValueError("Invalid ephemerides method")
     # convert to radians
     beta = np.radians(beta)
     # return the latitude of the moon
@@ -1664,7 +1741,7 @@ def lunar_longitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    method: str, default 'Meeus'
+    ephemerides: str, default 'Meeus'
         Method of calculating the longitude
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -1676,10 +1753,10 @@ def lunar_longitude(
         Longitude of the moon (radians)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
+    kwargs.setdefault("ephemerides", "Meeus")
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
-    if kwargs["method"].lower() == "meeus":
+    if kwargs["ephemerides"].lower() == "meeus":
         # mean longitude of the moon (degrees)
         lunar_mean_longitude = np.array(
             [
@@ -1748,7 +1825,7 @@ def lunar_longitude(
             d, m, mp, f, coeff, _ = line
             delta_S = np.radians(d * D + m * M + mp * Mp + f * F)
             S += 1e-6 * coeff * np.power(ee, np.abs(m)) * np.sin(delta_S)
-    elif kwargs["method"].lower() == "kubo":
+    elif kwargs["ephemerides"].lower() == "kubo":
         # coefficients for calculating the longitude of the moon
         coefficients = np.array(
             [
@@ -1819,7 +1896,8 @@ def lunar_longitude(
         S = 218.3162 + 481267.8809 * T
         for i, (a, b, c) in enumerate(coefficients):
             S += a * np.cos(np.radians(b + c * T))
-
+    else:
+        raise ValueError("Invalid ephemerides method")
     # take the modulus and convert to radians
     S = np.radians(normalize_angle(S, circle=360.0))
     # return the longitude of the moon
@@ -1964,6 +2042,8 @@ def lunar_distance(
         p = np.radians(parallax)
         # convert to meters
         R = a_axis / (p * (1.0 - p * p / 6.0))
+    else:
+        raise ValueError("Invalid ephemerides method")
     # return the distance from the moon to the Earth
     return R
 
