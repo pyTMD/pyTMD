@@ -2585,10 +2585,6 @@ def generating_force(
     kwargs.setdefault("lmax", 4)
     # method for calculating solar and lunar positions
     kwargs.setdefault("method", "Meeus")
-    # Earth parameters
-    kwargs.setdefault("a_axis", _wgs84.a_axis)
-    kwargs.setdefault("flat", _wgs84.flat)
-    kwargs.setdefault("J2", _wgs84.J2)
     # distance of 1 Astronomical Unit (meters)
     kwargs.setdefault("AU", 149597870700.0)
     # gravitational constants (m^3 s^-2)
@@ -2601,10 +2597,6 @@ def generating_force(
     MJD = t + _mjd_tide
     # Earth's radius at the given latitude (meters)
     radius = pyTMD.math.radius(XYZ.X, XYZ.Y, XYZ.Z)
-    # average radius of the Earth with same volume as ellipsoid
-    rad_e = kwargs["a_axis"] * (1.0 - kwargs["flat"]) ** (1.0 / 3.0)
-
-    # sine of geocentric latitude
     # distance between the Earth and the sun/moon
     solar_radius = pyTMD.math.radius(SXYZ.X, SXYZ.Y, SXYZ.Z)
     lunar_radius = pyTMD.math.radius(LXYZ.X, LXYZ.Y, LXYZ.Z)

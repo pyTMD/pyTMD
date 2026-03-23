@@ -1628,9 +1628,6 @@ def TG_forces(
         XYZ,
         SXYZ,
         LXYZ,
-        a_axis=units.a_axis,
-        flat=units.flat,
-        J2=units.J2,
         **kwargs,
     )
 
