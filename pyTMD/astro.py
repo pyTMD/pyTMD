@@ -656,7 +656,7 @@ def equation_of_time(MJD: np.ndarray):
 
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
-def solar_ecef(MJD: np.ndarray, **kwargs):
+def solar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
     """
     Wrapper function for calculating the positional coordinates
     of the sun in an Earth-centric, Earth-Fixed (ECEF) frame
@@ -683,11 +683,10 @@ def solar_ecef(MJD: np.ndarray, **kwargs):
         ECEF coordinates of the sun (meters)
     """
     # determine the solar positions
-    kwargs.setdefault("ephemerides", "approximate")
     methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
-    if kwargs["ephemerides"].lower() in methods:
-        return solar_approximate(MJD, **kwargs)
-    elif kwargs["ephemerides"].upper() == "JPL":
+    if ephemerides.lower() in methods:
+        return solar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL":
         assert jplephem_available, "jplephem is required for JPL ephemerides"
         return solar_ephemerides(MJD, **kwargs)
     else:
@@ -704,7 +703,7 @@ def solar_approximate(MJD, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    ephemerides: str, default 'approximate'
+    ephemerides: str, default 'Montenbruck'
         Method for calculating solar ephemerides
 
     Returns
@@ -1345,7 +1344,7 @@ def lunar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    ephemerides: str, default 'approximate'
+    ephemerides: str, default 'Montenbruck'
         Method for calculating lunar ephemerides
 
             - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -1363,7 +1362,7 @@ def lunar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
     # determine the lunar positions
     methods = ["approximate", "montenbruck", "kubo", "meeus"]
     if ephemerides.lower() in methods:
-        return lunar_approximate(MJD, **kwargs)
+        return lunar_approximate(MJD, ephemerides=ephemerides, **kwargs)
     elif ephemerides.upper() == "JPL":
         assert jplephem_available, "jplephem is required for JPL ephemerides"
         return lunar_ephemerides(MJD, **kwargs)

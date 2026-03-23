@@ -1168,7 +1168,7 @@ def _ephemerides_SET(
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     tide_system: str = "tide_free",
-    ephemerides: str = "approximate",
+    ephemerides: str = "Montenbruck",
     variable: str | list = "R",
     **kwargs,
 ):

@@ -2542,7 +2542,6 @@ def generating_force(
     XYZ: xr.Dataset,
     SXYZ: xr.Dataset,
     LXYZ: xr.Dataset,
-    deltat: float | np.ndarray = 0.0,
     **kwargs,
 ):
     r"""
@@ -2553,8 +2552,6 @@ def generating_force(
     ----------
     t: np.ndarray
         Days relative to 1992-01-01T00:00:00
-    XYZ: xr.Dataset
-        Dataset with cartesian coordinates
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
