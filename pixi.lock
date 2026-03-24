@@ -12563,8 +12563,8 @@ packages:
   timestamp: 1752805902938
 - pypi: ./
   name: pytmd
-  version: 3.0.4
-  sha256: 825722b31c3669c61564601035c623e32bb265c20b2bc29d071bc8efaae8570f
+  version: 3.0.5
+  sha256: 2a7cfd20efffafe559445d45d77c5893c94ca87a005dd4917b1abb0c0581b83b
   requires_dist:
   - h5netcdf
   - lxml
