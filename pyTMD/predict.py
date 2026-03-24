@@ -2560,12 +2560,6 @@ def generating_force(
         Dataset with Earth-centered Earth-fixed coordinates of the moon
     lmax: int, default 4
         Maximum degree of spherical harmonic expansion
-    a_axis: float, default 6378137.0
-        Semi-major axis of the Earth (meters)
-    flat: float, default 1.0/298.257223563
-        Ellipsoidal flattening
-    J2: float, default 0.0010826298213129214
-        Oblateness :math:`J_2` coefficient
     AU: float, default 149597870700.0
         Distance of 1 Astronomical Unit (meters)
     GM: float, default 3.986004418e14
@@ -2583,8 +2577,6 @@ def generating_force(
     # set default keyword arguments
     # maximum degree of spherical harmonic expansion
     kwargs.setdefault("lmax", 4)
-    # method for calculating solar and lunar positions
-    kwargs.setdefault("method", "Meeus")
     # distance of 1 Astronomical Unit (meters)
     kwargs.setdefault("AU", 149597870700.0)
     # gravitational constants (m^3 s^-2)
