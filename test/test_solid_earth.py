@@ -220,9 +220,9 @@ def test_solid_earth_tide():
     assert np.isclose(dy_expected, dxt['Y'])
     assert np.isclose(dz_expected, dxt['Z'])
 
-# parameterize ephemerides
-@pytest.mark.parametrize("EPHEMERIDES", ['approximate','JPL'])
-def test_solid_earth_radial(EPHEMERIDES):
+# parametrize over approximate methods
+@pytest.mark.parametrize("method", ['Kubo', 'Meeus', 'Montenbruck', 'JPL'])
+def test_solid_earth_radial(method):
     """Test radial solid tides with predictions from ICESat-2
     """
     times = np.array(['2018-10-14 00:21:48','2018-10-14 00:21:48',
@@ -249,10 +249,10 @@ def test_solid_earth_radial(EPHEMERIDES):
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
-        ephemerides=EPHEMERIDES)
+        ephemerides=method)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
-        tide_system='mean_tide', ephemerides=EPHEMERIDES)
+        tide_system='mean_tide', ephemerides=method)
     # as using estimated ephemerides, assert within 1/2 mm
     assert np.allclose(tide_earth, tide_free, atol=5e-4)
     # sign differences with ATLAS product: correction is subtractive
@@ -262,9 +262,9 @@ def test_solid_earth_radial(EPHEMERIDES):
     assert np.allclose(tide_mean-tide_free, predicted, atol=5e-4)
 
 # parameterize method
-@pytest.mark.parametrize("CATALOG", ['CTE1973','T1987'])
-@pytest.mark.parametrize("METHOD", ['ASTRO5','IERS'])
-def test_body_tides(CATALOG, METHOD):
+@pytest.mark.parametrize("catalog", ['CTE1973','T1987'])
+@pytest.mark.parametrize("method", ['ASTRO5','IERS'])
+def test_body_tides(catalog, method):
     """Test simplified solid tides using predictions from ICESat-2
     """
     times = np.array(['2018-10-14 00:21:48','2018-10-14 00:21:48',
@@ -294,21 +294,21 @@ def test_body_tides(CATALOG, METHOD):
     # using tide potentials from Cartwright and Tayler (1971)
     ts = timescale.from_datetime(times)
     tide_free = pyTMD.predict.body_tide(ts.tide, ds,
-        deltat=ts.tt_ut1, tide_system='tide_free', method=METHOD,
-        catalog=CATALOG)
+        deltat=ts.tt_ut1, tide_system='tide_free', method=method,
+        catalog=catalog)
     tide_mean = pyTMD.predict.body_tide(ts.tide, ds,
-        deltat=ts.tt_ut1, tide_system='mean_tide', method=METHOD,
-        catalog=CATALOG)
+        deltat=ts.tt_ut1, tide_system='mean_tide', method=method,
+        catalog=catalog)
     # since we are using simplified body tides: assert within 2 mm
     assert np.allclose(tide_earth, tide_free['R'], atol=2e-3)
     assert np.allclose(tide_expected, tide_mean['R'], atol=2e-3)
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         crs=4326, type='drift', standard='datetime', tide_system='tide_free',
-        method='catalog', ephemerides=METHOD, catalog=CATALOG)
+        method='catalog', ephemerides=method, catalog=catalog)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
         crs=4326, type='drift', standard='datetime', tide_system='mean_tide',
-        method='catalog', ephemerides=METHOD, catalog=CATALOG)
+        method='catalog', ephemerides=method, catalog=catalog)
     # since we are using simplified body tides: assert within 2 mm
     assert np.allclose(tide_earth, tide_free, atol=2e-3)
     assert np.allclose(tide_expected, tide_mean, atol=2e-3)
