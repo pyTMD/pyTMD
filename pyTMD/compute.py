@@ -1645,3 +1645,166 @@ def TG_forces(
         TGF[var].attrs["units"] = F[var].attrs.get("units", "m/s^2")
     # return the tide generating forces for variable(s)
     return TGF[variable]
+
+
+# PURPOSE: compute the estimated gravity tides
+def GT_acceleration(
+    x: np.ndarray,
+    y: np.ndarray,
+    delta_time: np.ndarray,
+    h: float | np.ndarray = 0.0,
+    crs: str | int = 4326,
+    epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
+    type: str | None = "drift",
+    standard: str = "UTC",
+    ellipsoid: str = "WGS84",
+    ephemerides: str = "Montenbruck",
+    **kwargs,
+):
+    r"""
+    Compute the estimated gravity tides at points and times
+    following :cite:t:`Tamura:1987tp,Hartmann:1995jp`
+
+    Parameters
+    ----------
+    x: np.ndarray
+        x-coordinates
+    y: np.ndarray
+        y-coordinates
+    delta_time: np.ndarray
+        Time coordinates
+    h: float or np.ndarray, default 0.0
+        Height of the point above the ellipsoid (meters)
+    crs: int, default: 4326 (WGS84 Latitude and Longitude)
+        Input coordinate system
+    epoch: tuple, default (2000,1,1,0,0,0)
+        Time period for calculating delta times
+    type: str or NoneType, default 'drift'
+        Input data type
+
+            - ``None``: determined from input variable dimensions
+            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'grid'``: spatial grids or images
+            - ``'time series'``: time series at a single point
+    standard: str, default 'UTC'
+        Time standard of input temporal data
+
+            - ``'GPS'``: leap seconds needed
+            - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
+            - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
+            - ``'UTC'``: no leap seconds needed
+            - ``'datetime'``: numpy datatime array in UTC
+    ellipsoid: str, default 'WGS84'
+        Ellipsoid name for calculating Earth parameters
+    ephemerides: str, default 'Montenbruck'
+        Method for calculating lunar and solar ephemerides
+
+            - ``'Kubo'``: :cite:t:`Kubo:1980ut`
+            - ``'Meeus'``: :cite:t:`Meeus:1991vh`
+            - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
+            - ``'JPL'``: computed ephemerides from JPL kernels
+    kwargs: dict, optional
+        Additional keyword arguments to pass to the prediction function
+
+    Returns
+    -------
+    G: xr.DataArray or xr.Dataset
+        Estimated gravity tides (m s\ :sup:`-2`)
+    """
+
+    # validate input arguments
+    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
+    assert ephemerides.lower() in (
+        "approximate",
+        "kubo",
+        "meeus",
+        "montenbruck",
+        "jpl",
+    )
+    # determine input data type based on variable dimensions
+    if not type:
+        type = pyTMD.spatial.data_type(x, y, delta_time)
+    assert type.lower() in ("grid", "drift", "time series")
+
+    # earth and physical parameters for ellipsoid
+    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    # convert coordinates to xarray DataArrays
+    # in WGS84 Latitude and Longitude
+    longitude, latitude = pyTMD.io.dataset._coords(
+        x, y, type=type, source_crs=crs, target_crs=4326
+    )
+    # create dataset
+    ds = xr.Dataset(coords={"x": longitude, "y": latitude})
+
+    # verify that delta time is an array
+    delta_time = np.atleast_1d(delta_time)
+    # convert delta times or datetimes objects to timescale
+    if standard.lower() == "datetime":
+        ts = timescale.from_datetime(delta_time)
+    else:
+        ts = timescale.from_deltatime(
+            delta_time, epoch=epoch, standard=standard
+        )
+
+    # convert input coordinates to cartesian
+    X, Y, Z = pyTMD.spatial.to_cartesian(
+        ds.x, ds.y, h=h, a_axis=units.a_axis, flat=units.flat
+    )
+    XYZ = xr.Dataset(
+        data_vars={"X": (ds.dims, X), "Y": (ds.dims, Y), "Z": (ds.dims, Z)},
+        coords=ds.coords,
+    )
+    # geocentric colatitude (radians)
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    # calculate longitude (radians)
+    phi = np.arctan2(XYZ.Y, XYZ.X)
+
+    # compute ephemerides for lunisolar coordinates
+    SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
+    LX, LY, LZ = pyTMD.astro.lunar_ecef(ts.MJD, ephemerides=ephemerides)
+    # create datasets for lunisolar coordinates
+    SXYZ = xr.Dataset(
+        data_vars={
+            "X": (["time"], SX),
+            "Y": (["time"], SY),
+            "Z": (["time"], SZ),
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD)),
+    )
+    LXYZ = xr.Dataset(
+        data_vars={
+            "X": (["time"], LX),
+            "Y": (["time"], LY),
+            "Z": (["time"], LZ),
+        },
+        coords=dict(time=np.atleast_1d(ts.MJD)),
+    )
+
+    # rotation matrix for converting to/from cartesian coordinates
+    R = xr.Dataset()
+    R[0, 0] = np.cos(phi) * np.cos(theta)
+    R[0, 1] = -np.sin(phi)
+    R[0, 2] = np.cos(phi) * np.sin(theta)
+    R[1, 0] = np.sin(phi) * np.cos(theta)
+    R[1, 1] = np.cos(phi)
+    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[2, 0] = -np.sin(theta)
+    R[2, 1] = xr.zeros_like(theta)
+    R[2, 2] = np.cos(theta)
+
+    # calculate the estimated gravity tides
+    G = pyTMD.predict.gravity_tide(
+        ts.tide,
+        XYZ,
+        SXYZ,
+        LXYZ,
+        **kwargs,
+    )
+
+    # rotate tides from cartesian coordinates
+    G["R"] = R[0, 2] * G["X"] + R[1, 2] * G["Y"] + R[2, 2] * G["Z"]
+    # set attributes for output variables
+    for var in G.data_vars:
+        G[var].attrs["units"] = G[var].attrs.get("units", "m/s^2")
+    # return the estimated gravity tides for variable(s)
+    return G["R"]
