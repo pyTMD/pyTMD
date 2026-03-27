@@ -43,8 +43,10 @@ __all__ = [
     "scalar_product",
     "aliasing",
     "legendre",
-    "sph_harm",
     "_assoc_legendre",
+    "_condon_shortley",
+    "_legendre_norm",
+    "sph_harm",
 ]
 
 
@@ -245,11 +247,7 @@ def aliasing(f: float, fs: float) -> float:
     return fa
 
 
-def legendre(
-    l: int,
-    x: np.ndarray,
-    m: int = 0,
-):
+def legendre(l: int, x: np.ndarray, m: int = 0, norm: float = 1.0):
     r"""
     Computes associated Legendre functions and their first-derivatives
     for a particular degree and order
@@ -266,6 +264,8 @@ def legendre(
         is the colatitude
     m: int, default 0
         Order of the Legendre polynomials (:math:`0` to :math:`l`)
+    norm: float, default 1.0
+        Normalization to apply to outputs
 
     Returns
     -------
@@ -298,7 +298,7 @@ def legendre(
     dPlm = np.where(np.isclose(u, 0.0), pole, dPlm)
     # return the associated legendre functions
     # and their first derivatives with respect to theta
-    return Plm, dPlm
+    return norm * Plm, norm * dPlm
 
 
 def _assoc_legendre(
@@ -354,9 +354,37 @@ def _assoc_legendre(
     # calculate for degree l and order m
     Plm = P * np.power(2.0, -l) * np.power(u, m)
     # apply Condon-Shortley phase
-    Plm *= np.power(-1.0, m)
+    Plm *= _condon_shortley(m)
     # return the associated legendre polynomials
     return Plm
+
+
+def _condon_shortley(m: int):
+    """
+    Computes the Condon-Shortley phase
+
+    Parameters
+    ----------
+    m: int
+        Order of the Legendre polynomials
+    """
+    return np.power(-1.0, m)
+
+
+def _legendre_norm(l: int, m: int):
+    """
+    Calculates the Legendre Polynomial normalization from
+    :cite:t:`Munk:1966go`
+
+    Parameters
+    ----------
+    l: int
+        Degree of the Legendre polynomials
+    m: int
+        Order of the Legendre polynomials (:math:`0` to :math:`l`)
+    """
+    # normalization from Munk and Cartwright (1966) equation A5
+    return np.sqrt(factorial(l - m) / factorial(l + m))
 
 
 def sph_harm(
@@ -391,13 +419,13 @@ def sph_harm(
         First derivative of spherical harmonics with respect to
         :math:`\theta`
     """
-    # calculate associated Legendre functions and derivatives
-    Plm, dPlm = legendre(l, np.cos(theta), m=m)
     # normalization from Munk and Cartwright (1966) equation A5
-    norm = np.sqrt(factorial(l - m) / factorial(l + m))
+    norm = _legendre_norm(l, m)
+    # calculate associated Legendre functions and derivatives
+    Plm, dPlm = legendre(l, np.cos(theta), m=m, norm=norm)
     # normalized spherical harmonics of degree l and order m
     dfactor = np.sqrt((2.0 * l + 1.0) / (4.0 * np.pi))
-    Ylm = dfactor * norm * Plm * np.exp(1j * m * phi + 1j * phase)
-    dYlm = dfactor * norm * dPlm * np.exp(1j * m * phi + 1j * phase)
+    Ylm = dfactor * Plm * np.exp(1j * m * phi + 1j * phase)
+    dYlm = dfactor * dPlm * np.exp(1j * m * phi + 1j * phase)
     # return values
     return Ylm, dYlm

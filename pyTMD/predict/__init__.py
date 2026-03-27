@@ -9,12 +9,5 @@ from .earth_orientation import (
     length_of_day,
 )
 from .gravity_tide import generating_force, gravity_tide
-from .ocean_load_tide import (
-    time_series,
-    infer_minor,
-    equilibrium_tide,
-)
-from .solid_earth_tide import (
-    body_tide,
-    solid_earth_tide,
-)
+from .ocean_load_tide import *
+from .solid_earth_tide import *
