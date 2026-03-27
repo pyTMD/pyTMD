@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 03/2026: add radius and scalar product functions
         calculate Legendre polynomials using Hofmann-Wellenhof (2006) eq. 1.67
+        split out Condon-Shortley phase and Legendre normalization functions
     Updated 02/2026: add inverse functions for converting radians to arcseconds
     Updated 11/2025: legendre now returns both polynomials and derivatives
     Updated 09/2025: added degree 4 to legendre polynomials function

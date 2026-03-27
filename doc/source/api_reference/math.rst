@@ -32,4 +32,8 @@ math
 
 .. autofunction:: pyTMD.math._assoc_legendre
 
+.. autofunction:: pyTMD.math._condon_shortley
+
+.. autofunction:: pyTMD.math._legendre_norm
+
 .. autofunction:: pyTMD.math.sph_harm

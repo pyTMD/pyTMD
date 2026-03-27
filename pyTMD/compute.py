@@ -65,6 +65,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 03/2026: added function for computing tide-generating forces
+        and a function for computing the accelerations from gravity tides
     Updated 02/2026: added attributes for constituents to output DataArrays
     Updated 12/2025: use coords functions to convert x and y to DataArrays
         no longer subclassing pathlib.Path for working directories
