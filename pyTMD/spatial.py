@@ -105,7 +105,11 @@ __all__ = [
 ]
 
 
-def data_type(x: np.ndarray, y: np.ndarray, t: np.ndarray) -> str:
+def data_type(
+    x: np.ndarray,
+    y: np.ndarray,
+    t: np.ndarray,
+) -> str:
     """
     Determines input data type based on variable dimensions
 
@@ -547,7 +551,7 @@ class datum:
 
     # Normal gravity at location
     # p. 80, Eqn.(2-199)
-    def gamma_0(self, theta) -> float:
+    def gamma_0(self, theta: float | np.ndarray) -> float:
         """Normal gravity at colatitudes
 
         Parameters
@@ -563,7 +567,11 @@ class datum:
 
     # Normal gravity at location
     # p. 82, Eqn.(2-215)
-    def gamma_h(self, theta, height) -> float:
+    def gamma_h(
+        self,
+        theta: float | np.ndarray,
+        height: float | np.ndarray,
+    ) -> float:
         """Normal gravity at colatitudes and heights
 
         Parameters
@@ -793,7 +801,11 @@ def convert_ellipsoid(
 
 
 def compute_delta_h(
-    lat: np.ndarray, a1: float, f1: float, a2: float, f2: float
+    lat: np.ndarray,
+    a1: float,
+    f1: float,
+    a2: float,
+    f2: float,
 ):
     """
     Compute difference in elevation for two ellipsoids at a given
@@ -869,7 +881,11 @@ def to_dms(d: np.ndarray):
     return (sign * degree, minute, second)
 
 
-def from_dms(degree: np.ndarray, minute: np.ndarray, second: np.ndarray):
+def from_dms(
+    degree: np.ndarray,
+    minute: np.ndarray,
+    second: np.ndarray,
+):
     """
     Convert degrees, minutes and seconds to decimal degrees
 
@@ -958,7 +974,11 @@ def to_cartesian(
         return (X, Y, Z)
 
 
-def to_sphere(x: np.ndarray, y: np.ndarray, z: np.ndarray):
+def to_sphere(
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray,
+):
     """
     Convert from cartesian coordinates to spherical coordinates
 

@@ -49,7 +49,12 @@ __all__ = [
 
 
 # PURPOSE: 1-dimensional linear interpolation on arrays
-def interp1d(x: float | np.ndarray, xp: np.ndarray, fp: np.ndarray, **kwargs):
+def interp1d(
+    x: float | np.ndarray,
+    xp: np.ndarray,
+    fp: np.ndarray,
+    **kwargs,
+):
     """
     Vectorized one-dimensional linear interpolation
 

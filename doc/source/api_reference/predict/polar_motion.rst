@@ -1,12 +1,12 @@
-=================
-earth_orientation
-=================
+============
+polar_motion
+============
 
 - Predicts ocean and load pole tides
 
 `Source code`__
 
-.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/predict/earth_orientation.py
+.. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/predict/polar_motion.py
 
 .. autofunction:: pyTMD.predict.load_pole_tide
 

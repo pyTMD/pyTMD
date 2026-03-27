@@ -201,7 +201,11 @@ class model:
         Verify that all model files exist
     """
 
-    def __init__(self, directory: str | pathlib.Path | None = None, **kwargs):
+    def __init__(
+        self,
+        directory: str | pathlib.Path | None = None,
+        **kwargs,
+    ):
         # set default keyword arguments
         kwargs.setdefault("compressed", False)
         kwargs.setdefault("verify", True)
@@ -221,7 +225,11 @@ class model:
         self.verify = copy.copy(kwargs["verify"])
         self.__parameters__ = {}
 
-    def from_database(self, m: str, group: tuple = ("z", "u", "v")):
+    def from_database(
+        self,
+        m: str,
+        group: tuple = ("z", "u", "v"),
+    ):
         """
         Create a model object from database of known tidal models
 
@@ -532,7 +540,10 @@ class model:
         # return unique list of models
         return sorted(set(model_list))
 
-    def pathfinder(self, model_file: str | pathlib.Path | list):
+    def pathfinder(
+        self,
+        model_file: str | pathlib.Path | list,
+    ):
         """
         Completes file paths and appends ``gzip`` suffix
 
@@ -691,7 +702,11 @@ class model:
         # return the model dictionary
         return d
 
-    def parse_constituents(self, group: str = "z", **kwargs) -> list:
+    def parse_constituents(
+        self,
+        group: str = "z",
+        **kwargs,
+    ) -> list:
         """
         Parses tide model files for a list of model constituents
 
@@ -714,7 +729,10 @@ class model:
         return self
 
     @staticmethod
-    def parse_file(model_file: str | pathlib.Path, raise_error: bool = False):
+    def parse_file(
+        model_file: str | pathlib.Path,
+        raise_error: bool = False,
+    ):
         """
         Parses a model file for a tidal constituent name
 
@@ -746,7 +764,11 @@ class model:
         else:
             return None
 
-    def reduce_constituents(self, constituents: str | list, group: str = "z"):
+    def reduce_constituents(
+        self,
+        constituents: str | list,
+        group: str = "z",
+    ):
         """
         Reduce model files to a subset of constituents
 
@@ -859,7 +881,11 @@ class model:
         # return xarray dataset
         return ds
 
-    def open_datatree(self, group: tuple = ("z", "u", "v"), **kwargs):
+    def open_datatree(
+        self,
+        group: tuple = ("z", "u", "v"),
+        **kwargs,
+    ):
         """
         Create a model object from known tidal models
 

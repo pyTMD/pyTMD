@@ -166,7 +166,12 @@ class DataTree:
         # return the datatree
         return dtree
 
-    def interp(self, x, y, **kwargs):
+    def interp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        **kwargs,
+    ):
         """
         Interpolate ``DataTree`` to new coordinates
 
@@ -204,7 +209,13 @@ class DataTree:
         # return the datatree
         return dtree
 
-    def transform_as(self, x, y, crs=4326, **kwargs):
+    def transform_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
         """
         Transform coordinates to/from the ``DataTree`` coordinate reference system
 
@@ -436,7 +447,11 @@ class Dataset:
         # return the transformed coordinates
         return X, Y
 
-    def crop(self, bounds: list | tuple, buffer: int | float = 0):
+    def crop(
+        self,
+        bounds: list | tuple,
+        buffer: int | float = 0,
+    ):
         """
         Crop ``Dataset`` to input bounding box
 
@@ -630,7 +645,13 @@ class Dataset:
         # return the dataset
         return ds
 
-    def interp(self, x: np.ndarray, y: np.ndarray, method="linear", **kwargs):
+    def interp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        method="linear",
+        **kwargs,
+    ):
         """
         Interpolate ``Dataset`` to new coordinates
 
@@ -718,7 +739,11 @@ class Dataset:
         # return xarray dataset
         return ds
 
-    def pad(self, n: int = 1, chunks=None):
+    def pad(
+        self,
+        n: int = 1,
+        chunks=None,
+    ):
         """
         Pad ``Dataset`` by repeating edge values in the x-direction
 
@@ -824,7 +849,11 @@ class Dataset:
         # return the transformed coordinates
         return (X, Y)
 
-    def to_units(self, units: str, value: float = 1.0):
+    def to_units(
+        self,
+        units: str,
+        value: float = 1.0,
+    ):
         """Convert ``Dataset`` to specified tide units
 
         Parameters
@@ -957,7 +986,11 @@ class DataArray:
         ph.attrs["units"] = "degrees"
         return ph
 
-    def to_units(self, units: str, value: float = 1.0):
+    def to_units(
+        self,
+        units: str,
+        value: float = 1.0,
+    ):
         """Convert ``DataArray`` to specified tide units
 
         Parameters

@@ -163,7 +163,11 @@ def open_mfdataset(
     return ds
 
 
-def open_atlas_grid(grid_file: str | pathlib.Path, group: str = "z", **kwargs):
+def open_atlas_grid(
+    grid_file: str | pathlib.Path,
+    group: str = "z",
+    **kwargs,
+):
     """
     Open ATLAS model grid file
 

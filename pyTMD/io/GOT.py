@@ -131,7 +131,10 @@ def open_mfdataset(
 
 
 # PURPOSE: reads a GOT ASCII or netCDF4 file
-def open_got_dataset(input_file: str | pathlib.Path, **kwargs):
+def open_got_dataset(
+    input_file: str | pathlib.Path,
+    **kwargs,
+):
     """
     Open GOT-formatted model files
 

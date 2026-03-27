@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-predict.py
+potential.py
 Written by Tyler Sutterley (03/2026)
 Prediction routines for gravity tides and tide-generating forces
 
@@ -33,16 +33,16 @@ import pyTMD.spatial
 __all__ = [
     "generating_force",
     "gravity_tide",
+    "_out_of_phase",
+    "_out_of_phase_diurnal",
+    "_out_of_phase_semidiurnal",
+    "_frequency_dependence",
+    "_frequency_dependence_diurnal",
+    "_frequency_dependence_long_period",
 ]
 
-# number of days between the Julian day epoch and MJD
-_jd_mjd = 2400000.5
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-# number of days between MJD and the J2000 epoch
-_mjd_j2000 = 51544.5
-# Julian century
-_century = 36525.0
 
 # get ellipsoidal parameters
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
@@ -198,7 +198,7 @@ def gravity_tide(
         Maximum degree of spherical harmonic expansion
     h2: float, default 0.6078
         Degree-2 Love number of vertical displacement
-    k2: float, default 0.2983
+    k2: float, default 0.30102
         Degree-2 Love number of gravitational potential
     h3: float, default 0.292
         Degree-3 Love number of vertical displacement
@@ -224,8 +224,8 @@ def gravity_tide(
     # maximum degree of spherical harmonic expansion
     kwargs.setdefault("lmax", 4)
     # nominal Love numbers for degrees 2 through 4
-    kwargs.setdefault("h2", 0.609)
-    kwargs.setdefault("k2", 0.2983)
+    kwargs.setdefault("h2", 0.6078)
+    kwargs.setdefault("k2", 0.30102)
     kwargs.setdefault("h3", 0.292)
     kwargs.setdefault("k3", 0.093)
     kwargs.setdefault("h4", 0.18)
@@ -285,10 +285,10 @@ def gravity_tide(
         hl = kwargs.get(f"h{l}", 0)
         kl = kwargs.get(f"k{l}", 0)
         # gravimetric factor from Farrell
-        dl = 1.0 + 2.0 * hl / l - (l + 1.0) * kl / l
+        gl = 1.0 + 2.0 * hl / l - (l + 1.0) * kl / l
         # include latitudinal dependence for degree 2
         if l == 2:
-            dl += -0.005 * np.sqrt(3 / 4) * (7.0 * sinphi**2 - 1.0)
+            gl += -0.005 * np.sqrt(3.0 / 4.0) * (7.0 * sinphi**2 - 1.0)
         # update gravitational parameters for degree
         K_solar *= radius / solar_radius
         K_lunar *= radius / lunar_radius
@@ -296,8 +296,8 @@ def gravity_tide(
         Pl_solar = pyTMD.math._assoc_legendre(l, 0, solar_scalar)
         Pl_lunar = pyTMD.math._assoc_legendre(l, 0, lunar_scalar)
         # add solar and lunar terms for degree
-        G_solar -= (K_solar * dl / radius) * (l * Pl_solar * unit_vector)
-        G_lunar -= (K_lunar * dl / radius) * (l * Pl_lunar * unit_vector)
+        G_solar -= (K_solar * gl / radius) * (l * Pl_solar * unit_vector)
+        G_lunar -= (K_lunar * gl / radius) * (l * Pl_lunar * unit_vector)
 
     # sum solar and lunar components
     G = G_solar + G_lunar
@@ -357,7 +357,7 @@ def _out_of_phase_diurnal(
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
     dh2: float = -0.0025,
-    dk2: float = -0.0013,
+    dk2: float = -0.00144,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -381,28 +381,40 @@ def _out_of_phase_diurnal(
     G: xr.Dataset
         Gravity tide corrections
     """
+    # degree and order for diurnal tides
+    l, m = (2, 1)
     # differential in the gravimetric factors from Farrell
-    del2 = dh2 - 1.5 * dk2
+    dg2 = 2.0 * dh2 / l - (l + 1.0) * dk2 / l
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
-    # geocentric latitude and longitude (radians)
-    phi = np.arctan2(XYZ.Z, np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
-    la = np.arctan2(XYZ.Y, XYZ.X)
-    theta = np.pi / 2.0 - phi
-    # Solar/Lunar declinations and hour angles (radians)
-    declination = np.arctan2(LSXYZ.Z, np.sqrt(LSXYZ.X**2.0 + LSXYZ.Y**2.0))
-    hour_angle = np.arctan2(LSXYZ.Y, LSXYZ.X)
-    # normalized Legendre polynomials for degree 2, order 1
-    l, m = (2, 1)
-    norm = pyTMD.math._legendre_norm(l, m)
-    P21 = norm * pyTMD.math._assoc_legendre(l, m, np.cos(theta))
-    LSP21 = norm * pyTMD.math._assoc_legendre(l, m, np.cos(declination))
-    # compute as additive correction
-    DR = (del2 * F2 * P21 * LSP21) * np.sin(la - hour_angle)
+    # sine and cosine of (geocentric) latitude
+    sinphi = XYZ["Z"] / radius
+    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # double angle formulas of cosine/sine latitude
+    sin2phi = 2.0 * sinphi * cosphi
+    # sine and cosine of longitude
+    sinla = XYZ["Y"] / cosphi / radius
+    cosla = XYZ["X"] / cosphi / radius
+    # compute the normalized position vector of the Sun/Moon
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
+    # sine and cosine of Solar/Lunar declinations
+    lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
+    )
+    # double angle formulas of sine Solar/Lunar declinations
+    lunisolar_sin2phi = 2.0 * lunisolar_cosphi * lunisolar_sinphi
+    # sine and cosine of Solar/Lunar hour angles
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
+    # calculate offsets
+    GR = (-0.75 * dg2 * F2 * sin2phi * lunisolar_sin2phi) * (
+        sinla * lunisolar_cosla - cosla * lunisolar_sinla
+    )
     # rotate to cartesian coordinates
-    GX = DR * np.cos(la) * np.cos(phi)
-    GY = DR * np.sin(la) * np.cos(phi)
-    GZ = DR * np.sin(phi)
+    GX = GR * cosla * cosphi
+    GY = GR * sinla * cosphi
+    GZ = GR * sinphi
     # compute as additive correction
     G = xr.Dataset()
     G["X"] = -l * GX / radius
@@ -417,7 +429,7 @@ def _out_of_phase_semidiurnal(
     LSXYZ: xr.Dataset,
     F2: np.ndarray,
     dh2: float = -0.0022,
-    dk2: float = -0.0014,
+    dk2: float = -0.0013,
 ):
     """
     Computes the out-of-phase corrections induced by mantle
@@ -441,33 +453,41 @@ def _out_of_phase_semidiurnal(
     G: xr.Dataset
         Gravity tide corrections
     """
+    # degree and order for semi-diurnal tides
+    l, m = (2, 2)
     # differential in the gravimetric factors from Farrell
-    del2 = dh2 - 1.5 * dk2
+    dg2 = 2.0 * dh2 / l - (l + 1.0) * dk2 / l
     # compute the normalized position vector of coordinates
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
-    # geocentric latitude and longitude (radians)
-    phi = np.arctan2(XYZ.Z, np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
-    la = np.arctan2(XYZ.Y, XYZ.X)
-    theta = np.pi / 2.0 - phi
-    # Solar/Lunar declinations and hour angles (radians)
-    declination = np.arctan2(LSXYZ.Z, np.sqrt(LSXYZ.X**2.0 + LSXYZ.Y**2.0))
-    hour_angle = np.arctan2(LSXYZ.Y, LSXYZ.X)
-    # normalized Legendre polynomials for degree 2, order 2
-    l, m = (2, 2)
-    norm = pyTMD.math._legendre_norm(l, m)
-    P22 = norm * pyTMD.math._assoc_legendre(l, m, np.cos(theta))
-    LSP22 = norm * pyTMD.math._assoc_legendre(l, m, np.cos(declination))
-    # calculate corrections
-    DR = (
-        2.0
-        * (del2 * F2 * P22 * LSP22)
-        * np.sin(la - hour_angle)
-        * np.cos(la - hour_angle)
+    # sine and cosine of (geocentric) latitude
+    sinphi = XYZ["Z"] / radius
+    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    # sine and cosine of longitude
+    sinla = XYZ["Y"] / cosphi / radius
+    cosla = XYZ["X"] / cosphi / radius
+    # double angle formulas of cosine/sine longitude
+    cos2la = cosla**2 - sinla**2
+    sin2la = 2.0 * cosla * sinla
+    # compute the normalized position vector of the Sun/Moon
+    lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
+    # cosine of Solar/Lunar declinations
+    lunisolar_cosphi = (
+        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
+    )
+    # sine and cosine of Solar/Lunar hour angles
+    lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
+    lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
+    # double angle formulas of cosine/sine Solar/Lunar hour angles
+    lunisolar_cos2la = lunisolar_cosla**2 - lunisolar_sinla**2
+    lunisolar_sin2la = 2.0 * lunisolar_cosla * lunisolar_sinla
+    # calculate offsets
+    GR = (-0.75 * dg2 * F2 * cosphi**2 * lunisolar_cosphi**2) * (
+        sin2la * lunisolar_cos2la - cos2la * lunisolar_sin2la
     )
     # rotate to cartesian coordinates
-    GX = DR * np.cos(la) * np.cos(phi)
-    GY = DR * np.sin(la) * np.cos(phi)
-    GZ = DR * np.sin(phi)
+    GX = GR * cosla * cosphi
+    GY = GR * sinla * cosphi
+    GZ = GR * sinphi
     # compute as additive correction
     G = xr.Dataset()
     G["X"] = -l * GX / radius
@@ -478,7 +498,9 @@ def _out_of_phase_semidiurnal(
 
 
 def _frequency_dependence(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Wrapper function to compute the frequency dependent in-phase and
@@ -501,13 +523,14 @@ def _frequency_dependence(
     # compute corrections for each species separately
     G = _frequency_dependence_diurnal(XYZ, MJD, deltat=deltat)
     G += _frequency_dependence_long_period(XYZ, MJD, deltat=deltat)
-    G += _frequency_dependence_semidiurnal(XYZ, MJD, deltat=deltat)
     # return the frequency dependent corrections
     return G
 
 
 def _frequency_dependence_diurnal(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Computes the frequency dependent in-phase and out-of-phase corrections
@@ -540,40 +563,35 @@ def _frequency_dependence_diurnal(
         "dG_ip",
         "dG_op",
     ]
-    # note: dG_op and dG_ip are scaled by 1e6
+    # note: dG_ip and dG_op are scaled by 1e6
     table = xr.DataArray(
         np.array(
             [
-                [1, -3, 0, 2, 0, 0, -1, 24.74, -0.57],
-                [1, -3, 2, 0, 0, 0, -1, 29.92, -0.69],
-                [1, -2, 0, 1, -1, 0, -1, 35.99, -0.86],
-                [1, -2, 0, 1, 0, 0, -1, 190.84, -4.57],
-                [1, -2, 2, -1, 0, 0, -1, 36.40, -0.88],
-                [1, -1, 0, 0, -1, 0, -1, 196.48, -4.93],
-                [1, -1, 0, 0, 0, 0, -1, 1041.70, -26.15],
-                [1, -1, 2, 0, 0, 0, -1, -13.73, 0.35],
-                [1, 0, -2, 1, 0, 0, -1, -8.46, 0.23],
-                [1, 0, 0, -1, 0, 0, -1, -33.33, 0.91],
-                [1, 0, 0, 1, 0, 0, -1, -93.07, 2.55],
-                [1, 0, 0, 1, 1, 0, -1, -18.69, 0.51],
-                [1, 0, 2, -1, 0, 0, -1, -18.44, 0.52],
-                [1, 1, -3, 0, 0, 1, -1, 53.76, -1.80],
-                [1, 1, -2, 0, -1, 0, -1, -12.21, 0.43],
-                [1, 1, -2, 0, 0, 0, -1, 1097.46, -38.41],
-                [1, 1, -1, 0, 0, -1, -1, -12.28, 0.44],
-                [1, 1, -1, 0, 0, 1, -1, -34.70, 1.23],
-                [1, 1, 0, 0, -1, 0, -1, 155.98, -6.98],
-                [1, 1, 0, 0, 0, 0, -1, -8291.27, 383.82],
-                [1, 1, 0, 0, 1, 0, -1, -1188.60, 56.74],
-                [1, 1, 0, 0, 2, 0, -1, 27.08, -1.33],
-                [1, 1, 1, 0, 0, -1, -1, 298.32, 6.00],
-                [1, 1, 1, 0, 0, 1, -1, -4.53, -0.09],
-                [1, 1, 1, 0, 1, -1, -1, 3.94, 0.02],
-                [1, 1, 2, 0, 0, 0, -1, 55.92, -2.06],
-                [1, 2, -2, 1, 0, 0, -1, -7.22, 0.07],
-                [1, 2, 0, -1, 0, 0, -1, -42.19, 0.54],
-                [1, 3, 0, 0, 0, 0, -1, -30.56, 0.61],
-                [1, 3, 0, 0, 1, 0, -1, -19.58, 0.39],
+                [1, -3, 2, 0, 0, 0, -1, -2.79, -0.21],
+                [1, -2, 0, 1, -1, 0, -1, -2.64, -0.29],
+                [1, -2, 0, 1, 0, 0, -1, -13.95, -1.56],
+                [1, -1, 0, 0, -1, 0, -1, -5.32, -1.96],
+                [1, -1, 0, 0, 0, 0, -1, -27.92, -10.42],
+                [1, 0, 0, -1, 0, 0, -1, -3.09, 0.47],
+                [1, 0, 0, 1, 0, 0, -1, -8.95, 1.31],
+                [1, 1, -3, 0, 0, 1, -1, 24.65, -1.38],
+                [1, 1, -2, 0, -1, 0, -1, -6.61, 0.34],
+                [1, 1, -2, 0, 0, 0, -1, 599.77, -31.09],
+                [1, 1, -1, 0, 0, -1, -1, -8.12, 0.38],
+                [1, 1, -1, 0, 0, 1, -1, -22.93, 1.06],
+                [1, 1, 0, 0, -1, 0, -1, 126.19, -6.54],
+                [1, 1, 0, 0, 0, 0, -1, -6786.96, 361.70],
+                [1, 1, 0, 0, 1, 0, -1, -984.51, 53.74],
+                [1, 1, 0, 0, 2, 0, -1, 22.70, -1.27],
+                [1, 1, 1, 0, 0, -1, -1, 310.08, 5.83],
+                [1, 1, 1, 0, 0, 1, -1, -4.71, -0.09],
+                [1, 1, 1, 0, 1, -1, -1, 4.15, 0.01],
+                [1, 1, 2, -2, 0, 0, -1, 3.32, -0.10],
+                [1, 1, 2, 0, 0, 0, -1, 77.34, -2.38],
+                [1, 1, 2, 0, 1, 0, -1, -2.84, 0.09],
+                [1, 2, -2, 1, 0, 0, -1, 8.86, -0.17],
+                [1, 2, 0, -1, 0, 0, -1, 41.92, -0.70],
+                [1, 2, 0, -1, 1, 0, -1, 8.29, -0.14],
             ]
         ),
         dims=["constituent", "argument"],
@@ -585,7 +603,7 @@ def _frequency_dependence_diurnal(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
-    K = np.pi / 2.0 + np.zeros_like(MJD)
+    K = np.pi / 2.0 + np.zeros_like(TAU)
     # dataset of arguments
     arguments = xr.Dataset(
         data_vars=dict(
@@ -620,23 +638,26 @@ def _frequency_dependence_diurnal(
     l, m = (2, 1)
     Ylm, _ = pyTMD.math.sph_harm(l, theta, la, m=m, phase=phase)
     # calculate offsets in local coordinates
-    # use differentials in gravimetric factors from Farrell
-    dr = 1e-6 * (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag)
+    GR = (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag).sum(
+        dim="constituent", skipna=False
+    )
     # rotate to cartesian coordinates
-    GX = (dr * np.cos(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GY = (dr * np.sin(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GZ = (dr * np.sin(phi)).sum(dim="constituent", skipna=False)
+    GX = GR * np.cos(la) * np.cos(phi)
+    GY = GR * np.sin(la) * np.cos(phi)
+    GZ = GR * np.sin(phi)
     # compute as additive correction
     G = xr.Dataset()
-    G["X"] = -l * GX / radius
-    G["Y"] = -l * GY / radius
-    G["Z"] = -l * GZ / radius
+    G["X"] = -1e-6 * l * GX / radius
+    G["Y"] = -1e-6 * l * GY / radius
+    G["Z"] = -1e-6 * l * GZ / radius
     # return the corrections
     return G
 
 
 def _frequency_dependence_long_period(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Computes the frequency dependent in-phase and out-of-phase corrections
@@ -670,29 +691,38 @@ def _frequency_dependence_long_period(
         "dG_ip",
         "dG_op",
     ]
-    # note: dG_op and dG_ip are scaled by 1e6
+    # note: dG_ip and dG_op are scaled by 1e6
     table = xr.DataArray(
         np.array(
             [
-                [0, 0, 0, 0, 1, 0, 0, 27.12, -21.84],
-                [0, 0, 0, 0, 2, 0, 0, -0.13, 0.18],
-                [0, 0, 1, 0, 0, -1, 0, 3.82, 1.78],
-                [0, 0, 2, 0, 0, 0, 0, 33.80, 8.90],
-                [0, 0, 2, 0, 1, 0, 0, -0.84, -0.22],
-                [0, 0, 3, 0, 0, -1, 0, 2.28, 0.45],
-                [0, 1, -2, 1, 0, 0, 0, 11.78, 0.87],
-                [0, 1, 0, -1, -1, 0, 0, -4.15, -0.27],
-                [0, 1, 0, -1, 0, 0, 0, 63.24, 4.13],
-                [0, 1, 0, -1, 1, 0, 0, -4.11, -0.27],
-                [0, 1, 0, 1, 0, 0, 0, -3.39, -0.22],
-                [0, 2, -2, 0, 0, 0, 0, 11.61, 0.42],
-                [0, 2, 0, -2, 0, 0, 0, 5.80, 0.19],
-                [0, 2, 0, 0, 0, 0, 0, 134.05, 4.37],
-                [0, 2, 0, 0, 1, 0, 0, 55.59, 1.81],
-                [0, 2, 0, 0, 2, 0, 0, 5.20, 0.17],
-                [0, 3, -2, 1, 0, 0, 0, 5.12, 0.10],
-                [0, 3, 0, -1, 0, 0, 0, 27.11, 0.49],
-                [0, 3, 0, -1, 1, 0, 0, 11.24, 0.20],
+                [0, 0, 0, 0, 1, 0, 0, 141.08, -33.01],
+                [0, 0, 0, 0, 2, 0, 0, -1.25, 0.29],
+                [0, 0, 1, 0, 0, -1, 0, -16.25, 3.75],
+                [0, 0, 2, 0, 0, 0, 0, -92.65, 21.29],
+                [0, 0, 2, 0, 1, 0, 0, 2.28, -0.52],
+                [0, 0, 3, 0, 0, -1, 0, -5.10, 1.17],
+                [0, 1, -2, 1, -1, 0, 0, 1.13, -0.26],
+                [0, 1, -2, 1, 0, 0, 0, -15.67, 3.56],
+                [0, 1, 0, -1, -1, 0, 0, 5.27, -1.20],
+                [0, 1, 0, -1, 0, 0, 0, -80.31, 18.20],
+                [0, 1, 0, -1, 1, 0, 0, 5.21, -1.18],
+                [0, 1, 0, 1, 0, 0, 0, 4.28, -0.97],
+                [0, 1, 0, 1, 1, 0, 0, 1.74, -0.40],
+                [0, 1, 2, -1, 0, 0, 0, 1.09, -0.25],
+                [0, 2, -2, 0, 0, 0, 0, -12.20, 2.75],
+                [0, 2, 0, -2, 0, 0, 0, -5.97, 1.34],
+                [0, 2, 0, 0, 0, 0, 0, -137.69, 31.01],
+                [0, 2, 0, 0, 1, 0, 0, -57.07, 12.85],
+                [0, 2, 0, 0, 2, 0, 0, -5.34, 1.20],
+                [0, 3, -2, -1, 0, 0, 0, -1.82, 0.41],
+                [0, 3, -2, 1, 0, 0, 0, -4.76, 1.07],
+                [0, 3, -2, 1, 1, 0, 0, -1.97, 0.44],
+                [0, 3, 0, -1, 0, 0, 0, -24.91, 5.59],
+                [0, 3, 0, -1, 1, 0, 0, -10.32, 2.32],
+                [0, 4, -2, 0, 0, 0, 0, -3.84, 0.86],
+                [0, 4, -2, 0, 1, 0, 0, -1.59, 0.36],
+                [0, 4, 0, -2, 0, 0, 0, -3.17, 0.71],
+                [0, 4, 0, -2, 1, 0, 0, -1.31, 0.29],
             ]
         ),
         dims=["constituent", "argument"],
@@ -704,7 +734,7 @@ def _frequency_dependence_long_period(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
-    K = np.pi / 2.0 + np.zeros_like(MJD)
+    K = np.pi / 2.0 + np.zeros_like(TAU)
     # dataset of arguments
     arguments = xr.Dataset(
         data_vars=dict(
@@ -739,127 +769,17 @@ def _frequency_dependence_long_period(
     l, m = (2, 0)
     Ylm, _ = pyTMD.math.sph_harm(l, theta, la, m=m, phase=phase)
     # calculate offsets in local coordinates
-    # use differentials in gravimetric factors from Farrell
-    dr = 1e-6 * (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag)
+    GR = (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag).sum(
+        dim="constituent", skipna=False
+    )
     # rotate to cartesian coordinates
-    GX = (dr * np.cos(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GY = (dr * np.sin(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GZ = (dr * np.sin(phi)).sum(dim="constituent", skipna=False)
+    GX = GR * np.cos(la) * np.cos(phi)
+    GY = GR * np.sin(la) * np.cos(phi)
+    GZ = GR * np.sin(phi)
     # compute as additive correction
     G = xr.Dataset()
-    G["X"] = -l * GX / radius
-    G["Y"] = -l * GY / radius
-    G["Z"] = -l * GZ / radius
-    # return the corrections
-    return G
-
-
-def _frequency_dependence_semidiurnal(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
-):
-    """
-    Computes the frequency dependent in-phase and out-of-phase corrections
-    of the semi-diurnal band :cite:p:`Petit:2010tp`
-
-    Parameters
-    ----------
-    XYZ: xr.Dataset
-        Dataset with cartesian coordinates
-    MJD: np.ndarray
-        Modified Julian Day (MJD)
-    deltat: float or np.ndarray, default 0.0
-        Time correction for converting to Ephemeris Time (days)
-
-    Returns
-    -------
-    G: xr.Dataset
-        Gravity tide corrections
-    """
-    # Corrections for Frequency Dependence of Semi-Diurnal Tides
-    # based on table 6.5c from IERS conventions
-    columns = [
-        "tau",
-        "s",
-        "h",
-        "p",
-        "np",
-        "ps",
-        "k",
-        "dG_ip",
-        "dG_op",
-    ]
-    # note: dG_op and dG_ip are scaled by 1e6
-    table = xr.DataArray(
-        np.array(
-            [
-                [2, -2, 0, 2, 0, 0, 0, -65.32, -2.40],
-                [2, -2, 2, 0, 0, 0, 0, -78.83, -2.90],
-                [2, -1, 0, 1, 0, 0, 0, -493.64, -18.15],
-                [2, -1, 2, -1, 0, 0, 0, -93.76, -3.45],
-                [2, 0, 0, 0, -1, 0, 0, 96.20, 3.54],
-                [2, 0, 0, 0, 0, 0, 0, -2578.31, -94.79],
-                [2, 1, 0, -1, 0, 0, 0, 72.88, 2.68],
-                [2, 2, -3, 0, 0, 1, 0, -70.13, -2.58],
-                [2, 2, -2, 0, 0, 0, 0, -1199.56, -44.10],
-                [2, 2, 0, 0, 0, 0, 0, -326.08, -11.99],
-                [2, 2, 0, 0, 1, 0, 0, -97.21, -3.57],
-            ]
-        ),
-        dims=["constituent", "argument"],
-        coords=dict(argument=columns),
-    )
-    coef = table.to_dataset(dim="argument")
-    # get phase angles (Doodson arguments)
-    TAU, S, H, P, ZNS, PS = pyTMD.astro.doodson_arguments(MJD + deltat)
-    # variable for multiples of 90 degrees (Ray technical note 2017)
-    # full expansion of Equilibrium Tide includes some negative cosine
-    # terms and some sine terms (Pugh and Woodworth, 2014)
-    K = np.pi / 2.0 + np.zeros_like(MJD)
-    # dataset of arguments
-    arguments = xr.Dataset(
-        data_vars=dict(
-            tau=(["time"], TAU),
-            s=(["time"], S),
-            h=(["time"], H),
-            p=(["time"], P),
-            np=(["time"], ZNS),
-            ps=(["time"], PS),
-            k=(["time"], K),
-        ),
-        coords=dict(time=np.atleast_1d(MJD)),
-    )
-    # compute the normalized position vector of coordinates
-    radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
-    # geocentric latitude and colatitude (radians)
-    phi = np.arctan2(XYZ.Z, np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
-    theta = np.pi / 2.0 - phi
-    # calculate longitude (radians)
-    la = np.arctan2(XYZ.Y, XYZ.X)
-    # compute phase angle of tide potential (Greenwich)
-    phase = (
-        arguments.tau * coef["tau"]
-        + arguments.s * coef["s"]
-        + arguments.h * coef["h"]
-        + arguments.p * coef["p"]
-        + arguments.np * coef["np"]
-        + arguments.ps * coef["ps"]
-        + arguments.k * coef["k"]
-    )
-    # rotate spherical harmonic functions by phase angles
-    l, m = (2, 2)
-    Ylm, _ = pyTMD.math.sph_harm(l, theta, la, m=m, phase=phase)
-    # calculate offsets in local coordinates
-    # use differentials in gravimetric factors from Farrell
-    dr = 1e-6 * (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag)
-    # rotate to cartesian coordinates
-    GX = (dr * np.cos(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GY = (dr * np.sin(la) * np.cos(phi)).sum(dim="constituent", skipna=False)
-    GZ = (dr * np.sin(phi)).sum(dim="constituent", skipna=False)
-    # convert to output units
-    # compute as additive correction
-    G = xr.Dataset()
-    G["X"] = -l * GX / radius
-    G["Y"] = -l * GY / radius
-    G["Z"] = -l * GZ / radius
+    G["X"] = -1e-6 * l * GX / radius
+    G["Y"] = -1e-6 * l * GY / radius
+    G["Z"] = -1e-6 * l * GZ / radius
     # return the corrections
     return G

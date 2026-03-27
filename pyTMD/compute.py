@@ -176,6 +176,7 @@ __all__ = [
     "_ephemerides_SET",
     "_catalog_SET",
     "TG_forces",
+    "GT_accelerations",
 ]
 
 # default working data directory for tide models
@@ -210,7 +211,6 @@ def corrections(
             - ``'LPT'``: solid earth load pole tide
             - ``'OPT'``: ocean pole tide
             - ``'SET'``: solid earth tide
-            - ``'TGF'``: tide-generating forces
     **kwargs: dict
         Keyword arguments for correction functions
 
@@ -226,7 +226,6 @@ def corrections(
         * ``correction == 'LPT'`` → :func:`LPT_displacements`
         * ``correction == 'OPT'`` → :func:`OPT_displacements`
         * ``correction == 'SET'`` → :func:`SET_displacements`
-        * ``correction == 'TGF'`` → :func:`TG_forces`
 
         Refer to the respective helper function docstrings for details
         on the variable names, units, and metadata of the returned object.
@@ -241,8 +240,6 @@ def corrections(
         return OPT_displacements(x, y, delta_time, **kwargs)
     elif correction.upper() == "SET":
         return SET_displacements(x, y, delta_time, **kwargs)
-    elif correction.upper() == "TGF":
-        return TG_forces(x, y, delta_time, **kwargs)
     else:
         raise ValueError(f"Unrecognized correction type: {correction}")
 
@@ -1648,7 +1645,7 @@ def TG_forces(
 
 
 # PURPOSE: compute the estimated gravity tides
-def GT_acceleration(
+def GT_accelerations(
     x: np.ndarray,
     y: np.ndarray,
     delta_time: np.ndarray,

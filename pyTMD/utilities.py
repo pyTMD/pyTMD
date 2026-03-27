@@ -167,7 +167,8 @@ def get_data_path(relpath: list | str | pathlib.Path):
 
 # PURPOSE: get the path to the user cache directory
 def get_cache_path(
-    relpath: list | str | pathlib.Path | None = None, appname="pytmd"
+    relpath: list | str | pathlib.Path | None = None,
+    appname="pytmd",
 ):
     """
     Get the path to the user cache directory for an application
@@ -190,7 +191,9 @@ def get_cache_path(
 
 
 def import_dependency(
-    name: str, extra: str = "", raise_exception: bool = False
+    name: str,
+    extra: str = "",
+    raise_exception: bool = False,
 ):
     """
     Import an optional dependency
@@ -229,7 +232,10 @@ def import_dependency(
     return module
 
 
-def dependency_available(name: str, minversion: str | None = None):
+def dependency_available(
+    name: str,
+    minversion: str | None = None,
+):
     """
     Checks whether a module is installed without importing it
 
@@ -498,7 +504,10 @@ def compressuser(filename: str | pathlib.Path):
 
 
 # PURPOSE: get the hash value of a file
-def get_hash(local: str | io.IOBase | pathlib.Path, algorithm: str = "md5"):
+def get_hash(
+    local: str | io.IOBase | pathlib.Path,
+    algorithm: str = "md5",
+):
     """
     Get the hash value from a local file or ``BytesIO`` object
 
@@ -534,7 +543,10 @@ def get_hash(local: str | io.IOBase | pathlib.Path, algorithm: str = "md5"):
 
 
 # PURPOSE: get the git hash value
-def get_git_revision_hash(refname: str = "HEAD", short: bool = False):
+def get_git_revision_hash(
+    refname: str = "HEAD",
+    short: bool = False,
+):
     """
     Get the ``git`` hash value for a particular reference
 
@@ -645,7 +657,10 @@ def build_logger(name: str, **kwargs):
 
 
 # PURPOSE: returns the Unix timestamp value for a formatted date string
-def get_unix_time(time_string: str, format: str = "%Y-%m-%d %H:%M:%S"):
+def get_unix_time(
+    time_string: str,
+    format: str = "%Y-%m-%d %H:%M:%S",
+):
     """
     Get the Unix timestamp value for a formatted date string
 
@@ -709,7 +724,9 @@ def copy(
 
 # PURPOSE: check ftp connection
 def check_ftp_connection(
-    HOST: str, username: str | None = None, password: str | None = None
+    HOST: str,
+    username: str | None = None,
+    password: str | None = None,
 ):
     """
     Check internet connection with ``ftp`` host

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-earth_orientation.py
+polar_motion.py
 Written by Tyler Sutterley (03/2026)
 Prediction routines for pole tides and Earth Orientation Parameters (EOPs)
 
@@ -267,7 +267,10 @@ def ocean_pole_tide(
     return dxt
 
 
-def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
+def earth_orientation(
+    t: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
+):
     """
     Compute the variations in earth rotation caused by diurnal
     and semidiurnal tides :cite:p:`Herring:1994ku,Ray:1994dk`
@@ -461,7 +464,10 @@ def earth_orientation(t: np.ndarray, deltat: float | np.ndarray = 0.0):
 
 
 # PURPOSE: estimate variations in length of day
-def length_of_day(t: np.ndarray, deltat: float | np.ndarray = 0.0):
+def length_of_day(
+    t: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
+):
     """
     Compute the variations in earth rotation caused by long-period (zonal)
     tides :cite:p:`Ray:2014fu`

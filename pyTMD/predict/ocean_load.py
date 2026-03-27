@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-ocean_load_tide.py
+ocean_load.py
 Written by Tyler Sutterley (03/2026)
-Prediction routines for ocean, load and equilibrium  tides
+Prediction routines for ocean, load and equilibrium tides
 
 REFERENCES:
     G. D. Egbert and S. Erofeeva, "Efficient Inverse Modeling of Barotropic
@@ -122,17 +122,15 @@ __all__ = [
     "equilibrium_tide",
 ]
 
-# number of days between the Julian day epoch and MJD
-_jd_mjd = 2400000.5
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-# number of days between MJD and the J2000 epoch
-_mjd_j2000 = 51544.5
-# Julian century
-_century = 36525.0
 
 
-def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def time_series(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Predict tides from ``Dataset`` at times
 
@@ -199,7 +197,11 @@ def time_series(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
 
 # PURPOSE: infer the minor corrections from the major constituents
-def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def infer_minor(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Infer the tidal values for minor constituents using their
     relation with major constituents
@@ -263,7 +265,11 @@ def infer_minor(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
 
 # PURPOSE: infer short-period minor constituents
-def _infer_short_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def _infer_short_period(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Infer the tidal values for short-period minor constituents
     using their relation with major constituents
@@ -419,7 +425,11 @@ def _infer_short_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
 
 # PURPOSE: infer semi-diurnal minor constituents
-def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def _infer_semi_diurnal(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Infer the tidal values for semi-diurnal minor constituents
     using their relation with major constituents
@@ -602,7 +612,11 @@ def _infer_semi_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
 
 # PURPOSE: infer diurnal minor constituents
-def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def _infer_diurnal(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Infer the tidal values for diurnal minor constituents
     using their relation with major constituents taking into
@@ -814,7 +828,11 @@ def _infer_diurnal(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
 
 
 # PURPOSE: infer long-period minor constituents
-def _infer_long_period(t: float | np.ndarray, ds: xr.Dataset, **kwargs):
+def _infer_long_period(
+    t: float | np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Infer the tidal values for long-period minor constituents
     using their relation with major constituents with option to
@@ -1002,7 +1020,11 @@ _infer["long_period"] = _infer_long_period
 
 
 # PURPOSE: estimate long-period equilibrium tides
-def equilibrium_tide(t: np.ndarray, ds: xr.Dataset, **kwargs):
+def equilibrium_tide(
+    t: np.ndarray,
+    ds: xr.Dataset,
+    **kwargs,
+):
     """
     Compute the long-period equilibrium tides the summation of fifteen
     tidal spectral lines from Cartwright-Tayler-Edden tables

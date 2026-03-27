@@ -125,7 +125,11 @@ __all__ = [
 ]
 
 
-def arguments(MJD: np.ndarray, constituents: list | np.ndarray, **kwargs):
+def arguments(
+    MJD: np.ndarray,
+    constituents: list | np.ndarray,
+    **kwargs,
+):
     """
     Calculates the nodal corrections for tidal constituents
     :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Pugh:2014di`
@@ -202,7 +206,10 @@ def arguments(MJD: np.ndarray, constituents: list | np.ndarray, **kwargs):
     return (pu, pf, G)
 
 
-def minor_arguments(MJD: np.ndarray, **kwargs):
+def minor_arguments(
+    MJD: np.ndarray,
+    **kwargs,
+):
     """
     Calculates the nodal corrections for minor tidal constituents
     in order to infer their values
@@ -360,7 +367,10 @@ def minor_arguments(MJD: np.ndarray, **kwargs):
 _coefficients_table = get_data_path(["data", "doodson.json"])
 
 
-def coefficients_table(constituents: list | tuple | np.ndarray | str, **kwargs):
+def coefficients_table(
+    constituents: list | tuple | np.ndarray | str,
+    **kwargs,
+):
     """
     Doodson table coefficients for tidal constituents
     :cite:p:`Doodson:1921kt,Doodson:1941td,Pugh:2014di`
@@ -426,7 +436,10 @@ def coefficients_table(constituents: list | tuple | np.ndarray | str, **kwargs):
     return coef
 
 
-def doodson_number(constituents: str | list | np.ndarray, **kwargs):
+def doodson_number(
+    constituents: str | list | np.ndarray,
+    **kwargs,
+):
     """
     Calculates the Doodson or Cartwright number for
     tidal constituents :cite:p:`Doodson:1921kt`
@@ -1715,7 +1728,10 @@ def group_modulation(
     return (u, f)
 
 
-def frequency(constituents: list | np.ndarray, **kwargs):
+def frequency(
+    constituents: list | np.ndarray,
+    **kwargs,
+):
     """
     Wrapper function for calculating the angular frequency
     for tidal constituents :cite:p:`Ray:1999vm`
@@ -1756,7 +1772,9 @@ def frequency(constituents: list | np.ndarray, **kwargs):
 
 
 def aliasing_period(
-    constituents: list | np.ndarray, sampling: float | np.ndarray, **kwargs
+    constituents: list | np.ndarray,
+    sampling: float | np.ndarray,
+    **kwargs,
 ):
     """
     Calculates the tidal aliasing for a repeat period
@@ -2274,7 +2292,11 @@ def _frequency(coef: np.ndarray, **kwargs):
     return np.abs(omega)
 
 
-def _love_numbers(omega: np.ndarray, model: str = "PREM", **kwargs):
+def _love_numbers(
+    omega: np.ndarray,
+    model: str = "PREM",
+    **kwargs,
+):
     """
     Compute the body tide Love/Shida numbers for a given frequency
     :cite:p:`Wahr:1979vx,Wahr:1981ea,Wahr:1981if,Mathews:1995go`
@@ -2406,7 +2428,7 @@ def _complex_love_numbers(omega: np.ndarray, **kwargs):
     elif omega > 1e-4:
         # in-phase and out-of-phase components for the semi-diurnal band
         # table 7.3a (IERS conventions 2010)
-        h2 = 0.6078 - 0.0025j
+        h2 = 0.6078 - 0.0022j
         # table 6.5c (IERS conventions 2010)
         k2 = 0.30102 - 0.0013j
         # table 7.3a (IERS conventions 2010)

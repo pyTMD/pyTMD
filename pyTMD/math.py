@@ -50,9 +50,7 @@ __all__ = [
 ]
 
 
-def asec2rad(
-    x: float | np.ndarray,
-):
+def asec2rad(x: float | np.ndarray):
     """
     Convert angles from arcseconds to radians
 
@@ -64,9 +62,7 @@ def asec2rad(
     return np.radians(x / 3600.0)
 
 
-def masec2rad(
-    x: float | np.ndarray,
-):
+def masec2rad(x: float | np.ndarray):
     """
     Convert angles from microarcseconds to radians
 
@@ -78,9 +74,7 @@ def masec2rad(
     return np.radians(x / 3.6e9)
 
 
-def rad2asec(
-    x: float | np.ndarray,
-):
+def rad2asec(x: float | np.ndarray):
     """
     Convert angles from radians to arcseconds
 
@@ -92,9 +86,7 @@ def rad2asec(
     return 3600.0 * np.degrees(x)
 
 
-def rad2masec(
-    x: float | np.ndarray,
-):
+def rad2masec(x: float | np.ndarray):
     """
     Convert angles from radians to microarcseconds
 
@@ -107,7 +99,10 @@ def rad2masec(
 
 
 # PURPOSE: calculate the sum of a polynomial function of time
-def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
+def polynomial_sum(
+    coefficients: list | np.ndarray,
+    t: np.ndarray,
+):
     """
     Calculates the sum of a polynomial function using Horner's method
     :cite:p:`Horner:1819br`
@@ -124,7 +119,10 @@ def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
     return np.sum([c * (t**i) for i, c in enumerate(coefficients)], axis=0)
 
 
-def normalize_angle(theta: float | np.ndarray, circle: float = 360.0):
+def normalize_angle(
+    theta: float | np.ndarray,
+    circle: float = 360.0,
+):
     """
     Normalize an angle to a single rotation
 
@@ -158,7 +156,10 @@ def radius(
     return np.sqrt(x**2 + y**2 + z**2)
 
 
-def rotate(theta: float | np.ndarray, axis: str = "x"):
+def rotate(
+    theta: float | np.ndarray,
+    axis: str = "x",
+):
     """
     Rotate a 3-dimensional matrix about a given axis
 
@@ -227,7 +228,10 @@ def scalar_product(
     return x * u + y * v + z * w
 
 
-def aliasing(f: float, fs: float) -> float:
+def aliasing(
+    f: float,
+    fs: float,
+) -> float:
     """
     Calculate the aliasing frequency of a signal
 
@@ -247,7 +251,12 @@ def aliasing(f: float, fs: float) -> float:
     return fa
 
 
-def legendre(l: int, x: np.ndarray, m: int = 0, norm: float = 1.0):
+def legendre(
+    l: int,
+    x: np.ndarray,
+    m: int = 0,
+    norm: float = 1.0,
+):
     r"""
     Computes associated Legendre functions and their first-derivatives
     for a particular degree and order

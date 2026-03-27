@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-solid_earth_tide.py
+solid_earth.py
 Written by Tyler Sutterley (03/2026)
-Prediction routines for solid earth tides
+Prediction routines for solid Earth (body) tides
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -49,14 +49,8 @@ __all__ = [
     "_free_to_mean",
 ]
 
-# number of days between the Julian day epoch and MJD
-_jd_mjd = 2400000.5
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-# number of days between MJD and the J2000 epoch
-_mjd_j2000 = 51544.5
-# Julian century
-_century = 36525.0
 
 # get ellipsoidal parameters
 _iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
@@ -414,10 +408,6 @@ def solid_earth_tide(
     unit_vector = XYZ / radius
     solar_unit_vector = SXYZ / solar_radius
     lunar_unit_vector = LXYZ / lunar_radius
-    # compute new h2 and l2 (Mathews et al., 1997)
-    # from equations 5 and 6
-    h2 = kwargs["h2"] - 0.0006 * (1.5 * sinphi**2 - 0.5)
-    l2 = kwargs["l2"] + 0.0002 * (1.5 * sinphi**2 - 0.5)
     # factors for sun and moon using IAU estimates of mass ratios
     K_solar = kwargs["mass_ratio_solar"] * a_axis**3 / solar_radius**2
     K_lunar = kwargs["mass_ratio_lunar"] * a_axis**3 / lunar_radius**2
@@ -434,14 +424,14 @@ def solid_earth_tide(
     # from the tide-generating potentials
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
-        # use calculated love numbers or nominal
+        # get the degree-dependent Love numbers
+        hl = kwargs.get(f"h{l}", 0)
+        ll = kwargs.get(f"l{l}", 0)
+        # include latitudinal dependence for degree 2
+        # from equations 5 and 6 of Mathews et al., (1997)
         if l == 2:
-            hl = np.copy(h2)
-            ll = np.copy(l2)
-        else:
-            # use nominal Love numbers for all other degrees
-            hl = kwargs.get(f"h{l}", 0)
-            ll = kwargs.get(f"l{l}", 0)
+            hl -= 0.0006 * (1.5 * sinphi**2 - 0.5)
+            ll += 0.0002 * (1.5 * sinphi**2 - 0.5)
         # update gravitational parameters for degree
         K_solar *= a_axis / solar_radius
         K_lunar *= a_axis / lunar_radius
@@ -474,6 +464,9 @@ def solid_earth_tide(
     dxt += _frequency_dependence(XYZ, MJD, deltat=deltat)
     # convert the permanent tide system if specified
     if tide_system.lower() == "mean_tide":
+        # compute new h2 and l2 (Mathews et al., 1997)
+        h2 = kwargs["h2"] - 0.0006 * (1.5 * sinphi**2 - 0.5)
+        l2 = kwargs["l2"] + 0.0002 * (1.5 * sinphi**2 - 0.5)
         dxt += _free_to_mean(XYZ, h2, l2)
     # add units attributes to output dataset
     for var in dxt.data_vars:
@@ -843,7 +836,9 @@ def _latitude_dependence_semidiurnal(
 
 
 def _frequency_dependence(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Wrapper function to compute the frequency dependent in-phase and
@@ -872,7 +867,9 @@ def _frequency_dependence(
 
 
 def _frequency_dependence_diurnal(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Computes the frequency dependent in-phase and out-of-phase corrections
@@ -984,18 +981,18 @@ def _frequency_dependence_diurnal(
     cphase = np.cos(thetaf) * cosla - np.sin(thetaf) * sinla
     # calculate offsets in local coordinates
     # equations 27 and 28 from Mathews et al. (1997)
-    dr = sin2phi * (coef["dR_ip"] * sphase + coef["dR_op"] * cphase)
-    dn = cos2phi * (coef["dT_ip"] * sphase + coef["dT_op"] * cphase)
-    de = sinphi * (coef["dT_ip"] * cphase - coef["dT_op"] * sphase)
+    DR = sin2phi * (coef["dR_ip"] * sphase + coef["dR_op"] * cphase)
+    DN = cos2phi * (coef["dT_ip"] * sphase + coef["dT_op"] * cphase)
+    DE = sinphi * (coef["dT_ip"] * cphase - coef["dT_op"] * sphase)
     # compute corrections (Mathews et al. 1997)
     # rotate to cartesian coordinates
-    DX = (dr * cosla * cosphi - de * sinla - dn * cosla * sinphi).sum(
+    DX = (DR * cosla * cosphi - DE * sinla - DN * cosla * sinphi).sum(
         dim="constituent", skipna=False
     )
-    DY = (dr * sinla * cosphi + de * cosla - dn * sinla * sinphi).sum(
+    DY = (DR * sinla * cosphi + DE * cosla - DN * sinla * sinphi).sum(
         dim="constituent", skipna=False
     )
-    DZ = (dr * sinphi + dn * cosphi).sum(dim="constituent", skipna=False)
+    DZ = (DR * sinphi + DN * cosphi).sum(dim="constituent", skipna=False)
     # convert from millimeters to meters
     D = xr.Dataset()
     D["X"] = 1e-3 * DX
@@ -1006,7 +1003,9 @@ def _frequency_dependence_diurnal(
 
 
 def _frequency_dependence_long_period(
-    XYZ: xr.Dataset, MJD: np.ndarray, deltat: float | np.ndarray = 0.0
+    XYZ: xr.Dataset,
+    MJD: np.ndarray,
+    deltat: float | np.ndarray = 0.0,
 ):
     """
     Computes the frequency dependent in-phase and out-of-phase corrections
@@ -1093,20 +1092,19 @@ def _frequency_dependence_long_period(
     cphase = np.cos(thetaf)
     # calculate offsets in local coordinates
     # equations 31 and 32 from Mathews et al. (1997)
-    dr = (1.5 * sinphi**2 - 0.5) * (
+    DR = (1.5 * sinphi**2 - 0.5) * (
         coef["dT_ip"] * sphase + coef["dR_ip"] * cphase
     )
-    dn = sin2phi * (coef["dT_op"] * sphase + coef["dR_op"] * cphase)
-    de = 0.0
+    DN = sin2phi * (coef["dT_op"] * sphase + coef["dR_op"] * cphase)
     # compute corrections (Mathews et al. 1997)
     # rotate to cartesian coordinates
-    DX = (dr * cosla * cosphi - de * sinla - dn * cosla * sinphi).sum(
+    DX = (DR * cosla * cosphi - DN * cosla * sinphi).sum(
         dim="constituent", skipna=False
     )
-    DY = (dr * sinla * cosphi + de * cosla - dn * sinla * sinphi).sum(
+    DY = (DR * sinla * cosphi - DN * sinla * sinphi).sum(
         dim="constituent", skipna=False
     )
-    DZ = (dr * sinphi + dn * cosphi).sum(dim="constituent", skipna=False)
+    DZ = (DR * sinphi + DN * cosphi).sum(dim="constituent", skipna=False)
     # convert from millimeters to meters
     D = xr.Dataset()
     D["X"] = 1e-3 * DX
