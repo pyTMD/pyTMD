@@ -177,7 +177,7 @@ def load_pole_tide(
 # PURPOSE: estimate ocean pole tides in Cartesian coordinates
 def ocean_pole_tide(
     t: np.ndarray,
-    UXYZ: np.ndarray,
+    UXYZ: xr.Dataset,
     deltat: float = 0.0,
     gamma_0: float = 9.780325,
     a_axis: float = 6378136.3,
@@ -195,7 +195,7 @@ def ocean_pole_tide(
     ----------
     t: np.ndarray
         Days relative to 1992-01-01T00:00:00
-    UXYZ: np.ndarray
+    UXYZ: xarray.Dataset
         Ocean pole tide values from Desai (2002)
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)

@@ -25,7 +25,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
-    Updated 03/2026: simplify structure by spliting up IERS corrections
+    Updated 03/2026: simplify structure by splitting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
         clean up the ephemerides method of calculating solid earth tides

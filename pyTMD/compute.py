@@ -308,7 +308,7 @@ def tide_elevations(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     method: str = 'linear'
         Interpolation method from ``xarray``
 
@@ -509,7 +509,7 @@ def tide_currents(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     method: str
         Interpolation method from ``xarray``
 
@@ -755,7 +755,7 @@ def LPET_elevations(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
 
     Returns
     -------
@@ -840,7 +840,7 @@ def LPT_displacements(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
     convention: str, default '2018'
@@ -994,7 +994,7 @@ def OPT_displacements(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
     convention: str, default '2018'
@@ -1199,7 +1199,7 @@ def _ephemerides_SET(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
     tide_system: str, default 'tide_free'
@@ -1378,7 +1378,7 @@ def _catalog_SET(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     catalog: str, default 'CTE1973'
         Name of the tide potential catalog
 
@@ -1507,7 +1507,7 @@ def TG_forces(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
     ephemerides: str, default 'Montenbruck'
@@ -1690,7 +1690,7 @@ def GT_accelerations(
             - ``'LORAN'``: leap seconds needed (LORAN = GPS + 9 seconds)
             - ``'TAI'``: leap seconds needed (TAI = GPS + 19 seconds)
             - ``'UTC'``: no leap seconds needed
-            - ``'datetime'``: numpy datatime array in UTC
+            - ``'datetime'``: numpy datetime array in UTC
     ellipsoid: str, default 'WGS84'
         Ellipsoid name for calculating Earth parameters
     ephemerides: str, default 'Montenbruck'

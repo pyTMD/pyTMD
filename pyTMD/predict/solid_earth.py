@@ -25,7 +25,6 @@ UPDATE HISTORY:
 
 from __future__ import annotations
 
-import logging
 import numpy as np
 import xarray as xr
 import pyTMD.astro
@@ -228,7 +227,11 @@ def body_tide(
             Ylm[l, m], dYlm[l, m] = pyTMD.math.sph_harm(l, th, phi, m=m)
 
     # initialize phase array
-    phase = xr.DataArray(np.zeros_like(MJD), dims=dict(time=np.atleast_1d(MJD)))
+    phase = xr.DataArray(
+        np.zeros_like(MJD),
+        dims="time",
+        coords=dict(time=np.atleast_1d(MJD)),
+    )
     # initialize output body tides
     for key in ["R", "N", "E"]:
         zeta[key] = xr.zeros_like(th * phase)

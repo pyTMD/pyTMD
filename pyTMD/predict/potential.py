@@ -23,7 +23,6 @@ UPDATE HISTORY:
 
 from __future__ import annotations
 
-import logging
 import numpy as np
 import xarray as xr
 import pyTMD.astro
@@ -168,7 +167,6 @@ def gravity_tide(
     LXYZ: xr.Dataset,
     deltat: float = 0.0,
     a_axis: float = _iers.a_axis,
-    tide_system: str = "tide_free",
     **kwargs,
 ):
     r"""
@@ -189,11 +187,6 @@ def gravity_tide(
         Time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
         Semi-major axis of the Earth (meters)
-    tide_system: str, default 'tide_free'
-        Output permanent tide system
-
-            - ``'tide_free'``: no permanent direct and indirect tidal potentials
-            - ``'zero_tide'``: direct permanent tidal potentials (no indirect)
     lmax: int, default 3
         Maximum degree of spherical harmonic expansion
     h2: float, default 0.6078
@@ -222,7 +215,7 @@ def gravity_tide(
     """
     # set default keyword arguments
     # maximum degree of spherical harmonic expansion
-    kwargs.setdefault("lmax", 4)
+    kwargs.setdefault("lmax", 3)
     # nominal Love numbers for degrees 2 through 4
     kwargs.setdefault("h2", 0.6078)
     kwargs.setdefault("k2", 0.30102)
@@ -373,7 +366,7 @@ def _out_of_phase_diurnal(
         Factors for the sun or moon
     dh2: float, default -0.0025
         Love number correction for the diurnal band
-    dk2: float, default -0.0013
+    dk2: float, default -0.00144
         Love number correction for the diurnal band
 
     Returns
@@ -445,7 +438,7 @@ def _out_of_phase_semidiurnal(
         Factors for the sun or moon
     dh2: float, default -0.0022
         Love number correction for the semi-diurnal band
-    dk2: float, default -0.0014
+    dk2: float, default -0.0013
         Love number correction for the semi-diurnal band
 
     Returns
