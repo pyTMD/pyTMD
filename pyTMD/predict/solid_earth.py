@@ -1159,12 +1159,12 @@ def _free_to_mean(
     dR0 = dfactor * h2 * H0
     dN0 = dfactor * l2 * H0
     # calculate offsets in local coordinates
-    dr = 0.5 * dR0 * (3.0 * sinphi**2 - 1.0)
-    dn = 3.0 * dN0 * cosphi * sinphi
+    DR = 0.5 * dR0 * (3.0 * sinphi**2 - 1.0)
+    DN = 3.0 * dN0 * cosphi * sinphi
     # compute as an additive correction (Mathews et al. 1997)
     D = xr.Dataset()
-    D["X"] = -dr * cosla * cosphi + dn * cosla * sinphi
-    D["Y"] = -dr * sinla * cosphi + dn * sinla * sinphi
-    D["Z"] = -dr * sinphi - dn * cosphi
+    D["X"] = -DR * cosla * cosphi + DN * cosla * sinphi
+    D["Y"] = -DR * sinla * cosphi + DN * sinla * sinphi
+    D["Z"] = -DR * sinphi - DN * cosphi
     # return the corrections
     return D
