@@ -127,7 +127,10 @@ def open_mfdataset(
 
 
 # PURPOSE: reads a FES ASCII or netCDF4 file
-def open_fes_dataset(input_file: str | pathlib.Path, **kwargs):
+def open_fes_dataset(
+    input_file: str | pathlib.Path,
+    **kwargs,
+):
     """
     Open FES-formatted model files
 

@@ -656,7 +656,11 @@ def equation_of_time(MJD: np.ndarray):
 
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
-def solar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
+def solar_ecef(
+    MJD: np.ndarray,
+    ephemerides: str = "Montenbruck",
+    **kwargs,
+):
     """
     Wrapper function for calculating the positional coordinates
     of the sun in an Earth-centric, Earth-Fixed (ECEF) frame
@@ -693,7 +697,10 @@ def solar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
         raise ValueError("Invalid ephemerides method")
 
 
-def solar_approximate(MJD, **kwargs):
+def solar_approximate(
+    MJD: np.ndarray,
+    **kwargs,
+):
     """
     Computes approximate positional coordinates of the sun in an
     Earth-centric, Earth-Fixed (ECEF) frame
@@ -769,7 +776,10 @@ def solar_approximate(MJD, **kwargs):
 
 
 # PURPOSE: compute coordinates of the sun in an ECEF frame
-def solar_ephemerides(MJD: np.ndarray, **kwargs):
+def solar_ephemerides(
+    MJD: np.ndarray,
+    **kwargs,
+):
     """
     Computes positional coordinates of the sun in an Earth-centric,
     Earth-Fixed (ECEF) frame using JPL ephemerides
@@ -1334,7 +1344,11 @@ def solar_distance(
 
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
-def lunar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
+def lunar_ecef(
+    MJD: np.ndarray,
+    ephemerides: str = "Montenbruck",
+    **kwargs,
+):
     """
     Wrapper function for calculating the positional coordinates
     of the moon in an Earth-centric, Earth-Fixed (ECEF) frame
@@ -1370,7 +1384,10 @@ def lunar_ecef(MJD: np.ndarray, ephemerides: str = "Montenbruck", **kwargs):
         raise ValueError("Invalid ephemerides method")
 
 
-def lunar_approximate(MJD, **kwargs):
+def lunar_approximate(
+    MJD: np.ndarray,
+    **kwargs,
+):
     """
     Computes approximate positional coordinates of the moon in an
     Earth-centric, Earth-Fixed (ECEF) frame
@@ -1498,7 +1515,10 @@ def lunar_approximate(MJD, **kwargs):
 
 
 # PURPOSE: compute coordinates of the moon in an ECEF frame
-def lunar_ephemerides(MJD: np.ndarray, **kwargs):
+def lunar_ephemerides(
+    MJD: np.ndarray,
+    **kwargs,
+):
     """
     Computes positional coordinates of the moon in an Earth-centric,
     Earth-Fixed (ECEF) frame using JPL ephemerides
@@ -2071,7 +2091,10 @@ def gast(T: float | np.ndarray):
     return np.mod(ts.st + eqeq / 24.0, 1.0)
 
 
-def itrs(T: float | np.ndarray, include_polar_motion: bool = True):
+def itrs(
+    T: float | np.ndarray,
+    include_polar_motion: bool = True,
+):
     """
     International Terrestrial Reference System (ITRS)
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
@@ -2210,7 +2233,8 @@ def _eqeq_complement(T: float | np.ndarray):
 
 
 def _icrs_rotation_matrix(
-    T: float | np.ndarray, include_polar_motion: bool = True
+    T: float | np.ndarray,
+    include_polar_motion: bool = True,
 ):
     """
     Rotation matrix for transforming from the
@@ -2467,7 +2491,10 @@ def _precession_matrix(T: float | np.ndarray):
     return P
 
 
-def _correct_aberration(position, velocity):
+def _correct_aberration(
+    position: np.ndarray,
+    velocity: np.ndarray,
+):
     """
     Correct a relative position for aberration effects
     :cite:p:`Kaplan:1989cf`

@@ -18,13 +18,13 @@ import pyTMD.constituents
 import pyTMD.ellipse
 import pyTMD.interpolate
 import pyTMD.math
-import pyTMD.predict
 import pyTMD.spatial
 import pyTMD.tools
 import pyTMD.utilities
 import pyTMD.version
 from pyTMD import datasets
 from pyTMD import io
+from pyTMD import predict
 from pyTMD import solve
 
 # get version information

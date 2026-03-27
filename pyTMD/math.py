@@ -43,14 +43,14 @@ __all__ = [
     "scalar_product",
     "aliasing",
     "legendre",
-    "sph_harm",
     "_assoc_legendre",
+    "_condon_shortley",
+    "_legendre_norm",
+    "sph_harm",
 ]
 
 
-def asec2rad(
-    x: float | np.ndarray,
-):
+def asec2rad(x: float | np.ndarray):
     """
     Convert angles from arcseconds to radians
 
@@ -62,9 +62,7 @@ def asec2rad(
     return np.radians(x / 3600.0)
 
 
-def masec2rad(
-    x: float | np.ndarray,
-):
+def masec2rad(x: float | np.ndarray):
     """
     Convert angles from microarcseconds to radians
 
@@ -76,9 +74,7 @@ def masec2rad(
     return np.radians(x / 3.6e9)
 
 
-def rad2asec(
-    x: float | np.ndarray,
-):
+def rad2asec(x: float | np.ndarray):
     """
     Convert angles from radians to arcseconds
 
@@ -90,9 +86,7 @@ def rad2asec(
     return 3600.0 * np.degrees(x)
 
 
-def rad2masec(
-    x: float | np.ndarray,
-):
+def rad2masec(x: float | np.ndarray):
     """
     Convert angles from radians to microarcseconds
 
@@ -105,7 +99,10 @@ def rad2masec(
 
 
 # PURPOSE: calculate the sum of a polynomial function of time
-def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
+def polynomial_sum(
+    coefficients: list | np.ndarray,
+    t: np.ndarray,
+):
     """
     Calculates the sum of a polynomial function using Horner's method
     :cite:p:`Horner:1819br`
@@ -122,7 +119,10 @@ def polynomial_sum(coefficients: list | np.ndarray, t: np.ndarray):
     return np.sum([c * (t**i) for i, c in enumerate(coefficients)], axis=0)
 
 
-def normalize_angle(theta: float | np.ndarray, circle: float = 360.0):
+def normalize_angle(
+    theta: float | np.ndarray,
+    circle: float = 360.0,
+):
     """
     Normalize an angle to a single rotation
 
@@ -156,7 +156,10 @@ def radius(
     return np.sqrt(x**2 + y**2 + z**2)
 
 
-def rotate(theta: float | np.ndarray, axis: str = "x"):
+def rotate(
+    theta: float | np.ndarray,
+    axis: str = "x",
+):
     """
     Rotate a 3-dimensional matrix about a given axis
 
@@ -225,7 +228,10 @@ def scalar_product(
     return x * u + y * v + z * w
 
 
-def aliasing(f: float, fs: float) -> float:
+def aliasing(
+    f: float,
+    fs: float,
+) -> float:
     """
     Calculate the aliasing frequency of a signal
 
@@ -249,6 +255,7 @@ def legendre(
     l: int,
     x: np.ndarray,
     m: int = 0,
+    norm: float = 1.0,
 ):
     r"""
     Computes associated Legendre functions and their first-derivatives
@@ -266,6 +273,8 @@ def legendre(
         is the colatitude
     m: int, default 0
         Order of the Legendre polynomials (:math:`0` to :math:`l`)
+    norm: float, default 1.0
+        Normalization to apply to outputs
 
     Returns
     -------
@@ -298,7 +307,7 @@ def legendre(
     dPlm = np.where(np.isclose(u, 0.0), pole, dPlm)
     # return the associated legendre functions
     # and their first derivatives with respect to theta
-    return Plm, dPlm
+    return norm * Plm, norm * dPlm
 
 
 def _assoc_legendre(
@@ -354,9 +363,37 @@ def _assoc_legendre(
     # calculate for degree l and order m
     Plm = P * np.power(2.0, -l) * np.power(u, m)
     # apply Condon-Shortley phase
-    Plm *= np.power(-1.0, m)
+    Plm *= _condon_shortley(m)
     # return the associated legendre polynomials
     return Plm
+
+
+def _condon_shortley(m: int):
+    """
+    Computes the Condon-Shortley phase
+
+    Parameters
+    ----------
+    m: int
+        Order of the Legendre polynomials
+    """
+    return np.power(-1.0, m)
+
+
+def _legendre_norm(l: int, m: int):
+    """
+    Calculates the Legendre Polynomial normalization from
+    :cite:t:`Munk:1966go`
+
+    Parameters
+    ----------
+    l: int
+        Degree of the Legendre polynomials
+    m: int
+        Order of the Legendre polynomials (:math:`0` to :math:`l`)
+    """
+    # normalization from Munk and Cartwright (1966) equation A5
+    return np.sqrt(factorial(l - m) / factorial(l + m))
 
 
 def sph_harm(
@@ -391,13 +428,13 @@ def sph_harm(
         First derivative of spherical harmonics with respect to
         :math:`\theta`
     """
-    # calculate associated Legendre functions and derivatives
-    Plm, dPlm = legendre(l, np.cos(theta), m=m)
     # normalization from Munk and Cartwright (1966) equation A5
-    norm = np.sqrt(factorial(l - m) / factorial(l + m))
+    norm = _legendre_norm(l, m)
+    # calculate associated Legendre functions and derivatives
+    Plm, dPlm = legendre(l, np.cos(theta), m=m, norm=norm)
     # normalized spherical harmonics of degree l and order m
     dfactor = np.sqrt((2.0 * l + 1.0) / (4.0 * np.pi))
-    Ylm = dfactor * norm * Plm * np.exp(1j * m * phi + 1j * phase)
-    dYlm = dfactor * norm * dPlm * np.exp(1j * m * phi + 1j * phase)
+    Ylm = dfactor * Plm * np.exp(1j * m * phi + 1j * phase)
+    dYlm = dfactor * dPlm * np.exp(1j * m * phi + 1j * phase)
     # return values
     return Ylm, dYlm

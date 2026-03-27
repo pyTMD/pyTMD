@@ -134,7 +134,10 @@ def from_xml(url, **kwargs):
         return df
 
 
-def active_stations(api: str = "activestations", **kwargs):
+def active_stations(
+    api: str = "activestations",
+    **kwargs,
+):
     """
     Retrieve a list of active tide stations
 
@@ -169,7 +172,9 @@ def active_stations(api: str = "activestations", **kwargs):
 
 
 def prediction_stations(
-    api: str = "tidepredictionstations", active_only: bool = True, **kwargs
+    api: str = "tidepredictionstations",
+    active_only: bool = True,
+    **kwargs,
 ):
     """
     Retrieve a list of tide prediction stations
@@ -207,7 +212,10 @@ def prediction_stations(
     return df
 
 
-def harmonic_constituents(api: str = "harmonicconstituents", **kwargs):
+def harmonic_constituents(
+    api: str = "harmonicconstituents",
+    **kwargs,
+):
     """
     Retrieve a list of harmonic constituents for a specified station
 
@@ -238,7 +246,10 @@ def harmonic_constituents(api: str = "harmonicconstituents", **kwargs):
     return df
 
 
-def water_level(api: str = "waterlevelrawsixmin", **kwargs):
+def water_level(
+    api: str = "waterlevelrawsixmin",
+    **kwargs,
+):
     """
     Retrieve water level data for a specified station and date range
 

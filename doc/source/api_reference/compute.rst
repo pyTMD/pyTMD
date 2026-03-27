@@ -51,3 +51,6 @@ compute
 .. autofunction:: pyTMD.compute._catalog_SET
 
 .. autofunction:: pyTMD.compute.TG_forces
+
+.. autofunction:: pyTMD.compute.GT_accelerations
+

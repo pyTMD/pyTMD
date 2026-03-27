@@ -266,7 +266,9 @@ def open_dataset(
 
 # PURPOSE: read a list of model files
 def open_mfdataset(
-    model_files: list[str] | list[pathlib.Path], group: str = "z", **kwargs
+    model_files: list[str] | list[pathlib.Path],
+    group: str = "z",
+    **kwargs,
 ):
     """
     Open multiple OTIS model files
@@ -926,7 +928,9 @@ def open_otis_transport(
 
 # PURPOSE: read ATLAS-compressed grid files
 def open_atlas_grid(
-    input_file: str | pathlib.Path, use_mmap: bool = False, **kwargs
+    input_file: str | pathlib.Path,
+    use_mmap: bool = False,
+    **kwargs,
 ):
     """
     Open ATLAS-compressed model grid files
@@ -1191,7 +1195,9 @@ def open_atlas_grid(
 
 # PURPOSE: read ATLAS-compressed elevation files
 def open_atlas_elevation(
-    input_file: str | pathlib.Path, use_mmap: bool = False, **kwargs
+    input_file: str | pathlib.Path,
+    use_mmap: bool = False,
+    **kwargs,
 ):
     """
     Open ATLAS-compressed tidal elevation files
@@ -1429,7 +1435,9 @@ def open_atlas_elevation(
 
 # PURPOSE: read ATLAS-compressed transport files
 def open_atlas_transport(
-    input_file: str | pathlib.Path, use_mmap: bool = False, **kwargs
+    input_file: str | pathlib.Path,
+    use_mmap: bool = False,
+    **kwargs,
 ):
     """
     Open ATLAS-compressed tidal transport files
@@ -2169,7 +2177,9 @@ class CompactDataset:
         return ds
 
     def combine_local(
-        self, dtree: xr.DataTree, chunks: int | dict | str | None = None
+        self,
+        dtree: xr.DataTree,
+        chunks: int | dict | str | None = None,
     ):
         """Combine ATLAS model solutions into a single xarray Dataset
 
