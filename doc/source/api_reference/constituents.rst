@@ -37,6 +37,10 @@ constituents
 
 .. autofunction:: pyTMD.constituents._complex_love_numbers
 
+.. autofunction:: pyTMD.constituents._degree_love_numbers
+
+.. autofunction:: pyTMD.constituents._melchior_table_52
+
 .. autofunction:: pyTMD.constituents._parse_tide_potential_table
 
 .. autofunction:: pyTMD.constituents._parse_rotation_rate_table
