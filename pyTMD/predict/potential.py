@@ -15,9 +15,12 @@ PYTHON DEPENDENCIES:
 
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
+    constituents.py: calculates constituent parameters and nodal arguments
     math.py: Special functions of mathematical physics
+    spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
 """
 
@@ -26,6 +29,7 @@ from __future__ import annotations
 import numpy as np
 import xarray as xr
 import pyTMD.astro
+import pyTMD.constituents
 import pyTMD.math
 import pyTMD.spatial
 
@@ -197,10 +201,6 @@ def gravity_tide(
         Degree-3 Love number of vertical displacement
     k3: float, default 0.093
         Degree-3 Love number of gravitational potential
-    h4: float, default 0.18
-        Degree-4 Love number of vertical displacement
-    k4: float, default 0.0
-        Degree-4 Love number of gravitational potential
     GM: float, default 3.986004418e14
         Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
     mass_ratio_solar: float, default 332946.0482
@@ -216,13 +216,11 @@ def gravity_tide(
     # set default keyword arguments
     # maximum degree of spherical harmonic expansion
     kwargs.setdefault("lmax", 3)
-    # nominal Love numbers for degrees 2 through 4
+    # nominal Love numbers for degrees 2 and 3
     kwargs.setdefault("h2", 0.6078)
     kwargs.setdefault("k2", 0.30102)
     kwargs.setdefault("h3", 0.292)
     kwargs.setdefault("k3", 0.093)
-    kwargs.setdefault("h4", 0.18)
-    kwargs.setdefault("k4", 0.0)
     # Earth parameters
     kwargs.setdefault("flat", _iers.flat)
     kwargs.setdefault("J2", _iers.J2)
@@ -274,9 +272,11 @@ def gravity_tide(
     # compute estimated gravity tides
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
+        # extract the body tide love numbers for degree
+        hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
         # get the degree-dependent Love numbers for the gravity tide
-        hl = kwargs.get(f"h{l}", 0)
-        kl = kwargs.get(f"k{l}", 0)
+        hl = kwargs.get(f"h{l}", hb)
+        kl = kwargs.get(f"k{l}", kb)
         # gravimetric factor from Farrell
         gl = 1.0 + 2.0 * hl / l - (l + 1.0) * kl / l
         # include latitudinal dependence for degree 2

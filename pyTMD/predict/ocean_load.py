@@ -23,6 +23,7 @@ PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
     interpolate.py: interpolation routines for spatial data
+    math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
     Updated 03/2026: simplify structure by splitting up IERS corrections
@@ -109,8 +110,8 @@ import numpy as np
 import xarray as xr
 import pyTMD.astro
 import pyTMD.constituents
-import pyTMD.math
 import pyTMD.interpolate
+import pyTMD.math
 
 __all__ = [
     "time_series",

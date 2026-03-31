@@ -16,10 +16,11 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
-    interpolate.py: interpolation routines for spatial data
+    math.py: Special functions of mathematical physics
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
 """
 
@@ -125,10 +126,6 @@ def body_tide(
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
         Degree-3 Love (Shida) number of horizontal displacement
-    h4: float, default 0.18
-        Degree-4 Love number of vertical displacement
-    l4: float, default 0.014
-        Degree-4 Love (Shida) number of horizontal displacement
 
     Returns
     -------
@@ -140,13 +137,11 @@ def body_tide(
     kwargs.setdefault("lmax", 6)
     # include contributions from planets
     kwargs.setdefault("include_planets", False)
-    # nominal Love and Shida numbers for degrees 2, 3, and 4
+    # nominal Love and Shida numbers for degrees 2 and 3
     kwargs.setdefault("h2", None)
     kwargs.setdefault("l2", None)
     kwargs.setdefault("h3", 0.291)
     kwargs.setdefault("l3", 0.015)
-    kwargs.setdefault("h4", 0.18)
-    kwargs.setdefault("l4", 0.014)
     # check if user has provided degree-2 Love numbers
     user_degree_2 = (kwargs["h2"] is not None) and (kwargs["l2"] is not None)
     # validate method and output tide system
@@ -301,9 +296,11 @@ def body_tide(
             hl -= 0.0006 * (1.0 - 1.5 * np.sin(th) ** 2)
             ll += 0.0002 * (1.0 - 1.5 * np.sin(th) ** 2)
         else:
+            # extract the body tide love numbers for degree
+            hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
             # use nominal Love numbers for all other degrees
-            hl = np.complex128(kwargs.get(f"h{l}", 0))
-            ll = np.complex128(kwargs.get(f"l{l}", 0))
+            hl = np.complex128(kwargs.get(f"h{l}", hb))
+            ll = np.complex128(kwargs.get(f"l{l}", lb))
         # convert potentials for constituent and add to the total
         # (latitudinal, longitudinal and radial components)
         zeta["N"] += line["Hs1"] * (ll.real * dS.real - ll.imag * dS.imag)
@@ -362,10 +359,6 @@ def solid_earth_tide(
         Degree-3 Love number of vertical displacement
     l3: float, default 0.015
         Degree-3 Love (Shida) number of horizontal displacement
-    h4: float, default 0.18
-        Degree-4 Love number of vertical displacement
-    l4: float, default 0.014
-        Degree-4 Love (Shida) number of horizontal displacement
     mass_ratio_solar: float, default 332946.0482
         Mass ratio between the Earth and the Sun
     mass_ratio_lunar: float, default 0.0123000371
@@ -379,13 +372,11 @@ def solid_earth_tide(
     # set default keyword arguments
     # maximum degree of spherical harmonic expansion
     kwargs.setdefault("lmax", 3)
-    # nominal Love and Shida numbers for degrees 2 through 4
+    # nominal Love and Shida numbers for degrees 2 and 3
     kwargs.setdefault("h2", 0.6078)
     kwargs.setdefault("l2", 0.0847)
     kwargs.setdefault("h3", 0.292)
     kwargs.setdefault("l3", 0.015)
-    kwargs.setdefault("h4", 0.18)
-    kwargs.setdefault("l4", 0.014)
     # mass ratios between earth and sun/moon
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
@@ -427,9 +418,11 @@ def solid_earth_tide(
     # from the tide-generating potentials
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
+        # extract the body tide love numbers for degree
+        hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
         # get the degree-dependent Love numbers
-        hl = kwargs.get(f"h{l}", 0)
-        ll = kwargs.get(f"l{l}", 0)
+        hl = kwargs.get(f"h{l}", hb)
+        ll = kwargs.get(f"l{l}", lb)
         # include latitudinal dependence for degree 2
         # from equations 5 and 6 of Mathews et al., (1997)
         if l == 2:
