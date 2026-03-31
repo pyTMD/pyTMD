@@ -15,7 +15,9 @@ PYTHON DEPENDENCIES:
 
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
+    constituents.py: calculates constituent parameters and nodal arguments
     math.py: Special functions of mathematical physics
+    spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
     Updated 03/2026: use table of body tide love numbers for degrees 4+
@@ -27,6 +29,7 @@ from __future__ import annotations
 import numpy as np
 import xarray as xr
 import pyTMD.astro
+import pyTMD.constituents
 import pyTMD.math
 import pyTMD.spatial
 

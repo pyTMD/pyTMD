@@ -142,3 +142,35 @@ def test_love_number_ratios(model):
         assert np.isclose(h2/ho1, v[0], atol=25e-4)
         assert np.isclose(k2/ko1, v[1], atol=25e-4)
         assert np.isclose(l2/lo1, v[2], atol=25e-4)
+
+@pytest.mark.parametrize("model", ['Longman', 'Kaula', 'Takeuchi'])
+def test_degree_love_numbers(model):
+    # expected values for each model
+    exp = {'Longman': {}, 'Kaula': {}, 'Takeuchi': {}}
+    # expected values (Longman)
+    exp['Longman'][0] = (0.0, 0.0, 0.0)
+    exp['Longman'][2] = (0.612, 0.302, 0.083)
+    exp['Longman'][3] = (0.290, 0.093, 0.014)
+    exp['Longman'][16] = (0.060, 0.003, 0.001)
+    exp['Longman'][17] = (0.058, 0.003, 0.001)
+    exp['Longman'][26] = (0.0, 0.0, 0.0)
+    # expected values (Kaula)
+    exp['Kaula'][0] = (0.0, 0.0, 0.0)
+    exp['Kaula'][2] = (0.624, 0.317, 0.085)
+    exp['Kaula'][3] = (0.293, 0.095, 0.014)
+    exp['Kaula'][16] = (0.060, 0.003, 0.001)
+    exp['Kaula'][17] = (0.0, 0.0, 0.0)
+    # expected values (Takeuchi)
+    exp['Takeuchi'][0] = (0.0, 0.0, 0.0)
+    exp['Takeuchi'][2] = (0.592, 0.280, 0.076)
+    exp['Takeuchi'][3] = (0.274, 0.083, 0.010)
+    exp['Takeuchi'][16] = (0.048, 0.002, 0.001)
+    exp['Takeuchi'][17] = (0.0, 0.0, 0.0)
+    # for each spherical harmonic degree
+    for l, v in exp[model].items():
+        # extract love numbers from tables
+        hl, kl, ll = pyTMD.constituents._degree_love_numbers(l, model=model)
+        # check Love numbers
+        assert np.isclose(hl, v[0])
+        assert np.isclose(kl, v[1])
+        assert np.isclose(ll, v[2])

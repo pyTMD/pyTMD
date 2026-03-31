@@ -16,7 +16,7 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
-    interpolate.py: interpolation routines for spatial data
+    math.py: Special functions of mathematical physics
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:

@@ -2512,7 +2512,7 @@ def _degree_love_numbers(
     ----------
     l: int
         Degree of the spherical harmonics
-    model: str, Defeault "Longman"
+    model: str, default "Longman"
         Earth model
 
         - ``'Longman'``: :cite:t:`Longman:1959hw`
@@ -2531,17 +2531,20 @@ def _degree_love_numbers(
     # get the table of body tide love numbers
     table = _melchior_table_52(model)
     # provide zero values for degrees not provided in the table
-    if l > table[-1, 0]:
+    lmin, lmax = np.array([table[0, 0], table[-1, 0]], dtype="i")
+    if (l < lmin) | (l > lmax):
         return (0.0, 0.0, 0.0)
     # column 1: Spherical harmonic degree
-    n = table[l - 2, 0]
-    assert n == l, f"Mismatched row for degree {l}"
+    n = table[l - lmin, 0]
+    # verify that the rows match
+    if n != l:
+        raise ValueError(f"Mismatched row for degree {l}")
     # column 2: Love number of vertical displacement
-    hl = table[l - 2, 1]
+    hl = table[l - lmin, 1]
     # column 3: Love number of gravitational potential
-    kl = table[l - 2, 2]
+    kl = table[l - lmin, 2]
     # column 4: Shida number of horizontal displacement
-    ll = table[l - 2, 3]
+    ll = table[l - lmin, 3]
     # return the Love numbers for degree l
     return (hl, kl, ll)
 
@@ -2560,85 +2563,87 @@ def _melchior_table_52(model: str):
         - ``'Kaula'``: :cite:t:`Kaula:1966un`
         - ``'Takeuchi'``: :cite:t:`Takeuchi:1950hi`
     """
-    # verify outputs from model are available
-    assert model in ("Longman", "Kaula", "Takeuchi")
     # table 5.2 from Melchior (1983)
     # column 1: Spherical harmonic degree
     # column 2: Love number of vertical displacement
     # column 3: Love number of gravitational potential
     # column 4: Shida number of horizontal displacement
-    table_52 = {}
-    # values from Longman (1959)
-    table_52["Longman"] = np.array(
-        [
-            [2, 0.612, 0.302, 0.083],
-            [3, 0.290, 0.093, 0.014],
-            [4, 0.175, 0.042, 0.010],
-            [5, 0.129, 0.025, 0.008],
-            [6, 0.107, 0.017, 0.007],
-            [7, 0.095, 0.013, 0.005],
-            [8, 0.087, 0.010, 0.004],
-            [9, 0.081, 0.008, 0.004],
-            [10, 0.076, 0.007, 0.003],
-            [11, 0.072, 0.006, 0.002],
-            [12, 0.069, 0.005, 0.002],
-            [13, 0.066, 0.005, 0.002],
-            [14, 0.064, 0.004, 0.001],
-            [15, 0.062, 0.004, 0.001],
-            [16, 0.060, 0.003, 0.001],
-            [17, 0.058, 0.003, 0.001],
-            [18, 0.056, 0.003, 0.001],
-            [19, 0.055, 0.003, 0.001],
-            [20, 0.053, 0.002, 0.001],
-            [21, 0.052, 0.002, 0.001],
-            [22, 0.051, 0.002, 0.000],
-            [23, 0.050, 0.002, 0.000],
-            [24, 0.048, 0.002, 0.000],
-            [25, 0.047, 0.002, 0.000],
-        ]
-    )
-    # values from Kaula (1966)
-    table_52["Kaula"] = np.array(
-        [
-            [2, 0.624, 0.317, 0.085],
-            [3, 0.293, 0.095, 0.014],
-            [4, 0.177, 0.042, 0.010],
-            [5, 0.130, 0.025, 0.008],
-            [6, 0.107, 0.017, 0.007],
-            [7, 0.095, 0.013, 0.005],
-            [8, 0.087, 0.010, 0.004],
-            [9, 0.081, 0.008, 0.004],
-            [10, 0.076, 0.007, 0.003],
-            [11, 0.072, 0.006, 0.002],
-            [12, 0.069, 0.005, 0.002],
-            [13, 0.066, 0.005, 0.002],
-            [14, 0.064, 0.004, 0.001],
-            [15, 0.062, 0.004, 0.001],
-            [16, 0.060, 0.003, 0.001],
-        ]
-    )
-    # values from Takeuchi (1950)
-    table_52["Takeuchi"] = np.array(
-        [
-            [2, 0.592, 0.280, 0.076],
-            [3, 0.274, 0.083, 0.010],
-            [4, 0.161, 0.035, 0.007],
-            [5, 0.116, 0.020, 0.006],
-            [6, 0.094, 0.013, 0.005],
-            [7, 0.081, 0.009, 0.004],
-            [8, 0.073, 0.007, 0.003],
-            [9, 0.068, 0.006, 0.0025],
-            [10, 0.063, 0.005, 0.002],
-            [11, 0.059, 0.004, 0.002],
-            [12, 0.055, 0.003, 0.002],
-            [13, 0.053, 0.003, 0.0015],
-            [14, 0.051, 0.003, 0.001],
-            [15, 0.0495, 0.0025, 0.001],
-            [16, 0.048, 0.002, 0.001],
-        ]
-    )
+    if model == "Longman":
+        # values from Longman (1959)
+        table_52 = np.array(
+            [
+                [2, 0.612, 0.302, 0.083],
+                [3, 0.290, 0.093, 0.014],
+                [4, 0.175, 0.042, 0.010],
+                [5, 0.129, 0.025, 0.008],
+                [6, 0.107, 0.017, 0.007],
+                [7, 0.095, 0.013, 0.005],
+                [8, 0.087, 0.010, 0.004],
+                [9, 0.081, 0.008, 0.004],
+                [10, 0.076, 0.007, 0.003],
+                [11, 0.072, 0.006, 0.002],
+                [12, 0.069, 0.005, 0.002],
+                [13, 0.066, 0.005, 0.002],
+                [14, 0.064, 0.004, 0.001],
+                [15, 0.062, 0.004, 0.001],
+                [16, 0.060, 0.003, 0.001],
+                [17, 0.058, 0.003, 0.001],
+                [18, 0.056, 0.003, 0.001],
+                [19, 0.055, 0.003, 0.001],
+                [20, 0.053, 0.002, 0.001],
+                [21, 0.052, 0.002, 0.001],
+                [22, 0.051, 0.002, 0.000],
+                [23, 0.050, 0.002, 0.000],
+                [24, 0.048, 0.002, 0.000],
+                [25, 0.047, 0.002, 0.000],
+            ]
+        )
+    elif model == "Kaula":
+        # values from Kaula (1966)
+        table_52 = np.array(
+            [
+                [2, 0.624, 0.317, 0.085],
+                [3, 0.293, 0.095, 0.014],
+                [4, 0.177, 0.042, 0.010],
+                [5, 0.130, 0.025, 0.008],
+                [6, 0.107, 0.017, 0.007],
+                [7, 0.095, 0.013, 0.005],
+                [8, 0.087, 0.010, 0.004],
+                [9, 0.081, 0.008, 0.004],
+                [10, 0.076, 0.007, 0.003],
+                [11, 0.072, 0.006, 0.002],
+                [12, 0.069, 0.005, 0.002],
+                [13, 0.066, 0.005, 0.002],
+                [14, 0.064, 0.004, 0.001],
+                [15, 0.062, 0.004, 0.001],
+                [16, 0.060, 0.003, 0.001],
+            ]
+        )
+    elif model == "Takeuchi":
+        # values from Takeuchi (1950)
+        table_52 = np.array(
+            [
+                [2, 0.592, 0.280, 0.076],
+                [3, 0.274, 0.083, 0.010],
+                [4, 0.161, 0.035, 0.007],
+                [5, 0.116, 0.020, 0.006],
+                [6, 0.094, 0.013, 0.005],
+                [7, 0.081, 0.009, 0.004],
+                [8, 0.073, 0.007, 0.003],
+                [9, 0.068, 0.006, 0.0025],
+                [10, 0.063, 0.005, 0.002],
+                [11, 0.059, 0.004, 0.002],
+                [12, 0.055, 0.003, 0.002],
+                [13, 0.053, 0.003, 0.0015],
+                [14, 0.051, 0.003, 0.001],
+                [15, 0.0495, 0.0025, 0.001],
+                [16, 0.048, 0.002, 0.001],
+            ]
+        )
+    else:
+        raise ValueError(f"Unknown Earth model: {model}")
     # return the table of love numbers
-    return table_52[model]
+    return table_52
 
 
 # Doodson (1921) table with values missing from Cartwright tables
