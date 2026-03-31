@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 model.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 03/2026: add support for FES-native netCDF4 files
     Updated 02/2026: add HTML representation for model objects using xarray
         set tidal constituent units (if unset) in a loop
         check if units are compatible with known types before setting units
@@ -535,7 +536,7 @@ class model:
         # extract all known FES-ascii or FES-netcdf models
         model_list = []
         for model, val in parameters.items():
-            if val["format"] in ("FES-ascii", "FES-netcdf"):
+            if val["format"] in ("FES-ascii", "FES-netcdf", "FES-native"):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -857,7 +858,7 @@ class model:
             ds = GOT.open_mfdataset(
                 model_file, format=self.file_format, **kwargs
             )
-        elif self.format in ("FES-ascii", "FES-netcdf"):
+        elif self.format in ("FES-ascii", "FES-netcdf", "FES-native"):
             # open FES ASCII/netCDF4 files as xarray Dataset
             ds = FES.open_mfdataset(
                 model_file, format=self.file_format, **kwargs

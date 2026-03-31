@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_aviso_fes.py
-Written by Tyler Sutterley (10/2025)
+Written by Tyler Sutterley (03/2026)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -24,6 +24,7 @@ COMMAND LINE OPTIONS:
         FES2012
         FES2014
         FES2022
+        FES2022_native
     --load: download load tide model outputs
         (FES2014)
     --currents: download tide model current outputs
@@ -42,6 +43,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 03/2026: added option to download FES2022_native
     Updated 12/2025: simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
         remove printing to log file
@@ -152,21 +154,23 @@ def fetch_aviso_fes(
             load=load,
             currents=currents,
             extrapolated=extrapolated,
-            GZIP=compressed,
-            MODE=mode,
+            compressed=compressed,
+            mode=mode,
         )
-    elif model in ("FES2022",):
+    elif model in ("FES2022", "FES2022_native"):
         _fes_list(
             model,
             f,
             logger,
-            DIRECTORY=directory,
-            LOAD=load,
-            CURRENTS=currents,
-            EXTRAPOLATED=extrapolated,
-            GZIP=compressed,
-            MODE=mode,
+            directory=directory,
+            load=load,
+            currents=currents,
+            extrapolated=extrapolated,
+            compressed=compressed,
+            mode=mode,
         )
+    else:
+        raise ValueError(f"Unknown FES tide model: {model}")
 
     # close the ftp connection
     f.quit()
@@ -175,15 +179,15 @@ def fetch_aviso_fes(
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading tar files and extracting contents
 def _fes_tar(
-    MODEL,
-    f,
-    logger,
-    DIRECTORY: str | pathlib.Path | None = _default_directory,
-    LOAD: bool = False,
-    CURRENTS: bool = False,
-    EXTRAPOLATED: bool = False,
-    GZIP: bool = False,
-    MODE: oct = 0o775,
+    model: str,
+    f: ftplib.FTP,
+    logger: logging.Logger,
+    directory: str | pathlib.Path | None = _default_directory,
+    load: bool = False,
+    currents: bool = False,
+    extrapolated: bool = False,
+    compressed: bool = False,
+    mode: oct = 0o775,
 ):
     """
     Download tar-compressed AVISO FES tide models from the AVISO FTP server
@@ -196,23 +200,23 @@ def _fes_tar(
         Active ftp connection to AVISO server
     logger: logging.logger object
         Logger for outputting file transfer information
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    LOAD: bool, default False
+    load: bool, default False
         Download load tide model outputs
-    CURRENTS: bool, default False
+    currents: bool, default False
         Download tide model current outputs
-    EXTRAPOLATED: bool, default False
+    extrapolated: bool, default False
         Download extrapolated tide model outputs
-    GZIP: bool, default False
+    compressed: bool, default False
         Compress output ASCII and netCDF4 tide files
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
     # check if local directory exists and recursively create if not
-    localpath = pyTMD.utilities.Path(DIRECTORY).joinpath(MODEL.lower())
-    localpath.mkdir(MODE, parents=True, exist_ok=True)
+    localpath = pyTMD.utilities.Path(directory).joinpath(model.lower())
+    localpath.mkdir(mode=mode, parents=True, exist_ok=True)
 
     # path to remote directory for FES
     FES = {}
@@ -241,7 +245,7 @@ def _fes_tar(
     TAR["FES2012"].extend([None, "r:xz"])
     FLATTEN["FES2012"] = []
     FLATTEN["FES2012"].extend([None, True])
-    if CURRENTS:
+    if currents:
         subdir = "fes2012_currents"
         FES["FES2012"].append([subdir, "readme_fes2012_currents_v1.1"])
         FES["FES2012"].append([subdir, "fes2012_currents_v1.1_block1.tar.lzma"])
@@ -269,7 +273,7 @@ def _fes_tar(
     TAR["FES2014"].extend([None, "r"])
     FLATTEN["FES2014"] = []
     FLATTEN["FES2014"].extend([None, False])
-    if LOAD:
+    if load:
         FES["FES2014"].append(
             [
                 "fes2014_elevations_and_load",
@@ -279,7 +283,7 @@ def _fes_tar(
         )
         TAR["FES2014"].extend(["r"])
         FLATTEN["FES2014"].extend([False])
-    if EXTRAPOLATED:
+    if extrapolated:
         FES["FES2014"].append(
             [
                 "fes2014_elevations_and_load",
@@ -289,7 +293,7 @@ def _fes_tar(
         )
         TAR["FES2014"].extend(["r"])
         FLATTEN["FES2014"].extend([False])
-    if CURRENTS:
+    if currents:
         subdir = "fes2014a_currents"
         FES["FES2014"].append([subdir, "readme_fes2014_currents_v1.2.txt"])
         FES["FES2014"].append([subdir, "eastward_velocity.tar.xz"])
@@ -299,7 +303,7 @@ def _fes_tar(
 
     # for each file for a model
     for remotepath, tarmode, flatten in zip(
-        FES[MODEL], TAR[MODEL], FLATTEN[MODEL]
+        FES[model], TAR[model], FLATTEN[model]
     ):
         # download file from ftp and decompress tar files
         _ftp_download(
@@ -307,25 +311,25 @@ def _fes_tar(
             f,
             remotepath,
             localpath,
-            TARMODE=tarmode,
-            FLATTEN=flatten,
-            GZIP=GZIP,
-            MODE=MODE,
+            decompress=tarmode,
+            flatten=flatten,
+            compressed=compressed,
+            mode=mode,
         )
 
 
 # PURPOSE: download local AVISO FES files with ftp server
 # by downloading individual files
 def _fes_list(
-    MODEL,
-    f,
-    logger,
-    DIRECTORY: str | pathlib.Path | None = _default_directory,
-    LOAD: bool = False,
-    CURRENTS: bool = False,
-    EXTRAPOLATED: bool = False,
-    GZIP: bool = False,
-    MODE: oct = 0o775,
+    model: str,
+    f: ftplib.FTP,
+    logger: logging.Logger,
+    directory: str | pathlib.Path | None = _default_directory,
+    load: bool = False,
+    currents: bool = False,
+    extrapolated: bool = False,
+    compressed: bool = False,
+    mode: oct = 0o775,
 ):
     """
     Download AVISO FES2022 tide model files from the AVISO FTP server
@@ -338,53 +342,57 @@ def _fes_list(
         Active ftp connection to AVISO server
     logger: logging.logger object
         Logger for outputting file transfer information
-    DIRECTORY: str or pathlib.Path
+    directory: str or pathlib.Path
         Working data directory
-    LOAD: bool, default False
+    load: bool, default False
         Download load tide model outputs
-    CURRENTS: bool, default False
+    currents: bool, default False
         Download tide model current outputs
-    EXTRAPOLATED: bool, default False
+    extrapolated: bool, default False
         Download extrapolated tide model outputs
-    GZIP: bool, default False
+    compressed: bool, default False
         Compress output ASCII and netCDF4 tide files
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
     # validate local directory
-    DIRECTORY = pyTMD.utilities.Path(DIRECTORY).resolve()
+    directory = pyTMD.utilities.Path(directory).resolve()
 
     # path to remote directory for FES
     FES = {}
     # 2022 model
     FES["FES2022"] = []
+    FES["FES2022_native"] = []
     # updated directory for ocean tide model
     # latest version fixes the valid_max attribute for longitudes
     FES["FES2022"].append(["fes2022b", "ocean_tide_20241025"])
-    if LOAD:
+    FES["FES2022_native"].append(["fes2022b", "ocean_tide_non_structured"])
+    if load:
         FES["FES2022"].append(["fes2022b", "load_tide"])
-    if CURRENTS:
+    if currents:
         logger.warning("FES2022 does not presently have current outputs")
-    if EXTRAPOLATED:
+    if extrapolated:
         FES["FES2022"].append(["fes2022b", "ocean_tide_extrapolated"])
 
     # for each model file type
-    for subdir in FES[MODEL]:
-        local_dir = DIRECTORY.joinpath(*subdir)
+    for subdir in FES[model]:
+        local_dir = directory.joinpath(*subdir)
         file_list = _ftp_list(f, subdir, basename=True, sort=True)
         for fi in file_list:
             remote_path = [*subdir, fi]
-            LZMA = fi.endswith(".xz")
+            # decompress file if lzma format
+            decompress = "lzma" if fi.endswith(".xz") else None
+            # download file
             _ftp_download(
                 logger,
                 f,
                 remote_path,
                 local_dir,
-                LZMA=LZMA,
-                GZIP=GZIP,
-                CHUNK=32768,
-                MODE=MODE,
+                compressed=compressed,
+                decompress=decompress,
+                chunk=32768,
+                mode=mode,
             )
 
 
@@ -425,21 +433,20 @@ def _ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
     return output
 
 
-# PURPOSE: pull file from a remote ftp server and decompress if tar file
+# PURPOSE: pull file from a remote ftp server and potentially decompress
 def _ftp_download(
     logger,
     f,
     remote_path,
     local_dir,
-    LZMA=None,
-    TARMODE=None,
-    FLATTEN=None,
-    GZIP=False,
-    CHUNK=8192,
-    MODE=0o775,
+    compressed=False,
+    decompress=None,
+    flatten=None,
+    chunk=8192,
+    mode=0o775,
 ):
     """
-    Pull file from a remote ftp server and decompress if tar file
+    Pull file from a remote ftp server and decompress if tar or lzma file
 
     Parameters
     ----------
@@ -451,65 +458,31 @@ def _ftp_download(
         Remote path components to file on ftp server
     local_dir: str or pathlib.Path
         Local directory to save file
-    LZMA: bool, default None
-        Decompress lzma-compressed file
-    TARMODE: str, default None
-        Mode for reading tar-compressed file
-    FLATTEN: bool, default None
-        Flatten tar file structure when extracting files
-    GZIP: bool, default False
+    compressed: bool, default False
         Compress output ASCII and netCDF4 tide files
-    CHUNK: int, default 8192
+    decompress: str or None, default None
+        Decompress lzma or tar compressed files
+    flatten: bool, default None
+        Flatten tar file structure when extracting files
+    chunk: int, default 8192
         Block size for downloading files from ftp server
-    MODE: oct, default 0o775
+    mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
     # remote and local directory for data product
     remote_file = posixpath.join("auxiliary", "tide_model", *remote_path)
     # if compressing the output file
-    opener = gzip.open if GZIP else open
+    opener = gzip.open if compressed else open
 
     # Printing files transferred
     remote_ftp_url = posixpath.join("ftp://", f.host, remote_file)
     logger.info(f"{remote_ftp_url} -->")
-    if TARMODE:
-        # copy remote file contents to bytesIO object
-        fileobj = io.BytesIO()
-        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=CHUNK)
-        fileobj.seek(0)
-        # open the tar file
-        tar = tarfile.open(name=remote_path[-1], fileobj=fileobj, mode=TARMODE)
-        # read tar file and extract all files
-        member_files = [
-            m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)
-        ]
-        for m in member_files:
-            member = posixpath.basename(m.name) if FLATTEN else m.name
-            base, sfx = posixpath.splitext(m.name)
-            # extract file contents to new file
-            output = (
-                f"{member}.gz" if sfx in (".asc", ".nc") and GZIP else member
-            )
-            local_file = local_dir.joinpath(*posixpath.split(output))
-            # check if the local file exists
-            if local_file.exists() and _newer(
-                m.mtime, local_file.stat().st_mtime
-            ):
-                # check the modification time of the local file
-                # if remote file is newer: overwrite the local file
-                continue
-            # print the file being transferred
-            logger.info(f"\t{str(local_file)}")
-            # recursively create output directory if non-existent
-            local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
-            # extract file to local directory
-            with tar.extractfile(m) as f_in, opener(local_file, "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
-            # get last modified date of remote file within tar file
-            # keep remote modification time of file and local access time
-            os.utime(local_file, (local_file.stat().st_atime, m.mtime))
-            local_file.chmod(mode=MODE)
-    elif LZMA:
+    # three decompress cases:
+    # lzma: dataset is compressed in a lzma file
+    # one of the tarmodes: dataset is compressed in a tar file
+    # None: uncompressed data or readme files
+    if decompress == "lzma":
+        # decompress lzma file
         # get last modified date of remote file and convert into unix time
         mdtm = f.sendcmd(f"MDTM {remote_file}")
         mtime = calendar.timegm(time.strptime(mdtm[4:], "%Y%m%d%H%M%S"))
@@ -517,53 +490,101 @@ def _ftp_download(
         stem = posixpath.basename(posixpath.splitext(remote_file)[0])
         base, sfx = posixpath.splitext(stem)
         # extract file contents to new file
-        output = f"{stem}.gz" if sfx in (".asc", ".nc") and GZIP else stem
-        local_file = local_dir.joinpath(output)
+        if sfx in (".asc", ".nc") and compressed:
+            filename = f"{stem}.gz"
+        else:
+            filename = stem
+        # full path to output local file
+        output = local_dir.joinpath(filename)
         # check if the local file exists
-        if local_file.exists() and _newer(mtime, local_file.stat().st_mtime):
+        if output.exists() and _newer(mtime, output.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             return
         # print the file being transferred
-        logger.info(f"\t{str(local_file)}")
+        logger.info(f"\t{str(output)}")
         # recursively create output directory if non-existent
-        local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
+        output.parent.mkdir(mode=mode, parents=True, exist_ok=True)
         # copy remote file contents to bytesIO object
         fileobj = io.BytesIO()
-        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=CHUNK)
+        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=chunk)
         fileobj.seek(0)
         # decompress lzma file and extract contents to local directory
-        with lzma.open(fileobj) as f_in, opener(local_file, "wb") as f_out:
+        with lzma.open(fileobj) as f_in, opener(output, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
         # get last modified date of remote file within tar file
         # keep remote modification time of file and local access time
-        os.utime(local_file, (local_file.stat().st_atime, mtime))
-        local_file.chmod(mode=MODE)
+        os.utime(output, (output.stat().st_atime, mtime))
+        output.chmod(mode=mode)
+    elif decompress is not None:
+        # decompress data from tar file
+        # copy remote file contents to bytesIO object
+        fileobj = io.BytesIO()
+        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=chunk)
+        fileobj.seek(0)
+        # open the tar file
+        tar = tarfile.open(
+            name=remote_path[-1], fileobj=fileobj, mode=decompress
+        )
+        # read tar file and extract all files
+        member_files = [
+            m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)
+        ]
+        for m in member_files:
+            member = posixpath.basename(m.name) if flatten else m.name
+            base, sfx = posixpath.splitext(m.name)
+            # extract file contents to new file
+            if sfx in (".asc", ".nc") and compressed:
+                filename = f"{member}.gz"
+            else:
+                filename = member
+            # full path to output local file
+            output = local_dir.joinpath(*posixpath.split(filename))
+            # check if the local file exists
+            if output.exists() and _newer(m.mtime, output.stat().st_mtime):
+                # check the modification time of the local file
+                # if remote file is newer: overwrite the local file
+                continue
+            # print the file being transferred
+            logger.info(f"\t{str(output)}")
+            # recursively create output directory if non-existent
+            output.parent.mkdir(mode=mode, parents=True, exist_ok=True)
+            # extract file to local directory
+            with tar.extractfile(m) as f_in, opener(output, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+            # get last modified date of remote file within tar file
+            # keep remote modification time of file and local access time
+            os.utime(output, (output.stat().st_atime, m.mtime))
+            output.chmod(mode=mode)
     else:
         # copy readme and uncompressed files directly
         stem = posixpath.basename(remote_file)
         base, sfx = posixpath.splitext(stem)
         # output file name for compressed and uncompressed cases
-        output = f"{stem}.gz" if sfx in (".asc", ".nc") and GZIP else stem
-        local_file = local_dir.joinpath(output)
+        if sfx in (".asc", ".nc") and compressed:
+            filename = f"{stem}.gz"
+        else:
+            filename = stem
+        # full path to output local file
+        output = local_dir.joinpath(filename)
         # get last modified date of remote file and convert into unix time
         mdtm = f.sendcmd(f"MDTM {remote_file}")
         mtime = calendar.timegm(time.strptime(mdtm[4:], "%Y%m%d%H%M%S"))
         # check if the local file exists
-        if local_file.exists() and _newer(mtime, local_file.stat().st_mtime):
+        if output.exists() and _newer(mtime, output.stat().st_mtime):
             # check the modification time of the local file
             # if remote file is newer: overwrite the local file
             return
         # print the file being transferred
-        logger.info(f"\t{str(local_file)}\n")
+        logger.info(f"\t{str(output)}\n")
         # recursively create output directory if non-existent
-        local_file.parent.mkdir(mode=MODE, parents=True, exist_ok=True)
+        output.parent.mkdir(mode=mode, parents=True, exist_ok=True)
         # copy remote file contents to local file
-        with opener(local_file, "wb") as f_out:
-            f.retrbinary(f"RETR {remote_file}", f_out.write, blocksize=CHUNK)
+        with opener(output, "wb") as f_out:
+            f.retrbinary(f"RETR {remote_file}", f_out.write, blocksize=chunk)
         # keep remote modification time of file and local access time
-        os.utime(local_file, (local_file.stat().st_atime, mtime))
-        local_file.chmod(mode=MODE)
+        os.utime(output, (output.stat().st_atime, mtime))
+        output.chmod(mode=mode)
 
 
 # PURPOSE: compare the modification time of two files
@@ -623,7 +644,6 @@ def arguments():
         help="Working data directory",
     )
     # FES tide models
-    choices = ["FES1999", "FES2004", "FES2012", "FES2014", "FES2022"]
     parser.add_argument(
         "--tide",
         "-T",
@@ -631,7 +651,6 @@ def arguments():
         type=str,
         nargs="+",
         default=["FES2022"],
-        choices=choices,
         help="FES tide model to download",
     )
     # download FES load tides

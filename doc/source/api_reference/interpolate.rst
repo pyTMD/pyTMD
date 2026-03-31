@@ -19,3 +19,11 @@ interpolate
 .. autofunction:: pyTMD.interpolate._build_tree
 
 .. autofunction:: pyTMD.interpolate._nearest_neighbors
+
+.. autofunction:: pyTMD.interpolate.barycentric
+
+.. autofunction:: pyTMD.interpolate._to_barycentric
+
+.. autofunction:: pyTMD.interpolate._inside_triangle
+
+.. autofunction:: pyTMD.interpolate._shape_functions

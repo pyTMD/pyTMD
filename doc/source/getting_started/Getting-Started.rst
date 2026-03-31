@@ -20,6 +20,7 @@ They can be either a single file containing all the constituents (compact) or mu
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
 GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
+FES also provides unstructured ("native") netCDF4 files, which contain data for all constituents on a finite element mesh.
 ``pyTMD`` uses ``pint`` to handle the units of the model constituent data and convert them into standard sets of units.
 
     - ``z``: tidal elevations in meters (:math:`m`)
@@ -149,7 +150,6 @@ For models with multiple constituent files, the files can be found using a ``glo
     * ``compressed``: model files are ``gzip`` compressed
     * ``z``:
 
-        - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
         - ``units``: units of the model constituent data
 
@@ -161,19 +161,28 @@ For models with multiple constituent files, the files can be found using a ``glo
     * ``version``: tide model version
     * ``z``:
 
-        - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
         - ``units``: units of the model constituent data
     * ``u``:
 
-        - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
         - ``units``: units of the model constituent data
     * ``v``:
 
-        - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
         - ``units``: units of the model constituent data
+
+- ``FES-native``
+
+    * ``compressed``: model files are ``gzip`` compressed
+    * ``format``: ``FES-native``
+    * ``name``: tide model name
+    * ``version``: tide model version
+    * ``z``:
+
+        - ``model_file``: path to model constituent file(s) or a ``glob`` string
+        - ``units``: units of the model constituent data
+
 
 Programs
 ########

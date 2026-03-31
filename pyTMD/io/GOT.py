@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GOT.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 
 Reads ascii and netCDF4 files from Richard Ray's Goddard Ocean Tide (GOT) model
     https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 03/2026: use numpy functions to convert from degrees to radians
     Updated 02/2026: make dataset accessor for GOT be a subaccessor from dataset
         some models have units in the second line of the header text
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
@@ -161,7 +162,7 @@ def open_got_dataset(
     # detect if file is compressed if not provided
     if kwargs.get("compressed", None) is None:
         kwargs["compressed"] = pyTMD.utilities.detect_compression(input_file)
-    # read constituent from elevation file
+    # read constituent from file
     if kwargs["format"] == "ascii":
         # GOT ascii constituent files
         ds = open_got_ascii(input_file, **kwargs)
@@ -203,7 +204,7 @@ def open_got_ascii(
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
-    # read the ASCII-format tide elevation file
+    # read the ASCII-format file
     if kwargs["compressed"]:
         # read gzipped ascii file
         with gzip.open(input_file, "rb") as f:
@@ -271,7 +272,7 @@ def open_got_ascii(
     # store the data variables
     var["data_vars"][cons] = {}
     var["data_vars"][cons]["dims"] = ("y", "x")
-    var["data_vars"][cons]["data"] = amp * np.exp(-1j * ph * np.pi / 180.0)
+    var["data_vars"][cons]["data"] = amp * np.exp(-1j * np.radians(ph))
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
     # coerce to specified chunks
@@ -314,7 +315,7 @@ def open_got_netcdf(
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
-    # read the netCDF4-format tide elevation file
+    # read the netCDF4-format file
     if kwargs["compressed"]:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, "rb")
@@ -333,7 +334,7 @@ def open_got_netcdf(
     ds.coords["x"] = tmp.longitude
     ds.coords["y"] = tmp.latitude
     # calculate complex form of constituent oscillation
-    ds[cons] = tmp.amplitude * np.exp(-1j * tmp.phase * np.pi / 180.0)
+    ds[cons] = tmp.amplitude * np.exp(-1j * np.radians(tmp.phase))
     # rename dimensions
     mapping_coords = dict(lon="x", lat="y")
     ds = ds.rename(mapping_coords)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -17,6 +17,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: add barycentric interpolation for unstructured grids
+        add support for unstructured (e.g. finite element) grids
     Updated 03/2026: allow caching of the kd-tree for extrapolation
     Updated 02/2026: create subaccessor registration functions
         add functions to test if units are compatible with known groups
@@ -414,6 +416,122 @@ class Dataset:
         # return the dataset
         return ds
 
+    def barycentric_interp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        **kwargs,
+    ):
+        """
+        Interpolate unstructured ``Datasets`` using a barycentric
+        method with first or second order triangular finite elements
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Interpolation x-coordinates
+        y: np.ndarray
+            Interpolation y-coordinates
+        order: int
+            Polynomial order of the triangular elements
+
+            - ``1``: linear
+            - ``2``: quadratic
+        cutoff: int or float, default np.inf
+            Maximum distance to check for elements
+
+        Returns
+        -------
+        other: xarray.Dataset
+            Interpolated ``Dataset``
+        """
+        # import barycentric interpolation functions
+        from pyTMD.interpolate import (
+            _to_barycentric,
+            _inside_triangle,
+            _shape_functions,
+        )
+
+        # get the polynomial order of the finite elements
+        order = self._ds["element"].attrs.get("order", 1)
+        # default order is same as the tide model
+        kwargs.setdefault("order", order)
+        # get extrapolation cutoff distance
+        cutoff = kwargs.get("cutoff", np.inf)
+        # check if cropping dataset to bounds
+        if np.isfinite(cutoff) and self.crs.is_geographic:
+            # convert cutoff distance to model coordinate units
+            cutoff_km = cutoff * __ureg__.parse_units("km")
+            a_axis = 6378.137 * __ureg__.parse_units("km")
+            buffer = (cutoff_km / a_axis).to(self.axis_units).magnitude
+            # bounds of interpolation coordinates
+            bounds = [np.min(x), np.max(x), np.min(y), np.max(y)]
+            # crop dataset to bounding box plus buffer
+            ds = self.crop(bounds=bounds, buffer=buffer)
+        elif np.isfinite(cutoff):
+            # convert cutoff distance to model coordinate units
+            cutoff_km = cutoff * __ureg__.parse_units("km")
+            buffer = cutoff_km.to(self.axis_units).magnitude
+            # bounds of interpolation coordinates
+            bounds = [np.min(x), np.max(x), np.min(y), np.max(y)]
+            # crop dataset to bounding box plus buffer
+            ds = self.crop(bounds=bounds, buffer=buffer)
+        else:
+            # copy dataset without cropping
+            ds = self._ds.copy()
+        # x and y coordinates of vertices
+        xv = ds.x.T
+        yv = ds.y.T
+        # check if there are meridian crossings
+        if self.crs.is_geographic:
+            # calculate peak-to-peak differences in longitude
+            xmin = ds.x.min(dim="vertex")
+            xmax = ds.x.max(dim="vertex")
+            xptp = xmax - xmin
+            # shift central meridian of longitudes
+            # in the case where there is a large spread in longitudes
+            if (xptp > 180).any() and (xmin < 0.0).any():
+                # adjust affected triangles to be 0:360
+                xv = xv.where((xptp < 180) | (xv > 0), xv + 360.0, drop=False)
+            elif (xptp > 180).any() and (xmax > 180.0).any():
+                # adjust affected triangles to be -180:180
+                xv = xv.where((xptp < 180) | (xv < 180), xv - 360.0, drop=False)
+        # convert model coordinates to barycentric
+        xi, eta = _to_barycentric(xv, yv, x, y)
+        # create masks to determine elements with points
+        inside = _inside_triangle(xi, eta)
+        # drop empty vertex coordinates
+        mask = inside.any(dim=x.dims).drop_vars("vertex").compute()
+        # reduce to elements containing interpolation points
+        ds = ds.where(mask, drop=True)
+        xi = xi.where(mask, drop=True)
+        eta = eta.where(mask, drop=True)
+        inside = inside.where(mask, drop=True)
+        # get shape functions and convert to DataArray
+        N = _shape_functions(xi, eta, kwargs["order"])
+        beta = xr.zeros_like(xi * ds.node)
+        for i, sf in enumerate(N):
+            beta[dict(node=i)] = sf
+        # allocate for output dataset
+        other = xr.Dataset()
+        # copy attributes
+        for att_name, att_val in self._ds.attrs.items():
+            other.attrs[att_name] = att_val
+        # iterate over variables in dataset
+        for i, v in enumerate(ds.data_vars.keys()):
+            # mask to reduce to valid triangles
+            # and calculate dot product over elements and nodes
+            other[v] = (ds[v] * inside).dot(beta, dim=("element", "node"))
+            # copy variable attributes
+            for att_name, att_val in self._ds[v].attrs.items():
+                other[v].attrs[att_name] = att_val
+        # add coordinates to output dataset
+        other.coords["x"] = x
+        other.coords["y"] = y
+        # return the interpolated dataset
+        # drop empty vertex coordinates
+        return other.drop_vars("vertex").compute()
+
     def coords_as(
         self,
         x: np.ndarray,
@@ -462,18 +580,24 @@ class Dataset:
         buffer: int or float, default 0
             Buffer to add to bounds for cropping
         """
-        # number of points to pad for global grids
-        n = int(180 // (self._x[1] - self._x[0]))
         # pad global grids along x-dimension (if necessary)
         lon_wrap = self.crs.to_dict().get("lon_wrap", 0)
-        if self.is_global and (lon_wrap == 180) and (np.min(bounds[:2]) < 0):
+        if self.grid_type == "unstructured":
+            # copy unstructured dataset
+            ds = self._ds.copy()
+        elif self.is_global and (lon_wrap == 180) and (np.min(bounds[:2]) < 0):
+            # number of points to pad for global grids
+            n = int(180 // (self._x[1] - self._x[0]))
             ds = self.pad(n=(n, 0))
         elif self.is_global and (lon_wrap == 0) and (np.max(bounds[:2]) > 180):
+            # number of points to pad for global grids
+            n = int(180 // (self._x[1] - self._x[0]))
             ds = self.pad(n=(0, n))
         else:
+            # copy dataset
             ds = self._ds.copy()
         # check if chunks are present
-        if ds.chunks is not None:
+        if hasattr(ds, "chunks") and ds.chunks is not None:
             ds = ds.chunk(-1).compute()
         # unpack bounds and buffer
         xmin = bounds[0] - buffer
@@ -481,10 +605,25 @@ class Dataset:
         ymin = bounds[2] - buffer
         ymax = bounds[3] + buffer
         # crop dataset to bounding box
-        ds = ds.where(
-            (ds.x >= xmin) & (ds.x <= xmax) & (ds.y >= ymin) & (ds.y <= ymax),
-            drop=True,
-        )
+        if self.grid_type == "unstructured":
+            # crop unstructured datasets
+            # include elements that cross the bounding box
+            ds = ds.where(
+                (ds.x.max(dim="vertex") >= xmin)
+                & (ds.x.min(dim="vertex") <= xmax)
+                & (ds.y.max(dim="vertex") >= ymin)
+                & (ds.y.min(dim="vertex") <= ymax),
+                drop=True,
+            )
+        else:
+            # crop gridded datasets
+            ds = ds.where(
+                (ds.x >= xmin)
+                & (ds.x <= xmax)
+                & (ds.y >= ymin)
+                & (ds.y <= ymax),
+                drop=True,
+            )
         # return the cropped dataset
         return ds
 
@@ -501,7 +640,7 @@ class Dataset:
 
         Returns
         -------
-        ds: xarray.Dataset
+        other: xarray.Dataset
             ``Dataset`` with extrapolated values
         """
         # import extrapolate functions
@@ -514,7 +653,7 @@ class Dataset:
         # get extrapolation cutoff distance
         cutoff = kwargs.get("cutoff", np.inf)
         # check if chunks are present
-        if other.chunks is not None:
+        if hasattr(other, "chunks") and other.chunks is not None:
             other = other.chunk(-1).compute()
         # bounds of other dataset
         bounds = [
@@ -672,12 +811,15 @@ class Dataset:
 
         Returns
         -------
-        ds: xarray.Dataset
+        other: xarray.Dataset
             Interpolated ``Dataset``
         """
         # set default keyword arguments
         kwargs.setdefault("extrapolate", False)
         kwargs.setdefault("cutoff", np.inf)
+        # use barycentric interpolation if data is unstructured
+        if self.grid_type == "unstructured":
+            return self.barycentric_interp(x, y, **kwargs)
         # pad global grids along x-dimension (if necessary)
         if self.is_global:
             self._ds = self.pad(n=1)
@@ -695,12 +837,12 @@ class Dataset:
                 # tide model convention (-180:180)
                 x = xr.where(x > 180, x - 360, x)
         # interpolate dataset
-        ds = self._ds.interp(x=x, y=y, method=method)
+        other = self._ds.interp(x=x, y=y, method=method)
         # extrapolate missing values using nearest-neighbors
         if kwargs["extrapolate"]:
-            ds = self.extrap_like(ds, cutoff=kwargs["cutoff"])
+            other = self.extrap_like(other, cutoff=kwargs["cutoff"])
         # return xarray dataset
-        return ds
+        return other
 
     def node_equilibrium(self):
         """
@@ -935,6 +1077,11 @@ class Dataset:
     def axis_units(self) -> str:
         """Units of the coordinate axes from the ``Dataset`` CRS"""
         return self.crs.axis_info[0].unit_name
+
+    @property
+    def grid_type(self) -> bool:
+        """Spatial structure of the ``Dataset``"""
+        return self._ds.attrs.get("grid_type", "grid")
 
     @property
     def _x(self):

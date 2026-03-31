@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: add 1st and 2nd order barycentric interpolation function
     Updated 03/2026: break up extrapolation into separate functions to allow
         for caching of the kd-tree when interpolating multiple variables
     Updated 02/2026: output data from extrapolate as an xarray DataArray
@@ -45,6 +46,13 @@ __all__ = [
     "interp1d",
     "inpaint",
     "extrapolate",
+    "_to_cartesian",
+    "_build_tree",
+    "_nearest_neighbors",
+    "barycentric",
+    "_to_barycentric",
+    "_inside_triangle",
+    "_shape_functions",
 ]
 
 
@@ -390,3 +398,187 @@ def _nearest_neighbors(
         data.mask[ind] = False
     # return extrapolated values
     return xr.DataArray(data)
+
+
+def barycentric(
+    xv: np.ndarray,
+    yv: np.ndarray,
+    ze: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
+    order: int = 1,
+    **kwargs,
+):
+    """
+    Interpolation of unstructured model data using a barycentric
+    method
+
+    Parameters
+    ----------
+    xv: np.ndarray
+        x-coordinates of triangle vertices
+    yv: np.ndarray
+        y-coordinates of triangle vertices
+    ze: np.ndarray
+        Unstructured model data at elements
+    x: np.ndarray
+        Output x-coordinates
+    y: np.ndarray
+        Output y-coordinates
+    order: int, default 1
+        Polynomial order of the triangular elements
+
+        - ``1``: linear
+        - ``2``: quadratic
+
+    Returns
+    -------
+    data: xr.DataArray
+        Interpolated data
+    """
+    # set default data type
+    dtype = kwargs.get("dtype", ze.dtype)
+    # convert to barycentric coordinates
+    xi, eta = _to_barycentric(xv, yv, x, y)
+    # check if inside polygon
+    valid = _inside_triangle(xi, eta)
+    # get shape functions for order
+    N = _shape_functions(xi, eta, order)
+    # allocate to output extrapolate data array
+    data = np.zeros_like(x, dtype=dtype)
+    for p, sf in enumerate(N):
+        data += sf * valid * ze[..., p]
+    # return the interpolated value
+    return xr.DataArray(data)
+
+
+def _to_barycentric(
+    xv: np.ndarray,
+    yv: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
+):
+    """
+    Convert coordinates to barycentric space
+
+    Parameters
+    ----------
+    xv: np.ndarray
+        x-coordinates of triangle vertices
+    yv: np.ndarray
+        y-coordinates of triangle vertices
+    x: np.ndarray
+        Output x-coordinates
+    y: np.ndarray
+        Output y-coordinates
+
+    Returns
+    -------
+    xi: np.ndarray
+        Normalized barycentric (areal) xi-coordinates
+    eta: np.ndarray
+        Normalized barycentric (areal) eta-coordinates
+    """
+    # calculate triangle area
+    A = 0.5 * (
+        xv[0] * (yv[1] - yv[2])
+        + xv[1] * (yv[2] - yv[0])
+        + xv[2] * (yv[0] - yv[1])
+    )
+    # calculate Jacobian
+    # ignore divide by zero and invalid value warnings
+    with np.errstate(divide="ignore", invalid="ignore"):
+        J = 1.0 / (2.0 * A)
+    # mapping into barycentric coordinates
+    xi = J * (
+        (xv[1] * yv[2] - xv[2] * yv[1])
+        + (yv[1] - yv[2]) * x
+        + (xv[2] - xv[1]) * y
+    )
+    eta = J * (
+        (xv[2] * yv[0] - xv[0] * yv[2])
+        + (yv[2] - yv[0]) * x
+        + (xv[0] - xv[2]) * y
+    )
+    # return the barycentric coordinates
+    return xi, eta
+
+
+def _inside_triangle(
+    xi: np.ndarray,
+    eta: np.ndarray,
+    atol: float = 1e-8,
+):
+    """
+    Check if point is within the triangular area
+
+    Parameters
+    ----------
+    xi: np.ndarray
+        Normalized barycentric (areal) xi-coordinates
+    eta: np.ndarray
+        Normalized barycentric (areal) eta-coordinates
+    atol: float = 1e-8
+        Absolute tolerance parameter
+
+    Returns
+    -------
+    valid: np.ndarray
+        Mask for coordinates
+    """
+    # simple check to see if areas are valid
+    la = 1.0 - eta - xi
+    # all barycentric coordinates should be within 0 to 1
+    # and have valid Jacobians (not dividing by 0)
+    valid = (
+        (np.isfinite(xi) & np.isfinite(eta))
+        & (la >= (0.0 - atol))
+        & (la <= (1.0 + atol))
+        & (xi >= (0.0 - atol))
+        & (xi <= (1.0 + atol))
+        & (eta >= (0.0 - atol))
+        & (eta <= (1.0 + atol))
+    )
+    return valid
+
+
+def _shape_functions(xi: np.ndarray, eta: np.ndarray, order: int):
+    """
+    Get the interpolating shape functions for a polynomial order
+
+    Parameters
+    ----------
+    xi: np.ndarray
+        Normalized barycentric (areal) xi-coordinates
+    eta: np.ndarray
+        Normalized barycentric (areal) eta-coordinates
+    order: int
+        Polynomial order of the triangular elements
+
+        - ``1``: linear
+        - ``2``: quadratic
+
+    Returns
+    -------
+    N: list
+        Shape functions in barycentric space
+    """
+    # shape functions in barycentric space
+    N = [None] * (3 * order)
+    if order == 1:
+        # 1st order terms: linear triangular elements
+        N[0] = xi
+        N[1] = eta
+        N[2] = 1.0 - eta - xi
+    elif order == 2:
+        # 2nd order terms: quadratic triangular elements
+        N[0] = xi * (2.0 * xi - 1.0)
+        N[1] = 4.0 * xi * eta
+        N[2] = eta * (2.0 * eta - 1.0)
+        N[3] = 4.0 * eta * (1.0 - xi - eta)
+        N[4] = (1.0 - xi - eta) * (1.0 - 2.0 * xi - 2.0 * eta)
+        N[5] = 4.0 * xi * (1.0 - xi - eta)
+    else:
+        raise ValueError(f"Unsupported polynomial order {order}")
+    # return the shape functions
+    return N
