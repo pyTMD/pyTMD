@@ -188,7 +188,7 @@ def time_series(
         - darr.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     # check if chunks are present
-    if tpred.chunks is not None:
+    if hasattr(tpred, "chunks") and tpred.chunks is not None:
         tpred = tpred.chunk(-1).compute()
     # copy units attribute
     tpred.attrs["units"] = ds[constituents[0]].attrs.get("units", None)

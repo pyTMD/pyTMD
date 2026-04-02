@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 FES.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (03/2026)
 
 Reads ascii and netCDF4 files for FES tidal solutions provided by AVISO
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 03/2026: add reader for FES-native (unstructured) netCDF4 files
     Updated 02/2026: make dataset accessor for FES be a subaccessor from dataset
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 11/2025: near-complete rewrite of program to use xarray
@@ -83,6 +84,7 @@ __all__ = [
     "open_fes_dataset",
     "open_fes_ascii",
     "open_fes_netcdf",
+    "open_fes_native",
     "FESDataset",
 ]
 
@@ -164,6 +166,9 @@ def open_fes_dataset(
     elif kwargs["format"] == "netcdf":
         # FES netCDF4 constituent files
         ds = open_fes_netcdf(input_file, **kwargs)
+    elif kwargs["format"] == "native":
+        # FES netCDF4 files with unstructured finite-element grids
+        ds = open_fes_native(input_file, **kwargs)
     else:
         raise ValueError(f"Unrecognized file format: {kwargs['format']}")
     # return xarray dataset
@@ -199,7 +204,7 @@ def open_fes_ascii(
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
-    # read the ASCII-format tide elevation file
+    # read the ASCII-format file
     if kwargs["compressed"]:
         # read gzipped ascii file
         with gzip.open(input_file, "rb") as f:
@@ -255,7 +260,7 @@ def open_fes_ascii(
     # store the data variables
     var["data_vars"][cons] = {}
     var["data_vars"][cons]["dims"] = ("y", "x")
-    var["data_vars"][cons]["data"] = amp * np.exp(-1j * ph * np.pi / 180.0)
+    var["data_vars"][cons]["data"] = amp * np.exp(-1j * np.radians(ph))
     # convert to xarray Dataset from the data dictionary
     ds = xr.Dataset.from_dict(var)
     # coerce to specified chunks
@@ -303,7 +308,7 @@ def open_fes_netcdf(
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
-    # read the netCDF4-format tide elevation file
+    # read the netCDF4-format file
     if kwargs["compressed"]:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, "rb")
@@ -338,12 +343,115 @@ def open_fes_netcdf(
     # create output xarray dataset for file
     ds = xr.Dataset()
     # calculate complex form of constituent oscillation
-    ds[cons] = amplitude * np.exp(-1j * phase * np.pi / 180.0)
+    ds[cons] = amplitude * np.exp(-1j * np.radians(phase))
     # rename coordinates
     ds = ds.rename(mapping_coords)
     # add attributes
     ds.attrs["group"] = kwargs["group"]
     ds[cons].attrs["units"] = tmp[amp_key].attrs.get("units", "")
+    # return xarray dataset
+    return ds
+
+
+# PURPOSE: read FES native netCDF4 files
+def open_fes_native(
+    input_file: str | pathlib.Path,
+    chunks: int | dict | str | None = None,
+    **kwargs,
+):
+    """
+    Open FES-native netCDF4 files with unstructured finite-element grids
+
+    Parameters
+    ----------
+    input_file: str or pathlib.Path
+        Model file
+    group: str or NoneType, default None
+        Tidal variable to read
+
+            - ``'z'``: heights
+            - ``'u'``: zonal currents
+            - ``'v'``: meridional currents
+    chunks: int, dict, str, or None, default None
+        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+    compressed: bool, default False
+        Input file is ``gzip`` compressed
+
+    Returns
+    -------
+    ds: xarray.Dataset
+        FES tide model data
+    """
+    # set default keyword arguments
+    kwargs.setdefault("group", "z")
+    kwargs.setdefault("compressed", False)
+    # tilde-expand input file
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
+        raise FileNotFoundError(f"File not found: {input_file}")
+    # read the unstructured netCDF4-format file
+    if kwargs["compressed"]:
+        # read gzipped netCDF4 file
+        f = gzip.open(input_file, "rb")
+        tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
+    else:
+        tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
+    # create output xarray dataset for file
+    ds = xr.Dataset()
+    # copy coordinate variables
+    ds.coords["triangles"] = tmp["triangles"]
+    ds.coords["three"] = tmp["three"]
+    # get the order of the finite elements
+    if "lgp1" in tmp.variables:
+        # first-order (linear) finite elements
+        element_type = "lgp1"
+        element_order = 1
+        # indices of LGP1 nodes in the triangles
+        nodes = tmp["lgp1"]
+    elif "lgp2" in tmp.variables:
+        # second-order (quadratic) finite elements
+        element_type = "lgp2"
+        element_order = 2
+        # copy LGP2 node coordinates
+        ds.coords["six"] = tmp["six"]
+        # indices of LGP2 nodes in the triangles
+        nodes = tmp["lgp2"]
+    # indices of triangle vertices
+    triangle = tmp["triangle"]
+    # latitude and longitude of the vertices of each element
+    ds["x"] = tmp["lon"][triangle]
+    ds["y"] = tmp["lat"][triangle]
+    # find amplitude variables in the dataset
+    variables = [v for v in tmp.data_vars if re.search(r"_amp(litude)?", v)]
+    # for each amplitude variable
+    for amp_key in variables:
+        # parse variable name for constituent id
+        cons = pyTMD.constituents._parse_name(amp_key)
+        # get the phase variable name
+        phase_key = re.sub(r"_amp(litude)?", r"_phase", amp_key)
+        # amplitude and phase of finite element nodes
+        amp = tmp[amp_key][nodes]
+        phase = tmp[phase_key][nodes]
+        # calculate complex form of constituent oscillation
+        ds[cons] = amp * np.exp(-1j * np.radians(phase))
+        ds[cons].attrs["units"] = tmp[amp_key].attrs.get("units", "")
+    # rename coordinates
+    mapping_coords = dict(triangles="element", three="vertex", six="node")
+    ds = ds.rename(mapping_coords)
+    # add coordinate attributes
+    ds["element"].attrs["description"] = "index of finite element"
+    ds["element"].attrs["type"] = element_type
+    ds["element"].attrs["order"] = element_order
+    ds["vertex"].attrs["description"] = "index of element vertex"
+    # add node description for second-order elements
+    if element_order == 2:
+        ds["node"].attrs["description"] = "index of element node (2nd order)"
+    # add attributes
+    ds.attrs["group"] = kwargs["group"]
+    ds.attrs["grid_type"] = "unstructured"
+    # verify that chunks are unified (if specified)
+    if chunks is not None:
+        ds = ds.unify_chunks()
     # return xarray dataset
     return ds
 

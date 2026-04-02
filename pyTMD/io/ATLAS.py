@@ -198,7 +198,7 @@ def open_atlas_grid(
     grid_file = pyTMD.utilities.Path(grid_file).resolve()
     if isinstance(grid_file, pathlib.Path) and not grid_file.exists():
         raise FileNotFoundError(f"File not found: {grid_file}")
-    # read the netCDF4-format tide elevation file
+    # read the netCDF4-format file
     if kwargs["compressed"]:
         # read gzipped netCDF4 file
         f = gzip.open(grid_file, "rb")
@@ -271,7 +271,7 @@ def open_atlas_dataset(
     input_file = pyTMD.utilities.Path(input_file).resolve()
     if isinstance(input_file, pathlib.Path) and not input_file.exists():
         raise FileNotFoundError(f"File not found: {input_file}")
-    # read the netCDF4-format tide elevation file
+    # read the netCDF4-format file
     if kwargs["compressed"]:
         # read gzipped netCDF4 file
         f = gzip.open(input_file, "rb")

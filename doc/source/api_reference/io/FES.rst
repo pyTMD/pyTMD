@@ -6,6 +6,7 @@ FES
 
    * ``FES-ascii``
    * ``FES-netcdf``
+   * ``FES-native``
 
 Calling Sequence
 ----------------
@@ -27,6 +28,8 @@ Calling Sequence
 .. autofunction:: pyTMD.io.FES.open_fes_ascii
 
 .. autofunction:: pyTMD.io.FES.open_fes_netcdf
+
+.. autofunction:: pyTMD.io.FES.open_fes_native
 
 .. autoclass:: pyTMD.io.FES.FESDataset
    :members:
