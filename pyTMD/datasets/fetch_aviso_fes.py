@@ -556,6 +556,8 @@ def _ftp_download(
             # keep remote modification time of file and local access time
             os.utime(output, (output.stat().st_atime, m.mtime))
             output.chmod(mode=mode)
+        # close the tar file
+        tar.close()
     else:
         # copy readme and uncompressed files directly
         stem = posixpath.basename(remote_file)

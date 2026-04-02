@@ -396,15 +396,26 @@ def open_fes_native(
         tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
         tmp = xr.open_dataset(input_file, mask_and_scale=True, chunks=chunks)
-    # second-order (quadratic) finite elements
-    # numbers of LGP2 nodes in the triangles
-    lgp2 = tmp["lgp2"]
     # create output xarray dataset for file
     ds = xr.Dataset()
     # copy coordinate variables
     ds.coords["triangles"] = tmp["triangles"]
     ds.coords["three"] = tmp["three"]
-    ds.coords["six"] = tmp["six"]
+    # get the order of the finite elements
+    if "lgp1" in tmp.variables:
+        # first-order (linear) finite elements
+        element_type = "lgp1"
+        element_order = 1
+        # indices of LGP1 nodes in the triangles
+        nodes = tmp["lgp1"]
+    elif "lgp2" in tmp.variables:
+        # second-order (quadratic) finite elements
+        element_type = "lgp2"
+        element_order = 2
+        # copy LGP2 node coordinates
+        ds.coords["six"] = tmp["six"]
+        # indices of LGP2 nodes in the triangles
+        nodes = tmp["lgp2"]
     # indices of triangle vertices
     triangle = tmp["triangle"]
     # latitude and longitude of the vertices of each element
@@ -419,20 +430,23 @@ def open_fes_native(
         # get the phase variable name
         phase_key = re.sub(r"_amp(litude)?", r"_phase", amp_key)
         # amplitude and phase of finite element nodes
-        amp = tmp[amp_key][lgp2]
-        phase = tmp[phase_key][lgp2]
+        amp = tmp[amp_key][nodes]
+        phase = tmp[phase_key][nodes]
         # calculate complex form of constituent oscillation
         ds[cons] = amp * np.exp(-1j * np.radians(phase))
         ds[cons].attrs["units"] = tmp[amp_key].attrs.get("units", "")
     # rename coordinates
     mapping_coords = dict(triangles="element", three="vertex", six="node")
     ds = ds.rename(mapping_coords)
-    # add attributes
+    # add coordinate attributes
     ds["element"].attrs["description"] = "index of finite element"
-    ds["element"].attrs["type"] = "lgp2"
-    ds["element"].attrs["order"] = 2
+    ds["element"].attrs["type"] = element_type
+    ds["element"].attrs["order"] = element_order
     ds["vertex"].attrs["description"] = "index of element vertex"
-    ds["node"].attrs["description"] = "index of element node (2nd order)"
+    # add node description for second-order elements
+    if element_order == 2:
+        ds["node"].attrs["description"] = "index of element node (2nd order)"
+    # add attributes
     ds.attrs["group"] = kwargs["group"]
     ds.attrs["grid_type"] = "unstructured"
     # verify that chunks are unified (if specified)

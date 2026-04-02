@@ -500,8 +500,9 @@ class Dataset:
         xi, eta = _to_barycentric(xv, yv, x, y)
         # create masks to determine elements with points
         inside = _inside_triangle(xi, eta)
-        # drop empty vertex coordinates
-        mask = inside.any(dim=x.dims).drop_vars("vertex").compute()
+        # mask of intersected elements
+        dims = [dim for dim in ds.dims if dim != "element"]
+        mask = inside.any(dim=dims).compute()
         # reduce to elements containing interpolation points
         ds = ds.where(mask, drop=True)
         xi = xi.where(mask, drop=True)
@@ -511,7 +512,7 @@ class Dataset:
         N = _shape_functions(xi, eta, kwargs["order"])
         beta = xr.zeros_like(xi * ds.node)
         for i, sf in enumerate(N):
-            beta[dict(node=i)] = sf
+            beta.isel(node=i).values = sf
         # allocate for output dataset
         other = xr.Dataset()
         # copy attributes
@@ -1079,7 +1080,7 @@ class Dataset:
         return self.crs.axis_info[0].unit_name
 
     @property
-    def grid_type(self) -> bool:
+    def grid_type(self) -> str:
         """Spatial structure of the ``Dataset``"""
         return self._ds.attrs.get("grid_type", "grid")
 
