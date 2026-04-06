@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: add 1st and 2nd order barycentric interpolation function
+        add winding number to check elements that may cross a meridian line
     Updated 03/2026: break up extrapolation into separate functions to allow
         for caching of the kd-tree when interpolating multiple variables
     Updated 02/2026: output data from extrapolate as an xarray DataArray
@@ -53,6 +54,7 @@ __all__ = [
     "_to_barycentric",
     "_inside_triangle",
     "_shape_functions",
+    "_winding_number",
 ]
 
 
@@ -442,10 +444,13 @@ def barycentric(
     xi, eta = _to_barycentric(xv, yv, x, y)
     # check if inside polygon
     valid = _inside_triangle(xi, eta)
-    # get shape functions for order
-    N = _shape_functions(xi, eta, order)
     # allocate to output extrapolate data array
     data = np.zeros_like(x, dtype=dtype)
+    if not np.any(valid):
+        return xr.DataArray(data)
+    # get shape functions for order
+    N = _shape_functions(xi, eta, order)
+    # calculate interpolation
     for p, sf in enumerate(N):
         data += sf * valid * ze[..., p]
     # return the interpolated value
@@ -582,3 +587,25 @@ def _shape_functions(xi: np.ndarray, eta: np.ndarray, order: int):
         raise ValueError(f"Unsupported polynomial order {order}")
     # return the shape functions
     return N
+
+
+# PURPOSE: determine if triangle winding is counter-clockwise
+def _winding_number(xv: np.ndarray, yv: np.ndarray):
+    """
+    Calculate the winding number of a triangle by taking the
+    cross-product of the vertex vectors
+
+    Parameters
+    ----------
+    xv: np.ndarray
+        x-coordinates of triangle vertices
+    yv: np.ndarray
+        y-coordinates of triangle vertices
+
+    Returns
+    -------
+    wind: np.ndarray
+        Winding number of the triangle
+    """
+    wind = (xv[1] - xv[0]) * (yv[2] - yv[0]) - (yv[1] - yv[0]) * (xv[2] - xv[0])
+    return wind

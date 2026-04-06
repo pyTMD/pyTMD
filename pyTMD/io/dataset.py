@@ -450,6 +450,7 @@ class Dataset:
             _to_barycentric,
             _inside_triangle,
             _shape_functions,
+            _winding_number,
         )
 
         # get the polynomial order of the finite elements
@@ -479,35 +480,46 @@ class Dataset:
         else:
             # copy dataset without cropping
             ds = self._ds.copy()
-        # x and y coordinates of vertices
-        xv = ds.x.T
-        yv = ds.y.T
-        # check if there are meridian crossings
-        if self.crs.is_geographic:
-            # calculate peak-to-peak differences in longitude
-            xmin = ds.x.min(dim="vertex")
-            xmax = ds.x.max(dim="vertex")
-            xptp = xmax - xmin
-            # shift central meridian of longitudes
-            # in the case where there is a large spread in longitudes
-            if (xptp > 180).any() and (xmin < 0.0).any():
-                # adjust affected triangles to be 0:360
-                xv = xv.where((xptp < 180) | (xv > 0), xv + 360.0, drop=False)
-            elif (xptp > 180).any() and (xmax > 180.0).any():
-                # adjust affected triangles to be -180:180
-                xv = xv.where((xptp < 180) | (xv < 180), xv - 360.0, drop=False)
-        # convert model coordinates to barycentric
-        xi, eta = _to_barycentric(xv, yv, x, y)
-        # create masks to determine elements with points
-        inside = _inside_triangle(xi, eta)
-        # mask of intersected elements
-        dims = [dim for dim in ds.dims if dim != "element"]
-        mask = inside.any(dim=dims).compute()
-        # reduce to elements containing interpolation points
-        ds = ds.where(mask, drop=True)
-        xi = xi.where(mask, drop=True)
-        eta = eta.where(mask, drop=True)
-        inside = inside.where(mask, drop=True)
+
+        # allocate for barycentric coordinates
+        xi = xr.zeros_like(x)
+        eta = xr.zeros_like(x)
+        # allocate for indices of valid elements
+        element = xr.zeros_like(x, dtype="i")
+        # find the valid elements and barycentric coordinates
+        for i, elem in enumerate(ds.element):
+            # x and y coordinates of element vertices
+            x_elem = ds.x.isel(element=i)
+            y_elem = ds.y.isel(element=i)
+            # copy x-coordinates to not affect outside array
+            xtmp = x.copy()
+            # if model is geographic:
+            # check if element crosses a meridian
+            if self.crs.is_geographic:
+                # calculate winding number of triangle element
+                # negative winding numbers are clockwise
+                wind = _winding_number(x_elem, y_elem)
+                # shift coordinates for meridian crossings
+                if (wind < 0) and (x_elem < 0.0).any():
+                    # adjust points to be 0:360
+                    x_elem = x_elem.where(x_elem > 0, x_elem + 360.0)
+                    xtmp = xtmp.where(xtmp > 0, xtmp + 360.0)
+                elif (wind < 0) and (x_elem > 180.0).any():
+                    # adjust points to be -180:180
+                    x_elem = x_elem.where(x_elem > 0, x_elem - 360.0)
+                    xtmp = xtmp.where(xtmp > 0, xtmp - 360.0)
+            # convert model coordinates to barycentric
+            xi_elem, eta_elem = _to_barycentric(x_elem, y_elem, xtmp, y)
+            # determine if points are within element
+            inside_element = _inside_triangle(xi_elem, eta_elem)
+            # skip if nothing is inside the element
+            if not np.any(inside_element):
+                continue
+            # save coordinates and indices
+            outside_element = np.logical_not(inside_element)
+            xi = xi.where(outside_element, xi_elem, drop=False)
+            eta = eta.where(outside_element, eta_elem, drop=False)
+            element = element.where(outside_element, i, drop=False)
         # get shape functions and convert to DataArray
         N = _shape_functions(xi, eta, kwargs["order"])
         beta = xr.zeros_like(xi * ds.node)
@@ -520,9 +532,10 @@ class Dataset:
             other.attrs[att_name] = att_val
         # iterate over variables in dataset
         for i, v in enumerate(ds.data_vars.keys()):
-            # mask to reduce to valid triangles
-            # and calculate dot product over elements and nodes
-            other[v] = (ds[v] * inside).dot(beta, dim=("element", "node"))
+            # tide model variable for valid elements
+            var = ds[v].isel(element=element)
+            # calculate dot product over elements and nodes
+            other[v] = var.dot(beta, dim=("element", "node"))
             # copy variable attributes
             for att_name, att_val in self._ds[v].attrs.items():
                 other[v].attrs[att_name] = att_val

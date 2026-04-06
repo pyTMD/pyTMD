@@ -11,9 +11,9 @@ import numpy as np
 # PURPOSE: test first and second order shape functions
 @pytest.mark.parametrize("order", [1, 2], ids=["linear", "quadratic"])
 def test_shape_functions(order):
-    # vertices of a triangle
-    xv = np.array([157.1472089, 157.10657818, 157.17874307])
-    yv = np.array([-4.45326521, -4.50707664, -4.52099995])
+    # vertices of an equilateral triangle
+    xv = np.array([-0.5, 0.5, 0.0])
+    yv = np.array([0.0, 0.0, np.sqrt(3.0 / 4.0)])
     # check that shape functions match expected
     nodes = 3 * order
     N = [None] * (nodes)
@@ -56,13 +56,13 @@ def test_shape_functions(order):
 @pytest.mark.parametrize("order", [1, 2], ids=["linear", "quadratic"])
 def test_simple_barycentric(order):
     # vertices of an equilateral triangle
-    xv = np.array([0.0, 1.0, 0.5])
+    xv = np.array([-0.5, 0.5, 0.0])
     yv = np.array([0.0, 0.0, np.sqrt(3.0 / 4.0)])
     # random values at the nodes
     nodes = 3 * order
     ze = -1.0 + 2.0 * np.random.rand(nodes)
     # test point at the triangle centroid
-    x, y = 0.5, np.sqrt(1.0 / 12.0)
+    x, y = 0.0, np.sqrt(1.0 / 12.0)
     # calculate value using linear barycentric interpolation
     z = pyTMD.interpolate.barycentric(xv, yv, ze, x, y, order=order)
     # calculate weights
@@ -78,3 +78,23 @@ def test_simple_barycentric(order):
     exp = np.sum(weights * ze) / np.sum(weights)
     # check that interpolated value matches expected
     assert np.isclose(z, exp, atol=1e-10)
+
+
+# PURPOSE: check the winding number of triangles
+def test_winding_number():
+    # vertices of an equilateral triangle
+    # counter-clockwise direction (winding is positive)
+    xv = np.array([-0.5, 0.5, 0.0])
+    yv = np.array([0.0, 0.0, np.sqrt(3.0 / 4.0)])
+    wind = pyTMD.interpolate._winding_number(xv, yv)
+    assert wind >= 0
+    # vertices of an equilateral triangle
+    # clockwise direction (winding is negative)
+    xv = np.array([0.5, -0.5, 0.0])
+    yv = np.array([0.0, 0.0, np.sqrt(3.0 / 4.0)])
+    wind = pyTMD.interpolate._winding_number(xv, yv)
+    assert wind < 0
+    # fix vertices to cross "meridian"
+    xv[xv < 0] += 1.0
+    wind = pyTMD.interpolate._winding_number(xv, yv)
+    assert wind >= 0
