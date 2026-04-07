@@ -457,25 +457,26 @@ class Dataset:
         order = self._ds["element"].attrs.get("order", 1)
         # default order is same as the tide model
         kwargs.setdefault("order", order)
-        # get extrapolation cutoff distance
+
+        # get cutoff distance to crop elements to bounding box
         cutoff = kwargs.get("cutoff", np.inf)
-        # check if cropping dataset to bounds
+        # crop dataset to bounding box of other dataset plus buffer
         if np.isfinite(cutoff) and self.crs.is_geographic:
-            # convert cutoff distance to model coordinate units
+            # use twice the cutoff distance as a buffer
             cutoff_km = cutoff * __ureg__.parse_units("km")
             a_axis = 6378.137 * __ureg__.parse_units("km")
-            buffer = (cutoff_km / a_axis).to(self.axis_units).magnitude
+            buffer = 2.0 * (cutoff_km / a_axis).to(self.axis_units).magnitude
             # bounds of interpolation coordinates
             bounds = [np.min(x), np.max(x), np.min(y), np.max(y)]
-            # crop dataset to bounding box plus buffer
+            # crop dataset to bounding box of other dataset plus buffer
             ds = self.crop(bounds=bounds, buffer=buffer)
         elif np.isfinite(cutoff):
-            # convert cutoff distance to model coordinate units
+            # use twice the cutoff distance as a buffer
             cutoff_km = cutoff * __ureg__.parse_units("km")
-            buffer = cutoff_km.to(self.axis_units).magnitude
+            buffer = 2.0 * cutoff_km.to(self.axis_units).magnitude
             # bounds of interpolation coordinates
             bounds = [np.min(x), np.max(x), np.min(y), np.max(y)]
-            # crop dataset to bounding box plus buffer
+            # crop dataset to bounding box of other dataset plus buffer
             ds = self.crop(bounds=bounds, buffer=buffer)
         else:
             # copy dataset without cropping
@@ -484,6 +485,7 @@ class Dataset:
         # allocate for barycentric coordinates
         xi = xr.full_like(x, np.nan)
         eta = xr.full_like(x, np.nan)
+        null_points = xi.isnull()
         # allocate for indices of valid elements
         element = xr.zeros_like(x, dtype="i")
         # find the valid elements and barycentric coordinates
@@ -492,7 +494,7 @@ class Dataset:
             x_elem = ds.x.isel(element=i).drop_vars("element")
             y_elem = ds.y.isel(element=i).drop_vars("element")
             # copy x-coordinates to not affect outside array
-            xtmp = x.copy()
+            xtmp = x.copy(deep=False)
             # if model is geographic:
             # check if element crosses a meridian
             if self.crs.is_geographic:
@@ -513,22 +515,23 @@ class Dataset:
             # drop dimensions
             xi_elem = xi_elem.drop_vars("vertex", errors="ignore")
             eta_elem = eta_elem.drop_vars("vertex", errors="ignore")
-            # determine if points are within element
+            # determine if points are within element and need values
             inside_element = _inside_triangle(xi_elem, eta_elem)
             # skip if nothing is inside the element
-            if not np.any(inside_element):
+            if not np.any(inside_element & null_points):
                 continue
-            # save coordinates and indices
-            outside_element = np.logical_not(inside_element)
-            xi = xi.where(outside_element, xi_elem, drop=False)
-            eta = eta.where(outside_element, eta_elem, drop=False)
-            element = element.where(outside_element, i, drop=False)
+            # save barycentric coordinates and indices
+            update_element = np.logical_not(inside_element & null_points)
+            xi = xi.where(update_element, xi_elem, drop=False)
+            eta = eta.where(update_element, eta_elem, drop=False)
+            element = element.where(update_element, i, drop=False)
             # can quit search if all interpolation points have values
-            if not xi.isnull().all():
+            null_points = xi.isnull()
+            if not null_points.any():
                 break
         # get shape functions and convert to DataArray
         N = _shape_functions(xi, eta, kwargs["order"])
-        beta = xr.DataArray(N, dims=("node", *xi.dims))
+        beta = xr.concat(N, dim="node")
         # allocate for output dataset
         other = xr.Dataset()
         # copy attributes
@@ -697,8 +700,18 @@ class Dataset:
         else:
             # copy dataset without cropping
             ds = self._ds.copy()
-        # calculate meshgrid of cropped model coordinates
-        gridx, gridy = np.meshgrid(ds.x.values, ds.y.values)
+        # check if extrapolating from grid or mesh
+        if self.grid_type == "unstructured":
+            # get the polynomial order of the finite elements
+            order = self._ds["element"].attrs.get("order", 1)
+            # reduce to data at the vertices
+            nodes = [0, 1, 2] if (order == 1) else [0, 2, 4]
+            ds = ds.isel(node=nodes)
+            # extract mesh x and y values
+            gridx, gridy = (ds.x.values, ds.y.values)
+        else:
+            # calculate meshgrid of cropped model coordinates
+            gridx, gridy = np.meshgrid(ds.x.values, ds.y.values)
         # initialize valid mask for building tree
         valid_mask = np.zeros_like(gridx, dtype=bool)
         tree = None
@@ -715,11 +728,11 @@ class Dataset:
             # or if the valid mask has changed
             if (tree is None) or (mask != valid_mask).any():
                 # get indices of valid points
-                indy, indx = np.nonzero(mask)
+                valid_indices = np.nonzero(mask)
                 # reduce to valid original values
                 p_in = _to_cartesian(
-                    gridx[indy, indx],
-                    gridy[indy, indx],
+                    gridx[valid_indices],
+                    gridy[valid_indices],
                     is_geographic=self.crs.is_geographic,
                 )
                 # build kd-tree for valid points
@@ -727,7 +740,7 @@ class Dataset:
                 # copy valid mask for next iteration
                 valid_mask = np.copy(mask)
             # reduce model to valid original values
-            flattened = ds[v].values[indy, indx]
+            flattened = ds[v].values[valid_indices]
             # extrapolate missing values using nearest-neighbors
             if other[v].ndim == 0:
                 # single point extrapolation
@@ -749,6 +762,51 @@ class Dataset:
                 other[v].values[invalid] = _nearest_neighbors(
                     tree, p_out, flattened, **kwargs
                 )
+        # return xarray dataset
+        return other
+
+    def grid_interp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        method="linear",
+        **kwargs,
+    ):
+        """
+        Interpolate a regular or rectilinear ``Dataset`` to new coordinates
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Interpolation x-coordinates
+        y: np.ndarray
+            Interpolation y-coordinates
+        method: str, default 'linear'
+            Interpolation method
+
+        Returns
+        -------
+        other: xarray.Dataset
+            Interpolated ``Dataset``
+        """
+        # pad global grids along x-dimension (if necessary)
+        if self.is_global:
+            self._ds = self.pad(n=1)
+        # verify longitudinal convention for geographic models
+        if self.crs.is_geographic:
+            # grid spacing in x-direction
+            dx = self._x[1] - self._x[0]
+            # adjust input longitudes to be consistent with model
+            if (np.min(x) < 0.0) & (self._x.max() > (180.0 + dx)):
+                # input points convention (-180:180)
+                # tide model convention (0:360)
+                x = xr.where(x < 0.0, x + 360.0, x)
+            elif (np.max(x) > 180.0) & (self._x.min() < (0.0 - dx)):
+                # input points convention (0:360)
+                # tide model convention (-180:180)
+                x = xr.where(x > 180.0, x - 360.0, x)
+        # interpolate dataset using built-in xarray methods
+        other = self._ds.interp(x=x, y=y, method=method)
         # return xarray dataset
         return other
 
@@ -806,7 +864,6 @@ class Dataset:
         self,
         x: np.ndarray,
         y: np.ndarray,
-        method="linear",
         **kwargs,
     ):
         """
@@ -818,14 +875,12 @@ class Dataset:
             Interpolation x-coordinates
         y: np.ndarray
             Interpolation y-coordinates
-        method: str, default 'linear'
-            Interpolation method
         extrapolate: bool, default False
             Flag to extrapolate values using nearest-neighbors
         cutoff: int or float, default np.inf
             Maximum distance for extrapolation
         **kwargs: dict
-            Additional keyword arguments for extrapolation functions
+            Additional keyword arguments for interpolation functions
 
         Returns
         -------
@@ -833,29 +888,16 @@ class Dataset:
             Interpolated ``Dataset``
         """
         # set default keyword arguments
+        kwargs.setdefault("method", "linear")
         kwargs.setdefault("extrapolate", False)
         kwargs.setdefault("cutoff", np.inf)
-        # use barycentric interpolation if data is unstructured
+        # check if interpolating from a grid or mesh
         if self.grid_type == "unstructured":
-            return self.barycentric_interp(x, y, **kwargs)
-        # pad global grids along x-dimension (if necessary)
-        if self.is_global:
-            self._ds = self.pad(n=1)
-        # verify longitudinal convention for geographic models
-        if self.crs.is_geographic:
-            # grid spacing in x-direction
-            dx = self._x[1] - self._x[0]
-            # adjust input longitudes to be consistent with model
-            if (np.min(x) < 0.0) & (self._x.max() > (180.0 + dx)):
-                # input points convention (-180:180)
-                # tide model convention (0:360)
-                x = xr.where(x < 0, x + 360, x)
-            elif (np.max(x) > 180.0) & (self._x.min() < (0.0 - dx)):
-                # input points convention (0:360)
-                # tide model convention (-180:180)
-                x = xr.where(x > 180, x - 360, x)
-        # interpolate dataset
-        other = self._ds.interp(x=x, y=y, method=method)
+            # use barycentric interpolation if data is unstructured
+            other = self.barycentric_interp(x, y, **kwargs)
+        else:
+            # use built-in xarray interpolation methods
+            other = self.grid_interp(x, y, **kwargs)
         # extrapolate missing values using nearest-neighbors
         if kwargs["extrapolate"]:
             other = self.extrap_like(other, cutoff=kwargs["cutoff"])
