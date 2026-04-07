@@ -77,7 +77,7 @@ def test_simple_barycentric(order):
     # calculate expected values
     exp = np.sum(weights * ze) / np.sum(weights)
     # check that interpolated value matches expected
-    assert np.isclose(z, exp, atol=1e-10)
+    assert np.isclose(z.values, exp, atol=1e-10)
 
 
 # PURPOSE: check the winding number of triangles

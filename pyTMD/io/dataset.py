@@ -482,15 +482,15 @@ class Dataset:
             ds = self._ds.copy()
 
         # allocate for barycentric coordinates
-        xi = xr.zeros_like(x)
-        eta = xr.zeros_like(x)
+        xi = xr.full_like(x, np.nan)
+        eta = xr.full_like(x, np.nan)
         # allocate for indices of valid elements
         element = xr.zeros_like(x, dtype="i")
         # find the valid elements and barycentric coordinates
         for i, elem in enumerate(ds.element):
             # x and y coordinates of element vertices
-            x_elem = ds.x.isel(element=i)
-            y_elem = ds.y.isel(element=i)
+            x_elem = ds.x.isel(element=i).drop_vars("element")
+            y_elem = ds.y.isel(element=i).drop_vars("element")
             # copy x-coordinates to not affect outside array
             xtmp = x.copy()
             # if model is geographic:
@@ -500,16 +500,19 @@ class Dataset:
                 # negative winding numbers are clockwise
                 wind = _winding_number(x_elem, y_elem)
                 # shift coordinates for meridian crossings
-                if (wind < 0) and (x_elem < 0.0).any():
+                if (wind < 0) & (x_elem < 0.0).any():
                     # adjust points to be 0:360
-                    x_elem = x_elem.where(x_elem > 0, x_elem + 360.0)
-                    xtmp = xtmp.where(xtmp > 0, xtmp + 360.0)
-                elif (wind < 0) and (x_elem > 180.0).any():
+                    x_elem = x_elem.where(x_elem >= 0.0, x_elem + 360.0)
+                    xtmp = xtmp.where(xtmp >= 0, xtmp + 360.0)
+                elif (wind < 0) & (x_elem > 180.0).any():
                     # adjust points to be -180:180
-                    x_elem = x_elem.where(x_elem > 0, x_elem - 360.0)
-                    xtmp = xtmp.where(xtmp > 0, xtmp - 360.0)
+                    x_elem = x_elem.where(x_elem <= 180.0, x_elem - 360.0)
+                    xtmp = xtmp.where(xtmp <= 180.0, xtmp - 360.0)
             # convert model coordinates to barycentric
             xi_elem, eta_elem = _to_barycentric(x_elem, y_elem, xtmp, y)
+            # drop dimensions
+            xi_elem = xi_elem.drop_vars("vertex", errors="ignore")
+            eta_elem = eta_elem.drop_vars("vertex", errors="ignore")
             # determine if points are within element
             inside_element = _inside_triangle(xi_elem, eta_elem)
             # skip if nothing is inside the element
@@ -520,11 +523,12 @@ class Dataset:
             xi = xi.where(outside_element, xi_elem, drop=False)
             eta = eta.where(outside_element, eta_elem, drop=False)
             element = element.where(outside_element, i, drop=False)
+            # can quit search if all interpolation points have values
+            if not xi.isnull().all():
+                break
         # get shape functions and convert to DataArray
         N = _shape_functions(xi, eta, kwargs["order"])
-        beta = xr.zeros_like(xi * ds.node)
-        for i, sf in enumerate(N):
-            beta.isel(node=i).values = sf
+        beta = xr.DataArray(N, dims=("node", *xi.dims))
         # allocate for output dataset
         other = xr.Dataset()
         # copy attributes
@@ -535,7 +539,7 @@ class Dataset:
             # tide model variable for valid elements
             var = ds[v].isel(element=element)
             # calculate dot product over elements and nodes
-            other[v] = var.dot(beta, dim=("element", "node"))
+            other[v] = var.dot(beta, dim="node")
             # copy variable attributes
             for att_name, att_val in self._ds[v].attrs.items():
                 other[v].attrs[att_name] = att_val
@@ -544,7 +548,7 @@ class Dataset:
         other.coords["y"] = y
         # return the interpolated dataset
         # drop empty vertex coordinates
-        return other.drop_vars("vertex").compute()
+        return other.drop_vars("vertex", errors="ignore").compute()
 
     def coords_as(
         self,
