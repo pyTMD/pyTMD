@@ -27,3 +27,5 @@ interpolate
 .. autofunction:: pyTMD.interpolate._inside_triangle
 
 .. autofunction:: pyTMD.interpolate._shape_functions
+
+.. autofunction:: pyTMD.interpolate._winding_number
