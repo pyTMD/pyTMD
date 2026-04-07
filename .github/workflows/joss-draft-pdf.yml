@@ -7,7 +7,7 @@ env:
 
 jobs:
   paper:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     name: Paper Draft
     steps:
       - name: Checkout
