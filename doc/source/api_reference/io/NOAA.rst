@@ -22,6 +22,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.io.NOAA.prediction_stations
 
+.. autofunction:: pyTMD.io.NOAA.active_stations
+
 .. autofunction:: pyTMD.io.NOAA.harmonic_constituents
 
 .. autofunction:: pyTMD.io.NOAA.water_level

@@ -132,6 +132,7 @@ class leaflet:
         kwargs.setdefault("scale_control", False)
         kwargs.setdefault("cursor_control", True)
         kwargs.setdefault("layer_control", True)
+        kwargs.setdefault("marker_control", False)
         kwargs.setdefault("center", (39, -108))
         # create basemap in projection
         if projection == "Global":

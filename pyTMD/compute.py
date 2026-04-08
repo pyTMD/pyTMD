@@ -50,7 +50,6 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 PROGRAM DEPENDENCIES:
-    time.py: utilities for calculating time operations
     spatial: utilities for reading, writing and operating on spatial data
     utilities.py: download and management utilities for syncing files
     astro.py: computes the basic astronomical mean longitudes

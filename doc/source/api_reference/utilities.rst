@@ -32,6 +32,8 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.detect_compression
 
+.. autofunction:: pyTMD.utilities.compressuser
+
 .. autofunction:: pyTMD.utilities.get_hash
 
 .. autofunction:: pyTMD.utilities.get_git_revision_hash
@@ -39,6 +41,10 @@ General Methods
 .. autofunction:: pyTMD.utilities.get_git_status
 
 .. autofunction:: pyTMD.utilities.url_split
+
+.. autofunction:: pyTMD.utilities.convert_arg_line_to_args
+
+.. autofunction:: pyTMD.utilities.build_logger
 
 .. autofunction:: pyTMD.utilities.get_unix_time
 
