@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 constituents.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 Calculates constituents parameters and nodal arguments
 Originally modified from Richard Ray's ARGUMENTS subroutine
 
@@ -24,6 +24,7 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 04/2026: add constituent mapping for TICON-4 sigma1 (SGM)
     Updated 03/2026: add degree-dependent body tide love number tables
     Updated 12/2025: added m1a and m1b constituents to nodal corrections
         added function to parse LOD table from Ray and Erofeeva (2014)
@@ -2946,6 +2947,7 @@ def _parse_name(constituent: str) -> str:
         ("omega0", "node"),
         ("om0", "node"),
         ("rho", "rho1"),
+        ("sgm", "sigma1"),
         ("sig1", "sigma1"),
         ("the", "theta1"),
         ("the1", "theta1"),

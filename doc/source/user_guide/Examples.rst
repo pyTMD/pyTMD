@@ -25,7 +25,7 @@ Examples
    ../notebooks/Plot-Ocean-Pole-Tide-Map
    ../notebooks/Plot-Ross-Ice-Shelf-Map
    ../notebooks/Plot-Solid-Earth-Tides
-   ../notebooks/Plot-Tidal-Spectra
+   ../notebooks/Plot-TICON-Stations
    ../notebooks/Plot-Tide-Forecasts
    ../notebooks/Plot-Tide-Form-Factor
    ../notebooks/Solve-Synthetic-Tides
@@ -110,11 +110,11 @@ Examples
 
 .. grid:: 1 2 4 4
 
-    .. grid-item-card::  Plot Tidal Spectra
+    .. grid-item-card::  Plot TICON Stations
       :text-align: center
-      :img-top: ../_assets/tidal_spectra.png
-      :link: ../notebooks/Plot-Tidal-Spectra.html
-      :link-alt: Plots tidal potential amplitude spectra for constituents
+      :img-top: ../_assets/ticon4_stations.png
+      :link: ../notebooks/Plot-TICON-Stations.html
+      :link-alt: Plots a forecast of tide heights using constituents from the TICON-4 database :cite:p:`HartDavis:2025gf`
 
     .. grid-item-card::  Plot Tide Forecasts
       :text-align: center

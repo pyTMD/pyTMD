@@ -35,12 +35,12 @@ def test_remapping():
     """
     Test remapping of model constituents
     """
-    mapping = [('2n','2n2'), ('alp1', 'alpha1'), ('alp2', 'alpha2'),
+    mapping = [('2n', '2n2'), ('alp1', 'alpha1'), ('alp2', 'alpha2'),
         ('bet1', 'beta1'), ('bet2', 'beta2'), ('del2', 'delta2'),
-        ('e2','eps2'), ('ep2','eps2'), ('gam2', 'gamma2'),
-        ('la2','lambda2'), ('lam2','lambda2'), ('lm2','lambda2'),
+        ('e2', 'eps2'), ('ep2', 'eps2'), ('gam2', 'gamma2'),
+        ('la2', 'lambda2'), ('lam2', 'lambda2'), ('lm2', 'lambda2'),
         ('msq', 'msqm'), ('omega0', 'node'), ('om0', 'node'),
-        ('rho', 'rho1'), ('sig1','sigma1'),
+        ('rho', 'rho1'), ('sgm', 'sigma1'), ('sig1', 'sigma1'),
         ('the', 'theta1'), ('the1', 'theta1')]
     for m in mapping:
         # test standard case
