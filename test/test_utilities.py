@@ -171,22 +171,21 @@ def test_url_joinpath():
     """URL.joinpath should append path segments"""
     url = pyTMD.utilities.URL("https://example.com/data")
     url2 = url.joinpath("subdir", "file.txt")
-    assert "subdir" in str(url2)
-    assert "file.txt" in str(url2)
+    assert str(url2) == "https://example.com/data/subdir/file.txt"
 
 
 def test_url_truediv():
     """URL / operator should join paths"""
     url = pyTMD.utilities.URL("https://example.com/data")
     url2 = url / "file.txt"
-    assert "file.txt" in str(url2)
+    assert str(url2) == "https://example.com/data/file.txt"
 
 
 def test_url_div():
     """URL __div__ should be equivalent to __truediv__"""
     url = pyTMD.utilities.URL("https://example.com/data")
     url2 = url.__div__("file.txt")
-    assert "file.txt" in str(url2)
+    assert str(url2) == "https://example.com/data/file.txt"
 
 
 def test_url_resolve():
@@ -231,7 +230,7 @@ def test_url_parent():
     url = pyTMD.utilities.URL("https://example.com/data/file.txt")
     parent = url.parent
     assert isinstance(parent, pyTMD.utilities.URL)
-    assert "data" in str(parent)
+    assert str(parent) == "https://example.com/data"
 
 
 def test_url_parents():
@@ -246,8 +245,8 @@ def test_url_parts():
     """URL.parts should include the scheme, netloc, and path segments"""
     url = pyTMD.utilities.URL("https://example.com/data/file.txt")
     parts = url.parts
-    assert "https://" in parts
-    assert "example.com" in parts
+    expected = ("https://", "example.com", "data", "file.txt")
+    assert tuple(parts) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -399,15 +398,13 @@ def test_git_status():
 def test_url_split_https():
     """url_split should split an HTTPS URL at /"""
     parts = pyTMD.utilities.url_split("https://example.com/data/file.txt")
-    assert "https://example.com" in parts
-    assert "data" in parts
-    assert "file.txt" in parts
+    assert tuple(parts) == ("https://example.com", "data", "file.txt")
 
 
 def test_url_split_simple():
     """url_split should handle a simple path"""
     parts = pyTMD.utilities.url_split("data/file.txt")
-    assert "file.txt" in parts
+    assert tuple(parts) == ("data", "file.txt")
 
 
 # ---------------------------------------------------------------------------
