@@ -810,3 +810,147 @@ def test_aliasing_period():
     # expected values in days
     exp = np.array([12.4, 13.0])
     assert np.allclose(obs/86400.0, exp, atol=0.03)
+
+def test_minor_arguments():
+    """
+    Tests the minor_arguments function (the full function, not just the table)
+    """
+    # use a random set of modified Julian days
+    MJD = np.random.randint(58000, 61000, size=10)
+    for corrections in ('OTIS', 'GOT'):
+        pu, pf, G = pyTMD.constituents.minor_arguments(MJD,
+            corrections=corrections)
+        # verify shapes
+        assert pu.shape == (10, 20)
+        assert pf.shape == (10, 20)
+        assert G.shape == (10, 20)
+        # verify finite values
+        assert np.all(np.isfinite(pu))
+        assert np.all(np.isfinite(pf))
+        assert np.all(np.isfinite(G))
+
+def test_doodson_number_formalisms():
+    """
+    Tests doodson_number() with Cartwright and Extended formalisms
+    """
+    # Cartwright formalism returns the 6-component array
+    cartwright = pyTMD.constituents.doodson_number('m2', formalism='Cartwright')
+    assert isinstance(cartwright, np.ndarray)
+    assert len(cartwright) == 6
+    assert cartwright[0] == 2.0  # tau coefficient for M2
+
+    # Extended (UKHO) Doodson number
+    extended = pyTMD.constituents.doodson_number('m2', formalism='Extended')
+    assert isinstance(extended, str)
+    assert len(extended) > 0
+
+    # List input should return a dict
+    numbers = pyTMD.constituents.doodson_number(['m2', 's2'],
+        formalism='Doodson')
+    assert isinstance(numbers, dict)
+    assert 'm2' in numbers
+    assert 's2' in numbers
+
+def test_doodson_number_list_cartwright():
+    """
+    Tests doodson_number() with a list and Cartwright formalism
+    """
+    numbers = pyTMD.constituents.doodson_number(['m2', 'k1'],
+        formalism='Cartwright')
+    assert isinstance(numbers, dict)
+    for c, arr in numbers.items():
+        assert isinstance(arr, np.ndarray)
+        assert len(arr) == 6
+
+def test_doodson_number_list_extended():
+    """
+    Tests doodson_number() with a list and Extended formalism
+    """
+    numbers = pyTMD.constituents.doodson_number(['m2', 'k1'],
+        formalism='Extended')
+    assert isinstance(numbers, dict)
+    for c, val in numbers.items():
+        assert isinstance(val, str)
+
+def test_doodson_number_raise_error_false():
+    """
+    Tests doodson_number() with raise_error=False for unknown constituents
+    """
+    # single unsupported constituent
+    result = pyTMD.constituents.doodson_number(
+        'unknown_const', raise_error=False)
+    assert result is None
+
+    # list with one unsupported constituent
+    results = pyTMD.constituents.doodson_number(
+        ['m2', 'unknown_const'], raise_error=False)
+    assert isinstance(results, dict)
+    assert results['unknown_const'] is None
+    assert results['m2'] is not None
+
+def test_nodal_deprecated():
+    """
+    Tests the deprecated nodal() function
+    """
+    import warnings
+    n = np.array([125.0])
+    p = np.array([260.0])
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', DeprecationWarning)
+        pu, pf = pyTMD.constituents.nodal(n, p, ['m2', 's2'])
+    assert pu.shape == (1, 2)
+    assert pf.shape == (1, 2)
+
+def test_nodal_modulation_empty_corrections():
+    """
+    Tests nodal_modulation() with empty corrections (no corrections)
+    """
+    n = np.array([125.0])
+    p = np.array([260.0])
+    pu, pf = pyTMD.constituents.nodal_modulation(n, p, ['m2', 's2'],
+        corrections='')
+    # with no corrections, f=1 and u=0
+    assert np.allclose(pf, 1.0)
+    assert np.allclose(pu, 0.0)
+
+def test_constituent_parameters_raise_error_false():
+    """
+    Tests _constituent_parameters() with raise_error=False for unknown const
+    """
+    amp, phase, omega, alpha, species = \
+        pyTMD.constituents._constituent_parameters(
+            'unknown_const', raise_error=False)
+    assert amp == 0.0
+    assert phase == 0.0
+    assert omega == 0.0
+    assert alpha == 0.0
+    assert species == 0
+
+def test_group_modulation():
+    """
+    Tests group_modulation() with representative constituent set
+    """
+    # use a random set of modified Julian days
+    MJD = np.random.randint(58000, 61000, size=5)
+    # compute astronomical longitudes
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
+    # test group modulation with common long-period constituents
+    constituents = ['sa', 'ssa', 'mm', 'mf']
+    pu, pf = pyTMD.constituents.group_modulation(h, n, p, pp, constituents)
+    assert pu.shape == (5, 4)
+    assert pf.shape == (5, 4)
+    assert np.all(np.isfinite(pu))
+    assert np.all(np.isfinite(pf))
+
+def test_parse_rotation_rate_table():
+    """
+    Tests the _parse_rotation_rate_table() function
+    """
+    ZROT = pyTMD.constituents._parse_rotation_rate_table()
+    # should return a numpy structured array
+    assert isinstance(ZROT, np.ndarray)
+    assert len(ZROT) > 0
+    # should have expected column names
+    assert 'period' in ZROT.dtype.names
+    assert 'UTc' in ZROT.dtype.names
+    assert 'dLODc' in ZROT.dtype.names
