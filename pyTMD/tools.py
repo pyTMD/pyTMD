@@ -120,17 +120,15 @@ class widgets:
         )
 
 
-# set default map dimensions
-_default_layout = ipywidgets.Layout(width="100%", height="500px")
-
-
 # draw ipyleaflet map
 class leaflet:
     def __init__(self, projection="Global", **kwargs):
         # set default keyword arguments
         kwargs.setdefault("map", None)
         kwargs.setdefault("center", (39, -108))
-        kwargs.setdefault("layout", _default_layout)
+        kwargs.setdefault(
+            "layout", ipywidgets.Layout(width="100%", height="500px")
+        )
         kwargs.setdefault("prefer_canvas", False)
         kwargs.setdefault("zoom", 1)
         kwargs.setdefault("attribution", True)
