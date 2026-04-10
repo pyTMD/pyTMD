@@ -139,6 +139,7 @@ def build_stylesheet(
     <xsl:output method="xml" omit-xml-declaration="yes" indent="yes"/>
         <xsl:template match="{key}:metadata">
             <xsl:copy-of select="{key}:location/*"/>
+            <xsl:copy-of select="{key}:date_established"/>
         </xsl:template>
         <xsl:template match="@*|node()">
             <xsl:copy>
@@ -204,7 +205,13 @@ def active_stations(
     # get list of active tide stations
     xpath = _xpaths[api]
     url, namespaces = build_query(api, **kwargs)
-    df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    stylesheet = build_stylesheet(namespaces)
+    df = from_xml(
+        url,
+        xpath=xpath,
+        namespaces=namespaces,
+        stylesheet=stylesheet,
+    )
     # rename columns for consistency
     df = df.rename(columns={"name": "ID", "ID": "name"})
     # convert station names to title case
@@ -214,7 +221,8 @@ def active_stations(
     # set the index to the station name
     df = df.set_index("name")
     # sort the index and drop metadata column
-    df = df.sort_index().drop(columns=["metadata", "parameter"])
+    drop_columns = ["metadata", "parameter"]
+    df = df.sort_index().drop(columns=drop_columns, errors="ignore")
     # return the dataframe
     return df
 
@@ -258,7 +266,8 @@ def prediction_stations(
     # set the index to the station name
     df = df.set_index("name")
     # sort the index and drop metadata column
-    df = df.sort_index().drop(columns=["metadata"], errors="ignore")
+    drop_columns = ["metadata"]
+    df = df.sort_index().drop(columns=drop_columns, errors="ignore")
     # reduce list to active stations only
     if active_only:
         df = df[df.ID.isin(active_stations().ID)]
