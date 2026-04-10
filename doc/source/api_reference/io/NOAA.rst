@@ -18,6 +18,8 @@ Calling Sequence
 
 .. autofunction:: pyTMD.io.NOAA.build_query
 
+.. autofunction:: pyTMD.io.NOAA.build_stylesheet
+
 .. autofunction:: pyTMD.io.NOAA.from_xml
 
 .. autofunction:: pyTMD.io.NOAA.prediction_stations

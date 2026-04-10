@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 """
 NOAA.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (04/2026)
 Query and parsing functions for NOAA webservices API
 
 PYTHON DEPENDENCIES:
+    lxml: processing XML and HTML in Python
+        https://pypi.python.org/pypi/lxml
     pandas: Python Data Analysis Library
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 04/2026: added builder for XSLT 1.0 stylesheets
     Updated 01/2026: raise original exception in case of HTTPError
     Updated 12/2025: make dataframe accessor inherit from Dataset
     Updated 11/2025: add accessor for pandas dataframe objects
@@ -33,6 +36,7 @@ pandas_available = pyTMD.utilities.dependency_available("pandas")
 
 __all__ = [
     "build_query",
+    "build_stylesheet",
     "from_xml",
     "active_stations",
     "prediction_stations",
@@ -68,7 +72,7 @@ _xpaths = {
 }
 
 
-def build_query(api, **kwargs):
+def build_query(api: str, **kwargs):
     """
     Build a query for the NOAA webservices API
 
@@ -102,7 +106,50 @@ def build_query(api, **kwargs):
     return (url, namespaces)
 
 
-def from_xml(url, **kwargs):
+def build_stylesheet(
+    namespaces: dict,
+    key: str = "wsdl",
+    **kwargs,
+):
+    """
+    Build an XSLT stylesheet to flatten NOAA webservices API responses
+
+    Parameters
+    ----------
+    namespaces: dict
+        Namespaces for parsing ``XML`` responses
+    key: str, default "wsdl"
+        Key for namespace to use in stylesheet
+
+    Returns
+    -------
+    stylesheet: StringIO
+        file-like object for XSLT stylesheet
+    """
+    from io import StringIO
+
+    # XSLT namespace and stylesheet template
+    xsl = "http://www.w3.org/1999/XSL/Transform"
+    # lxml only supports XSLT 1.0: cannot use xpath-default-namespace
+    namespace = namespaces.get(key, "")
+    # build output stylesheet
+    stylesheet = f"""
+    <xsl:stylesheet version="1.0" xmlns:xsl="{xsl}" xmlns:{key}="{namespace}">
+    <xsl:output method="xml" omit-xml-declaration="yes" indent="yes"/>
+        <xsl:template match="{key}:metadata">
+            <xsl:copy-of select="{key}:location/*"/>
+        </xsl:template>
+        <xsl:template match="@*|node()">
+            <xsl:copy>
+                <xsl:apply-templates select="@*|node()"/>
+            </xsl:copy>
+        </xsl:template>
+    </xsl:stylesheet>
+    """
+    return StringIO(stylesheet)
+
+
+def from_xml(url: str, **kwargs):
     """
     Query the NOAA webservices API and return as a ``DataFrame``
 
@@ -196,7 +243,13 @@ def prediction_stations(
     # get list of tide prediction stations
     xpath = _xpaths[api]
     url, namespaces = build_query(api, **kwargs)
-    df = from_xml(url, xpath=xpath, namespaces=namespaces)
+    stylesheet = build_stylesheet(namespaces)
+    df = from_xml(
+        url,
+        xpath=xpath,
+        namespaces=namespaces,
+        stylesheet=stylesheet,
+    )
     # convert station names to title case
     df["name"] = df["name"].str.title()
     # convert station IDs to strings
@@ -204,7 +257,7 @@ def prediction_stations(
     # set the index to the station name
     df = df.set_index("name")
     # sort the index and drop metadata column
-    df = df.sort_index().drop(columns=["metadata"])
+    df = df.sort_index().drop(columns=["metadata"], errors="ignore")
     # reduce list to active stations only
     if active_only:
         df = df[df.ID.isin(active_stations().ID)]
