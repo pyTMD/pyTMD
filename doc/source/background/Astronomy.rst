@@ -27,13 +27,13 @@ The rates of change of these arguments are the fundamental frequencies of the as
       - mean longitude of the sun
       - 365.2549 days
     * - :math:`P`
-      - lunar perigree
+      - lunar perigee
       - 8.847 years
     * - :math:`N`
       - ascending lunar node
       - 18.61 years
     * - :math:`Ps`
-      - solar perigree
+      - solar perigee
       - 21,000 years
 
 The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
