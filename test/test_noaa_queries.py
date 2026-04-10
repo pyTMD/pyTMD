@@ -44,7 +44,35 @@ def test_noaa_stations():
         pytest.xfail(exc.reason)
     # check that latitude and longitude columns are in list
     # note that the name is the index and not an available column
-    expected_columns = sorted(['ID', 'lat', 'long'])
+    expected_columns = ['ID', 'lat', 'long']
+    assert sorted(df.columns.tolist()) == expected_columns
+
+def test_noaa_active_stations():
+    """Test NOAA active station information retrieval
+    """
+    api = 'activestations'
+    xpath = pyTMD.io.NOAA._xpaths[api]
+    # attempt to get list of active stations
+    url, namespaces = pyTMD.io.NOAA.build_query(api)
+    # build stylesheet for flattening XML query results
+    stylesheet = pyTMD.io.NOAA.build_stylesheet(namespaces)
+    try:
+        stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
+            namespaces=namespaces, stylesheet=stylesheet)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
+    # check that latitude and longitude columns are in list
+    expected_columns = ['ID', 'date_established', 'lat', 'long',
+        'name', 'parameter', 'state']
+    assert sorted(stations.columns.tolist()) == expected_columns
+    # try from wrapper function
+    try:
+        df = pyTMD.io.NOAA.active_stations()
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
+    # check that latitude and longitude columns are in list
+    # note that the name is the index and not an available column
+    expected_columns = ['ID', 'date_established', 'lat', 'long', 'state']
     assert sorted(df.columns.tolist()) == expected_columns
 
 def test_noaa_harmonic_constituents():
