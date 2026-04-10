@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: added builder for XSLT 1.0 stylesheets
+        allows retrieval of prediction stations coordinates
     Updated 01/2026: raise original exception in case of HTTPError
     Updated 12/2025: make dataframe accessor inherit from Dataset
     Updated 11/2025: add accessor for pandas dataframe objects
@@ -131,7 +132,7 @@ def build_stylesheet(
     # XSLT namespace and stylesheet template
     xsl = "http://www.w3.org/1999/XSL/Transform"
     # lxml only supports XSLT 1.0: cannot use xpath-default-namespace
-    namespace = namespaces.get(key, "")
+    namespace = namespaces[key]
     # build output stylesheet
     stylesheet = f"""
     <xsl:stylesheet version="1.0" xmlns:xsl="{xsl}" xmlns:{key}="{namespace}">

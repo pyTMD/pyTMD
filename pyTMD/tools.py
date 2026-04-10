@@ -178,7 +178,8 @@ class leaflet:
             self.crs = "EPSG:3031"
         else:
             # use a predefined ipyleaflet map
-            assert kwargs["map"], "Leaflet map needs to be defined"
+            if not kwargs["map"]:
+                raise ValueError("Leaflet map needs to be defined")
             self.map = kwargs["map"]
             self.crs = self.map.crs["name"]
         # add control for full screen
