@@ -220,9 +220,8 @@ def active_stations(
     df["ID"] = df["ID"].astype(str)
     # set the index to the station name
     df = df.set_index("name")
-    # sort the index and drop metadata column
-    drop_columns = ["metadata", "parameter"]
-    df = df.sort_index().drop(columns=drop_columns, errors="ignore")
+    # sort the index and drop parameter column
+    df = df.sort_index().drop(columns=["parameter"], errors="ignore")
     # return the dataframe
     return df
 
@@ -266,8 +265,7 @@ def prediction_stations(
     # set the index to the station name
     df = df.set_index("name")
     # sort the index and drop metadata column
-    drop_columns = ["metadata"]
-    df = df.sort_index().drop(columns=drop_columns, errors="ignore")
+    df = df.sort_index().drop(columns=["metadata"], errors="ignore")
     # reduce list to active stations only
     if active_only:
         df = df[df.ID.isin(active_stations().ID)]
