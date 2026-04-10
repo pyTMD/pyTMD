@@ -8,6 +8,7 @@ PYTHON DEPENDENCIES:
         https://pandas.pydata.org
 
 UPDATE HISTORY:
+    Updated 04/2026: add check for latitude and longiude columns
     Updated 01/2026: xfail tests on HTTPError exceptions
     Updated 11/2025: added test for pandas dataframe accessor
         added test for xarray dataset conversion
@@ -24,13 +25,27 @@ def test_noaa_stations():
     xpath = pyTMD.io.NOAA._xpaths[api]
     # attempt to get list of tide prediction stations
     url, namespaces = pyTMD.io.NOAA.build_query(api)
+    # build stylesheet for flattening XML query results
+    stylesheet = pyTMD.io.NOAA.build_stylesheet(namespaces)
     try:
         stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
-            namespaces=namespaces)
+            namespaces=namespaces, stylesheet=stylesheet)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
+    # check that latitude and longitude columns are in list
+    expected_columns = ['ID', 'lat', 'long', 'name']
+    assert sorted(stations.columns.tolist()) == expected_columns
     # check that station indicator is in list
     assert '9410230' in stations['ID'].values
+    # try from wrapper function
+    try:
+        df = pyTMD.io.NOAA.prediction_stations(active_only=False)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
+    # check that latitude and longitude columns are in list
+    # note that the name is the index and not an available column
+    expected_columns = sorted(['ID', 'lat', 'long'])
+    assert sorted(df.columns.tolist()) == expected_columns
 
 def test_noaa_harmonic_constituents():
     """Test NOAA harmonic constituents retrieval
@@ -51,8 +66,8 @@ def test_noaa_harmonic_constituents():
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     # check if the values match expected
-    expected_columns = ['name', 'amplitude', 'phase', 'speed']
-    assert hcons.columns.tolist() == expected_columns
+    expected_columns = ['amplitude', 'name', 'phase', 'speed']
+    assert sorted(hcons.columns.tolist()) == expected_columns
     assert 'M2' in hcons['name'].values
     # get dataframe using wrapper function
     df = pyTMD.io.NOAA.harmonic_constituents(stationId=station_id)
@@ -93,13 +108,13 @@ def test_noaa_water_level():
             namespaces=namespaces, parse_dates=['timeStamp'])
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
-    expected_columns = ['timeStamp', 'WL', 'sigma', 'I', 'L']
+    expected_columns = sorted(['timeStamp', 'WL', 'sigma', 'I', 'L'])
     expected_WL = np.array([-0.2, -0.438, -0.571, -0.65, -0.589,
         -0.447, -0.278, -0.026, 0.159, 0.28, 0.341, 0.299, 0.246,
         0.162, 0.078, 0.06, 0.08, 0.147, 0.231, 0.305, 0.354,
         0.379, 0.298, 0.154])
     # check if the values match expected
-    assert wlevel.columns.tolist() == expected_columns
+    assert sorted(wlevel.columns.tolist()) == expected_columns
     assert wlevel['timeStamp'][0] == np.datetime64('2020-01-01')
     assert np.allclose(wlevel['WL'].values, expected_WL)
     # attempt to get dataframe using wrapper function
@@ -109,7 +124,7 @@ def test_noaa_water_level():
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     # check if the values match expected
-    assert df.columns.tolist() == expected_columns
+    assert sorted(df.columns.tolist()) == expected_columns
     assert df['timeStamp'][0] == np.datetime64('2020-01-01')
     assert np.allclose(df['WL'].values, expected_WL)
     # check if the values match between queries
