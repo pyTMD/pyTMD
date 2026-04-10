@@ -39,8 +39,8 @@ The rates of change of these arguments are the fundamental frequencies of the as
 The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
 
 .. math::
-    :label: 4.1
-    :name: eq:4.1
+    :label: 6.1
+    :name: eq:6.1
 
     \tau = t - S + H
 
@@ -75,8 +75,8 @@ When calculating :term:`Nutation`, IERS conventions use Delaunay arguments as th
 From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:
 
 .. math::
-    :label: 4.2
-    :name: eq:4.2
+    :label: 6.2
+    :name: eq:6.2
 
     \gamma &= \tau + S \\
     l &= S - P \\
@@ -88,8 +88,8 @@ From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arg
 And conversely:
 
 .. math::
-    :label: 4.3
-    :name: eq:4.3
+    :label: 6.3
+    :name: eq:6.3
 
     S &= F + \Omega \\
     H &= F + \Omega - D \\

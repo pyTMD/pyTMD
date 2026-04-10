@@ -9,11 +9,11 @@ The :math:`xy` plane is also called the equatorial plane.
 
 Geodetic coordinates (longitude :math:`\lambda`, latitude :math:`\varphi`, and height :math:`h`) are used to describe the position of a point on the Earth with respect to a defined ellipsoid.
 Changing the terrestrial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
-One method of transformation involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 2.1 <eq:2.1>`].
+One method of transformation involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 4.1 <eq:4.1>`].
 
 .. math::
-    :label: 2.1
-    :name: eq:2.1
+    :label: 4.1
+    :name: eq:4.1
 
     (\lambda, \varphi, h) &\rightarrow (x, y, z) \\
     (x, y, z) &\rightarrow (x', y', z') \\
@@ -22,26 +22,26 @@ One method of transformation involves converting from a geographic coordinate sy
 The transformation from ellipsoidal coordinates of a point in space to Cartesian coordinates is calculated by:
 
 .. math::
-    :label: 2.2
-    :name: eq:2.2
+    :label: 4.2
+    :name: eq:4.2
 
     x &= (N + h)\cos{\varphi}\cos{\lambda}\\
     y &= (N + h)\cos{\varphi}\sin{\lambda}\\
     z &= \left((1 - e^2) N + h \right) \sin{\varphi}
 
 .. math::
-    :label: 2.3
-    :name: eq:2.3
+    :label: 4.3
+    :name: eq:4.3
 
     N = \frac{a}{\sqrt{1 - e^2 \sin^2{\varphi}}}
 
 .. math::
-    :label: 2.4
-    :name: eq:2.4
+    :label: 4.4
+    :name: eq:4.4
 
     e^2 = 2f - f^2
 
-where :math:`N` is the radius of curvature in the prime vertical [:ref:`Equation 2.3 <eq:2.3>`], :math:`e` is the ellipsoidal eccentricity, with the squared eccentricity :math:`e^2` given by [:ref:`Equation 2.4 <eq:2.4>`], :math:`a` is the semi-major axis of the ellipsoid, and :math:`f` is the ellipsoidal flattening :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`.
+where :math:`N` is the radius of curvature in the prime vertical [:ref:`Equation 4.3 <eq:4.3>`], :math:`e` is the ellipsoidal eccentricity, with the squared eccentricity :math:`e^2` given by [:ref:`Equation 4.4 <eq:4.4>`], :math:`a` is the semi-major axis of the ellipsoid, and :math:`f` is the ellipsoidal flattening :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`.
 Ellipsoid definitions typically specify the semi-major axis (:math:`a`) and flattening (:math:`f`), and datum definitions additionally include the coordinate system origin :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`.
 In general, objects move with respect to the coordinate system, and the coordinate system itself moves and rotates in space :cite:p:`Urban:2013vl`.
 Coordinate system definitions, such as the International Terrestrial Reference Frame (ITRF), will often include a time component to account for these changes.
@@ -65,8 +65,8 @@ Celestial reference systems are used to describe the positions of celestial bodi
 Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math:`\mathbf{x}_{TRS}`) reference systems involves a set of transformation matrices for frame bias (:math:`\mathbf{B}`), precession (:math:`\mathbf{P}`), nutation (:math:`\mathbf{N}`), Earth's rotation (:math:`\mathbf{T}`), and polar motion (:math:`\mathbf{W}`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Urban:2013vl`.
 
 .. math::
-    :label: 2.5
-    :name: eq:2.5
+    :label: 4.5
+    :name: eq:4.5
 
     \mathbf{x}_{CRS} = \mathbf{B}\ \mathbf{P}\ \mathbf{N}\ \mathbf{T}\ \mathbf{W}\ \mathbf{x}_{TRS}
 
