@@ -4,7 +4,7 @@ Getting Started
 
 .. tip::
 
-    See the `background material <../background/Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
+    See the `background material <../background/Ocean-Load-Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
 .. note::
 

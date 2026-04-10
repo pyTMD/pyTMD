@@ -9,16 +9,16 @@ The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight an
 The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the JD by
 
 .. math::
-    :label: 3.1
-    :name: eq:3.1
+    :label: 5.1
+    :name: eq:5.1
 
     MJD = JD - 2400000.5
 
 Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
-    :label: 3.2
-    :name: eq:3.2
+    :label: 5.2
+    :name: eq:5.2
 
     T = \frac{JD - 2451545.0}{36525}
 
@@ -69,16 +69,16 @@ GMST is calculated in ``pyTMD`` using the revised IAU 2000 precession model :cit
 Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the Vernal Equinox due to :term:`Nutation` using the "equation of the equinoxes" (:math:`E_e`).
 
 .. math::
-    :label: 3.3
-    :name: eq:3.3
+    :label: 5.3
+    :name: eq:5.3
 
     GAST = GMST + E_e
 
 The "equation of the equinoxes" describes the difference between the positions of the true (:math:`\Upsilon_T`) and mean (:math:`\Upsilon_M`) equinoxes of date, and is calculated using the following equations:
 
 .. math::
-    :label: 3.4
-    :name: eq:3.4
+    :label: 5.4
+    :name: eq:5.4
 
     E_e &= \Upsilon_T - \Upsilon_M \\
     &= \Delta\psi\cos{\varepsilon} + \sum_k (C'_k \sin{A_k} + S'_k \cos{A_k})
