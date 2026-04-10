@@ -1,9 +1,9 @@
 Pole Tides
 ##########
 
-The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celestial pole, and rotates about it once every 26,000 years :cite:p:`Kantha:2000vo`.
+The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celestial pole, and precesses about the celestial pole approximately once every 26,000 years :cite:p:`Kantha:2000vo`.
 Superimposed on this long-term :term:`Precession`, the rotation axis of the Earth shifts with respect to its mean pole location due to :term:`Nutation`, :term:`Chandler Wobble`, annual variations, and other processes :cite:p:`Wahr:1985gr,Desai:2002ev,Agnew:2015kw`.
-Load and ocean pole tides are driven by these variations, the corresponding elastic response, and for the case of ocean pole tides the centripetal effects of :term:`Polar Motion` on the ocean :cite:p:`Desai:2002ev,Desai:2015jr`.
+Load and ocean pole tides are driven by these variations, the corresponding elastic response, and (for the case of the ocean pole tide) the centripetal effects of :term:`Polar Motion` on the ocean :cite:p:`Desai:2002ev,Desai:2015jr`.
 These variations are centimeter scale in both the vertical and horizontal, and should be taken into account when comparing observations over periods longer than two months.
 
 Methods
