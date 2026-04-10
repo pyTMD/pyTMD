@@ -1,0 +1,19 @@
+name: Check Notebooks
+
+on:
+  pull_request:
+    paths:
+      - '**.ipynb'
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+
+jobs:
+  check-notebooks:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify notebooks are stripped
+        uses: kynan/nbstripout@main
+        with:
+          paths: '**/*.ipynb'
