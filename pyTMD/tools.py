@@ -125,32 +125,40 @@ class leaflet:
     def __init__(self, projection="Global", **kwargs):
         # set default keyword arguments
         kwargs.setdefault("map", None)
-        kwargs.setdefault("attribution", True)
-        kwargs.setdefault("full_screen_control", False)
+        kwargs.setdefault("center", (39, -108))
+        kwargs.setdefault(
+            "layout", ipywidgets.Layout(width="100%", height="500px")
+        )
+        kwargs.setdefault("prefer_canvas", False)
         kwargs.setdefault("zoom", 1)
-        kwargs.setdefault("zoom_control", False)
-        kwargs.setdefault("scale_control", False)
+        kwargs.setdefault("attribution", True)
         kwargs.setdefault("cursor_control", True)
+        kwargs.setdefault("full_screen_control", False)
         kwargs.setdefault("layer_control", True)
         kwargs.setdefault("marker_control", False)
-        kwargs.setdefault("center", (39, -108))
+        kwargs.setdefault("scale_control", False)
+        kwargs.setdefault("zoom_control", False)
         # create basemap in projection
         if projection == "Global":
             self.map = ipyleaflet.Map(
                 center=kwargs["center"],
+                layout=kwargs["layout"],
                 zoom=kwargs["zoom"],
                 max_zoom=15,
                 world_copy_jump=True,
                 attribution_control=kwargs["attribution"],
+                prefer_canvas=kwargs["prefer_canvas"],
                 basemap=ipyleaflet.basemaps.Esri.WorldTopoMap,
             )
             self.crs = "EPSG:3857"
         elif projection == "North":
             self.map = ipyleaflet.Map(
                 center=kwargs["center"],
+                layout=kwargs["layout"],
                 zoom=kwargs["zoom"],
                 max_zoom=24,
                 attribution_control=kwargs["attribution"],
+                prefer_canvas=kwargs["prefer_canvas"],
                 basemap=ipyleaflet.basemaps.Esri.ArcticOceanBase,
                 crs=ipyleaflet.projections.EPSG5936.ESRIBasemap,
             )
@@ -159,15 +167,19 @@ class leaflet:
         elif projection == "South":
             self.map = ipyleaflet.Map(
                 center=kwargs["center"],
+                layout=kwargs["layout"],
                 zoom=kwargs["zoom"],
                 max_zoom=9,
                 attribution_control=kwargs["attribution"],
+                prefer_canvas=kwargs["prefer_canvas"],
                 basemap=ipyleaflet.basemaps.Esri.AntarcticBasemap,
                 crs=ipyleaflet.projections.EPSG3031.ESRIBasemap,
             )
             self.crs = "EPSG:3031"
         else:
             # use a predefined ipyleaflet map
+            if not kwargs["map"]:
+                raise ValueError("Leaflet map needs to be defined")
             self.map = kwargs["map"]
             self.crs = self.map.crs["name"]
         # add control for full screen
@@ -231,8 +243,8 @@ class leaflet:
     # convert points to EPSG:4326
     def transform(self, x, y, proj4def):
         # convert geolocation variable to EPSG:4326
-        crs1 = pyproj.CRS.from_string(proj4def)
-        crs2 = pyproj.CRS.from_string("EPSG:4326")
+        crs1 = pyproj.CRS.from_user_input(proj4def)
+        crs2 = pyproj.CRS.from_user_input(4326)
         trans = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
         return trans.transform(x, y)
 
