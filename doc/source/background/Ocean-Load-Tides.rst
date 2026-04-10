@@ -64,7 +64,7 @@ While the equilibrium condition is rarely satisfied for shorter period tides, so
 Using the relative amplitudes from equilibrium theory are also useful for *inferring* unmodeled constituents :cite:p:`Cartwright:1971iz,Cartwright:1973em`.
 Tidal inference refers to the estimation of smaller (minor) constituents from estimates of the more major constituents :cite:p:`Ray:2017jx`.
 Inference is a useful tool for estimating more of the tidal spectrum when only a limited set of constituents are provided by a tide model :cite:p:`Parker:2007wq`.
-For tides in the diurnal band, a resonance from the Earth's free core notation (FCN) can complicate inferring some constituents :cite:p:`Wahr:1981if,Ray:2017jx,Agnew:2018ih`.
+For tides in the diurnal band, a resonance from the Earth's free core nutation (FCN) can complicate inferring some constituents :cite:p:`Wahr:1981if,Ray:2017jx,Agnew:2018ih`.
 This resonance affects the instantaneous elastic response of the solid Earth to tidal loading :cite:p:`Wahr:1979vx`.
 
 Prediction
@@ -72,7 +72,7 @@ Prediction
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, :func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigree (:math:`P`), ascending lunar node (:math:`N`) and solar perigree (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
+For any given time, :func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigee (:math:`P`), ascending lunar node (:math:`N`) and solar perigee (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 These can be summed together to estimate the equilibrium phase (:math:`G`).
 

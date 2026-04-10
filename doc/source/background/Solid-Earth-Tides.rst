@@ -45,5 +45,5 @@ The radial difference in terms of latitude between the mean-tide and tide-free s
     :label: 2.1
     :name: eq:2.1
 
-    \delta r(\varphi) = -0.120582 \left(\frac{3}{2} sin^2 \varphi - \frac{1}{2} \right)
+    \delta r(\varphi) = -0.120582 \left(\frac{3}{2} \sin^2 \varphi - \frac{1}{2} \right)
 
