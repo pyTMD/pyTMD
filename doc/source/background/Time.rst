@@ -95,5 +95,5 @@ Many of the early estimates of the sub-daily variations in the length of day (LO
 
 .. plot:: ./background/length-of-day.py
     :show-source-link: False
-    :caption: Length of Day Variations from :cite:t:`Ray:1994dk`
+    :caption: Rotation Rate Variations due to a) Diurnal and Semi-Diurnal :cite:p:`Ray:1994dk` and b) Long-Period Tides :cite:p:`Ray:2014fu`. Red lines in b) denote values for the time period used for calculating the short-period tides in a). Variations in b) are dominated by the 18.6 year node tide cycle :cite:p:`Ray:2014fu`. 
     :align: center
