@@ -20,6 +20,7 @@ authors = [
 maintainers = [
     {name = "pyTMD contributors"}
 ]
+license = "MIT"
 license-files = ["LICENSE"]
 readme = {file = "README.md", content-type = "text/markdown"}
 
@@ -39,7 +40,6 @@ dependencies = [
 classifiers=[
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
