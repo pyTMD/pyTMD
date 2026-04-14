@@ -79,8 +79,6 @@ source_suffix = {
 if on_rtd:
     nb_execution_mode = "auto"
     nb_execution_excludepatterns = [
-        "Plot-Antarctic-Tidal-Currents.ipynb",
-        "Plot-Antarctic-Tide-Range.ipynb",
         "Plot-ATLAS-Compact.ipynb",
     ]
     nb_output_stderr = "remove-warn"
