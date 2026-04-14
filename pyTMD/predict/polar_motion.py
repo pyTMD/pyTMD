@@ -392,7 +392,7 @@ def earth_orientation(
     delaunay_table[:, 27] = [0, 0, -2, 2, -2, 2, 0]  # s2
     delaunay_table[:, 28] = [0, 1, -2, 2, -2, 2, 2]  # r2
     delaunay_table[:, 29] = [0, 0, 0, 0, 0, 2, 0]  # k2
-    # convert to data array of coefficients
+    # convert delaunay coefficients to DataArray
     delaunay_table = xr.DataArray(
         delaunay_table,
         dims=["argument", "constituent"],
@@ -433,7 +433,7 @@ def earth_orientation(
     dEOP[:, 27] = [0.0636 - 0.1441j, 0.0866 + 0.0592j, -0.0016 - 0.0755j]
     dEOP[:, 28] = [0.0006 - 0.0012j, 0.0007 + 0.0005j, -0.0000 - 0.0006j]
     dEOP[:, 29] = [0.0191 - 0.0385j, 0.0231 + 0.0177j, -0.0004 - 0.0210j]
-    # convert to data array of EOP corrections
+    # convert EOP corrections to DataArray
     dEOP = xr.DataArray(
         dEOP,
         dims=["EOP", "constituent"],
@@ -449,8 +449,8 @@ def earth_orientation(
     # calculate EOP corrections
     corrections = dEOP.real * phase.real + dEOP.imag * phase.imag
     # calculate angular frequency of constituents
-    omega = pyTMD.constituents.frequency(constituents)
-    # create output dataset from data arrays
+    omegas = pyTMD.constituents.frequency(constituents)
+    # create output Dataset from DataArray objects
     ds = xr.Dataset()
     # polar motion corrections in X and Y (arcseconds)
     ds["dX"] = 1e-3 * corrections.sel(EOP="dX")
@@ -464,8 +464,8 @@ def earth_orientation(
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
     # period of constituent (days)
-    period = 2.0 * np.pi / (86400.0 * omega)
-    ds["period"] = ("constituent", period)
+    periods = 2.0 * np.pi / (86400.0 * omegas)
+    ds["period"] = ("constituent", periods)
     ds["period"].attrs["units"] = "days"
     # return the variations in earth rotation
     return ds
@@ -510,7 +510,7 @@ def length_of_day(
     # note the sign change to go from N to N'
     args = ["tau", "s", "h", "p", "n", "pp", "k"]
     arguments = np.c_[tau, s, h, p, -n, pp, k]
-    # convert to dataarray
+    # convert arguments to DataArray
     arguments = xr.DataArray(
         arguments,
         dims=["time", "argument"],
@@ -542,7 +542,7 @@ def length_of_day(
     # calculate length of day corrections
     dUT = ZROT["UTc"] * np.cos(G) + ZROT["UTs"] * np.sin(G)
     dLOD = ZROT["dLODc"] * np.cos(G) + ZROT["dLODs"] * np.sin(G)
-    # create output dataset
+    # create output Dataset from DataArray objects
     ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
     # delta UT1-TAI (seconds)
     ds["dUT"] = 1e-6 * dUT

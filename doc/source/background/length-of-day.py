@@ -4,10 +4,10 @@ import timescale
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
-# MJD dates from Ray and Erofeeva (2014)
+# MJD dates from Ray and Erofeeva (2014) at daily resolution
 MJD1 = np.arange(37680, 55021)
-# dates from Ray (1994)
-MJD2 = 48830 + np.arange(86400 * 4) / 86400.0
+# MJD dates from Ray (1994) at minute resolution
+MJD2 = 48830 + np.arange(1440 * 4) / 1440.0
 
 # plot rotation rate variations
 fig, ax = plt.subplots(num=1, nrows=2, sharex=False, figsize=(8, 4))

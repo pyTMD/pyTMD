@@ -153,54 +153,6 @@ def body_tide(
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
 
-    # compute principal mean longitudes
-    # convert dates into Ephemeris Time
-    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + deltat, method=method)
-    # initial time conversions
-    hour = 24.0 * np.mod(MJD, 1)
-    # convert from hours solar time into mean lunar time in degrees
-    tau = 15.0 * hour - s + h
-    # variable for multiples of 90 degrees (Ray technical note 2017)
-    # full expansion of Equilibrium Tide includes some negative cosine
-    # terms and some sine terms (Pugh and Woodworth, 2014)
-    k = 90.0 + np.zeros_like(MJD)
-
-    # astronomical and planetary mean longitudes
-    args = ["tau", "s", "h", "p", "n", "pp", "k"]
-    if kwargs["include_planets"]:
-        # calculate planetary mean longitudes
-        # me: Mercury, ve: Venus, ma: Mars, ju: Jupiter, sa: Saturn
-        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD + deltat)
-        arguments = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
-        args.extend(["me", "ve", "ma", "ju", "sa"])
-    else:
-        arguments = np.c_[tau, s, h, p, n, pp, k]
-    # convert to dataarray
-    arguments = xr.DataArray(
-        arguments,
-        dims=["time", "argument"],
-        coords=dict(
-            time=np.atleast_1d(MJD),
-            argument=args,
-        ),
-    )
-    # number of arguments
-    nargs = len(args)
-    # allocate array for Doodson coefficients
-    coef = xr.DataArray(
-        np.zeros((nargs)),
-        dims="argument",
-        coords=dict(argument=args),
-    )
-
-    # longitudes and colatitudes in radians
-    phi = np.radians(ds.x)
-    th = np.radians(90.0 - ds.y)
-
-    # allocate for output body tide estimates (meters)
-    # latitudinal, longitudinal and radial components
-    zeta = xr.Dataset()
-
     # check if tide catalog includes planetary contributions
     if catalog == "HW1995":
         # catalog includes planetary contributions
@@ -228,6 +180,51 @@ def body_tide(
         include_planets=include_planets,
     )
 
+    # compute principal mean longitudes
+    # convert dates into Ephemeris Time
+    s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD + deltat, method=method)
+    # initial time conversions
+    hour = 24.0 * np.mod(MJD, 1)
+    # convert from hours solar time into mean lunar time in degrees
+    tau = 15.0 * hour - s + h
+    # variable for multiples of 90 degrees (Ray technical note 2017)
+    # full expansion of Equilibrium Tide includes some negative cosine
+    # terms and some sine terms (Pugh and Woodworth, 2014)
+    k = 90.0 + np.zeros_like(MJD)
+
+    # astronomical and planetary mean longitudes
+    args = ["tau", "s", "h", "p", "n", "pp", "k"]
+    # verify that the catalog includes planetary contributions
+    if kwargs["include_planets"] and include_planets:
+        # calculate planetary mean longitudes
+        # me: Mercury, ve: Venus, ma: Mars, ju: Jupiter, sa: Saturn
+        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD + deltat)
+        arguments = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
+        args.extend(["me", "ve", "ma", "ju", "sa"])
+    else:
+        arguments = np.c_[tau, s, h, p, n, pp, k]
+    # convert arguments to DataArray
+    arguments = xr.DataArray(
+        arguments,
+        dims=["time", "argument"],
+        coords=dict(
+            time=np.atleast_1d(MJD),
+            argument=args,
+        ),
+    )
+    # number of arguments
+    nargs = len(args)
+    # allocate array for Doodson coefficients
+    coef = xr.DataArray(
+        np.zeros((nargs)),
+        dims="argument",
+        coords=dict(argument=args),
+    )
+
+    # longitudes and colatitudes in radians
+    phi = np.radians(ds.x)
+    th = np.radians(90.0 - ds.y)
+
     # precompute spherical harmonic functions and derivatives
     # will need to be rotated by constituent phase
     Ylm = xr.Dataset()
@@ -243,6 +240,10 @@ def body_tide(
         dims="time",
         coords=dict(time=np.atleast_1d(MJD)),
     )
+
+    # allocate for output body tide estimates (meters)
+    # latitudinal, longitudinal and radial components
+    zeta = xr.Dataset()
     # initialize output body tides
     for key in ["R", "N", "E"]:
         zeta[key] = xr.zeros_like(th * phase)
