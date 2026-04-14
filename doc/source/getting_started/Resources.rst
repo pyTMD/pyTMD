@@ -46,6 +46,11 @@ Software
 - `Python tools for time and astronomical calculations <https://github.com/pyTMD/timescale>`_
 - `Tidal Correction Software for NASA Polar Altimetry Missions <https://github.com/tsutterley/Grounding-Zones>`_
 
+Tutorials
+#########
+
+- `Tidal Analysis and Prediction with pyTMD <https://github.com/pyTMD/pyTMD-tutorial>`_
+
 Alternative Data Sources
 ########################
 
