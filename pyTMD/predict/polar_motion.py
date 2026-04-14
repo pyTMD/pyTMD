@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 polar_motion.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 Prediction routines for pole tides and Earth Orientation Parameters (EOPs)
 
 PYTHON DEPENDENCIES:
@@ -19,6 +19,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 04/2026: parallel outputs from earth_orientation and length_of_day
     Written 03/2026: split up prediction functions into separate files
 """
 
@@ -316,13 +317,14 @@ def earth_orientation(
     gamma = gha + circle / 2.0
     # variable for multiples of 90 degrees (Ray technical note 2017)
     K = circle / 4.0 + np.zeros_like((MJD))
-    # data array of arguments
+    # delaunay arguments
+    args = ["l", "lp", "F", "D", "omega", "gamma", "k"]
     arguments = xr.DataArray(
         np.c_[l, lp, F, D, omega, gamma, K],
         dims=["time", "argument"],
         coords=dict(
             time=np.atleast_1d(MJD),
-            argument=["l", "lp", "F", "D", "omega", "gamma", "k"],
+            argument=args,
         ),
     )
     # major constituents in Ray (1994) and latest IERS conventions
@@ -395,7 +397,7 @@ def earth_orientation(
         delaunay_table,
         dims=["argument", "constituent"],
         coords=dict(
-            argument=["l", "lp", "F", "D", "omega", "gamma", "k"],
+            argument=args,
             constituent=constituents,
         ),
     )
@@ -445,20 +447,26 @@ def earth_orientation(
     # convert from arcseconds to complex phase in radians
     phase = np.exp(1j * pyTMD.math.asec2rad(G))
     # calculate EOP corrections
-    corrections = (dEOP.real * phase.real + dEOP.imag * phase.imag).sum(
-        dim="constituent"
-    )
+    corrections = dEOP.real * phase.real + dEOP.imag * phase.imag
+    # calculate angular frequency of constituents
+    omega = pyTMD.constituents.frequency(constituents)
     # create output dataset from data arrays
     ds = xr.Dataset()
+    # polar motion corrections in X and Y (arcseconds)
     ds["dX"] = 1e-3 * corrections.sel(EOP="dX")
     ds["dX"].attrs["units"] = "arcseconds"
     ds["dX"].attrs["long_name"] = "anomaly in polar motion in X"
     ds["dY"] = 1e-3 * corrections.sel(EOP="dY")
     ds["dY"].attrs["units"] = "arcseconds"
     ds["dY"].attrs["long_name"] = "anomaly in polar motion in Y"
+    # delta UT1-TAI (seconds)
     ds["dUT"] = 1e-4 * corrections.sel(EOP="dUT")
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
+    # period of constituent (days)
+    period = 2.0 * np.pi / (86400.0 * omega)
+    ds["period"] = ("constituent", period)
+    ds["period"].attrs["units"] = "days"
     # return the variations in earth rotation
     return ds
 
@@ -498,20 +506,19 @@ def length_of_day(
     tau = 15.0 * hour - s + h
     # variable for multiples of 90 degrees (Ray technical note 2017)
     k = 90.0 + 0.0 * MJD
-    # dataset of arguments
+    # astronomical arguments
     # note the sign change to go from N to N'
-    arguments = xr.Dataset(
-        data_vars=dict(
-            tau=(["time"], tau),
-            s=(["time"], s),
-            h=(["time"], h),
-            p=(["time"], p),
-            n=(["time"], -n),
-            pp=(["time"], pp),
-            k=(["time"], k),
+    args = ["tau", "s", "h", "p", "n", "pp", "k"]
+    arguments = np.c_[tau, s, h, p, -n, pp, k]
+    # convert to dataarray
+    arguments = xr.DataArray(
+        arguments,
+        dims=["time", "argument"],
+        coords=dict(
+            time=np.atleast_1d(MJD),
+            argument=args,
         ),
-        coords=dict(time=np.atleast_1d(MJD)),
-    ).to_dataarray(dim="argument")
+    )
     # parse rotation rate table from Ray and Erofeeva (2014)
     ZROT = pyTMD.constituents._parse_rotation_rate_table()
     # Doodson coefficients
@@ -528,19 +535,20 @@ def length_of_day(
             ]
         ),
         dims=["argument", "constituent"],
-        coords=dict(argument=["tau", "s", "h", "p", "n", "pp", "k"]),
+        coords=dict(argument=args),
     )
     # equilibrium phase converted to radians
     G = np.radians(arguments.dot(coefficients))
+    # calculate length of day corrections
+    dUT = ZROT["UTc"] * np.cos(G) + ZROT["UTs"] * np.sin(G)
+    dLOD = ZROT["dLODc"] * np.cos(G) + ZROT["dLODs"] * np.sin(G)
     # create output dataset
     ds = xr.Dataset(coords=dict(time=np.atleast_1d(MJD)))
-    # compute delta UT1-TAI (seconds)
-    dUT = ZROT["UTc"] * np.cos(G) + ZROT["UTs"] * np.sin(G)
+    # delta UT1-TAI (seconds)
     ds["dUT"] = 1e-6 * dUT
     ds["dUT"].attrs["units"] = "seconds"
     ds["dUT"].attrs["long_name"] = "anomaly in UT1-TAI"
-    # compute delta LOD (seconds per day)
-    dLOD = ZROT["dLODc"] * np.cos(G) + ZROT["dLODs"] * np.sin(G)
+    # delta LOD (seconds per day)
     ds["dLOD"] = 1e-6 * dLOD
     ds["dLOD"].attrs["units"] = "seconds per day"
     ds["dLOD"].attrs["long_name"] = "excess length of day"

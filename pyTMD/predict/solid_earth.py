@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 solid_earth.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 Prediction routines for solid Earth (body) tides
 
 PYTHON DEPENDENCIES:
@@ -20,6 +20,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 04/2026: use xarray dot product for calculating constituent phases
     Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
 """
@@ -165,17 +166,32 @@ def body_tide(
     k = 90.0 + np.zeros_like(MJD)
 
     # astronomical and planetary mean longitudes
+    args = ["tau", "s", "h", "p", "n", "pp", "k"]
     if kwargs["include_planets"]:
         # calculate planetary mean longitudes
         # me: Mercury, ve: Venus, ma: Mars, ju: Jupiter, sa: Saturn
-        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD)
-        fargs = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
-        nargs = 12
+        me, ve, ma, ju, sa = pyTMD.astro.planetary_longitudes(MJD + deltat)
+        arguments = np.c_[tau, s, h, p, n, pp, k, me, ve, ma, ju, sa]
+        args.extend(["me", "ve", "ma", "ju", "sa"])
     else:
-        fargs = np.c_[tau, s, h, p, n, pp, k]
-        nargs = 7
+        arguments = np.c_[tau, s, h, p, n, pp, k]
+    # convert to dataarray
+    arguments = xr.DataArray(
+        arguments,
+        dims=["time", "argument"],
+        coords=dict(
+            time=np.atleast_1d(MJD),
+            argument=args,
+        ),
+    )
+    # number of arguments
+    nargs = len(args)
     # allocate array for Doodson coefficients
-    coef = np.zeros((nargs))
+    coef = xr.DataArray(
+        np.zeros((nargs)),
+        dims="argument",
+        coords=dict(argument=args),
+    )
 
     # longitudes and colatitudes in radians
     phi = np.radians(ds.x)
@@ -266,7 +282,7 @@ def body_tide(
         if (omega == 0) and (tide_system.lower() == "mean_tide"):
             continue
         # determine constituent phase using equilibrium arguments
-        G = pyTMD.math.normalize_angle(np.dot(fargs, coef))
+        G = pyTMD.math.normalize_angle(arguments.dot(coef))
         # convert phase angles to radians
         phase[:] = np.radians(G)
         # rotate spherical harmonic functions by phase angles
