@@ -106,4 +106,4 @@ Examples
 
 
 .. tip::
-  More examples can be found on the `Recipes <./Recipes.html>`_ page!
+  More examples can be found on the `Recipes <./Recipes.html>`_ page and in the `Tutorials <https://github.com/pyTMD/pyTMD-tutorial>`_ repository!
