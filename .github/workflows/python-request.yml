@@ -10,23 +10,9 @@ on:
       - test/**
       - .github/workflows/python-request.yml
     types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_target:
-    branches:
-      - main
-    paths:
-      - pyTMD/**
-      - test/**
-      - .github/workflows/python-request.yml
-    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 0 1 * *'
-
-# When this workflow is queued, automatically cancel any previous running
-# or pending jobs from the same branch
-concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
 
 # set permissions for the workflow
 permissions:
@@ -73,6 +59,7 @@ jobs:
       run: |
         pixi run coverage
     - name: Create coverage comment
+      if: github.event.pull_request.head.repo.full_name == github.repository
       uses: MishaKav/pytest-coverage-comment@v1
       with:
         pytest-xml-coverage-path: coverage.xml
@@ -83,6 +70,7 @@ jobs:
         remove-links-to-files: true
         remove-links-to-lines: true
     - name: Archive code coverage results
+      if: github.event.pull_request.head.repo.full_name == github.repository
       uses: actions/upload-artifact@v6
       with:
         name: code-coverage-report-${{ matrix.os }}
