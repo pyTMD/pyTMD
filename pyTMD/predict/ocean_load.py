@@ -141,8 +141,8 @@ def time_series(
         Days relative to 1992-01-01T00:00:00
     ds: xarray.Dataset
         Dataset containing tidal harmonic constants
-    kwargs: keyword arguments
-        Additional keyword arguments
+    kwargs: dict
+        Keyword arguments for :func:`pyTMD.constituents.arguments`
 
     Returns
     -------

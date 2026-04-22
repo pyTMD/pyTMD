@@ -232,7 +232,7 @@ def open_dataset(
             - ``'U'``: zonal depth-averaged transport
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening files
 
     Returns
@@ -288,7 +288,7 @@ def open_mfdataset(
             - ``'V'``: meridional depth-averaged transport
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening OTIS files
 
     Returns

@@ -145,7 +145,7 @@ def open_fes_dataset(
 
             - ``'ascii'``: FES ASCII format
             - ``'netcdf'``: FES netCDF4 format
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening FES files
 
     Returns
@@ -483,7 +483,7 @@ class FESDataset:
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output path

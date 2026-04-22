@@ -4,7 +4,7 @@
 name: pytest Build
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - pyTMD/**
       - test/**
@@ -13,6 +13,10 @@ on:
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 0 1 * *'
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   build:

@@ -107,7 +107,7 @@ def open_mfdataset(
         List of OTIS model files
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening GOT files
 
     Returns
@@ -148,7 +148,7 @@ def open_got_dataset(
 
             - ``'ascii'``: traditional GOT ASCII format
             - ``'netcdf'``: GOT netCDF4 format
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening GOT files
 
     Returns
@@ -371,7 +371,7 @@ class GOTDataset:
             Fill value for missing data
         mode: str, default 'w'
             File mode
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for ASCII writer
         """
         # tilde-expand output path
@@ -444,7 +444,7 @@ class GOTDataset:
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output path

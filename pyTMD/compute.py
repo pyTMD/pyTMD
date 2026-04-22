@@ -211,7 +211,7 @@ def corrections(
             - ``'LPT'``: solid earth load pole tide
             - ``'OPT'``: ocean pole tide
             - ``'SET'``: solid earth tide
-    **kwargs: dict
+    kwargs: dict
         Keyword arguments for correction functions
 
     Returns

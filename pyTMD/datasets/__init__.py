@@ -1,5 +1,5 @@
 """
-Input/output functions for reading and writing tidal data
+Utility functions for downloading or subsetting tidal data
 """
 
 from .fetch_arcticdata import fetch_arcticdata

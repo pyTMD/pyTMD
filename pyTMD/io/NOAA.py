@@ -81,7 +81,7 @@ def build_query(api: str, **kwargs):
     ----------
     api: str
         NOAA webservices API endpoint to query
-    **kwargs: dict
+    kwargs: dict
         Additional query parameters to include in the request
 
     Returns
@@ -159,7 +159,7 @@ def from_xml(url: str, **kwargs):
     ----------
     url: str
         The complete URL for the API request
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments to pass to ``pandas.read_xml``
 
     Returns
@@ -194,7 +194,7 @@ def active_stations(
     ----------
     api: str
         NOAA webservices API endpoint to query
-    **kwargs: dict
+    kwargs: dict
         Additional query parameters to include in the request
 
     Returns
@@ -240,7 +240,7 @@ def prediction_stations(
         NOAA webservices API endpoint to query
     active_only: bool, default True
         Reduce list to active stations only
-    **kwargs: dict
+    kwargs: dict
         Additional query parameters to include in the request
 
     Returns
@@ -284,7 +284,7 @@ def harmonic_constituents(
     ----------
     api: str
         NOAA webservices API endpoint to query
-    **kwargs: dict
+    kwargs: dict
         Additional query parameters to include in the request
 
     Returns
@@ -318,7 +318,7 @@ def water_level(
     ----------
     api: str
         NOAA webservices API endpoint to query
-    **kwargs: dict
+    kwargs: dict
         Additional query parameters to include in the request
 
     Returns

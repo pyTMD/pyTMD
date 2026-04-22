@@ -678,8 +678,8 @@ def solar_ecef(
             - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
             - ``'JPL'``: computed ephemerides from JPL kernels
             - ``'VSOP87'``: :cite:t:`Bretagnon:1988wg`
-    **kwargs: dict
-        Keyword options for ephemeris calculation
+    kwargs: dict
+        Keyword arguments for ephemeris calculation
 
     Returns
     -------
@@ -1365,8 +1365,8 @@ def lunar_ecef(
             - ``'Meeus'``: :cite:t:`Meeus:1991vh`
             - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
             - ``'JPL'``: computed ephemerides from JPL kernels
-    **kwargs: dict
-        Keyword options for ephemeris calculation
+    kwargs: dict
+        Keyword arguments for ephemeris calculation
 
     Returns
     -------

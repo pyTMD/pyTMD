@@ -98,7 +98,7 @@ def open_dataset(
         List of ATLAS model files
     grid_file: str or pathlib.path
         ATLAS model grid file
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening ATLAS files
 
     Returns
@@ -139,7 +139,7 @@ def open_mfdataset(
         List of ATLAS model files
     parallel: bool, default False
         Open files in parallel using ``dask.delayed``
-    **kwargs: dict
+    kwargs: dict
         Additional keyword arguments for opening ATLAS files
 
     Returns
@@ -334,7 +334,7 @@ class ATLASDataset:
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output file
@@ -397,7 +397,7 @@ class ATLASDataset:
             netCDF4 file mode
         encoding: dict, default {"zlib": True, "complevel": 9}
             netCDF4 variable compression settings
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for ``xarray`` netCDF4 writer
         """
         # tilde-expand output directory
@@ -495,7 +495,7 @@ class ATLASDataTree:
             Output ATLAS-netcdf grid file
         directory: str or pathlib.Path
             Output directory for ATLAS-netcdf files
-        **kwargs: dict
+        kwargs: dict
             Additional keyword arguments for netCDF4 writer
         """
         # tilde-expand grid file

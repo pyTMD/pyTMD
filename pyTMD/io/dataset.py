@@ -8,6 +8,9 @@ PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
         https://numpy.org
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
+    pint: Python package to define, operate and manipulate physical quantities
+        https://pypi.org/project/Pint/
+        https://pint.readthedocs.io/en/stable
     pyproj: Python interface to PROJ library
         https://pypi.org/project/pyproj/
         https://pyproj4.github.io/pyproj/
@@ -19,6 +22,8 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 04/2026: add barycentric interpolation for unstructured grids
         add support for unstructured (e.g. finite element) grids
+        added function to calculate the high and low peaks of a prediction
+        added function to try to convert units into a pint-friendly format
     Updated 03/2026: allow caching of the kd-tree for extrapolation
     Updated 02/2026: create subaccessor registration functions
         add functions to test if units are compatible with known groups
@@ -36,6 +41,7 @@ UPDATE HISTORY:
     Written 08/2025
 """
 
+import re
 import pint
 import pyproj
 import warnings
@@ -92,7 +98,7 @@ class DataTree:
             Updated y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of coordinates
-        kwargs: keyword arguments
+        kwargs: dict
             Keyword arguments for ``xarray.Dataset.assign_coords``
 
         Returns
@@ -402,7 +408,7 @@ class Dataset:
             Updated y-coordinates
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system of coordinates
-        kwargs: keyword arguments
+        kwargs: dict
             Keyword arguments for ``xarray.Dataset.assign_coords``
 
         Returns
@@ -656,8 +662,8 @@ class Dataset:
         ----------
         other: xarray.Dataset
             ``Dataset`` with missing values to be extrapolated
-        kwargs: keyword arguments
-            Keyword arguments for extrapolation functions
+        kwargs: dict
+            Keyword arguments for :func:`pyTMD.interpolate._nearest_neighbors`
 
         Returns
         -------
@@ -818,8 +824,8 @@ class Dataset:
         ----------
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
-        kwargs: keyword arguments
-            Additional keyword arguments for inference functions
+        kwargs: dict
+            Keyword arguments for :func:`pyTMD.predict.infer_minor`
 
         Returns
         -------
@@ -839,8 +845,8 @@ class Dataset:
 
         Parameters
         ----------
-        kwargs: keyword arguments
-            Keyword arguments for ``pyTMD.interpolate.inpaint``
+        kwargs: dict
+            Keyword arguments for :func:`pyTMD.interpolate.inpaint`
 
         Returns
         -------
@@ -879,8 +885,8 @@ class Dataset:
             Flag to extrapolate values using nearest-neighbors
         cutoff: int or float, default np.inf
             Maximum distance for extrapolation
-        **kwargs: dict
-            Additional keyword arguments for interpolation functions
+        kwargs: dict
+            Keyword arguments for interpolation functions
 
         Returns
         -------
@@ -980,8 +986,8 @@ class Dataset:
         ----------
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
-        kwargs: keyword arguments
-            Additional keyword arguments for prediction functions
+        kwargs: dict
+            Keyword arguments for :func:`pyTMD.predict.time_series`
 
         Returns
         -------
@@ -1193,6 +1199,31 @@ class DataArray:
         ph.attrs["units"] = "degrees"
         return ph
 
+    def find_peaks(self, **kwargs):
+        """
+        Find peaks in the ``DataArray``
+
+        Returns
+        -------
+        high_peaks: xarray.DataArray
+            Boolean array indicating locations of high tide peaks
+        low_peaks: xarray.DataArray
+            Boolean array indicating locations of low tide peaks
+        """
+        # differentiate to calculate high and low tides
+        diff = self._da.differentiate("time")
+        # indices of high and low tides
+        high_peaks = xr.zeros_like(diff, dtype=bool)
+        low_peaks = xr.zeros_like(diff, dtype=bool)
+        high_peaks.isel(time=slice(0, -1)).values[:] = (
+            np.sign(diff.isel(time=slice(0, -1)).values) >= 0
+        ) & (np.sign(diff.isel(time=slice(1, None)).values) < 0)
+        low_peaks.isel(time=slice(0, -1)).values[:] = (
+            np.sign(diff.isel(time=slice(0, -1)).values) <= 0
+        ) & (np.sign(diff.isel(time=slice(1, None)).values) > 0)
+        # return the peaks
+        return (high_peaks, low_peaks)
+
     def to_units(
         self,
         units: str,
@@ -1244,7 +1275,7 @@ class DataArray:
     def units(self):
         """Units of the ``DataArray``"""
         try:
-            return __ureg__.parse_units(self._units)
+            return self._parse_units(self._units)
         except TypeError as exc:
             raise ValueError(f"Unknown units: {self._units}") from exc
         except AttributeError as exc:
@@ -1270,6 +1301,21 @@ class DataArray:
             return "angle"
         else:
             raise ValueError(f"Unknown unit group: {self._units}")
+
+    @staticmethod
+    def _parse_units(units: str):
+        """
+        Convert units attributes to ``pint`` units
+        """
+        # fix the exponent notation in units string
+        units = re.sub(
+            r"(\w)([-]?\d+)",
+            lambda m: m.group(1) + r"^" + m.group(2),
+            units,
+            flags=re.IGNORECASE,
+        )
+        # parse units string using pint
+        return __ureg__.parse_units(units.lower())
 
     @property
     def _units(self):
