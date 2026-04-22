@@ -484,7 +484,7 @@ def _infer_semi_diurnal(
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
-    amajor = np.zeros((3))
+    amajor = np.zeros(3)
     amajor[0] = 0.121006  # n2
     amajor[1] = 0.631931  # m2
     amajor[2] = 0.294019  # s2
@@ -532,7 +532,7 @@ def _infer_semi_diurnal(
         return 0.0
 
     # Cartwright and Edden potential amplitudes for inferred constituents
-    amin = np.zeros((14))
+    amin = np.zeros(14)
     amin[0] = 0.004669  # eps2
     amin[1] = 0.016011  # 2n2
     amin[2] = 0.019316  # mu2
@@ -672,7 +672,7 @@ def _infer_diurnal(
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
-    amajor = np.zeros((3))
+    amajor = np.zeros(3)
     amajor[0] = 0.050184  # q1
     amajor[1] = 0.262163  # o1
     amajor[2] = 0.368731  # k1
@@ -735,7 +735,7 @@ def _infer_diurnal(
         return 0.0
 
     # Cartwright and Edden potential amplitudes for inferred constituents
-    amin = np.zeros((17))
+    amin = np.zeros(17)
     amin[0] = 0.006638  # 2q1
     amin[1] = 0.008023  # sigma1
     amin[2] = 0.009540  # rho1
@@ -767,7 +767,7 @@ def _infer_diurnal(
     theta = np.radians(G) + pu
     # compute tilt factors for minor constituents
     nc = len(minor_constituents)
-    gamma_2 = np.zeros((nc))
+    gamma_2 = np.zeros(nc)
     for i, c in enumerate(minor_constituents):
         # Love numbers of degree 2 for constituent
         h2, k2, l2 = pyTMD.constituents._love_numbers(omega[i])
@@ -883,7 +883,7 @@ def _infer_long_period(
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
     # Cartwright and Edden potential amplitudes for major constituents
-    amajor = np.zeros((3))
+    amajor = np.zeros(3)
     amajor[0] = 0.027929  # node
     amajor[1] = 0.035184  # mm
     amajor[2] = 0.066607  # mf
@@ -938,7 +938,7 @@ def _infer_long_period(
         return 0.0
 
     # Cartwright and Edden potential amplitudes for inferred constituents
-    amin = np.zeros((9))
+    amin = np.zeros(9)
     amin[0] = 0.004922  # sa
     amin[1] = 0.030988  # ssa
     amin[2] = 0.001809  # sta
@@ -963,7 +963,7 @@ def _infer_long_period(
 
     # compute tilt factors for minor constituents
     nc = len(minor_constituents)
-    gamma_2 = np.zeros((nc))
+    gamma_2 = np.zeros(nc)
     for i, c in enumerate(minor_constituents):
         # complex Love numbers of degree 2 for long-period band
         if kwargs["include_anelasticity"]:
@@ -1165,7 +1165,7 @@ def equilibrium_tide(
     P20 = dfactor * Plm.real
 
     # calculate tilt factors for each constituent
-    gamma_2 = np.zeros((nc))
+    gamma_2 = np.zeros(nc)
     for i, c in enumerate(cindex):
         # calculate angular frequencies of constituents
         omega = pyTMD.constituents._frequency(coef[:, i])

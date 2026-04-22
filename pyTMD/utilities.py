@@ -497,7 +497,7 @@ def compressuser(filename: str | pathlib.Path):
     filename = pathlib.Path(filename).expanduser().absolute()
     try:
         relative_to = filename.relative_to(pathlib.Path().home())
-    except (ValueError, AttributeError) as exc:
+    except (ValueError, AttributeError):
         return filename
     else:
         return pathlib.Path("~").joinpath(relative_to)

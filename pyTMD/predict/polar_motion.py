@@ -316,7 +316,7 @@ def earth_orientation(
     # IERS conventions: gamma = GHA + 180 degrees
     gamma = gha + circle / 2.0
     # variable for multiples of 90 degrees (Ray technical note 2017)
-    K = circle / 4.0 + np.zeros_like((MJD))
+    K = circle / 4.0 + np.zeros_like(MJD)
     # delaunay arguments
     args = ["l", "lp", "F", "D", "omega", "gamma", "k"]
     arguments = xr.DataArray(

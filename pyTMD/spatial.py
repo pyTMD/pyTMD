@@ -702,8 +702,8 @@ def convert_ellipsoid(
     b2 = (1.0 - f2) * a2
     # initialize output arrays
     npts = len(lat1)
-    lat2 = np.zeros((npts))
-    h2 = np.zeros((npts))
+    lat2 = np.zeros(npts)
+    h2 = np.zeros(npts)
     # for each point
     for N in range(npts):
         # force lat1 into range -90 <= lat1 <= 90

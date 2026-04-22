@@ -216,7 +216,7 @@ def body_tide(
     nargs = len(args)
     # allocate array for Doodson coefficients
     coef = xr.DataArray(
-        np.zeros((nargs)),
+        np.zeros(nargs),
         dims="argument",
         coords=dict(argument=args),
     )
