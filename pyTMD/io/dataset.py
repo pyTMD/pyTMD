@@ -1203,6 +1203,11 @@ class DataArray:
         """
         Find peaks in the ``DataArray``
 
+        Parameters
+        ----------
+        kwargs: dict
+            Keyword arguments for ``xarray.DataArray.differentiate``
+
         Returns
         -------
         high_peaks: xarray.DataArray
@@ -1211,7 +1216,7 @@ class DataArray:
             Boolean array indicating locations of low tide peaks
         """
         # differentiate to calculate high and low tides
-        diff = self._da.differentiate("time")
+        diff = self._da.differentiate("time", **kwargs)
         # look for zero crossings in the derivative to find peaks
         # compare the sign of the derivative with the next time step
         sign = np.sign(diff)
