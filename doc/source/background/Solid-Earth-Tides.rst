@@ -10,8 +10,8 @@ Methods
 -------
 
 Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two methods:
-1) :func:`pyTMD.predict.solid_earth_tide` uses :term:`Ephemerides` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`, or
-2) :func:`pyTMD.predict.body_tide` uses tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
+1) :py:func:`pyTMD.predict.solid_earth_tide` uses :term:`Ephemerides` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`, or
+2) :py:func:`pyTMD.predict.body_tide` uses tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
 For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth :cite:p:`Merriam:1992kg`.
 For the catalog method, some tide potential catalogs additionally include the potentials induced by the motions of the closest planetary bodies [see :ref:`tab-catalogs`] and higher degree harmonics [see :ref:`fig-sphharm`].

@@ -41,7 +41,7 @@
 * ``docs``: add acknowledgment to our JOSS reviewers `(#474) <https://github.com/pyTMD/pyTMD/pull/474>`_
 * ``test``: fix ``pixi`` task for testing `(#475) <https://github.com/pyTMD/pyTMD/pull/475>`_
 * ``feat``: can solve with inferred minor constituents (post-fit) `(#476) <https://github.com/pyTMD/pyTMD/pull/476>`_
-* ``docs``: add ``:func:`` and ``:py:class:`` pointers `(#477) <https://github.com/pyTMD/pyTMD/pull/477>`_
+* ``docs``: add ``:py:func:`` and ``:py:class:`` pointers `(#477) <https://github.com/pyTMD/pyTMD/pull/477>`_
 * ``refactor``: remove some deprecated functions `(#477) <https://github.com/pyTMD/pyTMD/pull/477>`_
 * ``feat``: added option to use memory mapping for reading large files `(#478) <https://github.com/pyTMD/pyTMD/pull/478>`_
 * ``feat``: create ``fetch`` class to group fetching functions `(#479) <https://github.com/pyTMD/pyTMD/pull/479>`_

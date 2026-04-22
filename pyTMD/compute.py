@@ -221,11 +221,11 @@ def corrections(
         times. The exact return type, dimensions, and units are those of
         the underlying helper function:
 
-        * ``correction in {'ocean', 'load'}`` → :func:`tide_elevations`
-        * ``correction == 'LPET'`` → :func:`LPET_elevations`
-        * ``correction == 'LPT'`` → :func:`LPT_displacements`
-        * ``correction == 'OPT'`` → :func:`OPT_displacements`
-        * ``correction == 'SET'`` → :func:`SET_displacements`
+        * ``correction in {'ocean', 'load'}`` → :py:func:`tide_elevations`
+        * ``correction == 'LPET'`` → :py:func:`LPET_elevations`
+        * ``correction == 'LPT'`` → :py:func:`LPT_displacements`
+        * ``correction == 'OPT'`` → :py:func:`OPT_displacements`
+        * ``correction == 'SET'`` → :py:func:`SET_displacements`
 
         Refer to the respective helper function docstrings for details
         on the variable names, units, and metadata of the returned object.

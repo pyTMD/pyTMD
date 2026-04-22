@@ -47,12 +47,12 @@ def download_nodes(N=324, cleanup=False):
 
 # Franke's 2D evaluation function
 def franke_2d(x,y):
-	F1 = 0.75*np.exp(-((9.0*x-2.0)**2 + (9.0*y-2.0)**2)/4.0)
-	F2 = 0.75*np.exp(-((9.0*x+1.0)**2/49.0-(9.0*y+1.0)/10.0))
-	F3 = 0.5*np.exp(-((9.0*x-7.0)**2 + (9.0*y-3.0)**2)/4.0)
-	F4 = 0.2*np.exp(-((9.0*x-4.0)**2 + (9.0*y-7.0)**2))
-	F = F1 + F2 + F3 - F4
-	return F
+    F1 = 0.75*np.exp(-((9.0*x-2.0)**2 + (9.0*y-2.0)**2)/4.0)
+    F2 = 0.75*np.exp(-((9.0*x+1.0)**2/49.0-(9.0*y+1.0)/10.0))
+    F3 = 0.5*np.exp(-((9.0*x-7.0)**2 + (9.0*y-3.0)**2)/4.0)
+    F4 = 0.2*np.exp(-((9.0*x-4.0)**2 + (9.0*y-7.0)**2))
+    F = F1 + F2 + F3 - F4
+    return F
 
 # Franke's 3D evaluation function
 def franke_3d(x,y,z):
@@ -200,7 +200,7 @@ def test_extrapolation_checks(N=324):
     # in case where there are no valid grid points
     test = pyTMD.interpolate.extrapolate(LON, LAT, FI, lon, lat,
         is_geographic=True)
-    assert(np.all(test.isnull()))
+    assert test.isnull().all()
     # use nearest neighbors extrapolation
     # in case where there are no points to be extrapolated
     test = pyTMD.interpolate.extrapolate(LON, LAT, FI, [], [])

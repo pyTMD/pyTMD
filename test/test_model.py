@@ -1,8 +1,9 @@
 """
-test_model.py (11/2025)
+test_model.py (04/2026)
 Tests the reading of model definition files
 
 UPDATE HISTORY:
+    Updated 04/2026: added cleanup options to functional tests
     Updated 11/2025: use new z, u, v database and JSON format
     Updated 07/2025: added GOT4.10_SAL subset of constituents
     Updated 06/2025: added function to check extra databases
@@ -88,7 +89,7 @@ def test_definition_FES():
     assert parsed_constituents == constituents
 
 # PURPOSE: test glob file functionality
-def test_definition_FES_glob():
+def test_definition_FES_glob(cleanup=False):
     """Tests the reading of the FES2014 model definition file
     with glob file searching
     """
@@ -145,7 +146,8 @@ def test_definition_FES_glob():
     # close the glob definition file
     fid.close()
     # clean up model
-    shutil.rmtree(filepath.joinpath('fes2014'))
+    if cleanup:
+        shutil.rmtree(filepath.joinpath('fes2014'))
 
 def test_definition_FES_currents():
     """Tests the reading of the FES2014 model definition file for currents
@@ -244,7 +246,7 @@ def test_definition_FES_currents():
     assert m['v'].variable == 'meridional_tidal_current'
 
 # PURPOSE: test glob file functionality
-def test_definition_FES_currents_glob():
+def test_definition_FES_currents_glob(cleanup=False):
     """Tests the reading of the FES2014 model definition file
     with glob file searching for currents
     """
@@ -359,9 +361,10 @@ def test_definition_FES_currents_glob():
     # close the glob definition file
     fid.close()
     # clean up model
-    shutil.rmtree(filepath.joinpath('fes2014'))
+    if cleanup:
+        shutil.rmtree(filepath.joinpath('fes2014'))
 
-def test_definition_GOT():
+def test_definition_GOT(cleanup=False):
     """Tests the reading of the GOT4.10 model definition file
     """
     # read model definition file
@@ -471,7 +474,7 @@ def test_definition_TPXO9():
     assert m.compressed is False
 
 # PURPOSE: test glob file functionality
-def test_definition_TPXO9_glob():
+def test_definition_TPXO9_glob(cleanup=False):
     """Tests the reading of the TPXO9-atlas-v5 model definition file
     with glob file searching
     """
@@ -529,7 +532,8 @@ def test_definition_TPXO9_glob():
     # close the glob definition file
     fid.close()
     # clean up model
-    shutil.rmtree(filepath.joinpath('TPXO9_atlas_v5'))
+    if cleanup:
+        shutil.rmtree(filepath.joinpath('TPXO9_atlas_v5'))
 
 def test_definition_TPXO9_currents():
     """Tests the reading of the TPXO9-atlas-v5 model definition file
@@ -585,7 +589,7 @@ def test_definition_TPXO9_currents():
     assert m['v'].variable == 'meridional_tidal_current'
 
 # PURPOSE: test glob file functionality
-def test_definition_TPXO9_currents_glob():
+def test_definition_TPXO9_currents_glob(cleanup=False):
     """Tests the reading of the TPXO9-atlas-v5 model definition file for
     currents with glob file searching
     """
@@ -661,7 +665,8 @@ def test_definition_TPXO9_currents_glob():
     # close the glob definition file
     fid.close()
     # clean up model
-    shutil.rmtree(filepath.joinpath('TPXO9_atlas_v5'))
+    if cleanup:
+        shutil.rmtree(filepath.joinpath('TPXO9_atlas_v5'))
 
 # parameterize model
 @pytest.mark.parametrize("MODEL", pyTMD.io.model.FES())

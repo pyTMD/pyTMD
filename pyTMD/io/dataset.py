@@ -603,7 +603,7 @@ class Dataset:
         Parameters
         ----------
         bounds: list, tuple
-            Bounding box [min_x, max_x, min_y, max_y]
+            Bounding box ``[min_x, max_x, min_y, max_y]``
         buffer: int or float, default 0
             Buffer to add to bounds for cropping
         """
@@ -663,7 +663,7 @@ class Dataset:
         other: xarray.Dataset
             ``Dataset`` with missing values to be extrapolated
         kwargs: dict
-            Keyword arguments for :func:`pyTMD.interpolate._nearest_neighbors`
+            Keyword arguments for :py:func:`pyTMD.interpolate._nearest_neighbors`
 
         Returns
         -------
@@ -825,7 +825,7 @@ class Dataset:
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
         kwargs: dict
-            Keyword arguments for :func:`pyTMD.predict.infer_minor`
+            Keyword arguments for :py:func:`pyTMD.predict.infer_minor`
 
         Returns
         -------
@@ -846,7 +846,7 @@ class Dataset:
         Parameters
         ----------
         kwargs: dict
-            Keyword arguments for :func:`pyTMD.interpolate.inpaint`
+            Keyword arguments for :py:func:`pyTMD.interpolate.inpaint`
 
         Returns
         -------
@@ -987,7 +987,7 @@ class Dataset:
         t: float or np.ndarray
             Days relative to 1992-01-01T00:00:00 UTC
         kwargs: dict
-            Keyword arguments for :func:`pyTMD.predict.time_series`
+            Keyword arguments for :py:func:`pyTMD.predict.time_series`
 
         Returns
         -------

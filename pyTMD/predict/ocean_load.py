@@ -142,7 +142,7 @@ def time_series(
     ds: xarray.Dataset
         Dataset containing tidal harmonic constants
     kwargs: dict
-        Keyword arguments for :func:`pyTMD.constituents.arguments`
+        Keyword arguments for :py:func:`pyTMD.constituents.arguments`
 
     Returns
     -------

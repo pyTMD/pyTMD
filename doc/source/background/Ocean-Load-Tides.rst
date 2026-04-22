@@ -72,7 +72,7 @@ Prediction
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 ``pyTMD`` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
-For any given time, :func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigee (:math:`P`), ascending lunar node (:math:`N`) and solar perigee (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
+For any given time, :py:func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigee (:math:`P`), ascending lunar node (:math:`N`) and solar perigee (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 These can be summed together to estimate the equilibrium phase (:math:`G`).
 
@@ -87,5 +87,5 @@ These can be summed together to estimate the equilibrium phase (:math:`G`).
     ``pyTMD`` stores these coefficients in a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/doodson.json>`_ supplied with the program.
 
 Together the Doodson coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used by ``pyTMD`` to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal values :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
-After the determination of the major constituents, :func:`pyTMD.predict.infer_minor` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
+After the determination of the major constituents, :py:func:`pyTMD.predict.infer_minor` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 

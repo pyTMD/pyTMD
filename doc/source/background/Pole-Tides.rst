@@ -10,7 +10,7 @@ Methods
 -------
 
 The formalism for estimating the pole tides within ``pyTMD`` is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
-For ocean pole tides, :func:`pyTMD.predict.ocean_pole_tide` uses the equilibrium response model from :cite:t:`Desai:2002ev` as recommended by IERS Conventions :cite:p:`Petit:2010tp`.
+For ocean pole tides, :py:func:`pyTMD.predict.ocean_pole_tide` uses the equilibrium response model from :cite:t:`Desai:2002ev` as recommended by IERS Conventions :cite:p:`Petit:2010tp`.
 ``pyTMD`` uses the ``timescale`` library for reading the Earth Orientation Parameters (EOPs) necessary for computing load pole and ocean pole tide variations.
 The currently accepted formalism for estimating the reference position of the Earth's figure axis at a given date is the `IERS 2018 secular pole model <https://iers-conventions.obspm.fr/chapter7.php>`_:
 

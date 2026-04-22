@@ -33,9 +33,9 @@ Data Access
 ###########
 
 Some tide models can be programmatically downloaded using the fetching routines in ``pyTMD.datasets``.
-OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the :func:`pyTMD.datasets.fetch_arcticdata` function.
-GOT models can be downloaded from the NASA GSFC server using the :func:`pyTMD.datasets.fetch_gsfc_got` function.
-Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the :func:`pyTMD.datasets.fetch_aviso_fes` function.
+OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the :py:func:`pyTMD.datasets.fetch_arcticdata` function.
+GOT models can be downloaded from the NASA GSFC server using the :py:func:`pyTMD.datasets.fetch_gsfc_got` function.
+Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the :py:func:`pyTMD.datasets.fetch_aviso_fes` function.
 
 Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
@@ -216,7 +216,7 @@ Interpolation
 #############
 
 For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
-For coastal or near-grounded points, the model can be extrapolated with :func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
+For coastal or near-grounded points, the model can be extrapolated with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 

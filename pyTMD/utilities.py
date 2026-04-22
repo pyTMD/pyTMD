@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (04/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 04/2026: add query and path functions to URL class
     Updated 01/2026: raise original exceptions in cases of HTTPError/URLError
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
@@ -363,6 +364,10 @@ class URL:
         """Ping URL to check connection"""
         return check_connection(self.urlname, *args, **kwargs)
 
+    def query(self, *args, **kwargs):
+        """List contents from URL"""
+        return http_list(self.urlname, headers=self._headers, *args, **kwargs)
+
     def read(self, *args, **kwargs):
         """Open URL and read response"""
         return self.urlopen(*args, **kwargs).read()
@@ -403,6 +408,11 @@ class URL:
         """URL parts as a tuple"""
         paths = url_split(self._components.path)
         return (self.scheme, self.netloc, *paths)
+
+    @property
+    def path(self):
+        """URL path"""
+        return self._components.path
 
     @property
     def scheme(self):

@@ -14,9 +14,12 @@
 *.7z
 *.dmg
 *.gz
+*.h5
+*.hdf
 *.iso
 *.jar
 *.mat
+*.nc
 *.rar
 *.tar
 *.zip

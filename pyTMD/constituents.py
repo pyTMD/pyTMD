@@ -2407,7 +2407,7 @@ def _complex_love_numbers(omega: np.ndarray, **kwargs):
     omega: np.ndarray
         Angular frequency (radians per second)
     kwargs: dict
-        Keyword arguments for :func:`pyTMD.constituents._love_numbers`
+        Keyword arguments for :py:func:`pyTMD.constituents._love_numbers`
 
     Returns
     -------

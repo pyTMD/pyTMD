@@ -2,7 +2,7 @@
 utilities
 =========
 
-Download and management utilities for syncing time and auxiliary files
+Download and management utilities for syncing files
 
 `Source code`__
 
