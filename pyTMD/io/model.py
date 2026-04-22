@@ -226,7 +226,6 @@ class model:
         self.name = None
         self.verify = copy.copy(kwargs["verify"])
         self.__parameters__ = {}
-        self.__variables__ = []
 
     def from_database(
         self,
@@ -256,8 +255,6 @@ class model:
         # verify model types to extract
         if isinstance(group, str):
             group = (group,)
-        # reset data variables
-        self.__variables__ = []
         # verify paths
         for g in group:
             # verify model group is valid
@@ -265,8 +262,6 @@ class model:
             # skip if model group is unavailable
             if not hasattr(self, g):
                 continue
-            # append to data variables
-            self.__variables__.append(g)
             # validate paths: grid file for OTIS, ATLAS models
             if hasattr(self[g], "grid_file"):
                 self[g].grid_file = self.pathfinder(self[g].grid_file)
@@ -312,6 +307,8 @@ class model:
         d: dict
             Model object parameters
         """
+        # copy model parameters
+        self.__parameters__ = copy.copy(d)
         for key, val in d.items():
             if isinstance(val, dict) and key not in ("projection",):
                 setattr(self, key, DataBase(val))
@@ -954,6 +951,11 @@ class model:
         return xr.core.formatting_html._obj_repr(
             self, header_components, sections
         )
+
+    @property
+    def __variables__(self):
+        """List of model variables"""
+        return [k for k in ("z", "u", "v") if k in self.__parameters__]
 
     def get(self, key, default=None):
         return getattr(self, key, default) or default

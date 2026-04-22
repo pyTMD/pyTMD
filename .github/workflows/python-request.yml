@@ -4,7 +4,15 @@
 name: pytest Build
 
 on:
+  pull_request:
+    paths:
+      - pyTMD/**
+      - test/**
+      - .github/workflows/python-request.yml
+    types: [opened, synchronize, reopened, ready_for_review]
   pull_request_target:
+    branches:
+      - main
     paths:
       - pyTMD/**
       - test/**
@@ -14,6 +22,13 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 0 1 * *'
 
+# When this workflow is queued, automatically cancel any previous running
+# or pending jobs from the same branch
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+# set permissions for the workflow
 permissions:
   contents: read
   pull-requests: write

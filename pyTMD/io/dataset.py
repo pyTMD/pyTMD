@@ -1212,15 +1212,13 @@ class DataArray:
         """
         # differentiate to calculate high and low tides
         diff = self._da.differentiate("time")
-        # indices of high and low tides
-        high_peaks = xr.zeros_like(diff, dtype=bool)
-        low_peaks = xr.zeros_like(diff, dtype=bool)
-        high_peaks.isel(time=slice(0, -1)).values[:] = (
-            np.sign(diff.isel(time=slice(0, -1)).values) >= 0
-        ) & (np.sign(diff.isel(time=slice(1, None)).values) < 0)
-        low_peaks.isel(time=slice(0, -1)).values[:] = (
-            np.sign(diff.isel(time=slice(0, -1)).values) <= 0
-        ) & (np.sign(diff.isel(time=slice(1, None)).values) > 0)
+        # look for zero crossings in the derivative to find peaks
+        # compare the sign of the derivative with the next time step
+        sign = np.sign(diff)
+        next_sign = sign.shift(time=-1)
+        # get the zero crossings to find the high and low tides
+        high_peaks = (sign >= 0) & (next_sign < 0)
+        low_peaks = (sign <= 0) & (next_sign > 0)
         # return the peaks
         return (high_peaks, low_peaks)
 
