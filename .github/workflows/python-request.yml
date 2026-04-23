@@ -10,9 +10,6 @@ on:
       - test/**
       - .github/workflows/python-request.yml
     types: [opened, synchronize, reopened, ready_for_review]
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    - cron:  '0 0 1 * *'
 
 # set permissions for the workflow
 permissions:

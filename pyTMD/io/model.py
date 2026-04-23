@@ -240,7 +240,7 @@ class model:
         m: str
             Model name
         group: tuple, default ('z', 'u', 'v')
-            List of model types to extract
+            Model variable(s) to extract
         """
         # set working data directory if unset
         if self.directory is None:
@@ -810,7 +810,7 @@ class model:
 
     def open_dataset(self, **kwargs):
         """
-        Open model files
+        Open model files as an xarray Dataset
 
         Parameters
         ----------
@@ -890,7 +890,7 @@ class model:
         **kwargs,
     ):
         """
-        Create a model object from known tidal models
+        Open model files as an xarray DataTree
 
         Parameters
         ----------
