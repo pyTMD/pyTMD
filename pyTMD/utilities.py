@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: add query and path functions to URL class
+        can use from ftp within URL for downloading files
+        added s3 utilities for getting the bucket name and key
     Updated 01/2026: raise original exceptions in cases of HTTPError/URLError
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
@@ -124,6 +126,8 @@ __all__ = [
     "http_list",
     "from_http",
     "from_json",
+    "s3_bucket",
+    "s3_key",
     "iers_list",
     "uhslc_list",
 ]
@@ -349,7 +353,15 @@ class URL:
 
     def get(self, *args, **kwargs):
         """Get contents from URL"""
-        return from_http(self.urlname, headers=self._headers, *args, **kwargs)
+        if self.scheme.startswith("ftp"):
+            host = [self.netloc, *url_split(self.path)]
+            return from_ftp(host, *args, **kwargs)
+        elif self.scheme.startswith("http"):
+            return from_http(
+                self.urlname, *args, headers=self._headers, **kwargs
+            )
+        else:
+            raise NotImplementedError(f"Unsupported scheme: {self.scheme}")
 
     def headers(self, *args, **kwargs):
         """Get headers from URL"""
@@ -371,6 +383,10 @@ class URL:
     def read(self, *args, **kwargs):
         """Open URL and read response"""
         return self.urlopen(*args, **kwargs).read()
+
+    def request(self, *args, **kwargs):
+        """Make URL request"""
+        return urllib2.Request(self.urlname)
 
     def urlopen(self, *args, **kwargs):
         """Open URL and return response"""
@@ -415,6 +431,18 @@ class URL:
         return self._components.path
 
     @property
+    def s3bucket(self):
+        """AWS s3 bucket name"""
+        if self.scheme.startswith("s3"):
+            return s3_bucket(self.geturl())
+
+    @property
+    def s3key(self):
+        """AWS s3 key"""
+        if self.scheme.startswith("s3"):
+            return s3_key(self.geturl())
+
+    @property
     def scheme(self):
         """URL scheme"""
         return self._components.scheme + "://"
@@ -438,6 +466,10 @@ class URL:
     def __str__(self):
         """String representation of the ``URL`` object"""
         return str(self.urlname)
+
+    def __add__(self, other):
+        """Concatenate URL components using the addition operator"""
+        return URL(self.urlname + str(other))
 
     def __div__(self, other):
         """Join URL components using the division operator"""
@@ -856,8 +888,10 @@ def from_ftp(
     hash: str = "",
     chunk: int = 8192,
     verbose: bool = False,
-    fid=sys.stdout,
+    fid: object = sys.stdout,
+    label: str | None = None,
     mode: oct = 0o775,
+    **kwargs,
 ):
     """
     Download a file from a ``ftp`` host
@@ -880,8 +914,10 @@ def from_ftp(
         Chunk size for transfer encoding
     verbose: bool, default False
         Print file transfer information
-    fid: obj, default sys.stdout
-        Open file object to print if verbose
+    fid: object, default sys.stdout
+        Open file object for logging file transfers if verbose
+    label: str, default None
+        Label for logging file transfer information if verbose
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -896,6 +932,9 @@ def from_ftp(
     # verify inputs for remote ftp host
     if isinstance(HOST, str):
         HOST = url_split(HOST)
+    # set default label for logging
+    if label is None:
+        label = f"{posixpath.join(*HOST)} -->\n\t{local}"
     # try downloading from ftp
     try:
         # try to connect to ftp host
@@ -926,8 +965,7 @@ def from_ftp(
             # create directory if non-existent
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
-            args = (posixpath.join(*HOST), str(local))
-            logging.info("{0} -->\n\t{1}".format(*args))
+            logging.info(label)
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
             with local.open(mode="wb") as f:
@@ -1094,7 +1132,8 @@ def from_http(
     chunk: int = 16384,
     headers: dict = {},
     verbose: bool = False,
-    fid=sys.stdout,
+    fid: object = sys.stdout,
+    label: str | None = None,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -1119,8 +1158,10 @@ def from_http(
         Dictionary of headers to append from URL request
     verbose: bool, default False
         Print file transfer information
-    fid: obj, default sys.stdout
-        Open file object to print if verbose
+    fid: object, default sys.stdout
+        Open file object for logging file transfers if verbose
+    label: str or None, default None
+        Label for logging file transfer information if verbose
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -1135,6 +1176,9 @@ def from_http(
     # verify inputs for remote http host
     if isinstance(HOST, str):
         HOST = url_split(HOST)
+    # set default label for logging
+    if label is None:
+        label = f"{posixpath.join(*HOST)} -->\n\t{local}"
     # try downloading from http
     try:
         # Create and submit request.
@@ -1165,8 +1209,7 @@ def from_http(
             # create directory if non-existent
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
-            args = (posixpath.join(*HOST), str(local))
-            logging.info("{0} -->\n\t{1}".format(*args))
+            logging.info(label)
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
             with local.open(mode="wb") as f:
@@ -1226,6 +1269,46 @@ def from_json(
         # load JSON response
         json_response = json.loads(response.read())
         return json_response
+
+
+# PURPOSE: get a s3 bucket name from a presigned url
+def s3_bucket(presigned_url: str) -> str:
+    """
+    Get a s3 bucket name from a presigned url
+
+    Parameters
+    ----------
+    presigned_url: str
+        s3 presigned url
+
+    Returns
+    -------
+    bucket: str
+        s3 bucket name
+    """
+    host = url_split(presigned_url)
+    bucket = re.sub(r"s3:\/\/", r"", host[0], re.IGNORECASE)
+    return bucket
+
+
+# PURPOSE: get a s3 bucket key from a presigned url
+def s3_key(presigned_url: str) -> str:
+    """
+    Get a s3 bucket key from a presigned url
+
+    Parameters
+    ----------
+    presigned_url: str
+        s3 presigned url
+
+    Returns
+    -------
+    key: str
+        s3 bucket key for object
+    """
+    host = url_split(presigned_url)
+    key = posixpath.join(*host[1:])
+    return key
 
 
 # PURPOSE: list a directory on IERS https Server
