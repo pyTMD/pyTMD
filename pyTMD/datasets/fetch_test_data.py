@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 04/2026: check if needing to include algorithm in the hash
     Updated 03/2026: try multiple providers for fetching data
     Updated 12/2025: use URL class to build and operate on URLs
         add function to download from a zenodo article
@@ -30,6 +31,7 @@ UPDATE HISTORY:
     Written 10/2025
 """
 
+import re
 import ssl
 import shutil
 import logging
@@ -121,9 +123,13 @@ def _figshare(
     response = articles_api.load(timeout=timeout, context=context)
     # for each file in the JSON response
     for f in response["files"]:
+        # check if needing to include algorithm in the hash comparison
+        include_algorithm = re.match(r"md5\:", f["supplied_md5"])
         # check if file already exists by matching MD5 checksums
         local_file = directory.joinpath(f["name"])
-        original_md5 = pyTMD.utilities.get_hash(local_file)
+        original_md5 = pyTMD.utilities.get_hash(
+            local_file, include_algorithm=include_algorithm
+        )
         # skip download if checksums match
         if original_md5 == f["supplied_md5"]:
             continue
@@ -134,7 +140,9 @@ def _figshare(
         # get remote file as a byte-stream
         remote_buffer = download.get(timeout=timeout, context=context)
         # verify MD5 checksums
-        computed_md5 = pyTMD.utilities.get_hash(remote_buffer)
+        computed_md5 = pyTMD.utilities.get_hash(
+            remote_buffer, include_algorithm=include_algorithm
+        )
         # raise exception if checksums do not match
         if computed_md5 != f["supplied_md5"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
@@ -200,7 +208,11 @@ def _zenodo(
     for f in deposit_response:
         # check if file already exists by matching MD5 checksums
         local_file = directory.joinpath(f["filename"])
-        original_md5 = pyTMD.utilities.get_hash(local_file)
+        # check if needing to include algorithm in the hash comparison
+        include_algorithm = re.match(r"md5\:", f["checksum"])
+        original_md5 = pyTMD.utilities.get_hash(
+            local_file, include_algorithm=include_algorithm
+        )
         # skip download if checksums match
         if original_md5 == f["checksum"]:
             continue
@@ -211,7 +223,9 @@ def _zenodo(
         # get remote file as a byte-stream
         remote_buffer = download.get(timeout=timeout, context=context)
         # verify MD5 checksums
-        computed_md5 = pyTMD.utilities.get_hash(remote_buffer)
+        computed_md5 = pyTMD.utilities.get_hash(
+            remote_buffer, include_algorithm=include_algorithm
+        )
         # raise exception if checksums do not match
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")

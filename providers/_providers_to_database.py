@@ -42,13 +42,14 @@ def main():
     providers = [f for f in filepath.iterdir() if (f.suffix == ".json")]
     # for each provider
     for provider in providers:
+        print(f"Reading from {provider}") if args.verbose else None
         with provider.open("r", encoding="utf-8") as fid:
             p = json.load(fid)
             d.update(p)
 
     # writing model parameters to JSON database file
     json_file = pyTMD.utilities.get_data_path(["data", "database.json"])
-    print(f"\t{json_file}") if args.verbose else None
+    print(f"Writing to {json_file}") if args.verbose else None
     with open(json_file, "w") as fid:
         indent = 4 if args.pretty else None
         json.dump(d, fid, indent=indent, sort_keys=True)

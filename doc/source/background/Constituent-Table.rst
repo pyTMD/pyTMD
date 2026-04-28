@@ -8,6 +8,7 @@ Major Tidal Constituents
 .. csv-table:: Tidal Constituents
    :file: ../_assets/constituents.csv
    :header-rows: 1
+   :width: 100%
 
 
 From :cite:t:`Doodson:1921kt,Cartwright:1971iz,Cartwright:1973em`

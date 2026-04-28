@@ -21,6 +21,8 @@ def test_hash():
         )
     TEST = pyTMD.utilities.get_hash(ocean_pole_tide_file)
     assert (TEST == '9c66edc2d0fbf627e7ae1cb923a9f0e5')
+    TEST = pyTMD.utilities.get_hash(ocean_pole_tide_file, include_algorithm=True)
+    assert (TEST == 'md5:9c66edc2d0fbf627e7ae1cb923a9f0e5')
     # get hash of uncompressed file
     with gzip.open(ocean_pole_tide_file) as fid:
         TEST = pyTMD.utilities.get_hash(io.BytesIO(fid.read()))

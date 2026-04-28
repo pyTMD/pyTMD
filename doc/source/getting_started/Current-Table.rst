@@ -8,3 +8,4 @@ Tidal Current Directories
 .. csv-table:: Tidal Current Directories
    :file: ../_assets/current-models.csv
    :header-rows: 1
+   :width: 100%

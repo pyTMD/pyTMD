@@ -14,6 +14,7 @@ UPDATE HISTORY:
     Updated 04/2026: add query and path functions to URL class
         can use from ftp within URL for downloading files
         added s3 utilities for getting the bucket name and key
+        added include_algorithm option to get_hash function
     Updated 01/2026: raise original exceptions in cases of HTTPError/URLError
     Updated 12/2025: add URL class to build and operate on URLs
         no longer subclassing pathlib.Path for working directories
@@ -549,6 +550,7 @@ def compressuser(filename: str | pathlib.Path):
 def get_hash(
     local: str | io.IOBase | pathlib.Path,
     algorithm: str = "md5",
+    include_algorithm: bool = False,
 ):
     """
     Get the hash value from a local file or ``BytesIO`` object
@@ -559,12 +561,15 @@ def get_hash(
         ``BytesIO`` object or path to file
     algorithm: str, default 'md5'
         Hashing algorithm for checksum validation
+    include_algorithm: bool, default False
+        Include the algorithm name in the returned hash
     """
     # check if open file object or if local file exists
     if isinstance(local, io.IOBase):
         # generate checksum hash for a given type
         if algorithm in hashlib.algorithms_available:
-            return hashlib.new(algorithm, local.getvalue()).hexdigest()
+            value = hashlib.new(algorithm, local.getvalue()).hexdigest()
+            return f"{algorithm}:{value}" if include_algorithm else value
         else:
             raise ValueError(f"Invalid hashing algorithm: {algorithm}")
     elif isinstance(local, (str, pathlib.Path)):
@@ -577,7 +582,8 @@ def get_hash(
         with local.open(mode="rb") as local_buffer:
             # generate checksum hash for a given type
             if algorithm in hashlib.algorithms_available:
-                return hashlib.new(algorithm, local_buffer.read()).hexdigest()
+                value = hashlib.new(algorithm, local_buffer.read()).hexdigest()
+                return f"{algorithm}:{value}" if include_algorithm else value
             else:
                 raise ValueError(f"Invalid hashing algorithm: {algorithm}")
     else:

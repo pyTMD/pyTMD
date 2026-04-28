@@ -26,9 +26,7 @@ for model, parameters in models.items():
     # extract the reference
     reference = parameters.get("reference", None)
     # write the model and directory to the csv file
-    fid.write(
-        f"`{model} <{reference}>`_,``<path_to_tide_models>/{model_directory}``\n"
-    )
+    fid.write(f"`{model} <{reference}>`_,``<model_path>/{model_directory}``\n")
 # close the file
 fid.close()
 
@@ -49,7 +47,7 @@ for model, parameters in models.items():
             d = pathlib.Path(parameters[t]["model_file"]).parent
         elif isinstance(parameters[t]["model_file"], list):
             d = pathlib.Path(parameters[t]["model_file"][0]).parent
-        model_directories.append(f"``<path_to_tide_models>/{d}``")
+        model_directories.append(f"``<model_path>/{d}``")
     # only keep unique directories
     model_directories = list(set(model_directories))
     # join the directories
