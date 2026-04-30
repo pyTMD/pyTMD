@@ -160,7 +160,7 @@ def open_mfdataset(
     if parallel and dask_available:
         (d,) = dask.compute(d)
     # merge datasets
-    ds = xr.merge(d, compat="override")
+    ds = xr.merge(d, combine_attrs=combine_attrs, compat="override")
     # return xarray dataset
     return ds
 

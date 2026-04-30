@@ -1874,7 +1874,8 @@ class OTISDataset:
     # PURPOSE: interpolate grid variables to u and v nodes
     def merge(self, ds, group: str = "z"):
         """
-        Interpolate grid variables from zeta nodes to u and v nodes
+        Merge grid and model datasets while interpolating grid variables
+        from zeta nodes to u and v nodes
 
         Parameters
         ----------
@@ -1891,6 +1892,7 @@ class OTISDataset:
         """
         # wrap mask if global
         mode = "wrap" if self.is_global else "edge"
+        # interpolate to u and v nodes
         if group in ("u", "U"):
             # calculate Dataset on u grids
             # pad and roll the mask and bathymetry
@@ -1902,6 +1904,8 @@ class OTISDataset:
             ds["bathymetry"] = ds["mask"] * bathymetry.values
             for field in ["mask", "bathymetry"]:
                 ds[field].attrs.update(_attributes["u"][field])
+            # update attributes
+            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs])
         elif group in ("v", "V"):
             # calculate Dataset on v grids
             # pad and roll the mask and bathymetry
@@ -1913,6 +1917,8 @@ class OTISDataset:
             ds["bathymetry"] = ds["mask"] * bathymetry.values
             for field in ["mask", "bathymetry"]:
                 ds[field].attrs.update(_attributes["v"][field])
+            # update attributes
+            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs])
         else:
             # merge without interpolation
             ds = xr.merge(
