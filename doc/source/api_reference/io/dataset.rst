@@ -20,6 +20,10 @@ General Attributes and Methods
 .. autoclass:: pyTMD.io.dataset.DataArray
    :members:
 
+.. autofunction:: pyTMD.io.dataset.combine_attrs
+
+.. autofunction:: pyTMD.io.dataset.equivalent_attrs
+
 .. autofunction:: pyTMD.io.dataset.register_datatree_subaccessor
 
 .. autofunction:: pyTMD.io.dataset.register_dataset_subaccessor

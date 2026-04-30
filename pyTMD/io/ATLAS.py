@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ATLAS.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (04/2026)
 
 Reads netCDF4 ATLAS tidal solutions provided by Oregon State University
 
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attributes to save model filename(s)
     Updated 02/2026: make dataset and datatree accessors for ATLAS
         be subaccessors from dataset module
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
@@ -66,6 +67,7 @@ import xarray as xr
 import pyTMD.version
 import pyTMD.utilities
 from .dataset import (
+    combine_attrs,
     register_dataset_subaccessor,
     register_datatree_subaccessor,
 )
@@ -119,7 +121,7 @@ def open_dataset(
             units = str(ds2[c].tmd.units / ds1["bathymetry"].tmd.units)
             ds2[c].attrs["units"] = units
     # merge datasets
-    ds = xr.merge([ds1, ds2], compat="override")
+    ds = xr.merge([ds1, ds2], combine_attrs=combine_attrs, compat="override")
     # return xarray dataset
     return ds
 
@@ -164,7 +166,7 @@ def open_mfdataset(
 
 
 def open_atlas_grid(
-    grid_file: str | pathlib.Path,
+    input_file: str | pathlib.Path,
     group: str = "z",
     **kwargs,
 ):
@@ -173,7 +175,7 @@ def open_atlas_grid(
 
     Parameters
     ----------
-    grid_file: str or pathlib.Path
+    input_file: str or pathlib.Path
         ATLAS model grid file
     group: str, default 'z'
         Tidal variable to read
@@ -193,18 +195,18 @@ def open_atlas_grid(
     """
     # detect if file is compressed if not provided
     if kwargs.get("compressed", None) is None:
-        kwargs["compressed"] = pyTMD.utilities.detect_compression(grid_file)
+        kwargs["compressed"] = pyTMD.utilities.detect_compression(input_file)
     # tilde-expand input file
-    grid_file = pyTMD.utilities.Path(grid_file).resolve()
-    if isinstance(grid_file, pathlib.Path) and not grid_file.exists():
-        raise FileNotFoundError(f"File not found: {grid_file}")
+    input_file = pyTMD.utilities.Path(input_file).resolve()
+    if isinstance(input_file, pathlib.Path) and not input_file.exists():
+        raise FileNotFoundError(f"File not found: {input_file}")
     # read the netCDF4-format file
     if kwargs["compressed"]:
         # read gzipped netCDF4 file
-        f = gzip.open(grid_file, "rb")
+        f = gzip.open(input_file, "rb")
         tmp = xr.open_dataset(f, mask_and_scale=True)
     else:
-        tmp = xr.open_dataset(grid_file, mask_and_scale=True)
+        tmp = xr.open_dataset(input_file, mask_and_scale=True)
     # read bathymetry and coordinates for variable group
     if group == "z":
         # get bathymetry at nodes
@@ -228,6 +230,7 @@ def open_atlas_grid(
     # add attributes
     ds.attrs["group"] = group
     ds.attrs["format"] = "ATLAS"
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset
     return ds
 
@@ -300,6 +303,7 @@ def open_atlas_dataset(
     # add attributes
     ds.attrs["format"] = "ATLAS"
     ds.attrs["group"] = group.upper() if group in ("u", "v") else group
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset
     return ds
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 FES.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 
 Reads ascii and netCDF4 files for FES tidal solutions provided by AVISO
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attributes to save model filename(s)
     Updated 03/2026: add reader for FES-native (unstructured) netCDF4 files
     Updated 02/2026: make dataset accessor for FES be a subaccessor from dataset
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
@@ -73,7 +74,7 @@ import numpy as np
 import xarray as xr
 import pyTMD.constituents
 import pyTMD.utilities
-from .dataset import register_dataset_subaccessor
+from .dataset import combine_attrs, register_dataset_subaccessor
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -123,7 +124,7 @@ def open_mfdataset(
     if parallel and dask_available:
         (d,) = dask.compute(d)
     # merge datasets
-    ds = xr.merge(d, compat="override")
+    ds = xr.merge(d, combine_attrs=combine_attrs, compat="override")
     # return xarray dataset
     return ds
 
@@ -268,6 +269,7 @@ def open_fes_ascii(
         ds = ds.chunk(chunks)
     # add attributes
     ds.attrs["group"] = kwargs["group"]
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset
     return ds
 
@@ -349,6 +351,7 @@ def open_fes_netcdf(
     # add attributes
     ds.attrs["group"] = kwargs["group"]
     ds[cons].attrs["units"] = tmp[amp_key].attrs.get("units", "")
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset
     return ds
 
@@ -449,6 +452,7 @@ def open_fes_native(
     # add attributes
     ds.attrs["group"] = kwargs["group"]
     ds.attrs["grid_type"] = "unstructured"
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # verify that chunks are unified (if specified)
     if chunks is not None:
         ds = ds.unify_chunks()

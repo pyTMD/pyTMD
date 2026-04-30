@@ -20,6 +20,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: compact subaccessor should be to dataset
+        added lineage attributes to save model filename(s)
     Updated 02/2026: make dataset and datatree accessors for OTIS
         be subaccessors from dataset module
     Updated 01/2026: check if flexure variable exists in TMD3 files
@@ -106,6 +107,7 @@ import numpy as np
 import xarray as xr
 import pyTMD.utilities
 from .dataset import (
+    combine_attrs,
     register_dataset_subaccessor,
     register_datatree_subaccessor,
 )
@@ -322,7 +324,7 @@ def open_mfdataset(
         # transports are returned as (u,v)
         d = [open_otis_transport(f, **kwargs)[1] for f in model_files]
     # merge datasets
-    ds = xr.merge(d, compat="override")
+    ds = xr.merge(d, combine_attrs=combine_attrs, compat="override")
     # add attributes
     ds.attrs["group"] = group.upper() if group in ("u", "v") else group
     # return xarray dataset
@@ -447,7 +449,7 @@ def open_atlas_dataset(
         dsu, dtu, dsv, dtv = open_atlas_transport(model_file, use_mmap=use_mmap)
         ds2 = CompactDataset(dsv).combine_local(dtv, chunks=chunks)
     # merge datasets
-    ds = xr.merge([ds1, ds2], compat="override")
+    ds = xr.merge([ds1, ds2], combine_attrs=combine_attrs, compat="override")
     # add attributes
     ds.attrs["group"] = group.upper() if group in ("u", "v") else group
     # return xarray dataset
@@ -520,6 +522,7 @@ def open_tmd3_dataset(
         ds[con].attrs["units"] = units
     ds.attrs["crs"] = pyproj.CRS.from_user_input(spatial_proj4).to_dict()
     ds.attrs["group"] = group.upper() if group in ("u", "v") else group
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset
     return ds
 
@@ -670,6 +673,7 @@ def open_otis_grid(
     ds.attrs["dt"] = dt.copy()
     ds.attrs["iob"] = iob.copy()
     ds.attrs["bounds"] = bounds.copy()
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     for field in ["mask", "bathymetry"]:
         ds[field].attrs.update(_attributes["z"][field])
     # return xarray dataset
@@ -788,6 +792,7 @@ def open_otis_elevation(
         ds = ds.chunk(chunks)
     # add attributes
     ds.attrs["bounds"] = bounds.copy()
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     for field in ds.data_vars:
         ds[field].attrs.update(_attributes["z"]["elevation"])
     # return xarray dataset
@@ -919,6 +924,8 @@ def open_otis_transport(
     # add attributes
     dsu.attrs["bounds"] = bounds.copy()
     dsv.attrs["bounds"] = bounds.copy()
+    dsu.attrs["lineage"] = pathlib.Path(input_file).name
+    dsv.attrs["lineage"] = pathlib.Path(input_file).name
     for field in dsu.data_vars:
         dsu[field].attrs.update(_attributes["u"]["transport"])
     for field in dsv.data_vars:
@@ -1084,6 +1091,7 @@ def open_atlas_grid(
     ds.attrs["dt"] = dt.copy()
     ds.attrs["iob"] = iob.copy()
     ds.attrs["bounds"] = bounds.copy()
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     for field in ["mask", "bathymetry"]:
         ds[field].attrs.update(_attributes["z"][field])
 
@@ -1190,6 +1198,7 @@ def open_atlas_grid(
         # convert to xarray Dataset from the data dictionary
         dtree[name] = xr.Dataset.from_dict(local)
         dtree[name].attrs["bounds"] = BOUNDS.copy()
+        dtree[name].attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset (global) and datatree (local)
     return (ds, dtree)
 
@@ -1304,6 +1313,7 @@ def open_atlas_elevation(
     ds = xr.Dataset.from_dict(h)
     # add attributes
     ds.attrs["bounds"] = bounds.copy()
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     for field in ds.data_vars:
         ds[field].attrs.update(_attributes["z"]["elevation"])
     offset += 4
@@ -1430,6 +1440,7 @@ def open_atlas_elevation(
         # convert to xarray Dataset from the data dictionary
         dtree[name] = xr.Dataset.from_dict(local)
         dtree[name].attrs["bounds"] = BOUNDS.copy()
+        dtree[name].attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray dataset (global) and datatree (local)
     return (ds, dtree)
 
@@ -1558,6 +1569,8 @@ def open_atlas_transport(
     # add attributes
     dsu.attrs["bounds"] = bounds.copy()
     dsv.attrs["bounds"] = bounds.copy()
+    dsu.attrs["lineage"] = pathlib.Path(input_file).name
+    dsv.attrs["lineage"] = pathlib.Path(input_file).name
     for field in dsu.data_vars:
         dsu[field].attrs.update(_attributes["u"]["transport"])
     for field in dsv.data_vars:
@@ -1741,6 +1754,8 @@ def open_atlas_transport(
         dtv[name] = xr.Dataset.from_dict(lclv)
         dtu[name].attrs["bounds"] = BOUNDS.copy()
         dtv[name].attrs["bounds"] = BOUNDS.copy()
+        dtu[name].attrs["lineage"] = pathlib.Path(input_file).name
+        dtv[name].attrs["lineage"] = pathlib.Path(input_file).name
     # return xarray datasets (global) and datatrees (local)
     return (dsu, dsv, dtu, dtv)
 
@@ -1900,7 +1915,9 @@ class OTISDataset:
                 ds[field].attrs.update(_attributes["v"][field])
         else:
             # merge without interpolation
-            ds = xr.merge([self._ds, ds], compat="override")
+            ds = xr.merge(
+                [self._ds, ds], combine_attrs=combine_attrs, compat="override"
+            )
         # set coordinate reference system
         ds.attrs["crs"] = self.crs.to_dict()
         # return the updated datasets
