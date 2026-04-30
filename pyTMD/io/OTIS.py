@@ -1892,6 +1892,7 @@ class OTISDataset:
         """
         # wrap mask if global
         mode = "wrap" if self.is_global else "edge"
+        context = f"zeta_to_{group}"
         # interpolate to u and v nodes
         if group in ("u", "U"):
             # calculate Dataset on u grids
@@ -1905,7 +1906,7 @@ class OTISDataset:
             for field in ["mask", "bathymetry"]:
                 ds[field].attrs.update(_attributes["u"][field])
             # update attributes
-            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs])
+            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs], context)
         elif group in ("v", "V"):
             # calculate Dataset on v grids
             # pad and roll the mask and bathymetry
@@ -1918,7 +1919,7 @@ class OTISDataset:
             for field in ["mask", "bathymetry"]:
                 ds[field].attrs.update(_attributes["v"][field])
             # update attributes
-            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs])
+            ds.attrs = combine_attrs([self._ds.attrs, ds.attrs], context)
         else:
             # merge without interpolation
             ds = xr.merge(
