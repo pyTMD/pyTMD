@@ -1,115 +1,131 @@
 #!/usr/bin/env python
-u"""
+"""
 test_spatial.py (11/2020)
 Verify spatial operations
 """
+
 import pytest
 import numpy as np
 import pyTMD.spatial
 
+
 # PURPOSE: test the data type function
 def test_data_type():
     # test drift type
-    exp = 'drift'
+    exp = "drift"
     # number of data points
-    npts = 30; ntime = 30
+    npts = 30
+    ntime = 30
     x = np.random.rand(npts)
     y = np.random.rand(npts)
     t = np.random.rand(ntime)
-    obs = pyTMD.spatial.data_type(x,y,t)
-    assert (obs == exp)
+    obs = pyTMD.spatial.data_type(x, y, t)
+    assert obs == exp
     # test grid type
-    exp = 'grid'
-    xgrid,ygrid = np.meshgrid(x,y)
-    obs = pyTMD.spatial.data_type(xgrid,ygrid,t)
-    assert (obs == exp)
+    exp = "grid"
+    xgrid, ygrid = np.meshgrid(x, y)
+    obs = pyTMD.spatial.data_type(xgrid, ygrid, t)
+    assert obs == exp
     # test grid type with spatial dimensions
-    exp = 'grid'
-    nx = 30; ny = 20; ntime = 10
+    exp = "grid"
+    nx = 30
+    ny = 20
+    ntime = 10
     x = np.random.rand(nx)
     y = np.random.rand(ny)
     t = np.random.rand(ntime)
-    xgrid,ygrid = np.meshgrid(x,y)
-    obs = pyTMD.spatial.data_type(xgrid,ygrid,t)
-    assert (obs == exp)
+    xgrid, ygrid = np.meshgrid(x, y)
+    obs = pyTMD.spatial.data_type(xgrid, ygrid, t)
+    assert obs == exp
     # test time series type
-    exp = 'time series'
+    exp = "time series"
     # number of data points
-    npts = 1; ntime = 1
+    npts = 1
+    ntime = 1
     x = np.random.rand(npts)
     y = np.random.rand(npts)
     t = np.random.rand(ntime)
-    obs = pyTMD.spatial.data_type(x,y,t)
-    assert (obs == exp)
+    obs = pyTMD.spatial.data_type(x, y, t)
+    assert obs == exp
     # test catch for unknown data type
-    msg = 'Unknown data type'
+    msg = "Unknown data type"
     # number of data points
-    npts = 30; ntime = 10
+    npts = 30
+    ntime = 10
     x = np.random.rand(npts)
     y = np.random.rand(npts)
     t = np.random.rand(ntime)
     with pytest.raises(ValueError, match=msg):
-        pyTMD.spatial.data_type(x,y,t)
+        pyTMD.spatial.data_type(x, y, t)
+
 
 # PURPOSE: test ellipsoidal parameters within spatial module
 def test_ellipsoid_parameters():
     assert pyTMD.spatial._wgs84.a_axis == 6378137.0
-    assert pyTMD.spatial._wgs84.flat == (1.0/298.257223563)
+    assert pyTMD.spatial._wgs84.flat == (1.0 / 298.257223563)
+
 
 # PURPOSE: test ellipsoid conversion
 def test_convert_ellipsoid():
     # semimajor axis (a) and flattening (f) for TP and WGS84 ellipsoids
-    atop,ftop = (6378136.3,1.0/298.257)
-    awgs,fwgs = (6378137.0,1.0/298.257223563)
+    atop, ftop = (6378136.3, 1.0 / 298.257)
+    awgs, fwgs = (6378137.0, 1.0 / 298.257223563)
     # create latitude and height array in WGS84
-    lat_WGS84 = 90.0 - np.arange(181,dtype=np.float64)
-    elev_WGS84 = 3000.0 + np.zeros((181),dtype=np.float64)
+    lat_WGS84 = 90.0 - np.arange(181, dtype=np.float64)
+    elev_WGS84 = 3000.0 + np.zeros((181), dtype=np.float64)
     # convert from WGS84 to Topex/Poseidon Ellipsoids
-    lat_TPX,elev_TPX = pyTMD.spatial.convert_ellipsoid(lat_WGS84, elev_WGS84,
-        awgs, fwgs, atop, ftop, eps=1e-12, itmax=10)
+    lat_TPX, elev_TPX = pyTMD.spatial.convert_ellipsoid(
+        lat_WGS84, elev_WGS84, awgs, fwgs, atop, ftop, eps=1e-12, itmax=10
+    )
     # check minimum and maximum are expected from NSIDC IDL program
     # ftp://ftp.nsidc.org/DATASETS/icesat/tools/idl/ellipsoid/test_ce.pro
-    minlat = np.min(lat_TPX-lat_WGS84)
-    maxlat = np.max(lat_TPX-lat_WGS84)
-    explat = [-1.2305653e-7,1.2305653e-7]
-    minelev = 100.0*np.min(elev_TPX-elev_WGS84)
-    maxelev = 100.0*np.max(elev_TPX-elev_WGS84)
-    expelev = [70.000000,71.368200]
-    assert np.allclose([minlat,maxlat],explat)
-    assert np.allclose([minelev,maxelev],expelev)
+    minlat = np.min(lat_TPX - lat_WGS84)
+    maxlat = np.max(lat_TPX - lat_WGS84)
+    explat = [-1.2305653e-7, 1.2305653e-7]
+    minelev = 100.0 * np.min(elev_TPX - elev_WGS84)
+    maxelev = 100.0 * np.max(elev_TPX - elev_WGS84)
+    expelev = [70.000000, 71.368200]
+    assert np.allclose([minlat, maxlat], explat)
+    assert np.allclose([minelev, maxelev], expelev)
     # convert back from Topex/Poseidon to WGS84 Ellipsoids
-    phi_WGS84,h_WGS84 = pyTMD.spatial.convert_ellipsoid(lat_TPX, elev_TPX,
-        atop, ftop, awgs, fwgs, eps=1e-12, itmax=10)
+    phi_WGS84, h_WGS84 = pyTMD.spatial.convert_ellipsoid(
+        lat_TPX, elev_TPX, atop, ftop, awgs, fwgs, eps=1e-12, itmax=10
+    )
     # check minimum and maximum are expected from NSIDC IDL program
     # ftp://ftp.nsidc.org/DATASETS/icesat/tools/idl/ellipsoid/test_ce.pro
-    minlatdel = np.min(phi_WGS84-lat_WGS84)
-    maxlatdel = np.max(phi_WGS84-lat_WGS84)
-    explatdel = [-2.1316282e-14,2.1316282e-14]
-    minelevdel = 100.0*np.min(h_WGS84-elev_WGS84)
-    maxelevdel = 100.0*np.max(h_WGS84-elev_WGS84)
-    expelevdel = [-1.3287718e-7,1.6830199e-7]
-    assert np.allclose([minlatdel,maxlatdel],explatdel)
-    assert np.allclose([minelevdel,maxelevdel],expelevdel,atol=1e-5)
+    minlatdel = np.min(phi_WGS84 - lat_WGS84)
+    maxlatdel = np.max(phi_WGS84 - lat_WGS84)
+    explatdel = [-2.1316282e-14, 2.1316282e-14]
+    minelevdel = 100.0 * np.min(h_WGS84 - elev_WGS84)
+    maxelevdel = 100.0 * np.max(h_WGS84 - elev_WGS84)
+    expelevdel = [-1.3287718e-7, 1.6830199e-7]
+    assert np.allclose([minlatdel, maxlatdel], explatdel)
+    assert np.allclose([minelevdel, maxelevdel], expelevdel, atol=1e-5)
+
 
 # PURPOSE: verify cartesian to geodetic conversions
 def test_convert_geodetic():
     # choose a random set of locations
-    latitude = -90.0 + 180.0*np.random.rand(100)
-    longitude = -180.0 + 360.0*np.random.rand(100)
-    height = 2000.0*np.random.rand(100)
+    latitude = -90.0 + 180.0 * np.random.rand(100)
+    longitude = -180.0 + 360.0 * np.random.rand(100)
+    height = 2000.0 * np.random.rand(100)
     # ellipsoidal parameters
     a_axis = pyTMD.spatial._wgs84.a_axis
     flat = pyTMD.spatial._wgs84.flat
     # convert to cartesian coordinates
-    x, y, z = pyTMD.spatial.to_cartesian(longitude, latitude, h=height,
-        a_axis=a_axis, flat=flat)
+    x, y, z = pyTMD.spatial.to_cartesian(
+        longitude, latitude, h=height, a_axis=a_axis, flat=flat
+    )
     # convert back to geodetic coordinates
-    ln1, lt1, h1 = pyTMD.spatial.to_geodetic(x, y, z,
-        a_axis=a_axis, flat=flat, method='moritz')
-    ln2, lt2, h2 = pyTMD.spatial.to_geodetic(x, y, z,
-        a_axis=a_axis, flat=flat, method='bowring')
-    ln3, lt3, h3 = pyTMD.spatial.to_geodetic(x, y, z,
-        a_axis=a_axis, flat=flat, method='zhu')
+    ln1, lt1, h1 = pyTMD.spatial.to_geodetic(
+        x, y, z, a_axis=a_axis, flat=flat, method="moritz"
+    )
+    ln2, lt2, h2 = pyTMD.spatial.to_geodetic(
+        x, y, z, a_axis=a_axis, flat=flat, method="bowring"
+    )
+    ln3, lt3, h3 = pyTMD.spatial.to_geodetic(
+        x, y, z, a_axis=a_axis, flat=flat, method="zhu"
+    )
     # validate outputs for Moritz iterative method
     assert np.allclose(longitude, ln1)
     assert np.allclose(latitude, lt1)
@@ -123,15 +139,16 @@ def test_convert_geodetic():
     assert np.allclose(latitude, lt3)
     assert np.allclose(height, h3)
 
+
 # PURPOSE: test calculation of geocentric latitudes
 def test_geocentric_latitude():
     # WGS84 ellipsoidal parameters
     a_axis = 6378137.0
-    flat = (1.0/298.257223563)
+    flat = 1.0 / 298.257223563
     # square of the eccentricity of the ellipsoid
     ecc2 = 2.0 * flat - flat**2
     # first numerical eccentricity
-    ecc1 = np.sqrt(ecc2*a_axis**2)/a_axis
+    ecc1 = np.sqrt(ecc2 * a_axis**2) / a_axis
     # latitude and longitude arrays for testing
     lat = 90.0 - np.arange(181, dtype=np.float64)
     lon = np.zeros((181), dtype=np.float64)
@@ -141,7 +158,7 @@ def test_geocentric_latitude():
     # geodetic latitude in radians
     latitude_geodetic_rad = np.radians(lat)
     # prime vertical radius of curvature
-    N = a_axis/np.sqrt(1.0 - ecc1**2.*np.sin(latitude_geodetic_rad)**2.0)
+    N = a_axis / np.sqrt(1.0 - ecc1**2.0 * np.sin(latitude_geodetic_rad) ** 2.0)
     # calculate X, Y and Z from geodetic latitude and longitude
     X = N * np.cos(latitude_geodetic_rad) * np.cos(np.radians(lon))
     Y = N * np.cos(latitude_geodetic_rad) * np.sin(np.radians(lon))
@@ -151,8 +168,7 @@ def test_geocentric_latitude():
     # validate outputs
     assert np.allclose(test, validation, atol=1e-5)
     # validate against Cartesian coordinate method from function
-    x, y, z = pyTMD.spatial.to_cartesian(lon, lat,
-        a_axis=a_axis, flat=flat)
+    x, y, z = pyTMD.spatial.to_cartesian(lon, lat, a_axis=a_axis, flat=flat)
     # calculate geocentric latitude and convert to degrees
     validation = np.degrees(np.arctan(z / np.sqrt(x**2.0 + y**2.0)))
     # validate outputs
@@ -160,11 +176,12 @@ def test_geocentric_latitude():
     # compare against a different transformation
     theta = np.arctan2(
         (1.0 - ecc2) * np.sin(latitude_geodetic_rad),
-        np.cos(latitude_geodetic_rad)
+        np.cos(latitude_geodetic_rad),
     )
     # validate outputs
     assert np.allclose(test, np.degrees(theta), atol=1e-5)
     assert np.allclose(np.degrees(theta), validation, atol=1e-5)
+
 
 # PURPOSE: test wrap longitudes
 def test_wrap_longitudes():
@@ -174,8 +191,9 @@ def test_wrap_longitudes():
     # expected wrapped longitudes
     exp = np.zeros((360))
     exp[:181] = np.arange(181)
-    exp[181:] = np.arange(-179,0)
-    assert np.allclose(obs,exp)
+    exp[181:] = np.arange(-179, 0)
+    assert np.allclose(obs, exp)
+
 
 # PURPOSE: test the conversion of degrees to DMS
 def test_degrees_to_DMS():
@@ -189,6 +207,7 @@ def test_degrees_to_DMS():
     assert np.all(mins == expmin)
     assert np.all(secs == expsec)
 
+
 # PURPOSE: test the conversion of DMS to degrees
 def test_DMS_to_degrees():
     # test a range of angles
@@ -198,6 +217,7 @@ def test_DMS_to_degrees():
     d = pyTMD.spatial.from_dms(degs, mins, secs)
     expd = np.array([180.0, -180.0, 180.75, -180.75, 180.755, -180.755])
     assert np.all(d == expd)
+
 
 # PURPOSE: test the conversion of ECEF to ENU coordinates
 def test_ECEF_to_ENU():
@@ -213,6 +233,7 @@ def test_ECEF_to_ENU():
     assert np.isclose(Y, Yexp)
     assert np.isclose(Z, Zexp)
 
+
 # PURPOSE: test the conversion of ECEF to celestial horizontal coordinates
 def test_ECEF_to_horizontal():
     # US Naval Observatory (USNO)
@@ -220,26 +241,26 @@ def test_ECEF_to_horizontal():
     lat0 = 38.9215
     h0 = 92.0
     # solar ephemerides at J2000
-    SX =  1.353631936e11
-    SY =  1.938584775e9
+    SX = 1.353631936e11
+    SY = 1.938584775e9
     SZ = -5.755477511e10
     # lunar ephemerides at J2000
-    LX =  2.09322658e8
+    LX = 2.09322658e8
     LY = -3.35161630e8
     LZ = -7.60803221e7
     # convert from ECEF to east-north-up (ENU) coordinates
-    SE, SN, SU = pyTMD.spatial.to_ENU(SX, SY, SZ,
-        lon0=lon0, lat0=lat0, h0=h0)
-    LE, LN, LU = pyTMD.spatial.to_ENU(LX, LY, LZ,
-        lon0=lon0, lat0=lat0, h0=h0)
+    SE, SN, SU = pyTMD.spatial.to_ENU(SX, SY, SZ, lon0=lon0, lat0=lat0, h0=h0)
+    LE, LN, LU = pyTMD.spatial.to_ENU(LX, LY, LZ, lon0=lon0, lat0=lat0, h0=h0)
     # convert from ENU to horizontal coordinates
     salt, saz, sdist = pyTMD.spatial.to_horizontal(SE, SN, SU)
     lalt, laz, ldist = pyTMD.spatial.to_horizontal(LE, LN, LU)
     # calculate zenith angle from ECEF coordinates
-    solar_zenith = pyTMD.spatial.to_zenith(SX, SY, SZ,
-        lon0=lon0, lat0=lat0, h0=h0)
-    lunar_zenith = pyTMD.spatial.to_zenith(LX, LY, LZ,
-        lon0=lon0, lat0=lat0, h0=h0)
+    solar_zenith = pyTMD.spatial.to_zenith(
+        SX, SY, SZ, lon0=lon0, lat0=lat0, h0=h0
+    )
+    lunar_zenith = pyTMD.spatial.to_zenith(
+        LX, LY, LZ, lon0=lon0, lat0=lat0, h0=h0
+    )
     # check solar azimuth and elevation
     assert np.isclose(salt, -5.486, atol=0.001)
     assert np.isclose(saz, 115.320, atol=0.001)
@@ -252,3 +273,97 @@ def test_ECEF_to_horizontal():
     # verify relation between altitudes and zenith angles
     assert solar_zenith == (90.0 - salt)
     assert lunar_zenith == (90.0 - lalt)
+
+
+# PURPOSE: test polar stereographic scaling factors
+def test_distance_scaling():
+    # latitude values from Table 24 of Snyder (1982)
+    lat = 90 - np.arange(31)
+    # expected k scaling factors from Snyder
+    expected = np.array(
+        [
+            1.000000,
+            1.000076,
+            1.000305,
+            1.000686,
+            1.001219,
+            1.001906,
+            1.002746,
+            1.003741,
+            1.004889,
+            1.006193,
+            1.007653,
+            1.009270,
+            1.011045,
+            1.012979,
+            1.015073,
+            1.017328,
+            1.019746,
+            1.022329,
+            1.025077,
+            1.027993,
+            1.031078,
+            1.034335,
+            1.037765,
+            1.041370,
+            1.045154,
+            1.049117,
+            1.053264,
+            1.057595,
+            1.062115,
+            1.066826,
+            1.071732,
+        ]
+    )
+    # calculate distance scaling factors
+    test = pyTMD.spatial.scale_factors(
+        lat, reference_latitude=90.0, metric="distance"
+    )
+    # values from Snyder are inverse of scale factor outputs
+    assert np.allclose(1.0 / test, expected)
+
+
+# PURPOSE: test polar stereographic area scaling factors
+def test_area_scaling():
+    lat = 90 - np.arange(31)
+    expected = np.array(
+        [
+            [1.05677017, 1.06312303],
+            [1.05660922, 1.06296111],
+            [1.05612651, 1.06247550],
+            [1.05532241, 1.06166657],
+            [1.05419754, 1.06053493],
+            [1.05275277, 1.05908147],
+            [1.05098921, 1.05730732],
+            [1.04890823, 1.05521383],
+            [1.04651144, 1.05280263],
+            [1.04380069, 1.05007558],
+            [1.04077805, 1.04703477],
+            [1.03744586, 1.04368255],
+            [1.03380669, 1.04002150],
+            [1.02986332, 1.03605443],
+            [1.02561878, 1.03178437],
+            [1.02107633, 1.02721461],
+            [1.01623942, 1.02234862],
+            [1.01111176, 1.01719014],
+            [1.00569725, 1.01174308],
+            [1.00000000, 1.00601158],
+            [0.99402434, 1.00000000],
+            [0.98777480, 0.99371288],
+            [0.98125608, 0.98715498],
+            [0.97447310, 0.98033122],
+            [0.96743096, 0.97324675],
+            [0.96013493, 0.96590686],
+            [0.95259046, 0.95831704],
+            [0.94480318, 0.95048294],
+            [0.93677886, 0.94241038],
+            [0.92852344, 0.93410533],
+            [0.92004302, 0.92557393],
+        ]
+    )
+    # calculate area scaling factors for ESPG:3031
+    test = pyTMD.spatial.scale_factors(-lat, reference_latitude=-71.0)
+    assert np.allclose(test, expected[:, 0])
+    # calculate area scaling factors for ESPG:3413
+    test = pyTMD.spatial.scale_factors(lat, reference_latitude=70.0)
+    assert np.allclose(test, expected[:, 1])

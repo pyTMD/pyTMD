@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 spatial.py
-Written by Tyler Sutterley (02/2026)
+Written by Tyler Sutterley (04/2026)
 
 Spatial transformation routines
 
@@ -11,6 +11,8 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 04/2026: updated scale factors to add case where reference
+        latitude is at the pole
     Updated 02/2026: add function to compute geocentric latitudes
     Updated 12/2025: add units to input and output variables in docstrings
     Updated 08/2025: convert angles with numpy radians and degrees functions
@@ -81,9 +83,6 @@ from __future__ import annotations
 
 import warnings
 import numpy as np
-
-# suppress warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 __all__ = [
     "data_type",
@@ -1609,39 +1608,48 @@ def scale_factors(
         Scaling factors at input latitudes
     """
     assert metric.lower() in ["distance", "area"], "Unknown metric"
-    # convert latitude from degrees to positive radians
-    theta = np.radians(np.abs(lat))
-    # convert reference latitude from degrees to positive radians
-    theta_ref = np.radians(np.abs(reference_latitude))
+    # power for scaling factors
+    power = 1.0 if metric.lower() == "distance" else 2.0
+    # convert latitude to positive radians
+    phi = np.radians(np.abs(lat))
+    # convert reference latitude to positive radians
+    phi_ref = np.radians(np.abs(reference_latitude))
     # square of the eccentricity of the ellipsoid
     # ecc2 = (1-b**2/a**2) = 2.0*flat - flat^2
     ecc2 = 2.0 * flat - flat**2
     # eccentricity of the ellipsoid
     ecc = np.sqrt(ecc2)
-    # calculate ratio at input latitudes
-    m = np.cos(theta) / np.sqrt(1.0 - ecc2 * np.sin(theta) ** 2)
-    t = np.tan(np.pi / 4.0 - theta / 2.0) / (
-        (1.0 - ecc * np.sin(theta)) / (1.0 + ecc * np.sin(theta))
-    ) ** (ecc / 2.0)
-    # calculate ratio at reference latitude
-    mref = np.cos(theta_ref) / np.sqrt(1.0 - ecc2 * np.sin(theta_ref) ** 2)
-    tref = np.tan(np.pi / 4.0 - theta_ref / 2.0) / (
-        (1.0 - ecc * np.sin(theta_ref)) / (1.0 + ecc * np.sin(theta_ref))
-    ) ** (ecc / 2.0)
-    # distance scaling
-    k = (mref / m) * (t / tref)
-    kp = (
-        0.5
-        * mref
-        * np.sqrt(((1.0 + ecc) ** (1.0 + ecc)) * ((1.0 - ecc) ** (1.0 - ecc)))
-        / tref
+    # get p values following equations 17.33 and 17.35
+    p = np.sqrt(np.power(1.0 + ecc, 1.0 + ecc) * np.power(1.0 - ecc, 1.0 - ecc))
+    # calculate m factors using equation 12.15
+    m = np.cos(phi) / np.sqrt(1.0 - ecc2 * np.sin(phi) ** 2)
+    m_ref = np.cos(phi_ref) / np.sqrt(1.0 - ecc2 * np.sin(phi_ref) ** 2)
+    # calculate t factors using equation 13.9
+    t = np.tan(np.pi / 4.0 - phi / 2.0) / np.power(
+        (1.0 - ecc * np.sin(phi)) / (1.0 + ecc * np.sin(phi)), ecc / 2.0
     )
-    if metric.lower() == "distance":
-        # distance scaling
-        scale = np.where(np.isclose(theta, np.pi / 2.0), 1.0 / kp, 1.0 / k)
-    elif metric.lower() == "area":
-        # area scaling
+    t_ref = np.tan(np.pi / 4.0 - phi_ref / 2.0) / np.power(
+        (1.0 - ecc * np.sin(phi_ref)) / (1.0 + ecc * np.sin(phi_ref)), ecc / 2.0
+    )
+    # calculate scaling factors following Snyder (1982)
+    # ignore divide by zero and invalid value warnings
+    with np.errstate(divide="ignore", invalid="ignore"):
+        # check if reference latitude is at the pole
+        if np.isclose(phi_ref, np.pi / 2.0):
+            # equations 17.32 and 17.33
+            k = 2.0 * t / (p * m)
+            # at the pole (true scale)
+            k_pole = 1.0
+        else:
+            # equations 17.32 and 17.34
+            k = (m_ref / m) * (t / t_ref)
+            # at the pole from equation 17.35
+            k_pole = 0.5 * m_ref * p / t_ref
+        # distance and area scaling factors with special case at the pole
         scale = np.where(
-            np.isclose(theta, np.pi / 2.0), 1.0 / (kp**2), 1.0 / (k**2)
+            np.isclose(phi, np.pi / 2.0),
+            np.power(1.0 / k_pole, power),
+            np.power(1.0 / k, power),
         )
+    # return the scaling factors
     return scale
