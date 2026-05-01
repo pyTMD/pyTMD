@@ -361,9 +361,9 @@ def test_area_scaling():
             [0.92004302, 0.92557393],
         ]
     )
-    # calculate area scaling factors for ESPG:3031
+    # calculate area scaling factors for EPSG:3031
     test = pyTMD.spatial.scale_factors(-lat, reference_latitude=-71.0)
     assert np.allclose(test, expected[:, 0])
-    # calculate area scaling factors for ESPG:3413
+    # calculate area scaling factors for EPSG:3413
     test = pyTMD.spatial.scale_factors(lat, reference_latitude=70.0)
     assert np.allclose(test, expected[:, 1])
