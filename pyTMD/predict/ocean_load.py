@@ -274,7 +274,10 @@ def _infer_short_period(
     """
     Infer the tidal values for short-period minor constituents
     using their relation with major constituents
-    :cite:p:`Egbert:2002ge,Ray:1999vm`
+    :cite:p:`Egbert:2002ge,Ray:1999vm,Schureman:1958ty`
+
+    For FES corrections, high precision spline coefficients 
+    are provided by ``pyfes`` :cite:p:`Lyard:2025tr`
 
     Parameters
     ----------
@@ -334,9 +337,10 @@ def _infer_short_period(
         "l2",
         "l2b",
         "t2",
-        "eps2",
-        "eta2",
     ]
+    # FES models additionally infer eps2 and eta2
+    if kwargs["corrections"] in ("FES",):
+        minor_constituents.extend(["eps2", "eta2"])
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
     # only add minor constituents that are not on the list of major values
@@ -351,7 +355,7 @@ def _infer_short_period(
         logging.debug(msg)
         return 0.0
 
-    # relationship between major and minor constituent amplitude and phase
+    # relationship between major and minor constituent complex amplitudes
     dmin = xr.Dataset()
     dmin["2q1"] = 0.263 * ds["q1"] - 0.0252 * ds["o1"]
     dmin["sigma1"] = 0.297 * ds["q1"] - 0.0264 * ds["o1"]
@@ -371,8 +375,6 @@ def _infer_short_period(
     dmin["l2"] = 0.0131 * ds["m2"] + 0.0326 * ds["s2"]
     dmin["l2b"] = 0.0033 * ds["m2"] + 0.0082 * ds["s2"]
     dmin["t2"] = 0.0585 * ds["s2"]
-    dmin["eps2"] = xr.zeros_like(ds["m2"])
-    dmin["eta2"] = xr.zeros_like(ds["m2"])
     # additional coefficients for FES models
     if kwargs["corrections"] in ("FES",):
         # spline coefficients for admittances
