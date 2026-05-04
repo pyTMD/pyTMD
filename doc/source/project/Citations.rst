@@ -63,7 +63,7 @@ licensed for non-commercial use).
 The NASA Goddard Space Flight Center (GSFC) PREdict Tidal Heights (PERTH3) software was developed by
 Richard Ray and Remko Scharroo.
 An updated and more versatile version of the NASA GSFC tidal prediction software (PERTH5) was developed by Richard Ray.
-The [pyFES](https://github.com/CNES/aviso-fes) prediction software was funded and supported by CNES and the FES model is distributed by [AVISO](https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html).
+The pyFES prediction software was funded and supported by CNES and the FES model is distributed by AVISO.
 
 Data Citations
 ##############
