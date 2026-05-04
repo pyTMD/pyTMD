@@ -138,6 +138,9 @@ A zip archive of the latest version is available directly at:
 perth5 from NASA Goddard Space Flight Center:  
 <https://codeberg.org/rray/perth5>
 
+pyfes from the Centre National d'Études Spatiales (CNES):  
+<https://github.com/CNES/aviso-fes>
+
 Matlab Tide Model Driver from Earth & Space Research:  
 <https://github.com/EarthAndSpaceResearch/TMD_Matlab_Toolbox_v2.5>
 
@@ -147,7 +150,7 @@ Fortran OSU Tidal Prediction Software:
 ## Disclaimer
 
 This package includes software developed at NASA Goddard Space Flight Center (GSFC) and the University of Washington Applied Physics Laboratory (UW-APL).
-It is not sponsored or maintained by the Universities Space Research Association (USRA), AVISO or NASA.
+It is not sponsored or maintained by the Universities Space Research Association (USRA), AVISO, CNES or NASA.
 The software is provided here for your convenience but *with no guarantees whatsoever*.
 It should not be used for coastal navigation or any application that may risk life or property.
 
@@ -163,6 +166,7 @@ An updated version of the TMD Matlab Toolbox ([TMD3](https://github.com/chadagre
 The OSU Tidal Inversion Software (OTIS) and OSU Tidal Prediction Software ([OTPS](https://www.tpxo.net/otps)) were developed by Lana Erofeeva and Gary Egbert ([copyright OSU](https://www.tpxo.net/tpxo-products-and-registration), licensed for non-commercial use).
 The NASA Goddard Space Flight Center (GSFC) PREdict Tidal Heights (PERTH3) software was developed by Richard Ray and Remko Scharroo.
 An updated and more versatile version of the NASA GSFC tidal prediction software ([PERTH5](https://codeberg.org/rray/perth5)) was developed by Richard Ray.
+The [pyFES](https://github.com/CNES/aviso-fes) prediction software was funded and supported by CNES and the FES model is distributed by [AVISO](https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html).
 
 ## License
 
