@@ -276,7 +276,7 @@ def _infer_short_period(
     using their relation with major constituents
     :cite:p:`Egbert:2002ge,Ray:1999vm,Schureman:1958ty`
 
-    For FES corrections, high precision spline coefficients 
+    For FES corrections, high precision spline coefficients
     are provided by ``pyfes`` :cite:p:`Lyard:2025tr`
 
     Parameters
