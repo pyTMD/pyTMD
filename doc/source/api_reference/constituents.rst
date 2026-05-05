@@ -27,10 +27,6 @@ constituents
 
 .. autofunction:: pyTMD.constituents.aliasing_period
 
-.. autofunction:: pyTMD.constituents._arguments_table
-
-.. autofunction:: pyTMD.constituents._minor_table
-
 .. autofunction:: pyTMD.constituents._constituent_parameters
 
 .. autofunction:: pyTMD.constituents._love_numbers

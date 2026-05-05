@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ocean_load.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (05/2026)
 Prediction routines for ocean, load and equilibrium tides
 
 REFERENCES:
@@ -26,6 +26,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 05/2026: verify unique frequencies in short period inference
     Updated 03/2026: simplify structure by splitting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
@@ -274,7 +275,10 @@ def _infer_short_period(
     """
     Infer the tidal values for short-period minor constituents
     using their relation with major constituents
-    :cite:p:`Egbert:2002ge,Ray:1999vm`
+    :cite:p:`Egbert:2002ge,Ray:1999vm,Schureman:1958ty`
+
+    For FES corrections, high precision spline coefficients
+    are provided by ``pyfes`` :cite:p:`Lyard:2025tr`
 
     Parameters
     ----------
@@ -306,6 +310,8 @@ def _infer_short_period(
     cindex = ["q1", "o1", "p1", "k1", "n2", "m2", "s2", "k2", "2n2"]
     # check that major constituents are in the dataset for inference
     nz = sum([(c in ds.tmd.constituents) for c in cindex])
+    # angular frequencies for (available) major constituents
+    omajor = pyTMD.constituents.frequency(ds.tmd.constituents, **kwargs)
     # raise exception or log error
     msg = "Not enough constituents to infer short-period tides"
     if (nz < 6) and kwargs["raise_exception"]:
@@ -334,16 +340,22 @@ def _infer_short_period(
         "l2",
         "l2b",
         "t2",
-        "eps2",
-        "eta2",
     ]
+    # FES models additionally infer eps2 and eta2
+    if kwargs["corrections"] in ("FES",):
+        minor_constituents.extend(["eps2", "eta2"])
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
+    # angular frequencies for inferred constituents
+    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # only add minor constituents that are not on the list of major values
+    # and with frequencies not equal to any major constituent
     constituents = [
         m
         for i, m in enumerate(minor_constituents)
-        if (m not in ds.tmd.constituents) and (m in minor)
+        if (m not in ds.tmd.constituents)
+        and (m in minor)
+        and (np.all(omega[i] != omajor))
     ]
     # if there are no constituents to infer
     msg = "No short-period tidal constituents to infer"
@@ -351,7 +363,7 @@ def _infer_short_period(
         logging.debug(msg)
         return 0.0
 
-    # relationship between major and minor constituent amplitude and phase
+    # relationship between major and minor constituent complex amplitudes
     dmin = xr.Dataset()
     dmin["2q1"] = 0.263 * ds["q1"] - 0.0252 * ds["o1"]
     dmin["sigma1"] = 0.297 * ds["q1"] - 0.0264 * ds["o1"]
@@ -371,8 +383,6 @@ def _infer_short_period(
     dmin["l2"] = 0.0131 * ds["m2"] + 0.0326 * ds["s2"]
     dmin["l2b"] = 0.0033 * ds["m2"] + 0.0082 * ds["s2"]
     dmin["t2"] = 0.0585 * ds["s2"]
-    dmin["eps2"] = xr.zeros_like(ds["m2"])
-    dmin["eta2"] = xr.zeros_like(ds["m2"])
     # additional coefficients for FES models
     if kwargs["corrections"] in ("FES",):
         # spline coefficients for admittances

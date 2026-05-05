@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 constituents.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Calculates constituents parameters and nodal arguments
 Originally modified from Richard Ray's ARGUMENTS subroutine
 
@@ -24,6 +24,8 @@ REFERENCES:
         Ocean Tides", Journal of Atmospheric and Oceanic Technology, (2002).
 
 UPDATE HISTORY:
+    Updated 05/2026: use numpy hypot function to calculate magnitudes
+        deprecate minor table and arguments table functions
     Updated 04/2026: add constituent mapping for TICON-4 sigma1 (SGM)
     Updated 03/2026: add degree-dependent body tide love number tables
     Updated 12/2025: added m1a and m1b constituents to nodal corrections
@@ -110,8 +112,6 @@ __all__ = [
     "group_modulation",
     "frequency",
     "aliasing_period",
-    "_arguments_table",
-    "_minor_table",
     "_constituent_parameters",
     "_frequency",
     "_love_numbers",
@@ -262,9 +262,34 @@ def minor_arguments(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     k = 90.0 + np.zeros((nt))
 
+    # minor constituents to infer from major constituents
+    minor = [
+        "2q1",
+        "sigma1",
+        "rho1",
+        "m1b",
+        "m1a",
+        "chi1",
+        "pi1",
+        "phi1",
+        "theta1",
+        "j1",
+        "oo1",
+        "2n2",
+        "mu2",
+        "nu2",
+        "lambda2",
+        "l2a",
+        "l2b",
+        "t2",
+    ]
+    # FES and GOT models can additionally infer eps2 and eta2
+    if kwargs["corrections"] in ("FES", "GOT"):
+        minor.extend(["eps2", "eta2"])
+
     # determine equilibrium arguments
     fargs = np.c_[tau, s, h, p, n, pp, k]
-    arg = np.dot(fargs, _minor_table())
+    arg = np.dot(fargs, coefficients_table(minor, **kwargs))
 
     # convert mean longitudes to radians
     P = np.radians(p)
@@ -275,30 +300,31 @@ def minor_arguments(
     sin2n = np.sin(2.0 * N)
     cos2n = np.cos(2.0 * N)
 
+    # allocate for nodal corrections
+    nc = len(minor)
+    f = np.ones((nt, nc))
+    u = np.zeros((nt, nc))
+
     # nodal factor corrections for minor constituents
-    f = np.ones((nt, 20))
-    f[:, 0] = np.sqrt(
-        (1.0 + 0.189 * cosn - 0.0058 * cos2n) ** 2
-        + (0.189 * sinn - 0.0058 * sin2n) ** 2
+    f[:, 0] = np.hypot(
+        1.0 + 0.189 * cosn - 0.0058 * cos2n, 0.189 * sinn - 0.0058 * sin2n
     )  # 2Q1
     f[:, 1] = f[:, 0]  # sigma1
     f[:, 2] = f[:, 0]  # rho1
-    f[:, 3] = np.sqrt((1.0 + 0.185 * cosn) ** 2 + (0.185 * sinn) ** 2)  # M12
-    f[:, 4] = np.sqrt((1.0 + 0.201 * cosn) ** 2 + (0.201 * sinn) ** 2)  # M11
-    f[:, 5] = np.sqrt((1.0 + 0.221 * cosn) ** 2 + (0.221 * sinn) ** 2)  # chi1
-    f[:, 9] = np.sqrt((1.0 + 0.198 * cosn) ** 2 + (0.198 * sinn) ** 2)  # J1
-    f[:, 10] = np.sqrt(
-        (1.0 + 0.640 * cosn + 0.134 * cos2n) ** 2
-        + (0.640 * sinn + 0.134 * sin2n) ** 2
+    f[:, 3] = np.hypot(1.0 + 0.185 * cosn, 0.185 * sinn)  # M12
+    f[:, 4] = np.hypot(1.0 + 0.201 * cosn, 0.201 * sinn)  # M11
+    f[:, 5] = np.hypot(1.0 + 0.221 * cosn, 0.221 * sinn)  # chi1
+    f[:, 9] = np.hypot(1.0 + 0.198 * cosn, 0.198 * sinn)  # J1
+    f[:, 10] = np.hypot(
+        1.0 + 0.640 * cosn + 0.134 * cos2n, 0.640 * sinn + 0.134 * sin2n
     )  # OO1
-    f[:, 11] = np.sqrt((1.0 - 0.0373 * cosn) ** 2 + (0.0373 * sinn) ** 2)  # 2N2
+    f[:, 11] = np.hypot(1.0 - 0.0373 * cosn, 0.0373 * sinn)  # 2N2
     f[:, 12] = f[:, 11]  # mu2
     f[:, 13] = f[:, 11]  # nu2
     f[:, 15] = f[:, 11]  # L2
-    f[:, 16] = np.sqrt((1.0 + 0.441 * cosn) ** 2 + (0.441 * sinn) ** 2)  # L2
+    f[:, 16] = np.hypot(1.0 + 0.441 * cosn, 0.441 * sinn)  # L2
 
     # nodal angle corrections for minor constituents
-    u = np.zeros((nt, 20))
     u[:, 0] = np.arctan2(
         0.189 * sinn - 0.0058 * sin2n, 1.0 + 0.189 * cosn - 0.0058 * sin2n
     )  # 2Q1
@@ -357,11 +383,9 @@ def minor_arguments(
         u[:, 19] = -2.0 * nu  # eta2
     elif kwargs["corrections"] in ("GOT",):
         f[:, 18] = f[:, 11]  # eps2
-        f[:, 19] = np.sqrt(
-            (1.0 + 0.436 * cosn) ** 2 + (0.436 * sinn) ** 2
-        )  # eta2
+        f[:, 19] = np.hypot(1.0 + 0.436 * cosn, 0.436 * sinn)  # eta2
         u[:, 18] = u[:, 11]  # eps2
-        u[:, 19] = np.arctan(-0.436 * sinn / (1.0 + 0.436 * cosn))  # eta2
+        u[:, 19] = np.arctan2(-0.436 * sinn, 1.0 + 0.436 * cosn)  # eta2
 
     # return values as tuple
     return (u, f, arg)
@@ -684,7 +708,7 @@ def nodal_modulation(
         elif c in ("o1", "so3", "op2") and OTIS_TYPE:
             term1 = 0.189 * sinn - 0.0058 * sin2n
             term2 = 1.0 + 0.189 * cosn - 0.0058 * cos2n
-            f[:, i] = np.sqrt(term1**2 + term2**2)  # O1
+            f[:, i] = np.hypot(term1, term2)  # O1
             u[:, i] = np.radians(10.8 * sinn - 1.3 * sin2n + 0.2 * sin3n)
             continue
         elif (
@@ -704,7 +728,7 @@ def nodal_modulation(
             term1 = 0.1886 * sinn - 0.0058 * sin2n - 0.0065 * sin2p
             term2 = 1.0 + 0.1886 * cosn - 0.0058 * cos2n - 0.0065 * cos2p
         elif c in ("2q1", "q1", "rho1", "sigma1") and OTIS_TYPE:
-            f[:, i] = np.sqrt((1.0 + 0.188 * cosn) ** 2 + (0.188 * sinn) ** 2)
+            f[:, i] = np.hypot((1.0 + 0.188 * cosn), (0.188 * sinn))
             u[:, i] = np.arctan(0.189 * sinn / (1.0 + 0.189 * cosn))
             continue
         elif c in ("2q1", "q1", "rho1", "sigma1"):
@@ -1351,7 +1375,7 @@ def nodal_modulation(
 
         # calculate factors for linear tides
         # and parent waves in compound tides
-        f[:, i] = np.sqrt(term1**2 + term2**2)
+        f[:, i] = np.hypot(term1, term2)
         u[:, i] = np.arctan2(term1, term2)
 
     # return corrections for constituents
@@ -1725,7 +1749,7 @@ def group_modulation(
             continue
 
         # calculate factors for group
-        f[:, i] = np.sqrt(term1**2 + term2**2)
+        f[:, i] = np.hypot(term1, term2)
         u[:, i] = np.arctan2(term1, term2)
 
     # return corrections for groups
@@ -1833,6 +1857,10 @@ def _arguments_table(**kwargs):
     coef: np.ndarray
         Doodson coefficients (Cartwright numbers) for each constituent
     """
+    warnings.warn(
+        "Function is deprecated and will be removed in a future release.",
+        DeprecationWarning,
+    )
     # set default keyword arguments
     kwargs.setdefault("corrections", "OTIS")
     kwargs.setdefault("climate_solar_perigee", False)
@@ -1924,6 +1952,10 @@ def _minor_table(**kwargs):
     coef: np.ndarray
         Doodson coefficients (Cartwright numbers) for each constituent
     """
+    warnings.warn(
+        "Function is deprecated and will be removed in a future release.",
+        DeprecationWarning,
+    )
     # modified Doodson coefficients for constituents
     # using 7 index variables: tau, s, h, p, n, pp, k
     # tau: mean lunar time

@@ -54,6 +54,69 @@ def test_arguments(corrections):
     # variable for multiples of 90 degrees (Ray technical note 2017)
     k = 90.0 + np.zeros((nt))
 
+    cindex = [
+        "sa",
+        "ssa",
+        "mm",
+        "msf",
+        "mf",
+        "mt",
+        "alpha1",
+        "2q1",
+        "sigma1",
+        "q1",
+        "rho1",
+        "o1",
+        "tau1",
+        "m1",
+        "chi1",
+        "pi1",
+        "p1",
+        "s1",
+        "k1",
+        "psi1",
+        "phi1",
+        "theta1",
+        "j1",
+        "oo1",
+        "2n2",
+        "mu2",
+        "n2",
+        "nu2",
+        "m2a",
+        "m2",
+        "m2b",
+        "lambda2",
+        "l2",
+        "t2",
+        "s2",
+        "r2",
+        "k2",
+        "eta2",
+        "mns2",
+        "2sm2",
+        "m3",
+        "mk3",
+        "s3",
+        "mn4",
+        "m4",
+        "ms4",
+        "mk4",
+        "s4",
+        "s5",
+        "m6",
+        "s6",
+        "s7",
+        "s8",
+        "m8",
+        "mks2",
+        "msqm",
+        "mtm",
+        "n4",
+        "eps2",
+        "z0",
+    ]
+
     # determine equilibrium arguments
     arg = np.zeros((nt, 60))
     arg[:,0] = h - pp # Sa
@@ -124,7 +187,7 @@ def test_arguments(corrections):
 
     # determine equilibrium arguments using table
     fargs = np.c_[tau, s, h, p, omega, pp, k]
-    coef = pyTMD.constituents._arguments_table(corrections=corrections)
+    coef = pyTMD.constituents.coefficients_table(cindex, corrections=corrections)
     test = np.dot(fargs, coef)
 
     # validate arguments between methods
@@ -136,6 +199,69 @@ def test_table(corrections, climate_solar_perigee):
     """
     Compare Doodson coefficients tables
     """
+    cindex = [
+        "sa",
+        "ssa",
+        "mm",
+        "msf",
+        "mf",
+        "mt",
+        "alpha1",
+        "2q1",
+        "sigma1",
+        "q1",
+        "rho1",
+        "o1",
+        "tau1",
+        "m1",
+        "chi1",
+        "pi1",
+        "p1",
+        "s1",
+        "k1",
+        "psi1",
+        "phi1",
+        "theta1",
+        "j1",
+        "oo1",
+        "2n2",
+        "mu2",
+        "n2",
+        "nu2",
+        "m2a",
+        "m2",
+        "m2b",
+        "lambda2",
+        "l2",
+        "t2",
+        "s2",
+        "r2",
+        "k2",
+        "eta2",
+        "mns2",
+        "2sm2",
+        "m3",
+        "mk3",
+        "s3",
+        "mn4",
+        "m4",
+        "ms4",
+        "mk4",
+        "s4",
+        "s5",
+        "m6",
+        "s6",
+        "s7",
+        "s8",
+        "m8",
+        "mks2",
+        "msqm",
+        "mtm",
+        "n4",
+        "eps2",
+        "z0",
+    ]
+
     coef = np.zeros((7, 60))
     # adjust climatologically affected constituents
     if climate_solar_perigee:
@@ -209,7 +335,8 @@ def test_table(corrections, climate_solar_perigee):
     coef[:,59] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # z0
 
     # get Doodson coefficients
-    test = pyTMD.constituents._arguments_table(
+    test = pyTMD.constituents.coefficients_table(
+        cindex,
         corrections=corrections,
         climate_solar_perigee=climate_solar_perigee
     )
@@ -259,6 +386,29 @@ def test_minor():
     # variable for multiples of 90 degrees (Ray technical note 2017)
     k = 90.0 + np.zeros((nt))
 
+    minor_constituents = [
+        "2q1",
+        "sigma1",
+        "rho1",
+        "m1b",
+        "m1a",
+        "chi1",
+        "pi1",
+        "phi1",
+        "theta1",
+        "j1",
+        "oo1",
+        "2n2",
+        "mu2",
+        "nu2",
+        "lambda2",
+        "l2a",
+        "l2b",
+        "t2",
+        "eps2",
+        "eta2",
+    ]
+
     # determine equilibrium tidal arguments
     arg = np.zeros((nt, 20))
     arg[:,0] = t1 - 4.0*s + h + 2.0*p - 90.0# 2Q1
@@ -284,7 +434,7 @@ def test_minor():
 
     # determine equilibrium arguments
     fargs = np.c_[tau, s, h, p, n, pp, k]
-    coef = pyTMD.constituents._minor_table()
+    coef = pyTMD.constituents.coefficients_table(minor_constituents)
     test = np.dot(fargs, coef)
 
     # validate arguments between methods

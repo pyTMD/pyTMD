@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GOT.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (04/2026)
 
 Reads ascii and netCDF4 files from Richard Ray's Goddard Ocean Tide (GOT) model
     https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attributes to save model filename(s)
     Updated 03/2026: use numpy functions to convert from degrees to radians
     Updated 02/2026: make dataset accessor for GOT be a subaccessor from dataset
         some models have units in the second line of the header text
@@ -77,7 +78,7 @@ import xarray as xr
 import pyTMD.version
 import pyTMD.constituents
 import pyTMD.utilities
-from .dataset import register_dataset_subaccessor
+from .dataset import combine_attrs, register_dataset_subaccessor
 
 # attempt imports
 dask = pyTMD.utilities.import_dependency("dask")
@@ -126,7 +127,7 @@ def open_mfdataset(
     if parallel and dask_available:
         (d,) = dask.compute(d)
     # merge datasets
-    ds = xr.merge(d, compat="override")
+    ds = xr.merge(d, combine_attrs=combine_attrs, compat="override")
     # return xarray dataset
     return ds
 
@@ -280,6 +281,7 @@ def open_got_ascii(
         ds = ds.chunk(chunks)
     # add attributes
     ds.attrs["group"] = "z"
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     if units:
         ds[cons].attrs["units"] = units[0].lower()
     # return xarray dataset
@@ -340,6 +342,7 @@ def open_got_netcdf(
     ds = ds.rename(mapping_coords)
     # add attributes
     ds.attrs["group"] = "z"
+    ds.attrs["lineage"] = pathlib.Path(input_file).name
     ds[cons].attrs["units"] = tmp["amplitude"].attrs.get("units")
     # return xarray dataset
     return ds
