@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 solid_earth.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Prediction routines for solid Earth (body) tides
 
 PYTHON DEPENDENCIES:
@@ -20,6 +20,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 04/2026: use xarray dot product for calculating constituent phases
     Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
@@ -560,7 +561,7 @@ def _out_of_phase_diurnal(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     # double angle formulas of cosine/sine latitude
     sin2phi = 2.0 * sinphi * cosphi
     cos2phi = cosphi**2 - sinphi**2
@@ -571,9 +572,7 @@ def _out_of_phase_diurnal(
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # sine and cosine of Solar/Lunar declinations
     lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
-    lunisolar_cosphi = (
-        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
-    )
+    lunisolar_cosphi = np.hypot(LSXYZ["X"], LSXYZ["Y"]) / lunisolar_radius
     # double angle formulas of sine Solar/Lunar declinations
     lunisolar_sin2phi = 2.0 * lunisolar_cosphi * lunisolar_sinphi
     # sine and cosine of Solar/Lunar hour angles
@@ -634,7 +633,7 @@ def _out_of_phase_semidiurnal(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
@@ -644,9 +643,7 @@ def _out_of_phase_semidiurnal(
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # cosine of Solar/Lunar declinations
-    lunisolar_cosphi = (
-        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
-    )
+    lunisolar_cosphi = np.hypot(LSXYZ["X"], LSXYZ["Y"]) / lunisolar_radius
     # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
@@ -745,7 +742,7 @@ def _latitude_dependence_diurnal(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     # double angle formulas of cosine latitude
     cos2phi = cosphi**2 - sinphi**2
     # sine and cosine of longitude
@@ -755,9 +752,7 @@ def _latitude_dependence_diurnal(
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # sine and cosine of Solar/Lunar declinations
     lunisolar_sinphi = LSXYZ["Z"] / lunisolar_radius
-    lunisolar_cosphi = (
-        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
-    )
+    lunisolar_cosphi = np.hypot(LSXYZ["X"], LSXYZ["Y"]) / lunisolar_radius
     # double angle formulas of sin Solar/Lunar declinations
     lunisolar_sin2phi = 2.0 * lunisolar_sinphi * lunisolar_cosphi
     # sine and cosine of Solar/Lunar hour angles
@@ -811,7 +806,7 @@ def _latitude_dependence_semidiurnal(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius
@@ -821,9 +816,7 @@ def _latitude_dependence_semidiurnal(
     # compute the normalized position vector of the Sun/Moon
     lunisolar_radius = pyTMD.math.radius(LSXYZ["X"], LSXYZ["Y"], LSXYZ["Z"])
     # cosine of Solar/Lunar declinations
-    lunisolar_cosphi = (
-        np.sqrt(LSXYZ["X"] ** 2 + LSXYZ["Y"] ** 2) / lunisolar_radius
-    )
+    lunisolar_cosphi = np.hypot(LSXYZ["X"], LSXYZ["Y"]) / lunisolar_radius
     # sine and cosine of Solar/Lunar hour angles
     lunisolar_sinla = LSXYZ["Y"] / lunisolar_cosphi / lunisolar_radius
     lunisolar_cosla = LSXYZ["X"] / lunisolar_cosphi / lunisolar_radius
@@ -974,7 +967,7 @@ def _frequency_dependence_diurnal(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     sin2phi = 2.0 * sinphi * cosphi
     cos2phi = cosphi**2 - sinphi**2
     # sine and cosine of longitude
@@ -1085,7 +1078,7 @@ def _frequency_dependence_long_period(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     sin2phi = 2.0 * cosphi * sinphi
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
@@ -1157,7 +1150,7 @@ def _free_to_mean(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine and cosine of (geocentric) latitude
     sinphi = XYZ["Z"] / radius
-    cosphi = np.sqrt(XYZ["X"] ** 2 + XYZ["Y"] ** 2) / radius
+    cosphi = np.hypot(XYZ["X"], XYZ["Y"]) / radius
     # sine and cosine of longitude
     sinla = XYZ["Y"] / cosphi / radius
     cosla = XYZ["X"] / cosphi / radius

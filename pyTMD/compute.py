@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 compute.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (05/2026)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -63,6 +63,7 @@ PROGRAM DEPENDENCIES:
     interpolate.py: interpolation routines for spatial data
 
 UPDATE HISTORY:
+    Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 03/2026: added function for computing tide-generating forces
         and a function for computing the accelerations from gravity tides
     Updated 02/2026: added attributes for constituents to output DataArrays
@@ -905,7 +906,7 @@ def LPT_displacements(
         coords=ds.coords,
     )
     # geocentric colatitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 
@@ -1068,7 +1069,7 @@ def OPT_displacements(
         coords=ds.coords,
     )
     # geocentric colatitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
     # geocentric latitude (degrees)
@@ -1272,7 +1273,7 @@ def _ephemerides_SET(
         coords=ds.coords,
     )
     # geocentric colatitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 
@@ -1582,7 +1583,7 @@ def TG_forces(
     # difference between geodetic and geocentric coordinates (radians)
     alpha = np.radians(latitude - latitude_geocentric)
     # geocentric colatitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 
@@ -1752,7 +1753,7 @@ def GT_accelerations(
         coords=ds.coords,
     )
     # geocentric colatitude (radians)
-    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.sqrt(XYZ.X**2.0 + XYZ.Y**2.0))
+    theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
     phi = np.arctan2(XYZ.Y, XYZ.X)
 

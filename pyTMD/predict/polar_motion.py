@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 polar_motion.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Prediction routines for pole tides and Earth Orientation Parameters (EOPs)
 
 PYTHON DEPENDENCIES:
@@ -19,6 +19,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 04/2026: parallel outputs from earth_orientation and length_of_day
     Written 03/2026: split up prediction functions into separate files
 """
@@ -99,7 +100,7 @@ def load_pole_tide(
     # radius of the Earth
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # geocentric latitude (radians)
-    latitude = np.arctan(XYZ["Z"] / np.sqrt(XYZ["X"] ** 2.0 + XYZ["Y"] ** 2.0))
+    latitude = np.arctan(XYZ["Z"] / np.hypot(XYZ["X"], XYZ["Y"]))
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - latitude
     # calculate longitude (radians)

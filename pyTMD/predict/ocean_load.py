@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ocean_load.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (05/2026)
 Prediction routines for ocean, load and equilibrium tides
 
 REFERENCES:
@@ -26,6 +26,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 05/2026: verify unique frequencies in short period inference
     Updated 03/2026: simplify structure by splitting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
@@ -309,6 +310,8 @@ def _infer_short_period(
     cindex = ["q1", "o1", "p1", "k1", "n2", "m2", "s2", "k2", "2n2"]
     # check that major constituents are in the dataset for inference
     nz = sum([(c in ds.tmd.constituents) for c in cindex])
+    # angular frequencies for (available) major constituents
+    omajor = pyTMD.constituents.frequency(ds.tmd.constituents, **kwargs)
     # raise exception or log error
     msg = "Not enough constituents to infer short-period tides"
     if (nz < 6) and kwargs["raise_exception"]:
@@ -343,11 +346,16 @@ def _infer_short_period(
         minor_constituents.extend(["eps2", "eta2"])
     # possibly reduced list of minor constituents
     minor = kwargs["minor"] or minor_constituents
+    # angular frequencies for inferred constituents
+    omega = pyTMD.constituents.frequency(minor_constituents, **kwargs)
     # only add minor constituents that are not on the list of major values
+    # and with frequencies not equal to any major constituent
     constituents = [
         m
         for i, m in enumerate(minor_constituents)
-        if (m not in ds.tmd.constituents) and (m in minor)
+        if (m not in ds.tmd.constituents)
+        and (m in minor)
+        and (np.all(omega[i] != omajor))
     ]
     # if there are no constituents to infer
     msg = "No short-period tidal constituents to infer"
