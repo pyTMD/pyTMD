@@ -134,6 +134,15 @@ references:
       - given-names: Richard
         family-names: Ray
   - type: software
+    title: "pyfes/aviso-fes: reference implementation of the FES2014 / FES2022 tidal atlases"
+    version: 5
+    repository-code: "https://github.com/CNES/aviso-fes"
+    authors:
+      - name: Centre National d'Études Spatiales (CNES)
+      - name: Collecte Localisation Satellites (CLS)
+      - name: Laboratoire d'Etudes en Géophysique et Océanographie Spatiales (LEGOS)
+      - name: Archiving, Validation and Interpretation of Satellite Oceanographic data (AVISO)
+  - type: software
     title: "OTPS: OSU Tidal Prediction Software"
     version: 2024
     repository-code: "https://www.tpxo.net/otps"

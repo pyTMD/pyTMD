@@ -125,14 +125,6 @@ This will automatically create the environment, install all dependencies, and la
 > "Ocean Tide Influences on the Antarctic and Greenland Ice Sheets", *Reviews of Geophysics*,
 > 56, 142-184, (2018). [doi: 10.1002/2016RG000546](https://doi.org/10.1002/2016RG000546)
 
-## Download
-
-The program homepage is:  
-<https://github.com/pyTMD/pyTMD>
-
-A zip archive of the latest version is available directly at:  
-<https://github.com/pyTMD/pyTMD/archive/main.zip>
-
 ## Alternative Software
 
 perth5 from NASA Goddard Space Flight Center:  
@@ -146,6 +138,14 @@ Matlab Tide Model Driver from Earth & Space Research:
 
 Fortran OSU Tidal Prediction Software:  
 <https://www.tpxo.net/otps>
+
+## Download
+
+The program homepage is:  
+<https://github.com/pyTMD/pyTMD>
+
+A zip archive of the latest version is available directly at:  
+<https://github.com/pyTMD/pyTMD/archive/main.zip>
 
 ## Disclaimer
 

@@ -728,7 +728,7 @@ def nodal_modulation(
             term1 = 0.1886 * sinn - 0.0058 * sin2n - 0.0065 * sin2p
             term2 = 1.0 + 0.1886 * cosn - 0.0058 * cos2n - 0.0065 * cos2p
         elif c in ("2q1", "q1", "rho1", "sigma1") and OTIS_TYPE:
-            f[:, i] = np.hypot((1.0 + 0.188 * cosn), (0.188 * sinn))
+            f[:, i] = np.hypot(1.0 + 0.188 * cosn, 0.188 * sinn)
             u[:, i] = np.arctan(0.189 * sinn / (1.0 + 0.189 * cosn))
             continue
         elif c in ("2q1", "q1", "rho1", "sigma1"):
