@@ -12,7 +12,7 @@
 * ``docs``: add tutorial link in examples `(#565) <https://github.com/pyTMD/pyTMD/pull/565>`_
 * ``docs``: update license for `PEP-0639 <https://peps.python.org/pep-0639/#add-license-expression-field>`_ `(#565) <https://github.com/pyTMD/pyTMD/pull/565>`_
 * ``chore``: bump ``setuptools`` to ``v77`` `(#565) <https://github.com/pyTMD/pyTMD/pull/565>`_
-* ``refactor``: ``RUFF`` ``UP034`` remove extra parenthesis `(#567) <https://github.com/pyTMD/pyTMD/pull/567>`_
+* ``refactor``: ``RUFF`` ``UP034`` remove extra parentheses `(#567) <https://github.com/pyTMD/pyTMD/pull/567>`_
 * ``ci``: only upload artifacts from main repo PRs `(#568) <https://github.com/pyTMD/pyTMD/pull/568>`_
 * ``docs``: more docstring changes for uniformity `(#568) <https://github.com/pyTMD/pyTMD/pull/568>`_
 * ``feat``: add function to calculate high and low peaks `(#568) <https://github.com/pyTMD/pyTMD/pull/568>`_
@@ -35,7 +35,7 @@
 * ``test``: added polar stereo scaling tests `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
 * ``docs``: add ``pyfes`` to ``README.md`` `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
 * ``docs``: update infer minor docstring to add ``pyfes`` `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
-* ``refactor``: use ``np.hypot`` in magnitude calcuations `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
+* ``refactor``: use ``np.hypot`` in magnitude calculations `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
 * ``refactor``: deprecate minor and arguments table `(#573) <https://github.com/pyTMD/pyTMD/pull/573>`_
 * ``docs``: add ``pyfes`` to references in ``CITATION.cff`` `(#574) <https://github.com/pyTMD/pyTMD/pull/574>`_
 * ``fix``: extra parentheses in one ``hypot`` instance `(#574) <https://github.com/pyTMD/pyTMD/pull/574>`_
