@@ -117,6 +117,7 @@ __all__ = [
     "get_unix_time",
     "even",
     "copy",
+    "symlink",
     "check_ftp_connection",
     "ftp_list",
     "from_ftp",
@@ -768,6 +769,48 @@ def copy(
     # remove the original file if moving
     if move:
         source.unlink()
+
+
+# PURPOSE: make a symbolic link to a file
+def symlink(
+    source: str | pathlib.Path,
+    destination: str | pathlib.Path,
+):
+    """
+    Create a symbolic link to a file
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Source file
+    destination: str or pathlib.Path
+        Symbolic link file
+    """
+    # verify that source and destination are pathlib.Path objects
+    source = pathlib.Path(source).expanduser().absolute()
+    destination = pathlib.Path(destination).expanduser().absolute()
+    # verify conditions for creating symbolic link
+    if source == destination:
+        # skip if symlink has the same path as source file
+        logging.debug(f"Symbolic link {destination} matches source {source}")
+        return
+    elif destination.exists() and not destination.is_symlink():
+        # file exists and is not a symbolic link
+        raise FileExistsError(f"Existing file: {destination}")
+    elif destination.is_symlink() and destination.resolve() == source.resolve():
+        # skip if symlink already points to the source file
+        logging.debug(f"Symbolic link already exists: {destination}")
+        return
+    elif destination.is_symlink() and destination.resolve() != source.resolve():
+        # remove existing symbolic link if it points to a different file
+        logging.debug(f"Removing existing symbolic link: {destination}")
+        destination.unlink()
+    # make source relative to destination parent if possible
+    if source.is_relative_to(destination.parent):
+        source = source.relative_to(destination.parent)
+    # create new symbolic link
+    logging.info(f"\t--> {destination} (symlink)")
+    destination.symlink_to(source)
 
 
 # PURPOSE: check ftp connection

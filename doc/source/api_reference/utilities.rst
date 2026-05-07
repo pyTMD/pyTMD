@@ -52,6 +52,8 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.copy
 
+.. autofunction:: pyTMD.utilities.symlink
+
 .. autofunction:: pyTMD.utilities.check_ftp_connection
 
 .. autofunction:: pyTMD.utilities.ftp_list
