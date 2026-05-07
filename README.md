@@ -111,20 +111,6 @@ This will automatically create the environment, install all dependencies, and la
 - [timescale: Python tools for time and astronomical calculations](https://pypi.org/project/timescale/)
 - [xarray: N-D labeled arrays and datasets in Python](https://docs.xarray.dev/en/stable/) 
 
-## References
-
->  T. C. Sutterley, S. L. Howard, L. Padman, and M. R. Siegfried,
-> "pyTMD: Python-based tidal prediction software". *Journal of Open Source Software*,
-> 10(116), 8566, (2025). [doi: 10.21105/joss.08566](https://doi.org/10.21105/joss.08566)
-> 
-> T. C. Sutterley, T. Markus, T. A. Neumann, M. R. van den Broeke, J. M. van Wessem, and S. R. M. Ligtenberg,
-> "Antarctic ice shelf thickness change from multimission lidar mapping", *The Cryosphere*,
-> 13, 1801-1817, (2019). [doi: 10.5194/tc-13-1801-2019](https://doi.org/10.5194/tc-13-1801-2019)
->
-> L. Padman, M. R. Siegfried, and H. A. Fricker,
-> "Ocean Tide Influences on the Antarctic and Greenland Ice Sheets", *Reviews of Geophysics*,
-> 56, 142-184, (2018). [doi: 10.1002/2016RG000546](https://doi.org/10.1002/2016RG000546)
-
 ## Alternative Software
 
 perth5 from NASA Goddard Space Flight Center:  
@@ -167,6 +153,20 @@ The OSU Tidal Inversion Software (OTIS) and OSU Tidal Prediction Software ([OTPS
 The NASA Goddard Space Flight Center (GSFC) PREdict Tidal Heights (PERTH3) software was developed by Richard Ray and Remko Scharroo.
 An updated and more versatile version of the NASA GSFC tidal prediction software ([PERTH5](https://codeberg.org/rray/perth5)) was developed by Richard Ray.
 The [pyFES](https://github.com/CNES/aviso-fes) prediction software was funded and supported by CNES and the FES model is distributed by [AVISO](https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html).
+
+## References
+
+>  T. C. Sutterley, S. L. Howard, L. Padman, and M. R. Siegfried,
+> "pyTMD: Python-based tidal prediction software". *Journal of Open Source Software*,
+> 10(116), 8566, (2025). [doi: 10.21105/joss.08566](https://doi.org/10.21105/joss.08566)
+> 
+> T. C. Sutterley, T. Markus, T. A. Neumann, M. R. van den Broeke, J. M. van Wessem, and S. R. M. Ligtenberg,
+> "Antarctic ice shelf thickness change from multimission lidar mapping", *The Cryosphere*,
+> 13, 1801-1817, (2019). [doi: 10.5194/tc-13-1801-2019](https://doi.org/10.5194/tc-13-1801-2019)
+>
+> L. Padman, M. R. Siegfried, and H. A. Fricker,
+> "Ocean Tide Influences on the Antarctic and Greenland Ice Sheets", *Reviews of Geophysics*,
+> 56, 142-184, (2018). [doi: 10.1002/2016RG000546](https://doi.org/10.1002/2016RG000546)
 
 ## License
 
