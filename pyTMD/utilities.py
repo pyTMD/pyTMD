@@ -805,9 +805,12 @@ def symlink(
         # remove existing symbolic link if it points to a different file
         logging.debug(f"Removing existing symbolic link: {destination}")
         destination.unlink()
+    # make source relative to destination parent if possible
+    if source.is_relative_to(destination.parent):
+        source = source.relative_to(destination.parent)
     # create new symbolic link
     logging.info(f"\t--> {destination} (symlink)")
-    destination.symlink_to(source.relative_to(destination.parent))
+    destination.symlink_to(source)
 
 
 # PURPOSE: check ftp connection
