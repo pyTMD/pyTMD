@@ -422,11 +422,12 @@ def _query_tree(
         # this can lead to infinite weights in the IDW extrapolation
         dd = np.clip(dd, a_min=1e-10, a_max=None)
         # clip indices to handle cases where there are fewer than k neighbors
-        # weights will be nan so these points will be masked in the output
+        # distances will be inf so these points will be masked in the output
         ii = np.clip(ii, a_min=0, a_max=len(flattened) - 1)
-        # normalized weights if power > 0 (typically between 1 and 3)
-        # in the inverse distance weighting
+        # calculate inverse distance weights for power
         power_inverse_distance = np.power(dd, -power)
+        # normalize weights if power is greater than 0 (usually between 1 and 3)
+        # for power = 0, all weights are 1 and the extrapolation is an average
         s = np.nansum(power_inverse_distance, axis=1)
         w = power_inverse_distance / np.broadcast_to(s[:, None], (npts, k))
         # spatially extrapolate using inverse distance weighting

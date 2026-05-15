@@ -217,7 +217,7 @@ Interpolation
 #############
 
 For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
-For coastal or near-grounded points, the model can be extrapolated with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor routine.
+For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 
