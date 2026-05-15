@@ -14,9 +14,6 @@ General Methods
 
 .. autofunction:: pyTMD.spatial.data_type
 
-.. autoclass:: pyTMD.spatial.datum
-   :members:
-
 .. autofunction:: pyTMD.spatial.convert_ellipsoid
 
 .. autofunction:: pyTMD.spatial.compute_delta_h

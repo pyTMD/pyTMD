@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 05/2026: added parameters to allow for extrapolation with
+        inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
     Updated 04/2026: add 1st and 2nd order barycentric interpolation function
         add winding number to check elements that may cross a meridian line
     Updated 03/2026: break up extrapolation into separate functions to allow
@@ -49,7 +51,7 @@ __all__ = [
     "extrapolate",
     "_to_cartesian",
     "_build_tree",
-    "_nearest_neighbors",
+    "_query_tree",
     "barycentric",
     "_to_barycentric",
     "_inside_triangle",
@@ -168,7 +170,7 @@ def inpaint(
     # computation of distance Matrix
     # use scipy spatial KDTree routines
     xgrid, ygrid = np.meshgrid(xs, ys)
-    tree = scipy.spatial.cKDTree(np.c_[xgrid[W], ygrid[W]])
+    tree = scipy.spatial.KDTree(np.c_[xgrid[W], ygrid[W]])
     # find nearest neighbors
     masked = np.logical_not(W)
     _, ii = tree.query(np.c_[xgrid[masked], ygrid[masked]], k=1)
@@ -209,22 +211,24 @@ def inpaint(
     return z0
 
 
-# PURPOSE: Nearest-neighbor extrapolation of valid data to output data
+# PURPOSE: extrapolate valid data to output points
 def extrapolate(
     xs: np.ndarray,
     ys: np.ndarray,
     zs: np.ndarray,
     X: np.ndarray,
     Y: np.ndarray,
+    k: int = 1,
     fill_value: float = None,
     cutoff: int | float = np.inf,
     is_geographic: bool = True,
     **kwargs,
 ):
     """
-    Nearest-neighbor (NN) extrapolation of valid model data using `KD-trees
+    Spatially extrapolate values beyond model domain using `KD-trees
     <https://docs.scipy.org/doc/scipy/reference/generated/
-    scipy.spatial.cKDTree.html>`_
+    scipy.spatial.KDTree.html>`_ and nearest-neighbor (NN)
+    or inverse distance weighting (IDW)
 
     Parameters
     ----------
@@ -238,6 +242,8 @@ def extrapolate(
         Output x-coordinates
     Y: np.ndarray
         Output y-coordinates
+    k: int, default 1
+        Number of nearest neighbors to use for extrapolation
     fill_value: float, default np.nan
         Invalid value
     dtype: np.dtype, default np.float64
@@ -276,14 +282,14 @@ def extrapolate(
     # return none if no invalid points
     if npts == 0:
         return
-    # calculate coordinates for nearest-neighbors
+    # calculate coordinates to query for neighboring points
     p_in = _to_cartesian(x0, y0, is_geographic=is_geographic)
     p_out = _to_cartesian(X, Y, is_geographic=is_geographic)
     # create KD-tree of valid points
     tree = _build_tree(p_in)
-    # query output data points and find nearest neighbor within cutoff
-    data = _nearest_neighbors(
-        tree, p_out, z0, cutoff=cutoff, fill_value=fill_value, **kwargs
+    # query output data points and extrapolate values
+    data = _query_tree(
+        tree, p_out, z0, k=k, cutoff=cutoff, fill_value=fill_value, **kwargs
     )
     # return the extrapolated data
     return data
@@ -315,7 +321,7 @@ def _to_cartesian(
     # verify output dimensions
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
-    # calculate coordinates for nearest-neighbors
+    # calculate coordinates to query for neighboring points
     if is_geographic:
         # global or regional equirectangular model
         # ellipsoidal major axis in kilometers
@@ -332,50 +338,59 @@ def _to_cartesian(
 
 def _build_tree(points: np.ndarray, **kwargs):
     """
-    Build a KD-tree to search for the nearest-neighbors (NN)
+    Build a KD-tree to search for neighboring points
 
     Parameters
     ----------
     points: np.ndarray
         Input points in Cartesian coordinates
     kwargs: dict
-        Additional keyword arguments for ``scipy.spatial.cKDTree``
+        Additional keyword arguments for ``scipy.spatial.KDTree``
 
     Returns
     -------
-    tree: scipy.spatial.cKDTree
+    tree: scipy.spatial.KDTree
         KD-tree from input points
     """
     # create KD-tree of points for nearest-neighbor extrapolation
-    tree = scipy.spatial.cKDTree(points, **kwargs)
+    tree = scipy.spatial.KDTree(points, **kwargs)
     return tree
 
 
-def _nearest_neighbors(
-    tree: scipy.spatial.cKDTree,
+def _query_tree(
+    tree: scipy.spatial.KDTree,
     points: np.ndarray,
     flattened: np.ndarray,
+    k: int = 1,
+    power: int = 2,
     cutoff: int | float = np.inf,
     fill_value: float = None,
     **kwargs,
 ):
     """
-    Nearest-neighbor (NN) extrapolation of valid model data using KD-trees
+    Extrapolation of valid model data using KD-trees using
+    nearest-neighbor (NN) or inverse distance weighting (IDW)
 
     Parameters
     ----------
-    tree: scipy.spatial.cKDTree
-        KD-tree of valid points for nearest-neighbor extrapolation
+    tree: scipy.spatial.KDTree
+        KD-tree of valid points to query
     points: np.ndarray
         Output points in Cartesian coordinates
     flattened: np.ndarray
         Valid data array to be extrapolated
+    k: int, default 1
+        Number of nearest neighbors to use for extrapolation
+    power: int, default 2
+        Power for inverse distance weighting (IDW) extrapolation
     cutoff: float, default np.inf
         Return only neighbors within distance (kilometers)
     fill_value: float, default None
         Invalid value
     dtype: np.dtype, default from input data
         Output data type
+    workers: int, default 1
+        Number of parallel workers to use for KD-tree query
 
     Returns
     -------
@@ -384,20 +399,39 @@ def _nearest_neighbors(
     """
     # set default data type
     dtype = kwargs.get("dtype", flattened.dtype)
+    workers = kwargs.get("workers", 1)
     # number of data points
     npts, _ = points.shape
-    # query output data points and find nearest neighbor within cutoff
-    dd, ii = tree.query(points, k=1, distance_upper_bound=cutoff)
+    # query output data points and find k nearest neighbor within cutoff
+    dd, ii = tree.query(
+        points, k=k, distance_upper_bound=cutoff, workers=workers
+    )
     # allocate to output extrapolate data array
     data = np.ma.zeros((npts), dtype=dtype, fill_value=fill_value)
     data.mask = np.ones((npts), dtype=bool)
     # initially set all data to fill value
     data.data[:] = data.fill_value
-    # spatially extrapolate using nearest neighbors
-    if np.any(np.isfinite(dd)):
+    # spatially extrapolate using nearest neighbors or IDW
+    if k == 1 and np.any(np.isfinite(dd)):
+        # spatially extrapolate using nearest neighbors
         (ind,) = np.nonzero(np.isfinite(dd))
         data.data[ind] = flattened[ii[ind]]
         data.mask[ind] = False
+    elif k > 1 and np.any(np.isfinite(dd)):
+        # clip distances to handle cases where points overlap
+        # this can lead to infinite weights in the IDW extrapolation
+        dd = np.clip(dd, a_min=1e-10, a_max=None)
+        # clip indices to handle cases where there are fewer than k neighbors
+        # weights will be nan so these points will be masked in the output
+        ii = np.clip(ii, a_min=0, a_max=len(flattened) - 1)
+        # normalized weights if power > 0 (typically between 1 and 3)
+        # in the inverse distance weighting
+        power_inverse_distance = np.power(dd, -power)
+        s = np.nansum(power_inverse_distance, axis=1)
+        w = power_inverse_distance / np.broadcast_to(s[:, None], (npts, k))
+        # spatially extrapolate using inverse distance weighting
+        data.data[:] = np.nansum(w * flattened[ii], axis=1)
+        data.mask[:] = np.logical_not(np.isfinite(dd).any(axis=1))
     # return extrapolated values
     return xr.DataArray(data)
 
