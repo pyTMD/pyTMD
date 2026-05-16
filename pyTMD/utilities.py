@@ -349,6 +349,10 @@ class URL:
         """Boolean flag if path is a local directory"""
         return False
 
+    def exists(self):
+        """Boolean flag if ``URL`` is valid"""
+        return is_valid_url(self.urlname)
+
     def geturl(self):
         """String representation of the ``URL`` object"""
         return self._components.geturl()
