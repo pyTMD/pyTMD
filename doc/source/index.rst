@@ -125,6 +125,7 @@ Project Details
     api_reference/compute.rst
     api_reference/constituents.rst
     api_reference/datasets/datasets.rst
+    api_reference/earth.rst
     api_reference/ellipse.rst
     api_reference/interpolate.rst
     api_reference/io/io.rst

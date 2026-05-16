@@ -18,7 +18,7 @@ interpolate
 
 .. autofunction:: pyTMD.interpolate._build_tree
 
-.. autofunction:: pyTMD.interpolate._nearest_neighbors
+.. autofunction:: pyTMD.interpolate._query_tree
 
 .. autofunction:: pyTMD.interpolate.barycentric
 

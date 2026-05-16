@@ -16,11 +16,13 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
+    earth.py: calculates Earth parameters and Body Tide Love numbers
     math.py: Special functions of mathematical physics
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
     Updated 05/2026: use numpy hypot function to calculate magnitudes
+        moved ellipsoid and love number parameters to earth module
     Updated 04/2026: use xarray dot product for calculating constituent phases
     Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
@@ -55,7 +57,7 @@ __all__ = [
 _mjd_tide = 48622.0
 
 # get ellipsoidal parameters
-_iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
+_iers = pyTMD.earth.datum(ellipsoid="IERS", units="MKS")
 
 # tide potential tables
 _tide_potential_table = {}
@@ -299,15 +301,13 @@ def body_tide(
             # IERS: including both in-phase and out-of-phase components
             # 1) using resonance formula for tides in the diurnal band
             # 2) adjusting some long-period tides for anelastic effects
-            hl, kl, ll = pyTMD.constituents._complex_love_numbers(
-                omega, method=method
-            )
+            hl, kl, ll = pyTMD.earth.complex_love_numbers(omega, method=method)
             # 3) including complex latitudinal dependence
             hl -= (0.615e-3 + 0.122e-4j) * (1.0 - 1.5 * np.sin(th) ** 2)
             ll += (0.19334e-3 - 0.3819e-5j) * (1.0 - 1.5 * np.sin(th) ** 2)
         elif l == 2:
             # use resonance formula for tides in the diurnal band
-            hl, kl, ll = pyTMD.constituents._love_numbers(
+            hl, kl, ll = pyTMD.earth.love_numbers(
                 omega, method=method, astype=np.complex128
             )
             # include latitudinal dependence
@@ -315,7 +315,7 @@ def body_tide(
             ll += 0.0002 * (1.0 - 1.5 * np.sin(th) ** 2)
         else:
             # extract the body tide love numbers for degree
-            hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
+            hb, kb, lb = pyTMD.earth.degree_love_numbers(l)
             # use nominal Love numbers for all other degrees
             hl = np.complex128(kwargs.get(f"h{l}", hb))
             ll = np.complex128(kwargs.get(f"l{l}", lb))
@@ -437,7 +437,7 @@ def solid_earth_tide(
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
         # extract the body tide love numbers for degree
-        hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
+        hb, kb, lb = pyTMD.earth.degree_love_numbers(l)
         # get the degree-dependent Love numbers
         hl = kwargs.get(f"h{l}", hb)
         ll = kwargs.get(f"l{l}", lb)

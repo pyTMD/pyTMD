@@ -22,11 +22,13 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
+    earth.py: calculates Earth parameters and Body Tide Love numbers
     interpolate.py: interpolation routines for spatial data
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
     Updated 05/2026: verify unique frequencies in short period inference
+        moved ellipsoid and love number parameters to earth module
     Updated 03/2026: simplify structure by splitting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
@@ -690,7 +692,7 @@ def _infer_diurnal(
     dnorm = xr.Dataset()
     for i, c in enumerate(cindex):
         # Love numbers of degree 2 for constituent
-        h2, k2, l2 = pyTMD.constituents._love_numbers(omajor[i])
+        h2, k2, l2 = pyTMD.earth.love_numbers(omajor[i])
         # tilt factor: response with respect to the solid earth
         gamma_2 = 1.0 + k2 - h2
         dnorm[c] = ds[c] / (amajor[i] * gamma_2)
@@ -780,7 +782,7 @@ def _infer_diurnal(
     gamma_2 = np.zeros(nc)
     for i, c in enumerate(minor_constituents):
         # Love numbers of degree 2 for constituent
-        h2, k2, l2 = pyTMD.constituents._love_numbers(omega[i])
+        h2, k2, l2 = pyTMD.earth.love_numbers(omega[i])
         # tilt factor: response with respect to the solid earth
         gamma_2[i] = 1.0 + k2 - h2
 
@@ -903,10 +905,10 @@ def _infer_long_period(
         # complex Love numbers of degree 2 for long-period band
         if kwargs["include_anelasticity"]:
             # include variations largely due to mantle anelasticity
-            h2, k2, l2 = pyTMD.constituents._complex_love_numbers(omajor[i])
+            h2, k2, l2 = pyTMD.earth.complex_love_numbers(omajor[i])
         else:
             # Love numbers for long-period tides (Wahr, 1981)
-            h2, k2, l2 = pyTMD.constituents._love_numbers(
+            h2, k2, l2 = pyTMD.earth.love_numbers(
                 omajor[i], astype=np.complex128
             )
         # tilt factor: response with respect to the solid earth
@@ -978,10 +980,10 @@ def _infer_long_period(
         # complex Love numbers of degree 2 for long-period band
         if kwargs["include_anelasticity"]:
             # include variations largely due to mantle anelasticity
-            h2, k2, l2 = pyTMD.constituents._complex_love_numbers(omega[i])
+            h2, k2, l2 = pyTMD.earth.complex_love_numbers(omega[i])
         else:
             # Love numbers for long-period tides (Wahr, 1981)
-            h2, k2, l2 = pyTMD.constituents._love_numbers(
+            h2, k2, l2 = pyTMD.earth.love_numbers(
                 omega[i], astype=np.complex128
             )
         # tilt factor: response with respect to the solid earth
@@ -1182,12 +1184,10 @@ def equilibrium_tide(
         # complex Love numbers of degree 2 for long-period band
         if kwargs["include_anelasticity"]:
             # include variations largely due to mantle anelasticity
-            h2, k2, l2 = pyTMD.constituents._complex_love_numbers(omega)
+            h2, k2, l2 = pyTMD.earth.complex_love_numbers(omega)
         else:
             # Love numbers for long-period tides (Wahr, 1981)
-            h2, k2, l2 = pyTMD.constituents._love_numbers(
-                omega, astype=np.complex128
-            )
+            h2, k2, l2 = pyTMD.earth.love_numbers(omega, astype=np.complex128)
         # tilt factor: response with respect to the solid earth
         # use real components from Mathews et al. (2002)
         gamma_2[i] = 1.0 + k2.real - h2.real

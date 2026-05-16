@@ -10,6 +10,7 @@ UPDATE HISTORY:
 """
 import pytest
 import numpy as np
+import pyTMD.earth
 import pyTMD.constituents
 
 def test_love_numbers():
@@ -47,7 +48,7 @@ def test_love_numbers():
     for c, v in exp.items():
         # calculate Love numbers
         omega, = pyTMD.constituents.frequency(c)
-        h2, k2, l2 = pyTMD.constituents._love_numbers(
+        h2, k2, l2 = pyTMD.earth.love_numbers(
             omega, model='1066A')
         # check Love numbers
         assert np.isclose(h2, v[0], atol=15e-4)
@@ -94,7 +95,7 @@ def test_complex_love_numbers():
     for c, v in exp.items():
         # calculate Love numbers
         omega = pyTMD.constituents._frequency(coefficients[c])
-        h2, k2, l2 = pyTMD.constituents._complex_love_numbers(omega)
+        h2, k2, l2 = pyTMD.earth.complex_love_numbers(omega)
         # check Love numbers
         assert np.isclose(h2, v[0], atol=15e-4)
         assert np.isclose(k2, v[1], atol=15e-4)
@@ -132,12 +133,12 @@ def test_love_number_ratios(model):
     # frequency of the o1 tidal constituent
     omega = pyTMD.constituents.frequency('o1')
     # calculate Love numbers for o1
-    ho1, ko1, lo1 = pyTMD.constituents._love_numbers(omega, model=model)
+    ho1, ko1, lo1 = pyTMD.earth.love_numbers(omega, model=model)
     # for each tidal constituent
     for c, v in exp[model].items():
         # calculate Love numbers
         omega, = pyTMD.constituents.frequency(c)
-        h2, k2, l2 = pyTMD.constituents._love_numbers(omega, model=model)
+        h2, k2, l2 = pyTMD.earth.love_numbers(omega, model=model)
         # check Love numbers
         assert np.isclose(h2/ho1, v[0], atol=25e-4)
         assert np.isclose(k2/ko1, v[1], atol=25e-4)
@@ -169,7 +170,7 @@ def test_degree_love_numbers(model):
     # for each spherical harmonic degree
     for l, v in exp[model].items():
         # extract love numbers from tables
-        hl, kl, ll = pyTMD.constituents._degree_love_numbers(l, model=model)
+        hl, kl, ll = pyTMD.earth.degree_love_numbers(l, model=model)
         # check Love numbers
         assert np.isclose(hl, v[0])
         assert np.isclose(kl, v[1])

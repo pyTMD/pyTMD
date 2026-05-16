@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -20,6 +20,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 05/2026: added parameters to allow for extrapolation with
+        inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
     Updated 04/2026: add barycentric interpolation for unstructured grids
         add support for unstructured (e.g. finite element) grids
         added function to calculate the high and low peaks of a prediction
@@ -662,13 +664,14 @@ class Dataset:
     def extrap_like(self, other: xr.Dataset, **kwargs):
         """
         Extrapolate missing values in ``Dataset`` using nearest-neighbors
+        or inverse distance weighting
 
         Parameters
         ----------
         other: xarray.Dataset
             ``Dataset`` with missing values to be extrapolated
         kwargs: dict
-            Keyword arguments for :py:func:`pyTMD.interpolate._nearest_neighbors`
+            Keyword arguments for :py:func:`pyTMD.interpolate._query_tree`
 
         Returns
         -------
@@ -679,7 +682,7 @@ class Dataset:
         from pyTMD.interpolate import (
             _to_cartesian,
             _build_tree,
-            _nearest_neighbors,
+            _query_tree,
         )
 
         # get extrapolation cutoff distance
@@ -752,7 +755,7 @@ class Dataset:
                 valid_mask = np.copy(mask)
             # reduce model to valid original values
             flattened = ds[v].values[valid_indices]
-            # extrapolate missing values using nearest-neighbors
+            # extrapolate missing values using NN or IDW
             if other[v].ndim == 0:
                 # single point extrapolation
                 p_out = _to_cartesian(
@@ -760,7 +763,7 @@ class Dataset:
                     other.y.values,
                     is_geographic=self.crs.is_geographic,
                 )
-                (other[v].values,) = _nearest_neighbors(
+                (other[v].values,) = _query_tree(
                     tree, p_out, flattened, **kwargs
                 )
             else:
@@ -770,7 +773,7 @@ class Dataset:
                     other.y.values[invalid],
                     is_geographic=self.crs.is_geographic,
                 )
-                other[v].values[invalid] = _nearest_neighbors(
+                other[v].values[invalid] = _query_tree(
                     tree, p_out, flattened, **kwargs
                 )
         # return xarray dataset
@@ -887,9 +890,18 @@ class Dataset:
         y: np.ndarray
             Interpolation y-coordinates
         extrapolate: bool, default False
-            Flag to extrapolate values using nearest-neighbors
+            Spatially extrapolate values beyond model domain
         cutoff: int or float, default np.inf
             Maximum distance for extrapolation
+        k: int, default 1
+            Number of nearest neighbors to use for extrapolation
+
+            - ``1``: nearest neighbor (NN)
+            - ``>1``: inverse distance weighting (IDW)
+        power: int or float, default 2
+            Power parameter for inverse distance weighting extrapolation
+        workers: int, default 1
+            Number of workers to use for parallel extrapolation
         kwargs: dict
             Keyword arguments for interpolation functions
 
@@ -901,7 +913,6 @@ class Dataset:
         # set default keyword arguments
         kwargs.setdefault("method", "linear")
         kwargs.setdefault("extrapolate", False)
-        kwargs.setdefault("cutoff", np.inf)
         # check if interpolating from a grid or mesh
         if self.grid_type == "unstructured":
             # use barycentric interpolation if data is unstructured
@@ -909,9 +920,21 @@ class Dataset:
         else:
             # use built-in xarray interpolation methods
             other = self.grid_interp(x, y, **kwargs)
-        # extrapolate missing values using nearest-neighbors
+        # extrapolate using nearest-neighbors or inverse distance weighting
         if kwargs["extrapolate"]:
-            other = self.extrap_like(other, cutoff=kwargs["cutoff"])
+            # get extrapolation parameters
+            # maximum distance for extrapolation
+            cutoff = kwargs.get("cutoff", np.inf)
+            # number of nearest neighbors to use for extrapolation
+            k = kwargs.get("k", 1)
+            # power parameter for inverse distance weighting extrapolation
+            power = kwargs.get("power", 2)
+            # number of workers to use for parallel extrapolation
+            workers = kwargs.get("workers", 1)
+            # use extrapolation (NN or IDW) to fill in missing values
+            other = self.extrap_like(
+                other, k=k, cutoff=cutoff, power=power, workers=workers
+            )
         # return xarray dataset
         return other
 

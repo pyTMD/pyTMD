@@ -17,7 +17,7 @@ for i, key in enumerate(["h", "k", "l"]):
     love[key] = np.zeros((N))
 # calculate Love numbers
 for i, omega in enumerate(omegas):
-    love["h"][i], love["k"][i], love["l"][i] = pyTMD.constituents._love_numbers(
+    love["h"][i], love["k"][i], love["l"][i] = pyTMD.earth.love_numbers(
         omega, model="1066A-N"
     )
 
@@ -39,7 +39,7 @@ plot_colors = iter(plt.cm.rainbow(np.linspace(0, 1, len(cons))))
 for i, c in enumerate(cons):
     om = pyTMD.constituents.frequency(c)
     p = 2.0 * np.pi / (86400.0 * om)
-    h, k, l = pyTMD.constituents._love_numbers(om, model="1066A-N")
+    h, k, l = pyTMD.earth.love_numbers(om, model="1066A-N")
     (s,) = ax[0].plot(p, h, ".", color=next(plot_colors), label=labels[i])
     ax[1].plot(p, k, ".", color=s.get_markerfacecolor(), label=labels[i])
     ax[2].plot(p, l, ".", color=s.get_markerfacecolor(), label=labels[i])

@@ -54,16 +54,18 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
-    predict.py: predict tide values using harmonic constants
+    earth.py: calculates Earth parameters and Body Tide Love numbers
     io/model.py: retrieves tide model parameters for named tide models
     io/OTIS.py: extract tidal harmonic constants from OTIS tide models
     io/ATLAS.py: extract tidal harmonic constants from netcdf models
     io/GOT.py: extract tidal harmonic constants from GSFC GOT models
     io/FES.py: extract tidal harmonic constants from FES tide models
     interpolate.py: interpolation routines for spatial data
+    predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
     Updated 05/2026: use numpy hypot function to calculate magnitudes
+    Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 03/2026: added function for computing tide-generating forces
         and a function for computing the accelerations from gravity tides
     Updated 02/2026: added attributes for constituents to output DataArrays
@@ -317,7 +319,7 @@ def tide_elevations(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        Spatially extrapolate model with nearest-neighbors
+        Spatially extrapolate values beyond model domain
     cutoff: int or float, default 10.0
         Extrapolation cutoff (kilometers)
 
@@ -518,7 +520,7 @@ def tide_currents(
             - ``'nearest'``: nearest-neighbor interpolation
 
     extrapolate: bool, default False
-        Spatially extrapolate model with nearest-neighbors
+        Spatially extrapolate values beyond model domain
     cutoff: int or float, default 10.0
         Extrapolation cutoff (kilometers)
 
@@ -866,7 +868,7 @@ def LPT_displacements(
 
     # validate input arguments
     assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ellipsoid.upper() in pyTMD.spatial._ellipsoids
+    assert ellipsoid.upper() in pyTMD.earth._ellipsoids
     assert convention.isdigit() and convention in timescale.eop._conventions
     # determine input data type based on variable dimensions
     if not type:
@@ -891,7 +893,7 @@ def LPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # tidal love/shida numbers appropriate for the load tide
     hb2 = 0.6207
     lb2 = 0.0836
@@ -1025,7 +1027,7 @@ def OPT_displacements(
 
     # validate input arguments
     assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ellipsoid.upper() in pyTMD.spatial._ellipsoids
+    assert ellipsoid.upper() in pyTMD.earth._ellipsoids
     assert convention.isdigit() and convention in timescale.eop._conventions
     assert method.lower() in ("linear", "nearest")
     # determine input data type based on variable dimensions
@@ -1051,7 +1053,7 @@ def OPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # mean equatorial gravitational acceleration (m s^-2)
     ge = 9.7803278
     # density of sea water (kg m^-3)
@@ -1245,7 +1247,7 @@ def _ephemerides_SET(
         type = pyTMD.spatial.data_type(x, y, delta_time)
     assert type.lower() in ("grid", "drift", "time series")
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1548,7 +1550,7 @@ def TG_forces(
     assert type.lower() in ("grid", "drift", "time series")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1725,7 +1727,7 @@ def GT_accelerations(
     assert type.lower() in ("grid", "drift", "time series")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.spatial.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(

@@ -16,11 +16,13 @@ PYTHON DEPENDENCIES:
 PROGRAM DEPENDENCIES:
     astro.py: computes the basic astronomical mean longitudes
     constituents.py: calculates constituent parameters and nodal arguments
+    earth.py: calculates Earth parameters and Body Tide Love numbers
     math.py: Special functions of mathematical physics
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
     Updated 05/2026: use numpy hypot function to calculate magnitudes
+        moved ellipsoid and love number parameters to earth module
     Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
 """
@@ -49,7 +51,7 @@ __all__ = [
 _mjd_tide = 48622.0
 
 # get ellipsoidal parameters
-_iers = pyTMD.spatial.datum(ellipsoid="IERS", units="MKS")
+_iers = pyTMD.earth.datum(ellipsoid="IERS", units="MKS")
 
 
 def generating_force(
@@ -274,7 +276,7 @@ def gravity_tide(
     # for each spherical harmonic degree
     for l in range(2, kwargs["lmax"] + 1):
         # extract the body tide love numbers for degree
-        hb, kb, lb = pyTMD.constituents._degree_love_numbers(l)
+        hb, kb, lb = pyTMD.earth.degree_love_numbers(l)
         # get the degree-dependent Love numbers for the gravity tide
         hl = kwargs.get(f"h{l}", hb)
         kl = kwargs.get(f"k{l}", kb)
