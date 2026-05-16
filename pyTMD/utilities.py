@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 05/2026: add exists to URL class to check if URL is valid
     Updated 04/2026: add query and path functions to URL class
         can use from ftp within URL for downloading files
         added s3 utilities for getting the bucket name and key
