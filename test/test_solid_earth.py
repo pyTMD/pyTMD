@@ -1,5 +1,5 @@
 """
-test_solid_earth.py (03/2026)
+test_solid_earth.py (05/2026)
 Tests the steps for calculating the solid earth tides
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 05/2026: add unit tests for body tides using HW1995 and W1990
     Updated 03/2026: refactored IERS corrections to reduce redundancy
     Updated 09/2025: check body tides for both tide-free and mean-tide
     Updated 07/2025: revert free-to-mean conversion to April 2023 version
@@ -18,6 +19,7 @@ UPDATE HISTORY:
     Written 04/2023
 """
 import pytest
+import pandas as pd
 import numpy as np
 import xarray as xr
 import pyTMD.astro
@@ -312,3 +314,37 @@ def test_body_tides(catalog, method):
     # since we are using simplified body tides: assert within 2 mm
     assert np.allclose(tide_earth, tide_free, atol=2e-3)
     assert np.allclose(tide_expected, tide_mean, atol=2e-3)
+
+def test_body_tides_HW1995():
+    """
+    Test body tides using HW1995 catalog and IERS ephemerides
+    """
+    # read in test data from HW1995 catalog and IERS ephemerides
+    df = pd.read_csv("HW1995_IERS.csv.gz", parse_dates=["time"])
+    longitude = df["longitude"].iloc[0]
+    latitude = df["latitude"].iloc[0]
+    # predict body tides
+    ds = pyTMD.compute.SET_displacements(longitude, latitude, df["time"],
+        standard='datetime', type='time series', method='catalog',
+        catalog='HW1995', ephemerides='IERS', tide_system='mean_tide',
+        variable=["N", "E", "R"])
+    # check computation of each variable
+    for key, var in zip(["tide_north", "tide_east", "tide_up"], ["N", "E", "R"]):
+        assert np.allclose(df[key], ds[var].tmd.to_units("mm"), atol=1e-5)
+
+def test_body_tides_W1990():
+    """
+    Test body tides using W1990 catalog and ASTRO5 ephemerides
+    """
+    # read in test data from W1990 catalog and ASTRO5 ephemerides
+    df = pd.read_csv("W1990_ASTRO5.csv.gz", parse_dates=["time"])
+    longitude = df["longitude"].iloc[0]
+    latitude = df["latitude"].iloc[0]
+    # predict body tides (parallel old Geosat solid earth tide computations)
+    ds = pyTMD.compute.SET_displacements(longitude, latitude, df["time"],
+        standard='datetime', type='time series', method='catalog',
+        catalog='W1990', ephemerides='ASTRO5', tide_system='mean_tide',
+        h2=0.609, l2=0.0847, variable=["N", "E", "R"])
+    # check computation of each variable
+    for key, var in zip(["tide_north", "tide_east", "tide_up"], ["N", "E", "R"]):
+        assert np.allclose(df[key], ds[var].tmd.to_units("mm"), atol=1e-5)

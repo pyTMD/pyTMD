@@ -259,7 +259,7 @@ def test_sidereal():
     """
     # create timescale from modified Julian dates
     ts = timescale.time.Timescale(MJD=55414.0)
-    # expected side real time in hours
+    # expected sidereal time in hours
     expected = 20.96154017401333
     assert np.allclose(expected, 24.0*ts.st)
 

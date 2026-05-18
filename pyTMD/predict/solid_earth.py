@@ -23,6 +23,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 05/2026: use numpy hypot function to calculate magnitudes
         moved ellipsoid and love number parameters to earth module
+        refactored body tide function to improve computational times
     Updated 04/2026: use xarray dot product for calculating constituent phases
     Updated 03/2026: use table of body tide love numbers for degrees 4+
     Written 03/2026: split up prediction functions into separate files
@@ -175,13 +176,15 @@ def body_tide(
 
     # parse tide potential table for constituents
     table = _tide_potential_table[catalog]
-    CTE = pyTMD.constituents._parse_tide_potential_table(
+    tide_pot = pyTMD.constituents._parse_tide_potential_table(
         table,
         skiprows=1,
         columns=1,
         include_degree=True,
         include_planets=include_planets,
     )
+    # number of constituents in the catalog
+    nrows = len(tide_pot)
 
     # compute principal mean longitudes
     # convert dates into Ephemeris Time
@@ -206,52 +209,39 @@ def body_tide(
         args.extend(["me", "ve", "ma", "ju", "sa"])
     else:
         arguments = np.c_[tau, s, h, p, n, pp, k]
-    # convert arguments to DataArray
-    arguments = xr.DataArray(
-        arguments,
-        dims=["time", "argument"],
-        coords=dict(
-            time=np.atleast_1d(MJD),
-            argument=args,
-        ),
-    )
     # number of arguments
     nargs = len(args)
     # allocate array for Doodson coefficients
-    coef = xr.DataArray(
-        np.zeros(nargs),
-        dims="argument",
-        coords=dict(argument=args),
-    )
+    coef = np.zeros((nargs, nrows))
 
     # longitudes and colatitudes in radians
     phi = np.radians(ds.x)
     th = np.radians(90.0 - ds.y)
 
-    # precompute spherical harmonic functions and derivatives
-    # will need to be rotated by constituent phase
-    Ylm = xr.Dataset()
-    dYlm = xr.Dataset()
-    # for each degree and order
-    for l in range(2, lmax + 1):
-        for m in range(l + 1):
-            Ylm[l, m], dYlm[l, m] = pyTMD.math.sph_harm(l, th, phi, m=m)
+    # create dictionary of tide potential parameters for each constituent
+    CTE = dict(dims=("time", "constituent"), coords={}, data_vars={})
+    # time and constituent coordinates
+    for coord in ["time", "constituent"]:
+        CTE["coords"][coord] = dict(dims=coord)
+    CTE["coords"]["time"]["data"] = np.atleast_1d(MJD)
+    CTE["coords"]["constituent"]["data"] = np.arange(nrows)
+    # constituent parameters
+    for field in ["degree", "order", "amplitude", "hl", "ll"]:
+        CTE["data_vars"][field] = dict(dims=("constituent"))
+    # constituent equilibrium phases
+    for field in ["phase"]:
+        CTE["data_vars"][field] = dict(dims=("time", "constituent"))
+    # spherical harmonic degree and order
+    CTE["data_vars"]["degree"]["data"] = np.zeros(nrows)
+    CTE["data_vars"]["order"]["data"] = np.zeros(nrows)
+    # constituent potential amplitudes (meters)
+    CTE["data_vars"]["amplitude"]["data"] = np.zeros(nrows)
+    # complex love numbers
+    CTE["data_vars"]["hl"]["data"] = np.zeros(nrows, dtype=np.complex128)
+    CTE["data_vars"]["ll"]["data"] = np.zeros(nrows, dtype=np.complex128)
 
-    # initialize phase array
-    phase = xr.DataArray(
-        np.zeros_like(MJD),
-        dims="time",
-        coords=dict(time=np.atleast_1d(MJD)),
-    )
-
-    # allocate for output body tide estimates (meters)
-    # latitudinal, longitudinal and radial components
-    zeta = xr.Dataset()
-    # initialize output body tides
-    for key in ["R", "N", "E"]:
-        zeta[key] = xr.zeros_like(th * phase)
     # for each line in the table
-    for i, line in enumerate(CTE):
+    for i, line in enumerate(tide_pot):
         # spherical harmonic degree
         l = line["l"]
         # skip if degree is above the specified expansion limit
@@ -260,39 +250,37 @@ def body_tide(
         # spherical harmonic dependence (order)
         TAU = line["tau"]
         # update Doodson coefficients for constituent
-        coef[0] = TAU
-        coef[1] = line["s"]
-        coef[2] = line["h"]
-        coef[3] = line["p"]
+        coef[0, i] = TAU
+        coef[1, i] = line["s"]
+        coef[2, i] = line["h"]
+        coef[3, i] = line["p"]
         # convert N for ascending lunar node (from N')
-        coef[4] = -1.0 * line["n"]
-        coef[5] = line["pp"]
+        coef[4, i] = -1.0 * line["n"]
+        coef[5, i] = line["pp"]
         # use cosines for (l + tau) even
         # and sines for (l + tau) odd
-        coef[6] = -1.0 * np.mod(l + TAU, 2)
+        coef[6, i] = -1.0 * np.mod(l + TAU, 2)
         # include planetary contributions
         if kwargs["include_planets"]:
             # coefficients including planetary terms
-            coef[7] = line["lme"]
-            coef[8] = line["lve"]
-            coef[9] = line["lma"]
-            coef[10] = line["lju"]
-            coef[11] = line["lsa"]
-        # calculate angular frequency of constituent
+            coef[7, i] = line["lme"]
+            coef[8, i] = line["lve"]
+            coef[9, i] = line["lma"]
+            coef[10, i] = line["lju"]
+            coef[11, i] = line["lsa"]
+        # calculate angular frequency of constituents
         omega = pyTMD.constituents._frequency(
-            coef, method=method, include_planets=kwargs["include_planets"]
+            coef[:, i], method=method, include_planets=kwargs["include_planets"]
         )
         # skip the permanent tide if using a mean-tide system
         if (omega == 0) and (tide_system.lower() == "mean_tide"):
             continue
-        # determine constituent phase using equilibrium arguments
-        G = pyTMD.math.normalize_angle(arguments.dot(coef))
-        # convert phase angles to radians
-        phase[:] = np.radians(G)
-        # rotate spherical harmonic functions by phase angles
-        S = Ylm[l, TAU] * np.exp(1j * phase)
-        dS = dYlm[l, TAU] * np.exp(1j * phase)
-        # add components for degree and order to output body tides
+        # save degree and order for constituent
+        CTE["data_vars"]["degree"]["data"][i] = l
+        CTE["data_vars"]["order"]["data"][i] = TAU
+        # potential amplitude for constituent
+        CTE["data_vars"]["amplitude"]["data"][i] = line["Hs1"]
+        # calculate Love numbers for degree
         if (l == 2) and user_degree_2:
             # user-defined Love numbers for all constituents
             hl = np.complex128(kwargs["h2"])
@@ -301,29 +289,85 @@ def body_tide(
             # IERS: including both in-phase and out-of-phase components
             # 1) using resonance formula for tides in the diurnal band
             # 2) adjusting some long-period tides for anelastic effects
-            hl, kl, ll = pyTMD.earth.complex_love_numbers(omega, method=method)
-            # 3) including complex latitudinal dependence
-            hl -= (0.615e-3 + 0.122e-4j) * (1.0 - 1.5 * np.sin(th) ** 2)
-            ll += (0.19334e-3 - 0.3819e-5j) * (1.0 - 1.5 * np.sin(th) ** 2)
+            hl, _, ll = pyTMD.earth.complex_love_numbers(omega, method=method)
         elif l == 2:
             # use resonance formula for tides in the diurnal band
-            hl, kl, ll = pyTMD.earth.love_numbers(
+            hl, _, ll = pyTMD.earth.love_numbers(
                 omega, method=method, astype=np.complex128
             )
-            # include latitudinal dependence
-            hl -= 0.0006 * (1.0 - 1.5 * np.sin(th) ** 2)
-            ll += 0.0002 * (1.0 - 1.5 * np.sin(th) ** 2)
         else:
             # extract the body tide love numbers for degree
-            hb, kb, lb = pyTMD.earth.degree_love_numbers(l)
+            hb, _, lb = pyTMD.earth.degree_love_numbers(l)
             # use nominal Love numbers for all other degrees
             hl = np.complex128(kwargs.get(f"h{l}", hb))
             ll = np.complex128(kwargs.get(f"l{l}", lb))
-        # convert potentials for constituent and add to the total
-        # (latitudinal, longitudinal and radial components)
-        zeta["N"] += line["Hs1"] * (ll.real * dS.real - ll.imag * dS.imag)
-        zeta["E"] -= line["Hs1"] * TAU * (ll.real * S.imag - ll.imag * S.real)
-        zeta["R"] += line["Hs1"] * (hl.real * S.real - hl.imag * S.imag)
+        # save Love numbers for constituent
+        CTE["data_vars"]["hl"]["data"][i] = hl.copy()
+        CTE["data_vars"]["ll"]["data"][i] = ll.copy()
+    # calculate constituent phase using equilibrium arguments
+    # this calculates over all constituents and time steps
+    G = pyTMD.math.normalize_angle(np.dot(arguments, coef))
+    CTE["data_vars"]["phase"]["data"] = np.exp(1j * np.radians(G))
+    # convert to xarray Dataset from the constituent data dictionary
+    CTE = xr.Dataset.from_dict(CTE)
+
+    # allocate for output body tide estimates (meters)
+    # latitudinal, longitudinal and radial components
+    zeta = xr.Dataset()
+    # initialize output body tides
+    for key in ["R", "N", "E"]:
+        zeta[key] = xr.zeros_like(th * CTE["time"])
+
+    # order of operations for each spherical harmonic degree and order:
+    # 1) extract parameters for constituents with degree l and order m
+    # 2) extract or calculate the complex Love numbers for degree and order
+    # 3) calculate spherical harmonic functions and their derivatives
+    # 4) rotate the spherical harmonics by the constituent phase and
+    # scale by the Cartwright-Tayler-Edden (CTE) amplitude
+    # 5) convert the potentials to displacements and sum over constituents
+    # 6) add to totals (latitudinal, longitudinal and radial components)
+    # note: looping over constituents is slow due to repeated rotations and
+    #       dimensional broadcasting needed for the spherical harmonics
+    # here we split the calculations and do a summation over constituents
+    for l in range(2, lmax + 1):
+        for m in range(l + 1):
+            # skip if degree or order are not included in the catalog
+            if l not in CTE.degree or m not in CTE.order:
+                continue
+            # extract parameters for constituents with degree l and order m
+            params = CTE.where((CTE.degree == l) & (CTE.order == m), drop=True)
+            # calculate or extract complex Love numbers for degree and order
+            # (includes frequency dependence for degree 2)
+            if (l == 2) and (method == "IERS"):
+                # include (complex) latitudinal dependence for degree 2
+                dep2 = 1.0 - 1.5 * np.sin(th) ** 2
+                hl = params["hl"] - (0.615e-3 + 0.122e-4j) * dep2
+                ll = params["ll"] + (0.19334e-3 - 0.3819e-5j) * dep2
+            elif l == 2 and not user_degree_2:
+                # include (nominal) latitudinal dependence for degree 2
+                dep2 = 1.0 - 1.5 * np.sin(th) ** 2
+                hl = params["hl"] - 0.0006 * dep2
+                ll = params["ll"] + 0.0002 * dep2
+            else:
+                # nominal Love numbers
+                hl, ll = params["hl"], params["ll"]
+            # spherical harmonic functions and derivatives
+            # will need to be rotated by constituent phase
+            Ylm, dYlm = pyTMD.math.sph_harm(l, th, phi, m=m)
+            # rotate spherical harmonics and scale by amplitude
+            S = params["amplitude"] * Ylm * params["phase"]
+            dS = params["amplitude"] * dYlm * params["phase"]
+            # convert potentials for constituent and sum over constituents
+            # add to totals (latitudinal, longitudinal and radial components)
+            zeta["N"] += (ll.real * dS.real - ll.imag * dS.imag).sum(
+                dim="constituent"
+            )
+            zeta["E"] -= m * (ll.real * S.imag - ll.imag * S.real).sum(
+                dim="constituent"
+            )
+            zeta["R"] += (hl.real * S.real - hl.imag * S.imag).sum(
+                dim="constituent"
+            )
 
     # add units attributes to output dataset
     for var in zeta.data_vars:

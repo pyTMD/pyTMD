@@ -142,11 +142,12 @@ def test_gap_fill(nx=250, ny=250, percent=30, N=100):
     # number of points to be removed
     size = int(percent*nx*ny/100.0)
     # create random points to be removed from the grid
-    indx = np.random.randint(0, high=nx, size=size)
-    indy = np.random.randint(0, high=ny, size=size)
+    rng = np.random.default_rng(0)  
+    indx = rng.integers(0, nx, size=size)  
+    indy = rng.integers(0, ny, size=size)
     ZI.mask[indy,indx] = True
     # replace masked points with NaN
-    ZI.filled(np.nan)
+    ZI = ZI.filled(np.nan)
     # calculate gap-filled values with inpainting
     test = pyTMD.interpolate.inpaint(xpts, ypts, ZI, N=N)
     # verify that coordinates are within tolerance
