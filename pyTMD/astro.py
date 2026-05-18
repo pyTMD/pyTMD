@@ -896,6 +896,7 @@ def solar_latitude(
         # iterate over each power and coefficients
         for p, B in enumerate(coefficients):
             for i, (a, b, c) in enumerate(B):
+                # subtract angles to convert from heliocentric to geocentric
                 beta -= np.degrees(a) * np.cos(b + c * T) * np.power(T, p)
     else:
         # latitude of the sun is equal to 0 within 1 arcminute
@@ -991,7 +992,7 @@ def solar_longitude(
         if include_aberration:
             # convert to apparent longitude
             omega = np.radians(145.0 + 1934.0 * T)
-            H += -0.0057 + 0.0048 * np.cos(np.radians(omega))
+            H += -0.0057 + 0.0048 * np.cos(omega)
     elif kwargs["ephemerides"].lower() == "vsop87":
         # convert from MJD to millennia relative to 2000-01-01T12:00:00
         T = (MJD - _mjd_j2000) / _millennia
@@ -1939,7 +1940,7 @@ def lunar_distance(
         Modified Julian Day (MJD) of input date
     a_axis: float, default 6378137.0
         Semi-major axis of the Earth (meters)
-    method: str, default 'Meeus'
+    ephemerides: str, default 'Meeus'
         Method of calculating the distance
 
         - ``'Kubo'``: :cite:t:`Kubo:1980ut`
@@ -1951,10 +1952,10 @@ def lunar_distance(
         Distance from the moon to the Earth (meters)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Meeus")
+    kwargs.setdefault("ephemerides", "Meeus")
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
-    if kwargs["method"].lower() == "meeus":
+    if kwargs["ephemerides"].lower() == "meeus":
         # mean elongation of the moon (degrees)
         lunar_elongation = np.array(
             [
@@ -2004,7 +2005,7 @@ def lunar_distance(
             d, m, mp, f, _, coeff = line
             delta_R = np.radians(d * D + m * M + mp * Mp + f * F)
             R += coeff * np.power(ee, np.abs(m)) * np.cos(delta_R)
-    elif kwargs["method"].lower() == "kubo":
+    elif kwargs["ephemerides"].lower() == "kubo":
         # horizontal parallax of the moon (degrees)
         parallax = 0.950725
         # coefficients for calculating the distance to the moon
@@ -2318,7 +2319,7 @@ def _nutation_angles(T: float | np.ndarray):
     dpsi: np.ndarray
         Nutation in longitude
     deps: np.ndarray
-        Obliquity of the ecliptic
+        Nutation in obliquity of the ecliptic
     """
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
@@ -2642,7 +2643,7 @@ def _meeus_table_47B():
             [0, 0, 2, -1, 8822.0],
             [2, -1, 0, -1, 8216.0],
             [2, 0, -2, -1, 4324.0],
-            [2, 0, 1, -1, 4200.0],
+            [2, 0, 1, 1, 4200.0],
             [2, 1, 0, -1, -3359.0],
             [2, -1, -1, 1, 2463.0],
             [2, -1, 0, 1, 2211.0],
@@ -2697,8 +2698,7 @@ def _meeus_table_47B():
 
 
 def _parse_table_5_2e():
-    """Parse table with expressions for Greenwich Sidereal Time
-    provided in `Chapter 5
+    """Expressions for Greenwich Sidereal Time provided in `Table 5.2e
     <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
     of :cite:t:`Petit:2010tp`
     """
@@ -2760,9 +2760,9 @@ def _parse_table_5_2e():
 
 
 def _parse_table_5_3a():
-    """Parse table with IAU 2000A lunisolar and planetary components
-    of nutation in longitude provided in `Chapter 5
-    <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
+    """IAU 2000A lunisolar and planetary components of nutation in longitude
+    provided in `Table 5.3a
+    <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.3a.txt>`_
     of :cite:t:`Petit:2010tp`
     """
     table_5_3a = get_data_path(["data", "tab5.3a.txt"])
@@ -2823,9 +2823,9 @@ def _parse_table_5_3a():
 
 
 def _parse_table_5_3b():
-    """Parse table with IAU 2000A lunisolar and planetary components
-    of nutation in obliquity provided in `Chapter 5
-    <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.2e.txt>`_
+    """IAU 2000A lunisolar and planetary components of nutation in obliquity
+    provided in `Table 5.3b
+    <https://iers-conventions.obspm.fr/content/chapter5/additional_info/tab5.3b.txt>`_
     of :cite:t:`Petit:2010tp`
     """
     table_5_3b = get_data_path(["data", "tab5.3b.txt"])

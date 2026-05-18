@@ -392,6 +392,8 @@ def _query_tree(
     workers: int, default 1
         Number of parallel workers to use for KD-tree query
 
+        Set to ``-1`` to use all available cores
+
     Returns
     -------
     data: xr.DataArray
