@@ -19,6 +19,8 @@ UPDATE HISTORY:
     Written 04/2023
 """
 import pytest
+import inspect
+import pathlib
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -26,6 +28,10 @@ import pyTMD.astro
 import pyTMD.compute
 import pyTMD.predict
 import timescale.time
+
+# current file path
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+filepath = pathlib.Path(filename).absolute().parent
 
 def test_out_of_phase_diurnal():
     """Test out-of-phase diurnal corrections with IERS outputs
@@ -320,7 +326,8 @@ def test_body_tides_HW1995():
     Test body tides using HW1995 catalog and IERS ephemerides
     """
     # read in test data from HW1995 catalog and IERS ephemerides
-    df = pd.read_csv("HW1995_IERS.csv.gz", parse_dates=["time"])
+    unit_test_file = filepath.joinpath("HW1995_IERS.csv.gz")
+    df = pd.read_csv(unit_test_file, parse_dates=["time"])
     longitude = df["longitude"].iloc[0]
     latitude = df["latitude"].iloc[0]
     # predict body tides
@@ -337,7 +344,8 @@ def test_body_tides_W1990():
     Test body tides using W1990 catalog and ASTRO5 ephemerides
     """
     # read in test data from W1990 catalog and ASTRO5 ephemerides
-    df = pd.read_csv("W1990_ASTRO5.csv.gz", parse_dates=["time"])
+    unit_test_file = filepath.joinpath("W1990_ASTRO5.csv.gz")
+    df = pd.read_csv(unit_test_file, parse_dates=["time"])
     longitude = df["longitude"].iloc[0]
     latitude = df["latitude"].iloc[0]
     # predict body tides (parallel old Geosat solid earth tide computations)

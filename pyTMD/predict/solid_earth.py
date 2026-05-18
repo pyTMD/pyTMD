@@ -261,7 +261,7 @@ def body_tide(
         # and sines for (l + tau) odd
         coef[6, i] = -1.0 * np.mod(l + TAU, 2)
         # include planetary contributions
-        if kwargs["include_planets"]:
+        if kwargs["include_planets"] and include_planets:
             # coefficients including planetary terms
             coef[7, i] = line["lme"]
             coef[8, i] = line["lve"]
@@ -269,6 +269,8 @@ def body_tide(
             coef[10, i] = line["lju"]
             coef[11, i] = line["lsa"]
         # calculate angular frequency of constituents
+        # if not including planets the coefficients will be zero
+        # (and not contribute to the angular frequency)
         omega = pyTMD.constituents._frequency(
             coef[:, i], method=method, include_planets=kwargs["include_planets"]
         )
@@ -285,7 +287,7 @@ def body_tide(
             # user-defined Love numbers for all constituents
             hl = np.complex128(kwargs["h2"])
             ll = np.complex128(kwargs["l2"])
-        elif (l == 2) and (method == "IERS"):
+        elif (l == 2) and (method.lower() == "iers"):
             # IERS: including both in-phase and out-of-phase components
             # 1) using resonance formula for tides in the diurnal band
             # 2) adjusting some long-period tides for anelastic effects
@@ -338,7 +340,7 @@ def body_tide(
             params = CTE.where((CTE.degree == l) & (CTE.order == m), drop=True)
             # calculate or extract complex Love numbers for degree and order
             # (includes frequency dependence for degree 2)
-            if (l == 2) and (method == "IERS"):
+            if (l == 2) and (method.lower() == "iers"):
                 # include (complex) latitudinal dependence for degree 2
                 dep2 = 1.0 - 1.5 * np.sin(th) ** 2
                 hl = params["hl"] - (0.615e-3 + 0.122e-4j) * dep2
