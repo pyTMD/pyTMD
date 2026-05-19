@@ -35,7 +35,8 @@ from __future__ import annotations
 import pyproj
 import numpy as np
 import scipy.ndimage
-from pyTMD.spatial import datum, scale_factors
+from pyTMD.earth import datum
+from pyTMD.spatial import scale_factors
 
 
 class grid:
