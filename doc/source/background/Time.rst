@@ -22,6 +22,8 @@ Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern
 
     T = \frac{JD - 2451545.0}{36525}
 
+.. _time-standards:
+
 Standards
 ---------
 

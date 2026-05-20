@@ -89,3 +89,10 @@ To see the available tasks within the ``pyTMD`` workspace:
 .. note::
 
     ``pixi`` is under active development and may change in future releases
+
+
+Verifying Installation
+######################
+
+.. include:: Verify-Install.ipynb
+   :parser: myst_nb.docutils_

@@ -15,6 +15,10 @@ Tide Model Formats
 
 Ocean and load tide constituent files are available from different modeling groups in different formats.
 ``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
+Choosing a model is often a balance between the spatial resolution of the model, the accuracy of the model (e.g. the underlying physics and if it included data assimilation), the number of constituents included in the model, and the geographic region of interest.
+Another non-trivial consideration is if the model is openly available for download or if it requires registration and/or manual downloading.
+Post on the ``pyTMD`` `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_ if you want more information or help choosing a model.
+
 OTIS and ATLAS formatted data use binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
 They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
 ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
@@ -217,9 +221,14 @@ Interpolation
 #############
 
 For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
+
+.. important::
+    If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.
+    Verify that the coordinates are in the model domain and coordinate reference system.
+
 For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm.
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 
 .. warning::
-    The extrapolation cutoff can be set to any distance in kilometers, but should be used with caution in cases such as narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
+    The extrapolation cutoff can be set to any distance (including infinite), but should be used with caution in cases such as estuaries, narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
