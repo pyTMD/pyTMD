@@ -75,6 +75,12 @@ def response(
     kwargs.setdefault("a_axis", 6378137.0)
     kwargs.setdefault("flat", 1.0 / 298.257223563)
     kwargs.setdefault("ephemerides", "approximate")
+    # distances between the Earth and the sun/moon (meters)
+    kwargs.setdefault("AU", 1.495978707e11)
+    kwargs.setdefault("LD", 3.84399e8)
+    # mass ratios between earth and sun/moon
+    kwargs.setdefault("mass_ratio_solar", 332946.0482)
+    kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
     # check if input constituents is a string
     if isinstance(constituents, str):
         constituents = [constituents]
@@ -105,9 +111,7 @@ def response(
     )
     XYZ = np.c_[X, Y, Z]
     # geocentric latitude (radians)
-    theta = np.pi / 2.0 - np.arctan(
-        XYZ[:, 2] / np.sqrt(XYZ[:, 0] ** 2.0 + XYZ[:, 1] ** 2.0)
-    )
+    theta = np.pi / 2.0 - np.arctan(XYZ[:, 2] / np.hypot(XYZ[:, 0], XYZ[:, 1]))
     # longitude (radians)
     phi = np.arctan2(XYZ[:, 1], XYZ[:, 0])
     # solar ephemerides (convert time to Modified Julian Days)
@@ -117,14 +121,33 @@ def response(
     # spherical harmonics for degree and order
     Ylm, _ = pyTMD.math.sph_harm(2, theta, phi, m=0, phase=0.0)
     # gravitational potentials
-    US, UL = _gravitational(XYZ, SXYZ, LXYZ, l=2, **kwargs)
+    US = _gravitational(
+        XYZ,
+        SXYZ,
+        l=2,
+        mass_ratio=kwargs["mass_ratio_solar"],
+        distance=kwargs["AU"],
+        **kwargs,
+    )
+    UL = _gravitational(
+        XYZ,
+        LXYZ,
+        l=2,
+        mass_ratio=kwargs["mass_ratio_lunar"],
+        distance=kwargs["LD"],
+        **kwargs,
+    )
     # radiational function
-    RS = _radiational(XYZ, SXYZ, l=2, **kwargs)
+    RS = _radiational(
+        XYZ,
+        SXYZ,
+        l=2,
+        distance=kwargs["AU"],
+        **kwargs,
+    )
 
 
-def _gravitational(
-    XYZ: np.ndarray, SXYZ: np.ndarray, LXYZ: np.ndarray, l: int, **kwargs
-):
+def _gravitational(XYZ: np.ndarray, LSXYZ: np.ndarray, l: int, **kwargs):
     """
     Estimate gravitational tides using the response method
     :cite:p:`Munk:1966go`
@@ -133,73 +156,38 @@ def _gravitational(
     ----------
     XYZ: np.ndarray
         Earth-centered Earth-fixed coordinates of the observation points (meters)
-    SXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the sun (meters)
-    LXYZ: np.ndarray
-        Earth-centered Earth-fixed coordinates of the moon (meters)
+    LSXYZ: np.ndarray
+        Earth-centered Earth-fixed coordinates of the sun or moon (meters)
     l: int
         spherical harmonic degree
 
     Returns
     -------
-    solar_grav: np.ndarray
-        gravitatinal potential of the sun
-    lunar_grav: np.ndarray
-        gravitatinal potential of the moon
+    grav: np.ndarray
+        gravitational potential of the sun or moon
     """
     # default keyword arguments
-    kwargs.setdefault("a_axis", 6378137.0)
-    kwargs.setdefault("flat", 1.0 / 298.257223563)
-    kwargs.setdefault("omega", 7.2921151467e-5)
-    kwargs.setdefault("AU", 1.495978707e11)
-    kwargs.setdefault("LD", 3.84399e8)
-    # mass ratios between earth and sun/moon
-    kwargs.setdefault("mass_ratio_solar", 332946.0482)
-    kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
-    # average radius of the earth
-    rad_e = kwargs["a_axis"] * (1.0 - kwargs["flat"]) ** (1.0 / 3.0)
-    # solar and lunar radii from ephemerides
-    solar_radius = np.sqrt(SXYZ[:, 0] ** 2 + SXYZ[:, 1] ** 2 + SXYZ[:, 2] ** 2)
-    lunar_radius = np.sqrt(LXYZ[:, 0] ** 2 + LXYZ[:, 1] ** 2 + LXYZ[:, 2] ** 2)
-    # geocentric latitude (radians)
-    theta = np.arctan(XYZ[:, 2] / np.sqrt(XYZ[:, 0] ** 2.0 + XYZ[:, 1] ** 2.0))
-    # longitude (radians)
-    phi = np.arctan2(XYZ[:, 1], XYZ[:, 0])
-    # convert solar and lunar ephemerides from ECEF to zenith angle
-    solar_zenith = pyTMD.spatial.to_zenith(
-        SXYZ[:, 0],
-        SXYZ[:, 1],
-        SXYZ[:, 2],
-        np.degrees(phi),
-        np.degrees(theta),
-        **kwargs,
-    )
-    lunar_zenith = pyTMD.spatial.to_zenith(
-        LXYZ[:, 0],
-        LXYZ[:, 1],
-        LXYZ[:, 2],
-        np.degrees(phi),
-        np.degrees(theta),
-        **kwargs,
-    )
+    a_axis = kwargs.get("a_axis", 6378137.0)
+    # average distance between the Earth and the planetary body (meters)
+    kwargs.setdefault("distance", 1.495978707e11)
+    # mass ratio between the Earth and the planetary body
+    kwargs.setdefault("mass_ratio", 332946.0482)
+    # radius of the point on the Earth
+    radius = pyTMD.math.radius(XYZ[:, 0], XYZ[:, 1], XYZ[:, 2])
+    # lunisolar radius from ephemerides
+    lunisolar_radius = pyTMD.math.radius(LSXYZ[:, 0], LSXYZ[:, 1], LSXYZ[:, 2])
+    # cosine of angles between vectors of the point and the sun/moon
+    lunisolar_scalar = pyTMD.math.scalar_product(
+        XYZ[:, 0], XYZ[:, 1], XYZ[:, 2], LSXYZ[:, 0], LSXYZ[:, 1], LSXYZ[:, 2]
+    ) / (radius * lunisolar_radius)
     # associated Legendre functions of zenith angle for degree l
-    solar_legendre, _ = pyTMD.math.legendre(l, np.cos(np.radians(solar_zenith)))
-    lunar_legendre, _ = pyTMD.math.legendre(l, np.cos(np.radians(lunar_zenith)))
+    Pl, _ = pyTMD.math.legendre(l, lunisolar_scalar)
     # k values from Munk and Cartwright (1966)
-    solar_k = (
-        rad_e * kwargs["mass_ratio_solar"] * (rad_e / solar_radius) ** (l + 1)
-    )
-    lunar_k = (
-        rad_e * kwargs["mass_ratio_lunar"] * (rad_e / lunar_radius) ** (l + 1)
-    )
+    k = a_axis * kwargs["mass_ratio"] * (a_axis / lunisolar_radius) ** (l + 1)
     # gravitational potential of the sun and moon
-    solar_grav = (
-        solar_k * solar_legendre * (kwargs["AU"] / solar_radius) ** (l + 1)
-    )
-    lunar_grav = (
-        lunar_k * lunar_legendre * (kwargs["LD"] / lunar_radius) ** (l + 1)
-    )
-    return (solar_grav, lunar_grav)
+    grav = k * Pl * (kwargs["distance"] / lunisolar_radius) ** (l + 1)
+    # return the gravitational potential
+    return grav
 
 
 def _radiational(XYZ: np.ndarray, SXYZ: np.ndarray, l: int, **kwargs):
@@ -222,38 +210,27 @@ def _radiational(XYZ: np.ndarray, SXYZ: np.ndarray, l: int, **kwargs):
         radiation function of the sun
     """
     # default keyword arguments
-    kwargs.setdefault("a_axis", 6378137.0)
-    kwargs.setdefault("solar_constant", 1380.0)
-    kwargs.setdefault("AU", 1.495978707e11)
+    a_axis = kwargs.get("a_axis", 6378137.0)
+    S = kwargs.get("solar_constant", 1380.0)
+    AU = kwargs.get("distance", 1.495978707e11)
     # Earth equatorial radius in AU (~1/23455)
     # defined as parallax in Munk and Cartwright (1966)
-    xi = kwargs["a_axis"] / kwargs["AU"]
+    xi = a_axis / AU
     # kappa value (Munk and Cartwright, 1966)
     kappa = _kappa(l, xi)
-    # solar radius from ephemerides
-    solar_radius = np.sqrt(SXYZ[:, 0] ** 2 + SXYZ[:, 1] ** 2 + SXYZ[:, 2] ** 2)
-    # geocentric latitude (radians)
-    theta = np.arctan(XYZ[:, 2] / np.sqrt(XYZ[:, 0] ** 2.0 + XYZ[:, 1] ** 2.0))
-    # longitude (radians)
-    phi = np.arctan2(XYZ[:, 1], XYZ[:, 0])
-    # convert solar ephemerides from ECEF to zenith angle
-    solar_zenith = pyTMD.spatial.to_zenith(
-        SXYZ[:, 0],
-        SXYZ[:, 1],
-        SXYZ[:, 2],
-        np.degrees(phi),
-        np.degrees(theta),
-        **kwargs,
-    )
+    # radius of the point on the Earth
+    radius = pyTMD.math.radius(XYZ[:, 0], XYZ[:, 1], XYZ[:, 2])
+    # lunisolar radius from ephemerides
+    solar_radius = pyTMD.math.radius(SXYZ[:, 0], SXYZ[:, 1], SXYZ[:, 2])
+    # cosine of angles between vectors of the point and the sun/moon
+    solar_scalar = pyTMD.math.scalar_product(
+        XYZ[:, 0], XYZ[:, 1], XYZ[:, 2], SXYZ[:, 0], SXYZ[:, 1], SXYZ[:, 2]
+    ) / (radius * solar_radius)
+    solar_zenith = np.arccos(solar_scalar)
     # create radiation function
-    solar_rad = (
-        kwargs["solar_constant"]
-        * (kwargs["AU"] / solar_radius)
-        * kappa
-        * np.cos(np.radians(solar_zenith)) ** l
-    )
+    solar_rad = S * (AU / solar_radius) * kappa * solar_scalar**l
     # radiation is only valid during the day
-    solar_rad = np.where(solar_zenith < 0.5 * np.pi, solar_rad, 0.0)
+    solar_rad = np.where(solar_zenith < (np.pi / 2.0), solar_rad, 0.0)
     return solar_rad
 
 
