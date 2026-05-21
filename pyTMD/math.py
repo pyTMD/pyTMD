@@ -371,19 +371,22 @@ def _assoc_legendre(
     return Plm
 
 
-def _condon_shortley(m: int):
+def _condon_shortley(m: int | np.ndarray):
     r"""
     Computes the Condon-Shortley phase :math:`(-1)^m` for order :math:`m`
 
     Parameters
     ----------
-    m: int
+    m: int or np.ndarray
         Order of the Legendre polynomials
     """
     return np.power(-1.0, m)
 
 
-def _kronecker_delta(i: int, j: int):
+def _kronecker_delta(
+    i: int | np.ndarray,
+    j: int | np.ndarray,
+):
     r"""
     Computes the Kronecker delta :math:`\delta_{ij}` function
 
@@ -396,9 +399,9 @@ def _kronecker_delta(i: int, j: int):
 
     Parameters
     ----------
-    i: int
+    i: int or np.ndarray
         First index
-    j: int
+    j: int or np.ndarray
         Second index
     """
     return 1.0 * (i == j)

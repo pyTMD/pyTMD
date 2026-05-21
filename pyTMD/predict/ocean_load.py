@@ -163,6 +163,8 @@ def time_series(
     pu, pf, G = pyTMD.constituents.arguments(MJD, constituents, **kwargs)
     # calculate constituent phase angles
     if kwargs["corrections"] in ("OTIS", "ATLAS", "TMD3"):
+        # verify time is (at least) 1D
+        t = np.atleast_1d(t)
         # load parameters for constituents
         _, p, o, _, _ = pyTMD.constituents._constituent_parameters(constituents)
         # broadcast parameters to time and constituent dimensions

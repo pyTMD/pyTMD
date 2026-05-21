@@ -2012,7 +2012,7 @@ def _constituent_parameters(c: str | list, **kwargs):
         Angular frequency of constituent(s) (radians)
     alpha: float or np.ndarray
         Load Love number of tidal constituent(s)
-    species: float or np.ndarray
+    species: int or np.ndarray
         Spherical harmonic dependence of tidal constituent(s)
     """
     # default keyword arguments

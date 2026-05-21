@@ -1,9 +1,9 @@
 """
-test_constituents.py (05/2025)
+test_constituents.py (05/2026)
 Tests parsing model constituents from strings
 
 UPDATE HISTORY:
-    Updated 05/2025: refactored constituent parameters: verify match
+    Updated 05/2026: refactored constituent parameters: verify match
     Updated 02/2025: try parsing the entire Doodson table
     Written 02/2025
 """
