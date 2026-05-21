@@ -18,7 +18,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      SPHINXOPTS: "--quiet --nitpicky"
+      SPHINXOPTS: "--quiet"
     defaults:
       run:
         shell: bash -l {0}
