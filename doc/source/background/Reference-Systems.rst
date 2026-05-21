@@ -70,13 +70,13 @@ Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math
 
     \mathbf{x}_{CRS} = \mathbf{B}\ \mathbf{P}\ \mathbf{N}\ \mathbf{T}\ \mathbf{W}\ \mathbf{x}_{TRS}
 
-In ``pyTMD``, these transformations are used to convert planetary :term:`Ephemerides` from a celestial reference frame to a terrestrial reference frame.
+In ``pyTMD``, these transformations are used to convert planetary :term:`ephemerides <Ephemerides>` from a celestial reference frame to a terrestrial reference frame.
 
 Geoid Height
 ------------
 
-The height above mean sea level of a point on the Earth is defined with respect to an irregular surface known as the :term:`Geoid`.
-The :term:`Geoid` is the instantaneous shape of the Earth's gravitational field, which would coincide with global mean sea level if the oceans were at rest.
+The height above mean sea level of a point on the Earth is defined with respect to an irregular surface known as the :term:`geoid <Geoid>`.
+The :term:`geoid <Geoid>` is the instantaneous shape of the Earth's gravitational field, which would coincide with global mean sea level if the oceans were at rest.
 It is an equipotential surface, or a surface of constant potential energy :cite:p:`HofmannWellenhof:2006hy`.
 The distance between the geoid and the reference ellipsoid is called the geoid height (:math:`N`) :cite:p:`HofmannWellenhof:2006hy`.
 

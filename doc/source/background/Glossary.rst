@@ -241,5 +241,8 @@ Glossary
     Vertical Datum
         reference coordinate surface used for vertical positions
 
+    Zenith Angle
+        angle between the local vertical and the line of sight to a celestial body, such as the sun or moon
+
     Zero Tide
         model with permanent direct tidal effects removed, but indirect loading effects retained

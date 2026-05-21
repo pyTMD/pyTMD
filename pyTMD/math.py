@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 math.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (05/2026)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 05/2026: added kronecker delta function and updated docstrings
     Updated 03/2026: add radius and scalar product functions
         calculate Legendre polynomials using Hofmann-Wellenhof (2006) eq. 1.67
         split out Condon-Shortley phase and Legendre normalization functions
@@ -46,6 +47,7 @@ __all__ = [
     "legendre",
     "_assoc_legendre",
     "_condon_shortley",
+    "_kronecker_delta",
     "_legendre_norm",
     "sph_harm",
 ]
@@ -317,7 +319,7 @@ def _assoc_legendre(
     x: np.ndarray,
 ):
     r"""
-    Computes associated Legendre polynomials using equation 1.67
+    Computes associated Legendre polynomials following equation 1.67
     from :cite:t:`HofmannWellenhof:2006hy`
 
     Parameters
@@ -369,22 +371,49 @@ def _assoc_legendre(
     return Plm
 
 
-def _condon_shortley(m: int):
-    """
-    Computes the Condon-Shortley phase
+def _condon_shortley(m: int | np.ndarray):
+    r"""
+    Computes the Condon-Shortley phase :math:`(-1)^m` for order :math:`m`
 
     Parameters
     ----------
-    m: int
+    m: int or np.ndarray
         Order of the Legendre polynomials
     """
     return np.power(-1.0, m)
 
 
-def _legendre_norm(l: int, m: int):
+def _kronecker_delta(
+    i: int | np.ndarray,
+    j: int | np.ndarray,
+):
+    r"""
+    Computes the Kronecker delta :math:`\delta_{ij}` function
+
+    .. math::
+        \delta_{ij} =
+            \begin{cases}
+                1 & \text{if } i = j \\
+                0 & \text{if } i \neq j
+            \end{cases}
+
+    Parameters
+    ----------
+    i: int or np.ndarray
+        First index
+    j: int or np.ndarray
+        Second index
     """
+    return 1.0 * (i == j)
+
+
+def _legendre_norm(l: int, m: int):
+    r"""
     Calculates the Legendre Polynomial normalization from
     :cite:t:`Munk:1966go`
+
+    .. math::
+        N_l^m = \sqrt{\frac{(l - m)!}{(l + m)!}}
 
     Parameters
     ----------
@@ -408,18 +437,22 @@ def sph_harm(
     Computes the spherical harmonics for a particular degree
     and order :cite:p:`Munk:1966go,HofmannWellenhof:2006hy`
 
+    .. math::
+        Y_l^m = \sqrt{\frac{(2l + 1)(l - m)!}{4\pi(l + m)!}}
+        P_l^m(\cos\theta)e^{i(m\phi + \varphi)}
+
     Parameters
     ----------
     l: int
         Degree of the spherical harmonics
     theta: np.ndarray
-        Colatitude (radians)
+        Colatitude :math:`\theta` (radians)
     phi: np.ndarray
-        Longitude (radians)
+        Longitude :math:`\phi` (radians)
     m: int, default 0
         Order of the spherical harmonics (:math:`0` to :math:`l`)
     phase: float, default 0.0
-        Phase shift (radians)
+        Phase shift :math:`\varphi` (radians)
 
     Returns
     -------

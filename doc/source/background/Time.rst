@@ -2,7 +2,7 @@ Time
 ####
 
 ``pyTMD`` uses the ``timescale`` library to manage conversions between time scales.
-A uniform time scale expresses dates as the count of time elapsed since a reference :term:`Epoch`.
+A uniform time scale expresses dates as the count of time elapsed since a :term:`reference epoch <Epoch>`.
 The Julian Day (JD) is one such scale, and is the continuous count of days from noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
 The JD time system simplifies the calculation of the number of days between two epochs, and thus is convenient for astronomical purposes.
 The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight and 2) reducing the total number of digits for modern periods.
@@ -64,11 +64,11 @@ Sidereal time is based on the rotation of the Earth with respect to distant cele
 This timescale is slightly different from Universal Time (UT1), which is calculated based on the Earth's rotation with respect to the sun.
 As the Earth rotates 360 degrees in approximately 23 hours, 56 minutes and 4 seconds, the difference between a mean sidereal day and solar day is about 3 minutes and 56 seconds.
 Because the rotation rate of Earth is variable, both sidereal time and Universal Time are irregular with respect to atomic time :cite:p:`Urban:2013vl`.
-For every meridian, there is a local sidereal time, which is calculated with respect to an :term:`Equinox`. 
+For every meridian, there is a local sidereal time, which is calculated with respect to an :term:`equinox <Equinox>`. 
 
 Greenwich Mean Sidereal Time (GMST) is the angle between the Greenwich meridian and the average position of the :term:`Vernal Equinox`.
 GMST is calculated in ``pyTMD`` using the revised IAU 2000 precession model :cite:p:`Capitaine:2005hw,Urban:2013vl`.
-Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the Vernal Equinox due to :term:`Nutation` using the "equation of the equinoxes" (:math:`E_e`).
+Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the :term:`Vernal Equinox` due to :term:`nutation <Nutation>` using the "equation of the equinoxes" (:math:`E_e`).
 
 .. math::
     :label: 5.3

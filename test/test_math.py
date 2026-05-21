@@ -73,6 +73,30 @@ def test_aliasing():
     test = pyTMD.math.aliasing(frequency, sampling)
     assert np.all(exp == test)
 
+def test_condon_shortley():
+    """
+    Tests the calculation of the Condon-Shortley phase
+    """
+    # test values for m
+    m = np.array([-2, -1, 0, 1, 2])
+    # expected values
+    exp = np.array([1, -1, 1, -1, 1])
+    # test Condon-Shortley phase
+    test = pyTMD.math._condon_shortley(m)
+    assert np.all(exp == test)
+
+def test_kronecker_delta():
+    """
+    Tests the calculation of the Kronecker delta function
+    """
+    # test values for m
+    m = np.array([-2, -1, 0, 1, 2])
+    # expected values
+    exp = np.array([0, 0, 1, 0, 0])
+    # test Kronecker delta function
+    test = pyTMD.math._kronecker_delta(m, 0)
+    assert np.all(exp == test)
+
 @pytest.mark.parametrize("l", [1, 2, 3])
 def test_assoc_legendre(l, x=[-1.0, -0.9, -0.8]):
     """test the calculation of unnormalized Legendre polynomials
@@ -221,18 +245,19 @@ def test_legendre_hw95():
         l = int(l)
         m = int(m)
         # HW95 normalization of degree l and order m
+        # Condon-Shortley phase
+        cs = pyTMD.math._condon_shortley(m)
         # Kronecker delta
-        kron = int(m == 0)
+        kron = pyTMD.math._kronecker_delta(m, 0)
+        # normalization factors
+        norm = pyTMD.math._legendre_norm(l, m)
+        dfactor = np.sqrt(2.0 * l + 1.0)
         # unapply Condon-Shortley phase
-        norm = np.power(-1.0, m) * np.sqrt(
-            (2.0 * l + 1.0)
-            * factorial(l - m) / factorial(l + m)
-            * (2.0 - kron)
-        )
+        hw = cs * dfactor * norm * np.sqrt(2.0 - kron)
         # Legendre polynomials and their first derivative
-        Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m)
-        assert np.allclose(norm * Plm, PLM, atol=1e-05)
-        assert np.allclose(norm * dPlm, DPLM, atol=1e-05)
+        Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m, norm=hw)
+        assert np.allclose(Plm, PLM, atol=1e-05)
+        assert np.allclose(dPlm, DPLM, atol=1e-05)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():

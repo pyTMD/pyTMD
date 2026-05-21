@@ -6,11 +6,6 @@ Ocean tides are driven by gravitational undulations due to the relative position
 A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
 Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
-.. note::
-    Different measurement techniques can have different `vertical datums <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_!
-    Tide gauges measure the height of the ocean surface relative to the land upon which they are situated (*ocean tides only*).
-    Satellite altimeters measure the height of the ocean surface relative to the center of mass of the Earth system (*combination of ocean and earth tides*).
-
 Harmonic Method
 ---------------
 
@@ -25,7 +20,7 @@ The tide height (or current) at any time can be estimated through a summation of
 
     h(t) = z_0 +\sum_{k=1}^{n} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
 
-where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`Nodal Corrections`].
+where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`nodal corrections <Nodal Corrections>`].
 Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents` and :ref:`fig-sphharm`].
 
 .. plot:: ./background/spectra.py
@@ -51,7 +46,7 @@ This precession causes the maximum declination of the moon to vary between appro
 When the moon is at its maximum declination, the difference in tide potential causes the (lunar) diurnal tides to be at their largest.
 Conversely, when the moon is at its minimum declination, the difference causes the (lunar) semi-diurnal tides to be at their largest.
 The moon's perigee also varies with a period of approximately 8.8 years, which causes (smaller) modulations in tidal amplitudes :cite:p:`Dronkers:1975hm`.
-Both of these modulations need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations [see :term:`Nodal Corrections`].
+Both of these modulations need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations [see :term:`nodal corrections <Nodal Corrections>`].
 
 Equilibrium Theory
 ------------------

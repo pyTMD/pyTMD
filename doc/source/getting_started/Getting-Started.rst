@@ -10,6 +10,13 @@ Getting Started
 
     If you have previously used ``pyTMD``, check out the :ref:`transition-guide-v3` for information on changes incorporated in Version 3.
 
+Tide Corrections
+################
+
+Different measurement techniques can have different `vertical datums <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_, and require different sets of tidal corrections.
+Tide gauges measure the height of the ocean surface *relative to the land* upon which they are situated (*ocean tides only*).
+Satellite altimeters measure the height of the ocean surface *relative to the center of mass of the Earth* system (*combination of ocean and earth tides*).
+
 Tide Model Formats
 ##################
 

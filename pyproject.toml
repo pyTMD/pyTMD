@@ -166,10 +166,10 @@ cmd = "pixi workspace export conda-environment {{ flags }} > environment.yml"
 description = "Export workspace to a conda environment file" 
 
 [tool.pixi.feature.doc.tasks.docs]
-args = [ { "arg" = "flags", "default" = "" } ]
-cmd = "make html {{ flags }}"
+args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
+cmd = "make {{ builder }} {{ flags }}"
 cwd = "doc"
-description = "Create HTML documentation with sphinx"
+description = "Create documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.fetch]
 cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout=360)'"
