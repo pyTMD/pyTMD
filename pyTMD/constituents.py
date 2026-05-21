@@ -27,6 +27,8 @@ UPDATE HISTORY:
     Updated 05/2026: use numpy hypot function to calculate magnitudes
         deprecate minor table and arguments table functions
         moved body tide Love/Shida numbers to earth module
+        updated constituent parameters function to use dictionaries
+        and added support for providing values for multiple constituents
     Updated 04/2026: add constituent mapping for TICON-4 sigma1 (SGM)
     Updated 03/2026: add degree-dependent body tide love number tables
     Updated 12/2025: added m1a and m1b constituents to nodal corrections
@@ -1862,7 +1864,7 @@ def _arguments_table(**kwargs):
     kwargs.setdefault("corrections", "OTIS")
     kwargs.setdefault("climate_solar_perigee", False)
 
-    # constituents array (not all are included in tidal program)
+    # constituents array (not all are included in TMDv2.5)
     cindex = [
         "sa",
         "ssa",
@@ -1989,280 +1991,245 @@ def _minor_table(**kwargs):
     return coef
 
 
-def _constituent_parameters(c: str, **kwargs):
+def _constituent_parameters(c: str | list, **kwargs):
     """
     Loads parameters for a given tidal constituent :cite:p:`Egbert:2002ge`
 
     Parameters
     ----------
-    c: str
-        Tidal constituent ID
+    c: str or list
+        Tidal constituent ID(s)
     raise_error: bool, default False
         Raise ``ValueError`` if constituent is unsupported
 
     Returns
     -------
-    amplitude: float
-        Amplitude of equilibrium tide for tidal constituent (meters)
-    phase: float
-        Phase of tidal constituent (radians)
-    omega: float
-        Angular frequency of constituent (radians)
-    alpha: float
-        Load Love number of tidal constituent
-    species: float
-        Spherical harmonic dependence
+    amplitude: float or np.ndarray
+        Amplitude of equilibrium tide for tidal constituent(s) (meters)
+    phase: float or np.ndarray
+        Phase of tidal constituent(s) (radians)
+    omega: float or np.ndarray
+        Angular frequency of constituent(s) (radians)
+    alpha: float or np.ndarray
+        Load Love number of tidal constituent(s)
+    species: float or np.ndarray
+        Spherical harmonic dependence of tidal constituent(s)
     """
     # default keyword arguments
     kwargs.setdefault("raise_error", False)
-    # constituents array that are included in tidal program
-    cindex = [
-        "m2",
-        "s2",
-        "k1",
-        "o1",
-        "n2",
-        "p1",
-        "k2",
-        "q1",
-        "2n2",
-        "mu2",
-        "nu2",
-        "l2",
-        "t2",
-        "j1",
-        "m1",
-        "oo1",
-        "rho1",
-        "mf",
-        "mm",
-        "ssa",
-        "m4",
-        "ms4",
-        "mn4",
-        "m6",
-        "m8",
-        "mk3",
-        "s6",
-        "2sm2",
-        "2mk3",
-        "msf",
-        "sa",
-        "mt",
-        "2q1",
-    ]
-    # species type (spherical harmonic dependence of quadrupole potential)
-    _species = np.array(
-        [
-            2,
-            2,
-            1,
-            1,
-            2,
-            1,
-            2,
-            1,
-            2,
-            2,
-            2,
-            2,
-            2,
-            1,
-            1,
-            1,
-            1,
-            0,
-            0,
-            0,
-            4,
-            4,
-            4,
-            6,
-            8,
-            3,
-            6,
-            2,
-            3,
-            0,
-            0,
-            0,
-            1,
-        ]
-    )
-    # Load Love numbers
-    # alpha = correction factor for first order load tides
-    _alpha = np.array(
-        [
-            0.693,
-            0.693,
-            0.736,
-            0.695,
-            0.693,
-            0.706,
-            0.693,
-            0.695,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.695,
-            0.695,
-            0.695,
-            0.695,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-            0.693,
-        ]
-    )
+    # parameters for constituents that are included in TMDv2.5
+    # species: spherical harmonic dependence of quadrupole potential
+    _species = {
+        "m2": 2,
+        "s2": 2,
+        "k1": 1,
+        "o1": 1,
+        "n2": 2,
+        "p1": 1,
+        "k2": 2,
+        "q1": 1,
+        "2n2": 2,
+        "mu2": 2,
+        "nu2": 2,
+        "l2": 2,
+        "t2": 2,
+        "j1": 1,
+        "m1": 1,
+        "oo1": 1,
+        "rho1": 1,
+        "mf": 0,
+        "mm": 0,
+        "ssa": 0,
+        "m4": 4,
+        "ms4": 4,
+        "mn4": 4,
+        "m6": 6,
+        "m8": 8,
+        "mk3": 3,
+        "s6": 6,
+        "2sm2": 2,
+        "2mk3": 3,
+        "msf": 0,
+        "sa": 0,
+        "mt": 0,
+        "2q1": 1,
+    }
+    # alpha: Load Love numbers (correction factor for first order load tides)
+    _alpha = {
+        "m2": 0.693,
+        "s2": 0.693,
+        "k1": 0.736,
+        "o1": 0.695,
+        "n2": 0.693,
+        "p1": 0.706,
+        "k2": 0.693,
+        "q1": 0.695,
+        "2n2": 0.693,
+        "mu2": 0.693,
+        "nu2": 0.693,
+        "l2": 0.693,
+        "t2": 0.693,
+        "j1": 0.695,
+        "m1": 0.695,
+        "oo1": 0.695,
+        "rho1": 0.695,
+        "mf": 0.693,
+        "mm": 0.693,
+        "ssa": 0.693,
+        "m4": 0.693,
+        "ms4": 0.693,
+        "mn4": 0.693,
+        "m6": 0.693,
+        "m8": 0.693,
+        "mk3": 0.693,
+        "s6": 0.693,
+        "2sm2": 0.693,
+        "2mk3": 0.693,
+        "msf": 0.693,
+        "sa": 0.693,
+        "mt": 0.693,
+        "2q1": 0.693,
+    }
     # omega: angular frequency of constituent, in radians
-    _omega = np.array(
-        [
-            1.405189e-04,
-            1.454441e-04,
-            7.292117e-05,
-            6.759774e-05,
-            1.378797e-04,
-            7.252295e-05,
-            1.458423e-04,
-            6.495854e-05,
-            1.352405e-04,
-            1.355937e-04,
-            1.382329e-04,
-            1.431581e-04,
-            1.452450e-04,
-            7.556036e-05,
-            7.025945e-05,
-            7.824458e-05,
-            6.531174e-05,
-            0.053234e-04,
-            0.026392e-04,
-            0.003982e-04,
-            2.810377e-04,
-            2.859630e-04,
-            2.783984e-04,
-            4.215566e-04,
-            5.620755e-04,
-            2.134402e-04,
-            4.363323e-04,
-            1.503693e-04,
-            2.081166e-04,
-            4.925200e-06,
-            1.990970e-07,
-            7.962619e-06,
-            6.231934e-05,
-        ]
-    )
-    # Astronomical arguments (relative to t0 = 1 Jan 0:00 1992)
-    # phases for each constituent are referred to the time when the phase of
-    # the forcing for that constituent is zero on the Greenwich meridian
-    _phase = np.array(
-        [
-            1.731557546,
-            0.000000000,
-            0.173003674,
-            1.558553872,
-            6.050721243,
-            6.110181633,
-            3.487600001,
-            5.877717569,
-            4.086699633,
-            3.463115091,
-            5.427136701,
-            0.553986502,
-            0.050398470,
-            2.137025284,
-            2.436575000,
-            1.929046130,
-            5.254133027,
-            1.756042456,
-            1.964021610,
-            3.487600001,
-            3.463115091,
-            1.731557546,
-            1.499093481,
-            5.194672637,
-            6.926230184,
-            1.904561220,
-            0.000000000,
-            4.551627762,
-            3.290111417,
-            4.551627762,
-            6.232786837,
-            3.720064066,
-            3.91369596,
-        ]
-    )
-    # amplitudes of equilibrium tide in meters
-    # _amplitude = np.array([0.242334,0.112743,0.141565,0.100661,0.046397,
-    _amplitude = np.array(
-        [
-            0.2441,
-            0.112743,
-            0.141565,
-            0.100661,
-            0.046397,
-            0.046848,
-            0.030684,
-            0.019273,
-            0.006141,
-            0.007408,
-            0.008811,
-            0.006931,
-            0.006608,
-            0.007915,
-            0.007915,
-            0.004338,
-            0.003661,
-            0.042041,
-            0.022191,
-            0.019567,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.003681,
-            0.003104,
-            0.008044,
-            0.002565,
-        ]
-    )
+    _omega = {
+        "m2": 1.405189e-04,
+        "s2": 1.454441e-04,
+        "k1": 7.292117e-05,
+        "o1": 6.759774e-05,
+        "n2": 1.378797e-04,
+        "p1": 7.252295e-05,
+        "k2": 1.458423e-04,
+        "q1": 6.495854e-05,
+        "2n2": 1.352405e-04,
+        "mu2": 1.355937e-04,
+        "nu2": 1.382329e-04,
+        "l2": 1.431581e-04,
+        "t2": 1.452450e-04,
+        "j1": 7.556036e-05,
+        "m1": 7.025945e-05,
+        "oo1": 7.824458e-05,
+        "rho1": 6.531174e-05,
+        "mf": 0.053234e-04,
+        "mm": 0.026392e-04,
+        "ssa": 0.003982e-04,
+        "m4": 2.810377e-04,
+        "ms4": 2.859630e-04,
+        "mn4": 2.783984e-04,
+        "m6": 4.215566e-04,
+        "m8": 5.620755e-04,
+        "mk3": 2.134402e-04,
+        "s6": 4.363323e-04,
+        "2sm2": 1.503693e-04,
+        "2mk3": 2.081166e-04,
+        "msf": 4.925200e-06,
+        "sa": 1.990970e-07,
+        "mt": 7.962619e-06,
+        "2q1": 6.231934e-05,
+    }
+    # phase: constituent astronomical phase at t0 = 1 Jan 0:00 1992
+    _phase = {
+        "m2": 1.731557546,
+        "s2": 0.0,
+        "k1": 0.173003674,
+        "o1": 1.558553872,
+        "n2": 6.050721243,
+        "p1": 6.110181633,
+        "k2": 3.487600001,
+        "q1": 5.877717569,
+        "2n2": 4.086699633,
+        "mu2": 3.463115091,
+        "nu2": 5.427136701,
+        "l2": 0.553986502,
+        "t2": 0.050398470,
+        "j1": 2.137025284,
+        "m1": 2.436575000,
+        "oo1": 1.92904613,
+        "rho1": 5.254133027,
+        "mf": 1.756042456,
+        "mm": 1.964021610,
+        "ssa": 3.487600001,
+        "m4": 3.463115091,
+        "ms4": 1.731557546,
+        "mn4": 1.499093481,
+        "m6": 5.194672637,
+        "m8": 6.926230184,
+        "mk3": 1.90456122,
+        "s6": 0.0,
+        "2sm2": 4.551627762,
+        "2mk3": 3.290111417,
+        "msf": 4.551627762,
+        "sa": 6.232786837,
+        "mt": 3.720064066,
+        "2q1": 3.91369596,
+    }
+    # amplitude: equilibrium tide height in meters
+    _amplitude = {
+        "m2": 0.2441,
+        "s2": 0.112743,
+        "k1": 0.141565,
+        "o1": 0.100661,
+        "n2": 0.046397,
+        "p1": 0.046848,
+        "k2": 0.030684,
+        "q1": 0.019273,
+        "2n2": 0.006141,
+        "mu2": 0.007408,
+        "nu2": 0.008811,
+        "l2": 0.006931,
+        "t2": 0.006608,
+        "j1": 0.007915,
+        "m1": 0.007915,
+        "oo1": 0.004338,
+        "rho1": 0.003661,
+        "mf": 0.042041,
+        "mm": 0.022191,
+        "ssa": 0.019567,
+        "m4": 0.0,
+        "ms4": 0.0,
+        "mn4": 0.0,
+        "m6": 0.0,
+        "m8": 0.0,
+        "mk3": 0.0,
+        "s6": 0.0,
+        "2sm2": 0.0,
+        "2mk3": 0.0,
+        "msf": 0.003681,
+        "sa": 0.003104,
+        "mt": 0.008044,
+        "2q1": 0.002565,
+    }
 
-    # map between input constituent and cindex
-    j = [j for j, val in enumerate(cindex) if (val == c.lower())]
-    # set the values for the constituent
-    if j:
-        (amplitude,) = _amplitude[j]
-        (phase,) = _phase[j]
-        (omega,) = _omega[j]
-        (alpha,) = _alpha[j]
-        (species,) = _species[j]
-    elif kwargs["raise_error"]:
-        raise ValueError(f"Unsupported constituent {c}")
+    # get constituent parameters
+    if isinstance(c, str):
+        # check if constituent is in cindex
+        if c.lower() not in _amplitude and kwargs["raise_error"]:
+            raise ValueError(f"Unsupported constituent {c}")
+        # find constituent in table and get parameters
+        # set to zero values for unsupported constituents
+        amplitude = _amplitude.get(c.lower(), 0.0)
+        phase = _phase.get(c.lower(), 0.0)
+        omega = _omega.get(c.lower(), 0.0)
+        alpha = _alpha.get(c.lower(), 0.0)
+        species = _species.get(c.lower(), 0)
     else:
-        amplitude = 0.0
-        phase = 0.0
-        omega = 0.0
-        alpha = 0.0
-        species = 0
+        # if c is iterable: allocate for output arrays
+        amplitude = np.zeros_like(c, dtype=np.float64)
+        phase = np.zeros_like(c, dtype=np.float64)
+        omega = np.zeros_like(c, dtype=np.float64)
+        alpha = np.zeros_like(c, dtype=np.float64)
+        species = np.zeros_like(c, dtype=np.int32)
+        # for each constituent
+        for i, cons in enumerate(c):
+            # check if constituent is in cindex
+            if cons.lower() not in _amplitude and kwargs["raise_error"]:
+                raise ValueError(f"Unsupported constituent {cons}")
+            # find constituent in table and get parameters
+            # set to zero values for unsupported constituents
+            amplitude[i] = _amplitude.get(cons.lower(), 0.0)
+            phase[i] = _phase.get(cons.lower(), 0.0)
+            omega[i] = _omega.get(cons.lower(), 0.0)
+            alpha[i] = _alpha.get(cons.lower(), 0.0)
+            species[i] = _species.get(cons.lower(), 0)
     # return the values for the constituent
     return (amplitude, phase, omega, alpha, species)
 
@@ -2485,7 +2452,7 @@ def _parse_name(constituent: str) -> str:
     constituent: str
         Text containing the name of a tidal constituent
     """
-    # list of tidal constituents (not all are included in tidal program)
+    # list of tidal constituents to search for in the input string
     # include negative look-behind and look-ahead for complex cases
     cindex = [
         "z0",

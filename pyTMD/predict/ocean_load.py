@@ -29,6 +29,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 05/2026: verify unique frequencies in short period inference
         moved ellipsoid and love number parameters to earth module
+        updated constituent parameters function can output arrays
     Updated 03/2026: simplify structure by splitting up IERS corrections
         and adding wrapper functions where appropriate
         set the maximum degree and order for the HW1995 catalog to 6
@@ -162,14 +163,15 @@ def time_series(
     pu, pf, G = pyTMD.constituents.arguments(MJD, constituents, **kwargs)
     # calculate constituent phase angles
     if kwargs["corrections"] in ("OTIS", "ATLAS", "TMD3"):
-        theta = np.zeros_like(pu)
-        for i, c in enumerate(constituents):
-            # load parameters for constituent
-            amp, ph, omega, alpha, species = (
-                pyTMD.constituents._constituent_parameters(c)
-            )
-            # phase angle from frequency and phase-0
-            theta[:, i] = omega * t * 86400.0 + ph + pu[:, i]
+        # load parameters for constituents
+        _, p, o, _, _ = pyTMD.constituents._constituent_parameters(constituents)
+        # broadcast parameters to time and constituent dimensions
+        omega, phase0, t0 = np.broadcast_arrays(
+            o[None, :], p[None, :], t[:, None], subok=True
+        )
+        # calculate phase angle from frequency and phase-0
+        # convert angular frequency to radians per day
+        theta = 86400.0 * omega * t0 + phase0 + pu
     else:
         # phase angle from arguments
         theta = np.radians(G) + pu
@@ -698,14 +700,6 @@ def _infer_diurnal(
         dnorm[c] = ds[c] / (amajor[i] * gamma_2)
     # major constituents as a dataarray
     z = dnorm.tmd.to_dataarray()
-
-    # raise exception or log error
-    msg = "Not enough constituents to infer diurnal tides"
-    if (nz < 3) and kwargs["raise_exception"]:
-        raise Exception(msg)
-    elif nz < 3:
-        logging.debug(msg)
-        return 0.0
 
     # complete list of minor constituents
     minor_constituents = [

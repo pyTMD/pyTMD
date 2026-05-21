@@ -34,6 +34,8 @@ math
 
 .. autofunction:: pyTMD.math._condon_shortley
 
+.. autofunction:: pyTMD.math._kronecker_delta
+
 .. autofunction:: pyTMD.math._legendre_norm
 
 .. autofunction:: pyTMD.math.sph_harm

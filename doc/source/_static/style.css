@@ -13,6 +13,13 @@
     border-color: #360e24;
 }
 
+/* custom styles for flat tables */
+.wy-table-responsive table.flat, .wy-table-responsive table.flat td {
+    border: none;
+    background-color: rgba(0, 0, 0, 0.0) !important;
+    text-align: left;
+}
+
 /* fix for position of equation numbers
  * https://github.com/rtfd/sphinx_rtd_theme/issues/301
  */
