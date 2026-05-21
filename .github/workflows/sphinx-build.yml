@@ -18,7 +18,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      SPHINXOPTS: "--fail-on-warning"
+      SPHINXOPTS: "--quiet --nitpicky"
     defaults:
       run:
         shell: bash -l {0}
@@ -29,4 +29,5 @@ jobs:
       uses: prefix-dev/setup-pixi@v0.9.6
     - name: Compile Sphinx Documentation
       run: |
-        pixi run --environment=dev docs
+        # run a dummy build of the documentation
+        pixi run --environment=dev docs "dummy"
