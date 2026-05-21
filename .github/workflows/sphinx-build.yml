@@ -29,5 +29,5 @@ jobs:
       uses: prefix-dev/setup-pixi@v0.9.6
     - name: Compile Sphinx Documentation
       run: |
-        # run a dummy build of the documentation
-        pixi run --environment=dev docs "dummy"
+        # run a build of the documentation
+        pixi run --environment=dev docs
