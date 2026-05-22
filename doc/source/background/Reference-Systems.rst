@@ -50,13 +50,15 @@ Geocentric Coordinates
 ----------------------
 
 Similar to ECEF cartesian coordinates, geocentric coordinates are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
-Geocentric coordinates are used to estimate :ref:`fig-sphharm` coefficients, and for performing coordinate system rotations.
+Geocentric coordinates are used to estimate :ref:`spherical-harmonics` coefficients, and for performing coordinate system rotations.
 Geocentric longitudes are identical to geodetic longitudes, but geocentric latitudes can differ from geodetic latitudes by approximately 0.2 degrees.
 
 .. plot:: ./background/geocentric-latitude.py
     :show-source-link: False
     :caption: Difference between Geodetic and Geocentric Latitude
     :align: center
+
+.. _celestial-reference:
 
 Celestial Reference Systems
 ---------------------------
