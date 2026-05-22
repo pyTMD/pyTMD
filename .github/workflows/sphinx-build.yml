@@ -18,7 +18,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      SPHINXOPTS: "--quiet --fresh-env --warning-file=sphinx.log"
+      SPHINXOPTS: "--fail-on-warning --fresh-env --keep-going --warning-file=sphinx.log"
     defaults:
       run:
         shell: bash -l {0}

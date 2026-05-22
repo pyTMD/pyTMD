@@ -13,6 +13,7 @@
 import os
 
 # import sys
+import logging
 import datetime
 import warnings
 import subprocess
@@ -37,6 +38,24 @@ author = "Tyler C. Sutterley"
 version = metadata["version"]
 # append "v" before the version
 release = f"v{version}"
+
+
+# filter out numfig warnings when building documentation, see
+# https://github.com/sphinx-doc/sphinx/issues/10316
+# https://github.com/sphinx-doc/sphinx/pull/14446
+class numfig_filter(logging.Filter):
+    def filter(self, record):
+        warning_type = getattr(record, "type", "")
+        warning_subtype = getattr(record, "subtype", "")
+        suppress_warning = (
+            f"{warning_type}.{warning_subtype}" == "html.numfig_format"
+            or record.getMessage().startswith("numfig_format")
+        )
+        return not suppress_warning
+
+
+# add filter to logger
+logging.getLogger("sphinx").addFilter(numfig_filter())
 
 # suppress warnings in examples and documentation
 if on_rtd:
