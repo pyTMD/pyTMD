@@ -18,7 +18,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      SPHINXOPTS: "--quiet"
+      SPHINXOPTS: "--quiet --fresh-env --warning-file=sphinx.log"
     defaults:
       run:
         shell: bash -l {0}
@@ -31,3 +31,9 @@ jobs:
       run: |
         # run a build of the documentation
         pixi run --environment=dev docs
+    - name: Archive Sphinx Warnings
+      if: github.event.pull_request.head.repo.full_name == github.repository
+      uses: actions/upload-artifact@v6
+      with:
+        name: sphinx-log
+        path: doc/sphinx.log

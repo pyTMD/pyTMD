@@ -24,6 +24,7 @@ import importlib.util
 
 # -- Project information -----------------------------------------------------
 on_rtd = os.environ.get("READTHEDOCS") == "True"
+on_github = os.environ.get("GITHUB_ACTIONS") == "true"
 
 # package metadata
 metadata = importlib.metadata.metadata("pyTMD")
@@ -50,7 +51,7 @@ for module_name in ["model_table", "constituent_table"]:
     spec.loader.exec_module(module)
 
 # download a tide model for rendering documentation
-if on_rtd:
+if on_rtd or on_github:
     subprocess.run(["fetch_gsfc_got.py", "--tide", "GOT4.10"])
 
 # -- General configuration ---------------------------------------------------
