@@ -30,10 +30,10 @@ Standards
 ``timescale`` and ``pyTMD`` are both reliant on the International Earth Rotation Service (IERS) for the schedule of leap seconds and estimates of delta times.
 `Tables of leap seconds <https://github.com/pyTMD/timescale/blob/main/timescale/data/leap-seconds.list>`_ are used to convert from GPS, LORAN and TAI times.
 
-- TAI time: International Atomic Time uses SI seconds and is computed as the weighted average of several hundred atomic clocks.
-- GPS time: Atomic timing system for the Global Positioning System constellation of satellites monitored by the United States Naval Observatory (USNO). GPS time and UTC time were equal on January 6, 1980. TAI time is ahead of GPS time by 19 seconds.
-- LORAN time: Atomic timing system for the Loran-C chain transmitter sites used in terrestrial radionavigation. LORAN time and UTC time were equal on January 1, 1958. TAI time is ahead of LORAN time by 10 seconds.
-- UTC time: Coordinated Universal Time also uses SI seconds, but is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
+- **TAI:** International Atomic Time uses SI seconds and is computed as the weighted average of several hundred atomic clocks.
+- **GPS:** Atomic timing system for the Global Positioning System constellation of satellites monitored by the United States Naval Observatory (USNO). GPS time and UTC time were equal on January 6, 1980. TAI time is ahead of GPS time by 19 seconds.
+- **LORAN:** Atomic timing system for the Loran-C chain transmitter sites used in terrestrial radionavigation. LORAN time and UTC time were equal on January 1, 1958. TAI time is ahead of LORAN time by 10 seconds.
+- **UTC:** Coordinated Universal Time also uses SI seconds, but is `periodically adjusted <https://www.nist.gov/pml/time-and-frequency-division/leap-seconds-faqs>`_ to account for the difference between the definition of the second and the rotation of Earth. UTC is based off of atomic clocks and 1 day is exactly 86,400 seconds.
 
 Solar time is based on the position of the sun in the sky and is used for civil timekeeping.
 Universal Time (UT1) is effectively the mean solar time and is based on the true, irregular rotation of the Earth :cite:p:`Kaplan:2005kj`.

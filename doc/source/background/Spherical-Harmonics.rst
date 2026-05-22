@@ -1,6 +1,6 @@
 :orphan:
 
-.. _fig-sphharm:
+.. _spherical-harmonics:
 
 Spherical Harmonics
 ===================
@@ -29,8 +29,9 @@ The associated Legendre polynomials of degree :math:`l` and order :math:`m` are 
 
 .. math::
 
-   P_l^m(x) = 2^{-l}(1-x^2)^{m/2}\sum_{k=0}^{r}(-1)^k\frac{(2l-2k)!}{k!(l-k)!(l-m-2k)!}\, x^{l-m-2k}
+   P_l^m(x) = 2^{-l}(1-x^2)^{m/2}\sum_{k=0}^{n}(-1)^k\frac{(2l-2k)!}{k!(l-k)!(l-m-2k)!}\, x^{l-m-2k}
 
+where :math:`n` is the largest integer less than or equal to :math:`(l-m)/2`.
 The first few (unnormalized) Legendre polynomials are:
 
 .. list-table::

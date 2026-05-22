@@ -100,9 +100,37 @@ And conversely:
 Nutation
 --------
 
-:term:`Nutation` is the periodic oscillation of the Earth's rotation axis around its mean position.
-Nutation is often split into two components, the nutation in longitude and the nutation in obliquity.
 The angle between the equator and the orbital plane of Earth around the Sun (the :term:`ecliptic <Ecliptic>`) defines the inclination of the Earth's rotation axis (:term:`obliquity <Obliquity>` of the ecliptic).
+:term:`Nutations <Nutation>` are the periodic oscillations of the Earth's rotation axis around its mean position, which arise from the time-varying torques exerted on Earth's equatorial bulge :cite:p:`Dehant:2015vb,Woolard:1953wp`.
+These largely short-period wobbles have durations ranging from subdaily to multi-annual, which are superimposed on the much slower :term:`precession <Precession>` of the rotation axis :cite:p:`Dehant:2015vb`.
+The Earth's nutation is conventionally resolved into two components measured with respect to the :term:`ecliptic <Ecliptic>` :cite:p:`Dehant:2015vb,Meeus:1991vh`:
+
+- **Nutation in longitude** (:math:`\Delta\psi`)\ **:** shift in the position of the true :term:`vernal equinox <Vernal Equinox>` along the ecliptic
+- **Nutation in obliquity** (:math:`\Delta\varepsilon`)\ **:** variation in the tilt of Earth's equator with respect to the ecliptic
+
+These two quantities help define the orientation of the true equator and equinox of date relative to the mean equator and :term:`equinox <Equinox>`.
+For instance, the instantaneous (true) obliquity of the ecliptic is:
+
+.. math::
+    :label: 6.4
+    :name: eq:6.4
+
+    \varepsilon = \bar\varepsilon + \Delta\varepsilon
+
+where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
+These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from celestial to terrestrial reference frames (see :ref:`celestial-reference` and :ref:`Equation 4.5 <eq:4.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
+
+Equation of the Equinoxes
+-------------------------
+
+The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes" :math:`\alpha_e`, which is calculated using the :term:`nutation <Nutation>` terms along with small higher-order complementary terms (:math:`e_{comp}`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`:
+
+.. math::
+   :label: eq-eqeq
+
+   \alpha_e = \Delta\psi \cos\varepsilon + e_{comp}
+
+:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a celestial reference frame to an Earth-centered Earth-fixed (ECEF) reference frame (see :ref:`celestial-reference` and :ref:`ephemerides`) :cite:p:`Petit:2010tp`.
 
 .. _ephemerides:
 
@@ -121,8 +149,8 @@ Zenith Angles
 The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
 
 .. math::
-    :label: 6.4
-    :name: eq:6.4
+    :label: 6.5
+    :name: eq:6.5
 
     \cos\psi = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos h
 
