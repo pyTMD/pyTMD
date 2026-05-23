@@ -49,6 +49,8 @@ The first few (unnormalized) Legendre polynomials are:
       - :math:`P_2^1(x) = 3x\sqrt{1-x^2}`
       - :math:`P_2^2(x) = 3(1-x^2)`
 
+.. _tide-generating-potential:
+
 Tide-Generating Potential
 --------------------------
 

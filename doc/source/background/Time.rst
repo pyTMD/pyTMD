@@ -37,7 +37,7 @@ Standards
 
 Solar time is based on the position of the sun in the sky and is used for civil timekeeping.
 Universal Time (UT1) is effectively the mean solar time and is based on the true, irregular rotation of the Earth :cite:p:`Kaplan:2005kj`.
-The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly from very long baseline interferometry (VLBI).
+The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly from Very Long Baseline Interferometry (VLBI).
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
 
 Dynamical Time
@@ -55,6 +55,8 @@ Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to conv
     :show-source-link: False
     :caption: Delta times between Terrestrial Time (TT) and Universal Time (UT1)
     :align: center
+
+.. _sidereal-time:
 
 Sidereal Time
 -------------
