@@ -17,6 +17,8 @@ Different measurement techniques can have different `vertical datums <https://ww
 Tide gauges measure the height of the ocean surface *relative to the land* upon which they are situated (*ocean tides only*).
 Satellite altimeters measure the height of the ocean surface *relative to the center of mass of the Earth* system (*combination of ocean and earth tides*).
 
+.. include:: Tide-Corrections.rst
+
 Tide Model Formats
 ##################
 

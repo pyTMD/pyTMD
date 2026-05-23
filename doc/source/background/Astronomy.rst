@@ -118,28 +118,29 @@ For instance, the instantaneous (true) obliquity of the ecliptic is:
     \varepsilon = \bar\varepsilon + \Delta\varepsilon
 
 where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
-These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from celestial to terrestrial reference frames (see :ref:`celestial-reference` and :ref:`Equation 4.5 <eq:4.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
+These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames (see :ref:`Equation 4.5 <eq:4.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
 
-Equation of the Equinoxes
--------------------------
-
-The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes" :math:`\alpha_e`, which is calculated using the :term:`nutation <Nutation>` terms along with small higher-order complementary terms (:math:`e_{comp}`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`:
-
-.. math::
-   :label: eq-eqeq
-
-   \alpha_e = \Delta\psi \cos\varepsilon + e_{comp}
-
-:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a celestial reference frame to an Earth-centered Earth-fixed (ECEF) reference frame (see :ref:`celestial-reference` and :ref:`ephemerides`) :cite:p:`Petit:2010tp`.
+The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms (see :ref:`sidereal-time`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`:
+:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame (see :ref:`ephemerides`) :cite:p:`Petit:2010tp`.
 
 .. _ephemerides:
 
 Ephemerides
 -----------
 
-``pyTMD`` can calculate the positions of the sun and moon relative to the Earth using approximate relations (see :func:`pyTMD.astro.solar_approximate` and :func:`pyTMD.astro.lunar_approximate`), or use the ``jplephem`` package to read `JPL Ephemerides <https://ssd.jpl.nasa.gov/planets/orbits.html>`_ (see :func:`pyTMD.astro.solar_ephemerides` and :func:`pyTMD.astro.lunar_ephemerides`).
-Ephemerides are tables of values that give the positions of astronomical objects at a given time.
+The geocentric positions of the Sun and Moon determines the magnitude of the major tide-generating potentials at locations on the Earth's surface (see :ref:`tide-generating-potential`).
+Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
+``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
+The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
+They are computed from a comprehensive set of observations including spacecraft radio range data, lunar laser range data, and Very Long Baseline Interferometry (VLBI) measurements :cite:p:`Folkner:2014un,Park:2021fa`.
+``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :func:`pyTMD.astro.solar_ephemerides` and :func:`pyTMD.astro.lunar_ephemerides`.
+The data is provided in the :ref:`celestial reference frame <celestial-reference>`, which ``pyTMD`` transforms to get locations in reference to the Earth.
 
+``pyTMD`` can also use analytical approximations to compute the solar and lunar positions using :func:`pyTMD.astro.solar_approximate` and :func:`pyTMD.astro.lunar_approximate`.
+These express the solar and lunar coordinates as a truncated trigonometric or polynomial series :cite:p:`Meeus:1991vh`.
+They are less accurate than using ephemerides, but are faster to compute and do not require downloading the kernel files.
+
+.. include:: Approximate-Methods.rst
 
 .. _zenith-angle:
 
