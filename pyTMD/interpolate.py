@@ -279,9 +279,6 @@ def extrapolate(
     # verify number of neighbors is greater than 0
     if k < 1:
         raise ValueError(f"Invalid number of neighbors: {k}")
-    # set geographic flag if using old EPSG projection keyword
-    if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
-        is_geographic = True
     # calculate meshgrid of model coordinates
     gridx, gridy = np.meshgrid(xs, ys)
     # find valid values

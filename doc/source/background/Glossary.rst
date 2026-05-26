@@ -127,7 +127,7 @@ Glossary
         harmonic elements of the tide-producing force corresponding with a periodic change of relative position of the Earth, Sun and Moon
 
     Harmonic Inference
-        method exploiting the smooth variation of tidal :term:`admittance <Admittance>` with frequency in order to estimate the amplitude and phase of a minor tidal constituent from the amplitude(s) and phase(s) of major tidal constituent(s) 
+        method exploiting the smooth variation of tidal :term:`admittance <Admittance>` with frequency in order to estimate the amplitude and phase of a minor tidal constituent from the amplitude(s) and phase(s) of major tidal constituent(s)
 
     Harmonic Prediction
         method of estimating tidal elevations and currents through a combination of the :term:`harmonic constituents <Harmonic Constituents>`
