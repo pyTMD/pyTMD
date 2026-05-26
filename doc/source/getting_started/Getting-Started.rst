@@ -235,9 +235,15 @@ For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``neare
     If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.
     Verify that the coordinates are in the model domain and coordinate reference system.
 
-For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm.
+For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm (see :ref:`extrapolate-demo`).
 The default maximum extrapolation distance is 10 kilometers.
 This default distance may not be a large enough extrapolation for some applications and models.
 
 .. warning::
     The extrapolation cutoff can be set to any distance (including infinite), but should be used with caution in cases such as estuaries, narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   ../notebooks/Extrapolation.ipynb
