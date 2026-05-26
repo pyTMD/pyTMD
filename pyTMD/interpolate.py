@@ -16,6 +16,8 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 05/2026: added parameters to allow for extrapolation with
         inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
+        added worker parameter to allow for parallel KD-tree queries
+        added support for geographic coordinates in inpainting
     Updated 04/2026: add 1st and 2nd order barycentric interpolation function
         add winding number to check elements that may cross a meridian line
     Updated 03/2026: break up extrapolation into separate functions to allow
@@ -125,6 +127,7 @@ def inpaint(
     s0: int = 3,
     power: int = 2,
     epsilon: float = 2.0,
+    is_geographic: bool = False,
     **kwargs,
 ):
     """
@@ -148,12 +151,18 @@ def inpaint(
         Power for lambda function
     epsilon: float, default 2.0
         Relaxation factor
+    is_geographic: bool, default False
+        Input grid is in geographic coordinates
+    workers: int, default 1
+        Number of parallel workers for KD-tree query
 
     Returns
     -------
     z0: np.ndarray
         Data with inpainted (filled) values
     """
+    # set number of parallel workers for KD-tree query
+    workers = kwargs.get("workers", 1)
     # find masked values
     if isinstance(zs, np.ma.MaskedArray):
         W = np.logical_not(zs.mask)
@@ -165,15 +174,22 @@ def inpaint(
 
     # dimensions of input grid
     ny, nx = np.shape(zs)
+    # mask of invalid values
+    masked = np.logical_not(W)
 
+    # convert to Cartesian coordinates for distance calculations
+    xgrid, ygrid = np.meshgrid(xs, ys)
+    p_in = _to_cartesian(xgrid[W], ygrid[W], is_geographic=is_geographic)
+    p_out = _to_cartesian(
+        xgrid[masked], ygrid[masked], is_geographic=is_geographic
+    )
     # calculate initial values using nearest neighbors
     # computation of distance Matrix
     # use scipy spatial KDTree routines
-    xgrid, ygrid = np.meshgrid(xs, ys)
-    tree = scipy.spatial.KDTree(np.c_[xgrid[W], ygrid[W]])
+    tree = _build_tree(p_in)
     # find nearest neighbors
-    masked = np.logical_not(W)
-    _, ii = tree.query(np.c_[xgrid[masked], ygrid[masked]], k=1)
+    _, ii = tree.query(p_out, k=1, workers=workers)
+
     # copy valid original values
     z0 = np.zeros((ny, nx), dtype=zs.dtype)
     z0[W] = np.copy(zs[W])
@@ -260,9 +276,9 @@ def extrapolate(
     data: xr.DataArray
         Interpolated data
     """
-    # set geographic flag if using old EPSG projection keyword
-    if hasattr(kwargs, "EPSG") and (kwargs["EPSG"] == "4326"):
-        is_geographic = True
+    # verify number of neighbors is greater than 0
+    if k < 1:
+        raise ValueError(f"Invalid number of neighbors: {k}")
     # calculate meshgrid of model coordinates
     gridx, gridy = np.meshgrid(xs, ys)
     # find valid values

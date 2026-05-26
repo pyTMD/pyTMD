@@ -3,6 +3,9 @@ Glossary
 
 .. glossary::
 
+    Admittance
+        ratio of the observed tidal response to the equilibrium tide at a given frequency
+
     Aliasing
         spurious tidal frequency appearing in an analysis due to inadequate temporal sampling
 
@@ -54,11 +57,24 @@ Glossary
     Descending Node
         point of an orbit where a celestial body intersects the ecliptic, and the latitude coordinate is decreasing
 
+    Delaunay Arguments
+        five fundamental orbital elements used as the basis variables in nutation calculations
+        
+        see :ref:`Astronomical Arguments <astronomical-arguments>`, :term:`Doodson Arguments`, :term:`Nutation`
+
     Diurnal Tide
         tidal oscillations with a near-daily period
 
+    Doodson Arguments
+        six fundamental astronomical arguments used to characterise tidal constituents
+        
+        see :ref:`Astronomical Arguments <astronomical-arguments>`, :term:`Delaunay Arguments`, :term:`Harmonic Constituents`
+
+    Doodson Number
+        compact notation for encoding a tidal constituent's linear combination of :term:`Doodson Arguments`
+
     Earth Tide
-        tidal variations of the surface of the solid Earth, frequently split into the :term:`Body Tide` and the :term:`Load Tide`
+        tidal variations of the surface of the solid Earth, frequently split into the :term:`body <Body Tide>` and :term:`load tides <Load Tide>`
 
     Ecliptic
         mean plane of the orbit of the Earth around the sun
@@ -93,7 +109,7 @@ Glossary
         number of cycles in a unit time
 
     Geocentric Tide
-        tidal variation relative to the Earth's center of figure, which is equal to the sum of the :term:`Ocean Tide` and :term:`Earth Tide`
+        tidal variation relative to the Earth's center of figure, which is equal to the sum of the :term:`ocean <Ocean Tide>` and :term:`Earth tides <Earth Tide>`
 
     Geopotential
         the Earth's gravitational potential
@@ -102,16 +118,19 @@ Glossary
         equipotential surface coinciding with the ocean surface in the absence of astronomical or dynamical effects
 
     Harmonic Analysis
-        mathematical process by which the tides are separated into :term:`Harmonic Constituents`
+        mathematical process by which the tides are separated into :term:`harmonic constituents <Harmonic Constituents>`
 
     Harmonic Constants
-        amplitude and phase of the :term:`Harmonic Constituents`
+        amplitude and phase of the :term:`harmonic constituents <Harmonic Constituents>`
 
     Harmonic Constituents
         harmonic elements of the tide-producing force corresponding with a periodic change of relative position of the Earth, Sun and Moon
 
+    Harmonic Inference
+        method exploiting the smooth variation of tidal :term:`admittance <Admittance>` with frequency in order to estimate the amplitude and phase of a minor tidal constituent from the amplitude(s) and phase(s) of major tidal constituent(s)
+
     Harmonic Prediction
-        method of estimating tidal elevations and currents through a combination of the :term:`Harmonic Constituents`
+        method of estimating tidal elevations and currents through a combination of the :term:`harmonic constituents <Harmonic Constituents>`
 
     High Water Height
         height of the maximum vertical elevation of the tide relative to a fixed datum
@@ -189,7 +208,7 @@ Glossary
         tidal constituents or components induced by the absorption and re-emission of solar radiation
 
     Range
-        height difference between the :term:`High Water Height` and the :term:`Low Water Height`
+        height difference between the :term:`high <High Water Height>` and :term:`low water heights <Low Water Height>`
 
     Residuals
         differences between the observed sea level and the tidal predictions for a given location
@@ -212,7 +231,7 @@ Glossary
         see :term:`Semi-diurnal Tide`, :term:`Diurnal Tide`, and :term:`Long Period Tide`
 
     Spring Tide
-        tides of the greatest amplitude within a 15-day cycle, sometimes called a :term:`King Tide`
+        tides of the greatest amplitude within a 15-day cycle, sometimes called a :term:`king tide <King Tide>`
 
         see :term:`Neap Tide`
 
@@ -234,7 +253,7 @@ Glossary
         model with direct and indirect permanent tidal effects removed
 
     Vernal Equinox
-        intersection of the Earth's equatorial plane and the Earth's :term:`Ecliptic`
+        intersection of the Earth's equatorial plane and the Earth's :term:`ecliptic <Ecliptic>`
 
         see :term:`Equinox` 
 
@@ -246,3 +265,5 @@ Glossary
 
     Zero Tide
         model with permanent direct tidal effects removed, but indirect loading effects retained
+
+.. |degree|      unicode:: U+00B0 .. DEGREE SIGN

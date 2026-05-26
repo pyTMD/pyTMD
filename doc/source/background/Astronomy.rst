@@ -1,6 +1,8 @@
 Astronomy
 #########
 
+.. _astronomical-arguments:
+
 Arguments
 ---------
 
