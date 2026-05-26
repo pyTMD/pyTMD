@@ -222,7 +222,12 @@ def test_read_ocean_pole():
     U_valid['N'] = 0.012697 + 0.024930j
     U_valid['E'] = 0.000868 + 0.010389j
     # read ocean pole tide map from Desai (2002)
-    Umap = pyTMD.io.IERS.open_dataset()
+    try:
+        Umap = pyTMD.io.IERS.open_dataset()
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     # extract coefficients from IERS pole tide map
     U = Umap.interp(x=header['longitude'], y=header['latitude'])
     # compare with functional values
@@ -291,8 +296,14 @@ def test_ocean_pole_tide():
     xmean = np.array([header['xmean(t0)'], header['xmeandot']])
     ymean = np.array([header['ymean(t0)'], header['ymeandot']])
 
+    # read ocean pole tide map from Desai (2002)
+    try:
+        Umap = pyTMD.io.IERS.open_dataset()
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
+    except pyTMD.utilities.urllib2.HTTPError as exc:
+        pytest.xfail(exc.reason)
     # interpolate ocean pole tide map to coordinates
-    Umap = pyTMD.io.IERS.open_dataset()
     U = Umap.interp(x=header['longitude'], y=header['latitude'])
 
     # create timescale object from MJD
