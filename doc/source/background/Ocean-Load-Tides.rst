@@ -1,3 +1,5 @@
+.. _ocean-load-tides:
+
 Ocean and Load Tides
 ####################
 
@@ -47,6 +49,8 @@ When the moon is at its maximum declination, the difference in tide potential ca
 Conversely, when the moon is at its minimum declination, the difference causes the (lunar) semi-diurnal tides to be at their largest.
 The moon's perigee also varies with a period of approximately 8.8 years, which causes (smaller) modulations in tidal amplitudes :cite:p:`Dronkers:1975hm`.
 Both of these modulations need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations [see :term:`nodal corrections <Nodal Corrections>`].
+
+.. _equilibrium-theory:
 
 Equilibrium Theory
 ------------------

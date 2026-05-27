@@ -1,3 +1,5 @@
+.. _astronomy:
+
 Astronomy
 #########
 
@@ -41,8 +43,8 @@ The rates of change of these arguments are the fundamental frequencies of the as
 The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
 
 .. math::
-    :label: 6.1
-    :name: eq:6.1
+    :label: 7.1
+    :name: eq:7.1
 
     \tau = t - S + H
 
@@ -77,8 +79,8 @@ When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay argu
 From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:
 
 .. math::
-    :label: 6.2
-    :name: eq:6.2
+    :label: 7.2
+    :name: eq:7.2
 
     \gamma &= \tau + S \\
     l &= S - P \\
@@ -90,8 +92,8 @@ From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arg
 And conversely:
 
 .. math::
-    :label: 6.3
-    :name: eq:6.3
+    :label: 7.3
+    :name: eq:7.3
 
     S &= F + \Omega \\
     H &= F + \Omega - D \\
@@ -114,13 +116,13 @@ These two quantities help define the orientation of the true equator and equinox
 For instance, the instantaneous (true) obliquity of the ecliptic is:
 
 .. math::
-    :label: 6.4
-    :name: eq:6.4
+    :label: 7.4
+    :name: eq:7.4
 
     \varepsilon = \bar\varepsilon + \Delta\varepsilon
 
 where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
-These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames (see :ref:`Equation 4.5 <eq:4.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
+These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames (see :ref:`Equation 5.5 <eq:5.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
 
 The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms (see :ref:`sidereal-time`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
 :func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame (see :ref:`ephemerides`) :cite:p:`Petit:2010tp`.
@@ -152,8 +154,8 @@ Zenith Angles
 The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
 
 .. math::
-    :label: 6.5
-    :name: eq:6.5
+    :label: 7.5
+    :name: eq:7.5
 
     \cos\psi = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos h
 
