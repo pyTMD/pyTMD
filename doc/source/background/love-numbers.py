@@ -14,7 +14,7 @@ h0, k0, l0 = np.array([6.03e-1, 2.98e-1, 8.42e-2])
 # initialize arrays
 love = {}
 for i, key in enumerate(["h", "k", "l"]):
-    love[key] = np.zeros((N))
+    love[key] = np.zeros(N)
 # calculate Love numbers
 for i, omega in enumerate(omegas):
     love["h"][i], love["k"][i], love["l"][i] = pyTMD.earth.love_numbers(

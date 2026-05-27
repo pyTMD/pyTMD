@@ -89,7 +89,8 @@ import pathlib
 import argparse
 import builtins
 import posixpath
-import calendar, time
+import calendar
+import time
 import ftplib
 import pyTMD.utilities
 

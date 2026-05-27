@@ -85,7 +85,8 @@ import posixpath
 import subprocess
 import lxml.etree
 import platformdirs
-import calendar, time
+import calendar
+import time
 
 if sys.version_info[0] == 2:
     from urllib import quote_plus
@@ -136,7 +137,7 @@ __all__ = [
 ]
 
 
-class reify(object):
+class reify:
     """Class decorator that puts the result of the method it
     decorates into the instance"""
 

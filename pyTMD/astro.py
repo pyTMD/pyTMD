@@ -1429,9 +1429,9 @@ def lunar_approximate(
         N = np.radians(polynomial_sum(lunar_node, ts.T))
         F = s - N
         # mean anomaly of the sun (radians)
-        M = np.radians((357.5256 + 35999.049 * ts.T))
+        M = np.radians(357.5256 + 35999.049 * ts.T)
         # mean anomaly of the moon (radians)
-        l = np.radians((134.96292 + 477198.86753 * ts.T))
+        l = np.radians(134.96292 + 477198.86753 * ts.T)
         # series expansion for mean anomaly in moon radius (meters)
         r_moon = 1e3 * (
             385000.0
