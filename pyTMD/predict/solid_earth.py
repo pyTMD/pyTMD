@@ -217,6 +217,8 @@ def body_tide(
     # longitudes and colatitudes in radians
     phi = np.radians(ds.x)
     th = np.radians(90.0 - ds.y)
+    # latitude dependence of Love/Shida numbers for degree 2
+    dep2 = 1.0 - 1.5 * np.sin(th) ** 2
 
     # create dictionary of tide potential parameters for each constituent
     CTE = dict(dims=("time", "constituent"), coords={}, data_vars={})
@@ -342,12 +344,10 @@ def body_tide(
             # (includes frequency dependence for degree 2)
             if (l == 2) and (method.lower() == "iers"):
                 # include (complex) latitudinal dependence for degree 2
-                dep2 = 1.0 - 1.5 * np.sin(th) ** 2
                 hl = params["hl"] - (0.615e-3 + 0.122e-4j) * dep2
                 ll = params["ll"] + (0.19334e-3 - 0.3819e-5j) * dep2
             elif l == 2 and not user_degree_2:
                 # include (nominal) latitudinal dependence for degree 2
-                dep2 = 1.0 - 1.5 * np.sin(th) ** 2
                 hl = params["hl"] - 0.0006 * dep2
                 ll = params["ll"] + 0.0002 * dep2
             else:

@@ -1,3 +1,5 @@
+.. _pole-tides:
+
 Pole Tides
 ##########
 
@@ -15,8 +17,8 @@ For ocean pole tides, :py:func:`pyTMD.predict.ocean_pole_tide` uses the equilibr
 The currently accepted formalism for estimating the reference position of the Earth's figure axis at a given date is the `IERS 2018 secular pole model <https://iers-conventions.obspm.fr/chapter7.php>`_:
 
 .. math::
-    :label: 3.1
-    :name: eq:3.1
+    :label: 4.1
+    :name: eq:4.1
 
     \bar{x}_s(t) &= 0.055 + 0.001677(t - 2000.0)\\
     \bar{y}_s(t) &= 0.3205 + 0.00346(t - 2000.0)
@@ -26,8 +28,8 @@ The time-dependent offsets from the reference rotation pole position, also known
 
 
 .. math::
-    :label: 3.2
-    :name: eq:3.2
+    :label: 4.2
+    :name: eq:4.2
 
     m_1(t) &= x_p(t) - \bar{x}_s(t)\\
     m_2(t) &= -(y_p(t) - \bar{y}_s(t))
