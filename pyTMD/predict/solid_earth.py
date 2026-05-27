@@ -152,7 +152,7 @@ def body_tide(
     # validate method and output tide system
     assert method.lower() in ("cartwright", "meeus", "astro5", "iers")
     assert tide_system.lower() in ("tide_free", "mean_tide")
-    assert catalog in _tide_potential_table.keys()
+    assert catalog in _tide_potential_table
 
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide

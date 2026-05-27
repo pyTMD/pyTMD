@@ -48,7 +48,7 @@ def main():
 
         # restructure provider into new format
         tree = {}
-        for key in d.keys():
+        for key in d:
             for model, params in d[key].items():
                 if model not in tree:
                     tree[model] = params

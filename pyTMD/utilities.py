@@ -137,7 +137,7 @@ __all__ = [
 ]
 
 
-class reify(object):
+class reify:
     """Class decorator that puts the result of the method it
     decorates into the instance"""
 

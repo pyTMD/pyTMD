@@ -468,8 +468,8 @@ class GOTDataset:
             ds["phase"] = self._ds[v].tmd.phase
             ds["amplitude"].attrs["units"] = self._ds[v].attrs.get("units", "")
             ds["phase"].attrs["units"] = "degrees"
-            ds["amplitude"].attrs["long_name"] = f"Tide amplitude"
-            ds["phase"].attrs["long_name"] = f"Greenwich tide phase lag"
+            ds["amplitude"].attrs["long_name"] = "Tide amplitude"
+            ds["phase"].attrs["long_name"] = "Greenwich tide phase lag"
             # rename dimensions
             ds = ds.swap_dims(dict(x="lon", y="lat"))
             # remap coordinates to GOT convention

@@ -192,7 +192,7 @@ def arguments(
     # variable for multiples of 90 degrees (Ray technical note 2017)
     # full expansion of Equilibrium Tide includes some negative cosine
     # terms and some sine terms (Pugh and Woodworth, 2014)
-    k = 90.0 + np.zeros((nt))
+    k = 90.0 + np.zeros(nt)
 
     # determine equilibrium arguments
     fargs = np.c_[tau, s, h, p, n, pp, k]
@@ -259,7 +259,7 @@ def minor_arguments(
     # convert from hours solar time into mean lunar time in degrees
     tau = 15.0 * hour - s + h
     # variable for multiples of 90 degrees (Ray technical note 2017)
-    k = 90.0 + np.zeros((nt))
+    k = 90.0 + np.zeros(nt)
 
     # minor constituents to infer from major constituents
     minor = [
@@ -2275,7 +2275,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     # convert from hours solar time into mean lunar time in degrees
     tau = 15.0 * hour - s + h
     # variable for multiples of 90 degrees (Ray technical note 2017)
-    k = 90.0 + np.zeros((nt))
+    k = 90.0 + np.zeros(nt)
 
     # determine equilibrium arguments
     if kwargs["include_planets"]:
