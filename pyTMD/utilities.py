@@ -209,7 +209,7 @@ def get_github_url(
     branch: str = "main",
 ):
     """
-    Get a ``URL`` for the raw content of an item a GitHub repository
+    Get the ``URL`` of an item's raw content from a GitHub repository
 
     Parameters
     ----------
@@ -587,7 +587,7 @@ def compressuser(filename: str | pathlib.Path):
     filename = pathlib.Path(filename).expanduser().absolute()
     try:
         relative_to = filename.relative_to(pathlib.Path().home())
-    except (ValueError, AttributeError) as exc:
+    except (ValueError, AttributeError):
         return filename
     else:
         return pathlib.Path("~").joinpath(relative_to)
