@@ -15,7 +15,7 @@ Love and Shida Numbers
 ----------------------
 
 The elastic response of the Earth to the tidal potential is calculated using :term:`Love/Shida numbers <Love and Shida Numbers>` [:ref:`Equation 2.1 <eq:2.1>`].
-Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Munk:1960uk`.
+Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Lambeck:1980ic,Munk:1960uk`.
 
 .. math::
     :label: 2.1
@@ -34,7 +34,7 @@ Combinations of Love/Shida numbers can be used to calculate additional quantitie
     \gamma_2 = 1 + k_2 - h_2
 
 For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency as the tidal periods are longer than the Earth's free oscillation periods :cite:p:`Baker:1984tq,Wahr:1979vx,Wahr:1981ea`.
-However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some dependence on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Merriam:1992kg,Ray:2017jx`.
+However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some dependence on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Lambeck:1980ic,Ray:2017jx`.
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
 
 .. plot:: ./background/love-numbers.py

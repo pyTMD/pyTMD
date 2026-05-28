@@ -241,9 +241,3 @@ This default distance may not be a large enough extrapolation for some applicati
 
 .. warning::
     The extrapolation cutoff can be set to any distance (including infinite), but should be used with caution in cases such as estuaries, narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   ../notebooks/Extrapolation.ipynb
