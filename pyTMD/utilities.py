@@ -202,29 +202,41 @@ def get_cache_path(
     return pathlib.Path(filepath)
 
 
-def get_github_url(relpath: list | str, branch: str = "main"):
+def get_github_url(
+    relpath: list | str,
+    username: str = "pyTMD",
+    repository: str = "pyTMD",
+    branch: str = "main",
+):
     """
-    Get a URL for the raw content of an item in the project repository
+    Get a ``URL`` for the raw content of an item a GitHub repository
 
     Parameters
     ----------
     relpath: list or str
         Relative path
+    username: str, default 'pyTMD'
+        GitHub username for project repository
+    repository: str, default 'pyTMD'
+        GitHub project name
+    branch: str, default 'main'
+        GitHub branch name
+
+    Returns
+    -------
+    raw_url: str
+        item ``URL``
     """
     # components of the URL for raw content from the project repository
-    HOST = [
-        "https://raw.githubusercontent.com",
-        "pyTMD",
-        "pyTMD",
-        "refs",
-        "heads",
-        branch,
-    ]
+    HOST = URL("https://raw.githubusercontent.com")
+    HOST = HOST.joinpath(username, repository, "refs", "heads", branch)
     # check if relative path is a string and convert to list
     if isinstance(relpath, str):
         relpath = [relpath]
     # append the relative path components to the URL
-    return HOST + relpath
+    raw_url = HOST.joinpath(*relpath).urlname
+    # return the URL for the raw content
+    return raw_url
 
 
 def import_dependency(
