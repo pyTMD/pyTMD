@@ -2,7 +2,9 @@
 Background
 ==========
 
-Background information on the theoretical concepts used in ``pyTMD``
+Background information on the theoretical concepts used in ``pyTMD``. 
+*It is not necessary to read through this information* in order to use this library, but it may be helpful for understanding the outputs and assumptions.
+The information is organized into separate sections, which can be read in any order.
 
 .. grid:: 2 2 4 4
     :padding: 0
@@ -58,6 +60,9 @@ Background information on the theoretical concepts used in ``pyTMD``
       :link: ./Glossary.html
 
       :material-outlined:`format_list_bulleted;5em`
+
+.. tip::
+    For a more in-depth understanding of the underlying concepts: refer to the :ref:`original literature <bibliography>` and the :ref:`project resources <resources>`.
 
 .. toctree::
     :hidden:

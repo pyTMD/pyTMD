@@ -19,6 +19,8 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.get_cache_path
 
+.. autofunction:: pyTMD.utilities.get_github_url
+
 .. autofunction:: pyTMD.utilities.import_dependency
 
 .. autofunction:: pyTMD.utilities.dependency_available
