@@ -3,7 +3,7 @@ Background
 ==========
 
 Background information on the theoretical concepts used in ``pyTMD``. 
-*It is not necessary to read through this information* in order to use this library, but it may be helpful to help understand the outputs and assumptions.
+*It is not necessary to read through this information* in order to use this library, but it may be helpful for understanding the outputs and assumptions.
 The information is organized into separate sections, which can be read in any order.
 
 .. grid:: 2 2 4 4
