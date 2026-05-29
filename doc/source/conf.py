@@ -164,21 +164,27 @@ for project_url in metadata.get_all("Project-URL"):
     name, _, url = project_url.partition(", ")
     project_urls[name.lower()] = url
 # fetch the repository url
-repository_url = project_urls.get("repository")
+github_url = project_urls.get("repository")
+*_, github_user, github_repo = github_url.split("/")
 # add html context
 html_context = {
+    "display_github": True,
+    "github_user": github_user,
+    "github_repo": github_repo,
+    "github_version": "main",
+    "conf_py_path": "/doc/source/",
     "menu_links": [
         (
             '<i class="fa fa-github fa-fw"></i> Source Code',
-            repository_url,
+            github_url,
         ),
         (
             '<i class="fa fa-book fa-fw"></i> License',
-            f"{repository_url}/blob/main/LICENSE",
+            f"{github_url}/blob/main/LICENSE",
         ),
         (
             '<i class="fa fa-comment fa-fw"></i> Discussions',
-            f"{repository_url}/discussions",
+            f"{github_url}/discussions",
         ),
     ],
 }
