@@ -249,7 +249,7 @@ class model:
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
         try:
-            self.from_dict(parameters[m])
+            self._from_dict(parameters[m])
         except (ValueError, KeyError, AttributeError) as exc:
             raise ValueError(f"Unlisted tide model {m}") from exc
         # verify model types to extract
@@ -301,6 +301,75 @@ class model:
     def from_dict(self, d: dict):
         """
         Create a model object from a dictionary of parameters
+
+        Equivalent to :func:`from_file`, but reading the model parameters
+        from a dictionary instead of a definition file. The constituent
+        (and grid) file paths are resolved against the model
+        :attr:`directory` in the same way.
+
+        Parameters
+        ----------
+        d: dict
+            Model object parameters
+        """
+        # copy model parameters into the model object
+        # work on a deep copy so the caller's dictionary is not modified
+        # when the constituent file paths are resolved below
+        self._from_dict(copy.deepcopy(d))
+        # verify model name and format
+        assert self.name
+        self.validate_format()
+        # resolve grid files for projected (OTIS, ATLAS) model formats
+        if self.format in ("OTIS", "ATLAS-compact", "ATLAS-netcdf"):
+            for g in ("z", "u", "v"):
+                # check that model group is available
+                if not hasattr(self, g):
+                    continue
+                assert self[g].grid_file
+                # check if grid file is relative or absolute
+                if self.directory is not None:
+                    self[g].grid_file = self.directory.joinpath(
+                        self[g].grid_file
+                    )
+                else:
+                    self[g].grid_file = pyTMD.utilities.Path(self[g].grid_file)
+        # resolve model constituent files
+        for g in ("z", "u", "v"):
+            # check that model group is available
+            if not hasattr(self, g):
+                continue
+            # get model files for model group
+            if self.directory is not None:
+                # use glob strings to find files in directory
+                glob_string = copy.copy(self[g].model_file)
+                # search singular glob string or iterable glob strings
+                if isinstance(glob_string, str):
+                    # singular glob string
+                    self[g].model_file = list(self.directory.glob(glob_string))
+                elif isinstance(glob_string, Iterable):
+                    # iterable glob strings
+                    self[g].model_file = []
+                    for p in glob_string:
+                        self[g].model_file.extend(self.directory.glob(p))
+            elif isinstance(self[g].model_file, list):
+                # resolve paths to model files
+                self[g].model_file = [
+                    pyTMD.utilities.Path(f) for f in self[g].model_file
+                ]
+            else:
+                # fully defined single file case
+                self[g].model_file = pyTMD.utilities.Path(self[g].model_file)
+        # verify that projection attribute exists for projected models
+        if self.format in ("OTIS", "ATLAS-compact", "TMD3"):
+            assert self.projection
+        # set dictionary of parameters
+        self.__parameters__ = self.to_dict(serialize=True)
+        # return the model object
+        return self
+
+    def _from_dict(self, d: dict):
+        """
+        Copy model parameters from a dictionary without resolving file paths
 
         Parameters
         ----------
@@ -608,61 +677,9 @@ class model:
         """
         # load JSON file
         parameters = json.load(fid)
-        # convert from dictionary to model variable
-        temp = self.from_dict(parameters)
-        # verify model name and format
-        assert temp.name
-        temp.validate_format()
-        # verify parameters for each model format
-        if temp.format in (
-            "OTIS",
-            "ATLAS-compact",
-            "ATLAS-netcdf",
-        ):
-            # extract model files
-            for g in ("z", "u", "v"):
-                # check that model group is available
-                if not hasattr(temp, g):
-                    continue
-                assert temp[g].grid_file
-                # check if grid file is relative or absolute
-                if temp.directory is not None:
-                    temp[g].grid_file = temp.directory.joinpath(
-                        temp[g].grid_file
-                    )
-                else:
-                    temp[g].grid_file = pyTMD.utilities.Path(temp[g].grid_file)
-        # extract model files
-        for g in ("z", "u", "v"):
-            # check that model group is available
-            if not hasattr(temp, g):
-                continue
-            # get model files for model group
-            if temp.directory is not None:
-                # use glob strings to find files in directory
-                glob_string = copy.copy(temp[g].model_file)
-                # search singular glob string or iterable glob strings
-                if isinstance(glob_string, str):
-                    # singular glob string
-                    temp[g].model_file = list(temp.directory.glob(glob_string))
-                elif isinstance(glob_string, Iterable):
-                    # iterable glob strings
-                    temp[g].model_file = []
-                    for p in glob_string:
-                        temp[g].model_file.extend(temp.directory.glob(p))
-            elif isinstance(temp[g].model_file, list):
-                # resolve paths to model files
-                temp[g].model_file = [
-                    pyTMD.utilities.Path(f) for f in temp[g].model_file
-                ]
-            else:
-                # fully defined single file case
-                temp[g].model_file = pyTMD.utilities.Path(temp[g].model_file)
-        # verify that projection attribute exists for projected models
-        if temp.format in ("OTIS", "ATLAS-compact", "TMD3"):
-            assert temp.projection
-        # return the model parameters
-        return temp
+        # convert from dictionary to model variable, resolving the
+        # constituent (and grid) file paths against the model directory
+        return self.from_dict(parameters)
 
     def validate_format(self):
         """Asserts that the model format is a known type"""

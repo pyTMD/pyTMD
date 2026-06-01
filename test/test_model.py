@@ -818,3 +818,40 @@ def test_read_extra_database(extra_databases):
     assert 'EOT20_custom' in db_extra.keys()
     # verify default db is a subset of default + extra db
     assert db_default.items() <= db_extra.items()
+
+# PURPOSE: test that from_dict and from_file produce equivalent models
+def test_from_dict_matches_from_file(tmp_path):
+    """Tests that a model read from a dictionary is equivalent to the same
+    model read from a definition file, with constituent file paths resolved
+    against the model directory in both cases (see #417)
+    """
+    # custom model definition as a dictionary
+    parameters = _custom_database["EOT20_custom"]
+    # write the same definition out to a JSON file
+    definition_file = tmp_path.joinpath("model_EOT20_custom.json")
+    with definition_file.open(mode="w", encoding="utf8") as fid:
+        json.dump(parameters, fid)
+
+    # without a directory: file paths are left relative but resolved to Path
+    m_file = pyTMD.io.model().from_file(definition_file)
+    m_dict = pyTMD.io.model().from_dict(parameters)
+    assert m_dict.format == m_file.format == "FES-netcdf"
+    assert m_dict.name == m_file.name == "EOT20_custom"
+    assert m_dict.z.model_file == m_file.z.model_file
+    assert m_dict.__parameters__ == m_file.__parameters__
+
+    # with a directory: file paths must be resolved against it in both cases.
+    # create empty constituent files so the directory glob finds them
+    directory = tmp_path.joinpath("tide_models")
+    for model_file in parameters["z"]["model_file"]:
+        path = directory.joinpath(model_file)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    m_file = pyTMD.io.model(directory=directory).from_file(definition_file)
+    m_dict = pyTMD.io.model(directory=directory).from_dict(parameters)
+    # both must resolve to the same set of absolute paths under the directory
+    assert sorted(map(str, m_dict.z.model_file)) == \
+        sorted(map(str, m_file.z.model_file))
+    assert len(m_dict.z.model_file) == len(parameters["z"]["model_file"])
+    assert all(p.is_absolute() for p in m_dict.z.model_file)
+    assert m_dict.__parameters__ == m_file.__parameters__
