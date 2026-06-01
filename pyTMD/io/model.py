@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 model.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (06/2026)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -13,6 +13,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 06/2026: add validate argument to from_dict method
+        split old parse json function into a series of validation functions
     Updated 04/2026: add __variables__ attribute containing model variables
     Updated 03/2026: add support for FES-native netCDF4 files
     Updated 02/2026: add HTML representation for model objects using xarray
@@ -108,7 +110,7 @@ class DataBase:
     """pyTMD model database and parameters"""
 
     def __init__(self, d: dict):
-        self.__dict__ = d
+        self.__dict__ = copy.deepcopy(d)
 
     def update(self, d: dict):
         """Update the keys of the model database"""
@@ -249,7 +251,7 @@ class model:
         parameters = load_database(extra_databases=self.extra_databases)
         # try to extract parameters for model
         try:
-            self._from_dict(parameters[m])
+            self.from_dict(parameters[m], validate=False)
         except (ValueError, KeyError, AttributeError) as exc:
             raise ValueError(f"Unlisted tide model {m}") from exc
         # verify model types to extract
@@ -268,7 +270,9 @@ class model:
             # validate paths: model constituent files
             self[g].model_file = self.pathfinder(self[g].model_file)
         # return the model parameters
+        self.validate_name()
         self.validate_format()
+        self.validate_projection()
         # set dictionary of parameters
         self.__parameters__ = self.to_dict(serialize=True)
         return self
@@ -288,101 +292,35 @@ class model:
         """
         # load and parse definition file
         if isinstance(definition_file, io.IOBase):
-            self._parse_file(definition_file)
+            self.parse_json(definition_file)
         elif isinstance(definition_file, (str, pathlib.Path)):
             definition_file = pyTMD.utilities.Path(definition_file)
             with definition_file.open(mode="r", encoding="utf8") as fid:
-                self._parse_file(fid)
-        # set dictionary of parameters
-        self.__parameters__ = self.to_dict(serialize=True)
+                self.parse_json(fid)
         # return the model object
         return self
 
-    def from_dict(self, d: dict):
+    def from_dict(self, d: dict, validate: bool = True):
         """
         Create a model object from a dictionary of parameters
 
-        Equivalent to :func:`from_file`, but reading the model parameters
-        from a dictionary instead of a definition file. The constituent
-        (and grid) file paths are resolved against the model
-        :attr:`directory` in the same way.
-
         Parameters
         ----------
         d: dict
             Model object parameters
-        """
-        # copy model parameters into the model object
-        # work on a deep copy so the caller's dictionary is not modified
-        # when the constituent file paths are resolved below
-        self._from_dict(copy.deepcopy(d))
-        # verify model name and format
-        assert self.name
-        self.validate_format()
-        # resolve grid files for projected (OTIS, ATLAS) model formats
-        if self.format in ("OTIS", "ATLAS-compact", "ATLAS-netcdf"):
-            for g in ("z", "u", "v"):
-                # check that model group is available
-                if not hasattr(self, g):
-                    continue
-                assert self[g].grid_file
-                # check if grid file is relative or absolute
-                if self.directory is not None:
-                    self[g].grid_file = self.directory.joinpath(
-                        self[g].grid_file
-                    )
-                else:
-                    self[g].grid_file = pyTMD.utilities.Path(self[g].grid_file)
-        # resolve model constituent files
-        for g in ("z", "u", "v"):
-            # check that model group is available
-            if not hasattr(self, g):
-                continue
-            # get model files for model group
-            if self.directory is not None:
-                # use glob strings to find files in directory
-                glob_string = copy.copy(self[g].model_file)
-                # search singular glob string or iterable glob strings
-                if isinstance(glob_string, str):
-                    # singular glob string
-                    self[g].model_file = list(self.directory.glob(glob_string))
-                elif isinstance(glob_string, Iterable):
-                    # iterable glob strings
-                    self[g].model_file = []
-                    for p in glob_string:
-                        self[g].model_file.extend(self.directory.glob(p))
-            elif isinstance(self[g].model_file, list):
-                # resolve paths to model files
-                self[g].model_file = [
-                    pyTMD.utilities.Path(f) for f in self[g].model_file
-                ]
-            else:
-                # fully defined single file case
-                self[g].model_file = pyTMD.utilities.Path(self[g].model_file)
-        # verify that projection attribute exists for projected models
-        if self.format in ("OTIS", "ATLAS-compact", "TMD3"):
-            assert self.projection
-        # set dictionary of parameters
-        self.__parameters__ = self.to_dict(serialize=True)
-        # return the model object
-        return self
-
-    def _from_dict(self, d: dict):
-        """
-        Copy model parameters from a dictionary without resolving file paths
-
-        Parameters
-        ----------
-        d: dict
-            Model object parameters
+        validate: bool, default True
+            Validate the model parameters after loading
         """
         # copy model parameters
-        self.__parameters__ = copy.copy(d)
+        self.__parameters__ = copy.deepcopy(d)
         for key, val in d.items():
             if isinstance(val, dict) and key not in ("projection",):
                 setattr(self, key, DataBase(val))
             else:
                 setattr(self, key, copy.copy(val))
+        # validate the model parameters
+        if validate:
+            self.validate_model()
         # return the model parameters
         return self
 
@@ -647,26 +585,7 @@ class model:
         # return the complete output path
         return output_file
 
-    def _parse_file(self, fid: io.IOBase):
-        """
-        Load and parse a model definition file
-
-        Parameters
-        ----------
-        fid: io.IOBase
-            Open definition file object
-        """
-        # attempt to read and parse a JSON file
-        try:
-            self._parse_json(fid)
-        except json.decoder.JSONDecodeError as exc:
-            pass
-        else:
-            return self
-        # raise an exception
-        raise IOError("Cannot load model definition file")
-
-    def _parse_json(self, fid: io.IOBase):
+    def parse_json(self, fid: io.IOBase):
         """
         Load and parse ``JSON`` definition file
 
@@ -675,11 +594,27 @@ class model:
         fid: io.IOBase
             Open definition file object
         """
-        # load JSON file
-        parameters = json.load(fid)
-        # convert from dictionary to model variable, resolving the
-        # constituent (and grid) file paths against the model directory
-        return self.from_dict(parameters)
+        # attempt to read and parse a JSON file
+        try:
+            # load JSON file
+            parameters = json.load(fid)
+        except json.decoder.JSONDecodeError as exc:
+            raise IOError("Cannot load model definition file") from exc
+        # set model parameters from dictionary
+        self.from_dict(parameters)
+
+    def validate_model(self):
+        """Validates the model parameters for a model object"""
+        # validate model name
+        self.validate_name()
+        # validate model format
+        self.validate_format()
+        # validate model file paths
+        self.validate_paths()
+        # verify that projection attribute exists for projected models
+        self.validate_projection()
+        # set dictionary of parameters
+        self.__parameters__ = self.to_dict(serialize=True)
 
     def validate_format(self):
         """Asserts that the model format is a known type"""
@@ -696,7 +631,70 @@ class model:
             if self.format == m[0]:
                 self.format = m[1]
         # assert that tide model is a known format
-        assert self.format in self.known_formats()
+        if self.format not in self.known_formats():
+            raise ValueError(f"Unknown model format {self.format}")
+
+    def validate_name(self):
+        """Asserts that the model name is specified"""
+        # verify model name is specified
+        if not hasattr(self, "name") or self.name is None:
+            raise ValueError("Model name is not specified")
+
+    def validate_paths(self):
+        """Resolves paths to model files for specific model formats"""
+        # resolve grid files for projected (OTIS, ATLAS) model formats
+        if self.format in ("OTIS", "ATLAS-compact", "ATLAS-netcdf"):
+            for g in ("z", "u", "v"):
+                # check that model group is available
+                if not hasattr(self, g):
+                    continue
+                if (
+                    not hasattr(self[g], "grid_file")
+                    or self[g].grid_file is None
+                ):
+                    raise ValueError(
+                        f"Grid file is not specified for group {g}"
+                    )
+                # check if grid file is relative or absolute
+                if self.directory is not None:
+                    self[g].grid_file = self.directory.joinpath(
+                        self[g].grid_file
+                    )
+                else:
+                    self[g].grid_file = pyTMD.utilities.Path(self[g].grid_file)
+        # resolve model constituent files
+        for g in ("z", "u", "v"):
+            # check that model group is available
+            if not hasattr(self, g):
+                continue
+            # get model files for model group
+            if self.directory is not None:
+                # use glob strings to find files in directory
+                glob_string = copy.copy(self[g].model_file)
+                # search singular glob string or iterable glob strings
+                if isinstance(glob_string, str):
+                    # singular glob string
+                    self[g].model_file = list(self.directory.glob(glob_string))
+                elif isinstance(glob_string, Iterable):
+                    # iterable glob strings
+                    self[g].model_file = []
+                    for p in glob_string:
+                        self[g].model_file.extend(self.directory.glob(p))
+            elif isinstance(self[g].model_file, list):
+                # resolve paths to model files
+                self[g].model_file = [
+                    pyTMD.utilities.Path(f) for f in self[g].model_file
+                ]
+            else:
+                # fully defined single file case
+                self[g].model_file = pyTMD.utilities.Path(self[g].model_file)
+
+    def validate_projection(self):
+        """Asserts that the projection attribute is specified for projected models"""
+        if self.format in ("OTIS", "ATLAS-compact", "TMD3") and (
+            not hasattr(self, "projection") or self.projection is None
+        ):
+            raise ValueError("Projection is not specified for model")
 
     def serialize(self, d: dict):
         """
@@ -850,7 +848,8 @@ class model:
         kwargs.setdefault("constituents", None)
         # model group
         group = kwargs["group"].lower()
-        assert group in ("z", "u", "v"), f"Invalid model group {group}"
+        if group not in ("z", "u", "v"):
+            raise ValueError(f"Invalid model group {group}")
         # extract model file
         model_file = self[group].get("model_file")
         # reduce constituents if specified

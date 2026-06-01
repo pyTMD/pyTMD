@@ -1,8 +1,10 @@
 """
-test_model.py (04/2026)
+test_model.py (06/2026)
 Tests the reading of model definition files
 
 UPDATE HISTORY:
+    Updated 06/2026: add test for from_dict method
+        validates model parameters between from_dict and from_file
     Updated 04/2026: added cleanup options to functional tests
     Updated 11/2025: use new z, u, v database and JSON format
     Updated 07/2025: added GOT4.10_SAL subset of constituents
@@ -822,8 +824,7 @@ def test_read_extra_database(extra_databases):
 # PURPOSE: test that from_dict and from_file produce equivalent models
 def test_from_dict_matches_from_file(tmp_path):
     """Tests that a model read from a dictionary is equivalent to the same
-    model read from a definition file, with constituent file paths resolved
-    against the model directory in both cases (see #417)
+    model read from a definition file
     """
     # custom model definition as a dictionary
     parameters = _custom_database["EOT20_custom"]
