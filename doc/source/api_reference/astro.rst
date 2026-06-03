@@ -29,6 +29,8 @@ astro
 
 .. autofunction:: pyTMD.astro.solar_ephemerides
 
+.. autofunction:: pyTMD.astro.solar_equatorial
+
 .. autofunction:: pyTMD.astro.solar_latitude
 
 .. autofunction:: pyTMD.astro.solar_longitude
@@ -36,6 +38,8 @@ astro
 .. autofunction:: pyTMD.astro.solar_distance
 
 .. autofunction:: pyTMD.astro.lunar_ecef
+
+.. autofunction:: pyTMD.astro.lunar_equatorial
 
 .. autofunction:: pyTMD.astro.lunar_approximate
 
@@ -50,6 +54,8 @@ astro
 .. autofunction:: pyTMD.astro.gast
 
 .. autofunction:: pyTMD.astro.itrs
+
+.. autofunction:: pyTMD.astro._cartesian
 
 .. autofunction:: pyTMD.astro._eqeq_complement
 

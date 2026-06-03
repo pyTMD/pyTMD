@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 interpolate.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Interpolators for spatial data
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 06/2026: added spherical linear interpolation (slerp) function
     Updated 05/2026: added parameters to allow for extrapolation with
         inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
         added worker parameter to allow for parallel KD-tree queries
@@ -59,6 +60,7 @@ __all__ = [
     "_inside_triangle",
     "_shape_functions",
     "_winding_number",
+    "slerp",
 ]
 
 
@@ -662,3 +664,66 @@ def _winding_number(xv: np.ndarray, yv: np.ndarray):
     """
     wind = (xv[1] - xv[0]) * (yv[2] - yv[0]) - (yv[1] - yv[0]) * (xv[2] - xv[0])
     return wind
+
+
+# PURPOSE: calculate linear interpolation between two points on a sphere
+def slerp(
+    x: float | np.ndarray,
+    y: float | np.ndarray,
+    z: float | np.ndarray,
+    u: float | np.ndarray,
+    v: float | np.ndarray,
+    w: float | np.ndarray,
+    n: int = 10,
+    eps: float = 1e-10,
+):
+    """
+    Geometric spherical linear interpolation between two points
+    :cite:p:`Shoemake:1985gp`
+
+    Parameters
+    ----------
+    x: float or np.ndarray
+        x-coordinate of the first vector
+    y: float or np.ndarray
+        y-coordinate of the first vector
+    z: float or np.ndarray
+        z-coordinate of the first vector
+    u: float or np.ndarray
+        x-coordinate of the second vector
+    v: float or np.ndarray
+        y-coordinate of the second vector
+    w: float or np.ndarray
+        z-coordinate of the second vector
+    n: int, default 10
+        Number of interpolation points to return
+    eps: float, default 1e-10
+        Minimum angle between the two vectors to perform interpolation
+
+    Returns
+    -------
+    a: np.ndarray
+        x-coordinates of the interpolated points
+    b: np.ndarray
+        y-coordinates of the interpolated points
+    c: np.ndarray
+        z-coordinates of the interpolated points
+    """
+    # compute the radius of the two points
+    r1 = pyTMD.math.radius(x, y, z)
+    r2 = pyTMD.math.radius(u, v, w)
+    # compute the angle between the two points
+    s = pyTMD.math.scalar_product(x, y, z, u, v, w) / (r1 * r2)
+    # trim angle to range to avoid numerical errors
+    c = np.arccos(np.clip(s, -1.0, 1.0))
+    # if the points are too close, return the first point
+    if c < eps:
+        return x, y, z
+    # set the interpolation points
+    ii = np.linspace(0.0, 1.0, n)
+    # spherical linear interpolation following Shoemake (1985)
+    a = (np.sin((1.0 - ii) * c) * x + np.sin(ii * c) * u) / np.sin(c)
+    b = (np.sin((1.0 - ii) * c) * y + np.sin(ii * c) * v) / np.sin(c)
+    c = (np.sin((1.0 - ii) * c) * z + np.sin(ii * c) * w) / np.sin(c)
+    # return the interpolated points
+    return a, b, c
