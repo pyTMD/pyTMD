@@ -29,3 +29,5 @@ interpolate
 .. autofunction:: pyTMD.interpolate._shape_functions
 
 .. autofunction:: pyTMD.interpolate._winding_number
+
+.. autofunction:: pyTMD.interpolate.slerp

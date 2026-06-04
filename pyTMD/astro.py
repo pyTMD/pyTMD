@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 astro.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (06/2026)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,7 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 06/2026: added functions to lunisolar equatorial coordinates
     Updated 03/2026: added functions to compute the geocentric positions
         of the sun and moon (latitude, longitude and distance)
         use geocentric positions as new options for lunisolar ECEF XYZ
@@ -105,17 +106,20 @@ __all__ = [
     "solar_ecef",
     "solar_approximate",
     "solar_ephemerides",
+    "solar_equatorial",
     "solar_latitude",
     "solar_longitude",
     "solar_distance",
     "lunar_ecef",
     "lunar_approximate",
     "lunar_ephemerides",
+    "lunar_equatorial",
     "lunar_latitude",
     "lunar_longitude",
     "lunar_distance",
     "gast",
     "itrs",
+    "_cartesian",
     "_eqeq_complement",
     "_icrs_rotation_matrix",
     "_frame_bias_matrix",
@@ -687,16 +691,18 @@ def solar_ecef(
         ECEF coordinates of the sun (meters)
     """
     # determine the solar positions
-    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
-    if ephemerides.lower() in methods:
+    _methods = ["approximate", "kubo", "meeus", "montenbruck", "vsop87"]
+    if ephemerides.lower() in _methods:
         return solar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL" and not jplephem_available:
+        raise ValueError("jplephem is required for JPL ephemerides")
     elif ephemerides.upper() == "JPL":
-        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return solar_ephemerides(MJD, **kwargs)
     else:
         raise ValueError("Invalid ephemerides method")
 
 
+# PURPOSE: compute approximate coordinates of the sun in an ECEF frame
 def solar_approximate(
     MJD: np.ndarray,
     **kwargs,
@@ -720,8 +726,9 @@ def solar_approximate(
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Montenbruck")
-    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["approximate", "kubo", "meeus", "montenbruck", "vsop87"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # calculate solar positions using the specified method
@@ -737,13 +744,10 @@ def solar_approximate(
         lambda_sun = (
             Ps + M + asec2rad(6892.0 * np.sin(M) + 72.0 * np.sin(2.0 * M))
         )
-        # ecliptic latitude is equal to 0 within 1 arcminute
-        # obliquity of the J2000 ecliptic (radians)
-        epsilon_j2000 = np.radians(23.43929111)
-        # convert to position vectors
-        x = r_sun * np.cos(lambda_sun)
-        y = r_sun * np.sin(lambda_sun) * np.cos(epsilon_j2000)
-        z = r_sun * np.sin(lambda_sun) * np.sin(epsilon_j2000)
+        # assume ecliptic latitude is equal to 0 within 1 arcminute
+        # and the obliquity of the J2000 ecliptic is constant
+        beta_sun = 0.0
+        epsilon = np.radians(23.43929111)
     else:
         # calculate solar positions
         beta_sun = solar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
@@ -754,16 +758,13 @@ def solar_approximate(
         # simple correction for principal nutation (radians)
         omega = np.radians(1934.136 * ts.T + 235.0)
         epsilon += np.radians(0.00256 * np.cos(omega))
-        # convert to position vectors (Meeus equation 26.1)
-        x = r_sun * np.cos(beta_sun) * np.cos(lambda_sun)
-        y = r_sun * (
-            np.cos(beta_sun) * np.sin(lambda_sun) * np.cos(epsilon)
-            - np.sin(beta_sun) * np.sin(epsilon)
-        )
-        z = r_sun * (
-            np.cos(beta_sun) * np.sin(lambda_sun) * np.sin(epsilon)
-            + np.sin(beta_sun) * np.cos(epsilon)
-        )
+    # convert to position vectors (Meeus equation 26.1)
+    x, y, z = _cartesian(
+        beta_sun,
+        lambda_sun,
+        radius=r_sun,
+        inclination=epsilon,
+    )
     # Greenwich hour angle (radians)
     rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
@@ -843,6 +844,60 @@ def solar_ephemerides(
     Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
+
+# PURPOSE: compute the right ascension and declination of the sun
+def solar_equatorial(MJD, **kwargs):
+    """
+    Computes approximate coordinates of the sun in an equatorial
+    coordinate system :cite:p:`Meeus:1991vh,Montenbruck:1989uk`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    ephemerides: str, default 'Meeus'
+        Method for calculating solar ephemerides
+
+    Returns
+    -------
+    right_ascension: np.ndarray
+        Right ascension of the sun (radians)
+    declination: np.ndarray
+        Declination of the sun (radians)
+    """
+    # default keyword arguments
+    kwargs.setdefault("ephemerides", "Meeus")
+    _methods = ["kubo", "meeus", "vsop87"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
+    # check if input is scalar or array
+    singular_values = np.ndim(MJD) == 0
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # calculate solar angles
+    beta_sun = solar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
+    lambda_sun = solar_longitude(ts.MJD + ts.tt_ut1, **kwargs)
+    # obliquity of the ecliptic
+    epsilon = mean_obliquity(ts.MJD + ts.tt_ut1)
+    # simple correction for principal nutation (radians)
+    omega = np.radians(1934.136 * ts.T + 235.0)
+    epsilon += np.radians(0.00256 * np.cos(omega))
+    # calculate the right ascensions and declination
+    right_ascension = np.arctan2(
+        np.cos(epsilon) * np.sin(lambda_sun) * np.cos(beta_sun)
+        - np.sin(epsilon) * np.sin(beta_sun),
+        np.cos(lambda_sun) * np.cos(beta_sun),
+    )
+    declination = np.arcsin(
+        np.sin(epsilon) * np.sin(lambda_sun) * np.cos(beta_sun)
+        + np.cos(epsilon) * np.sin(beta_sun)
+    )
+    # return computed angles
+    if singular_values:
+        return (right_ascension.item(), declination.item())
+    else:
+        return (right_ascension, declination)
 
 
 def solar_latitude(
@@ -1375,16 +1430,18 @@ def lunar_ecef(
         ECEF coordinates of the moon (meters)
     """
     # determine the lunar positions
-    methods = ["approximate", "montenbruck", "kubo", "meeus"]
-    if ephemerides.lower() in methods:
+    _methods = ["approximate", "kubo", "meeus", "montenbruck"]
+    if ephemerides.lower() in _methods:
         return lunar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL" and not jplephem_available:
+        raise ValueError("jplephem is required for JPL ephemerides")
     elif ephemerides.upper() == "JPL":
-        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return lunar_ephemerides(MJD, **kwargs)
     else:
         raise ValueError("Invalid ephemerides method")
 
 
+# PURPOSE: compute approximate coordinates of the moon in an ECEF frame
 def lunar_approximate(
     MJD: np.ndarray,
     **kwargs,
@@ -1408,8 +1465,9 @@ def lunar_approximate(
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Montenbruck")
-    methods = ["approximate", "montenbruck", "kubo", "meeus"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["approximate", "kubo", "meeus", "montenbruck"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # calculate lunar positions using the specified method
@@ -1473,17 +1531,8 @@ def lunar_approximate(
             + 21.0 * np.sin(-l + F)
             + 11.0 * np.sin(-M + F - 2.0 * D)
         )
-        # convert to position vectors
-        x = r_moon * np.cos(lambda_moon) * np.cos(beta_moon)
-        y = r_moon * np.sin(lambda_moon) * np.cos(beta_moon)
-        z = r_moon * np.sin(beta_moon)
-        # obliquity of the J2000 ecliptic (radians)
-        epsilon_j2000 = np.radians(23.43929111)
-        # rotate by ecliptic
-        rot_x = rotate(-epsilon_j2000, "x")
-        u = rot_x[0, 0, :] * x + rot_x[0, 1, :] * y + rot_x[0, 2, :] * z
-        v = rot_x[1, 0, :] * x + rot_x[1, 1, :] * y + rot_x[1, 2, :] * z
-        w = rot_x[2, 0, :] * x + rot_x[2, 1, :] * y + rot_x[2, 2, :] * z
+        # assume obliquity of the J2000 ecliptic is constant
+        epsilon = np.radians(23.43929111)
     else:
         # calculate lunar positions
         beta_moon = lunar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
@@ -1494,16 +1543,13 @@ def lunar_approximate(
         # simple correction for principal nutation (radians)
         omega = np.radians(1934.136 * ts.T + 235.0)
         epsilon += np.radians(0.00256 * np.cos(omega))
-        # convert to position vectors rotated by ecliptic
-        u = r_moon * np.cos(beta_moon) * np.cos(lambda_moon)
-        v = r_moon * (
-            np.cos(beta_moon) * np.sin(lambda_moon) * np.cos(epsilon)
-            - np.sin(beta_moon) * np.sin(epsilon)
-        )
-        w = r_moon * (
-            np.cos(beta_moon) * np.sin(lambda_moon) * np.sin(epsilon)
-            + np.sin(beta_moon) * np.cos(epsilon)
-        )
+    # convert to position vectors rotated by ecliptic
+    u, v, w = _cartesian(
+        beta_moon,
+        lambda_moon,
+        radius=r_moon,
+        inclination=epsilon,
+    )
     # Greenwich hour angle (radians)
     rot_z = rotate(np.radians(ts.gha), "z")
     # rotate to cartesian (ECEF) coordinates
@@ -1584,6 +1630,60 @@ def lunar_ephemerides(
     Z = rot_z[2, 0, :] * x + rot_z[2, 1, :] * y + rot_z[2, 2, :] * z
     # return the ECEF coordinates
     return (X, Y, Z)
+
+
+# PURPOSE: compute the right ascension and declination of the moon
+def lunar_equatorial(MJD, **kwargs):
+    """
+    Computes approximate coordinates of the moon in an equatorial
+    coordinate system :cite:p:`Meeus:1991vh,Montenbruck:1989uk`
+
+    Parameters
+    ----------
+    MJD: np.ndarray
+        Modified Julian Day (MJD) of input date
+    ephemerides: str, default 'Meeus'
+        Method for calculating lunar ephemerides
+
+    Returns
+    -------
+    right_ascension: np.ndarray
+        Right ascension of the moon (radians)
+    declination: np.ndarray
+        Declination of the moon (radians)
+    """
+    # default keyword arguments
+    kwargs.setdefault("ephemerides", "Meeus")
+    _methods = ["kubo", "meeus"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
+    # check if input is scalar or array
+    singular_values = np.ndim(MJD) == 0
+    # create timescale from Modified Julian Day (MJD)
+    ts = timescale.time.Timescale(MJD=MJD)
+    # calculate lunar angles
+    beta_moon = lunar_latitude(ts.MJD + ts.tt_ut1, **kwargs)
+    lambda_moon = lunar_longitude(ts.MJD + ts.tt_ut1, **kwargs)
+    # obliquity of the ecliptic
+    epsilon = mean_obliquity(ts.MJD + ts.tt_ut1)
+    # simple correction for principal nutation (radians)
+    omega = np.radians(1934.136 * ts.T + 235.0)
+    epsilon += np.radians(0.00256 * np.cos(omega))
+    # calculate the right ascensions and declination
+    right_ascension = np.arctan2(
+        np.cos(epsilon) * np.sin(lambda_moon) * np.cos(beta_moon)
+        - np.sin(epsilon) * np.sin(beta_moon),
+        np.cos(lambda_moon) * np.cos(beta_moon),
+    )
+    declination = np.arcsin(
+        np.sin(epsilon) * np.sin(lambda_moon) * np.cos(beta_moon)
+        + np.cos(epsilon) * np.sin(beta_moon)
+    )
+    # return computed angles
+    if singular_values:
+        return (right_ascension.item(), declination.item())
+    else:
+        return (right_ascension, declination)
 
 
 def lunar_latitude(
@@ -2121,6 +2221,51 @@ def itrs(
     R = np.einsum("ijt...,jkt->ikt...", GAST, M)
     # return the combined rotation matrix
     return R
+
+
+def _cartesian(
+    beta: float | np.ndarray,
+    lmda: float | np.ndarray,
+    radius: float | np.ndarray = 1.0,
+    inclination: float | np.ndarray = 0.0,
+):
+    """
+    Convert from spherical coordinates to Cartesian coordinates
+    optionally rotated by an inclination angle
+    :cite:p:`Meeus:1991vh`
+
+    Parameters
+    ----------
+    beta: float or np.ndarray
+        Celestial Latitude (radians)
+    lmda: float or np.ndarray
+        Celestial Longitude (radians)
+    radius: float or np.ndarray, default 1.0
+        Radius of the sphere
+    inclination: float or np.ndarray, default 0.0
+        Inclination angle (radians)
+
+    Returns
+    -------
+    x: np.ndarray
+        Cartesian x-coordinates (units of radius)
+    y: np.ndarray
+        Cartesian y-coordinates (units of radius)
+    z: np.ndarray
+        Cartesian z-coordinates (units of radius)
+    """
+    # convert to position vectors rotated by inclination angle
+    x = radius * np.cos(beta) * np.cos(lmda)
+    y = radius * (
+        np.cos(beta) * np.sin(lmda) * np.cos(inclination)
+        - np.sin(beta) * np.sin(inclination)
+    )
+    z = radius * (
+        np.cos(beta) * np.sin(lmda) * np.sin(inclination)
+        + np.sin(beta) * np.cos(inclination)
+    )
+    # return the coordinates
+    return x, y, z
 
 
 def _eqeq_complement(T: float | np.ndarray):

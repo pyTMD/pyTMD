@@ -168,7 +168,8 @@ def from_xml(url: str, **kwargs):
         Data from NOAA webservices
     """
     # query the NOAA webservices API
-    assert pandas_available, "pandas is required for accessing NOAA webservices"
+    if not pandas_available:
+        raise ValueError("pandas is required for accessing NOAA webservices")
     try:
         logging.debug(url)
         df = pd.read_xml(url, **kwargs)

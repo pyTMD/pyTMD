@@ -14,7 +14,7 @@ Examples
    :hidden:
 
    ../notebooks/Compare-NOAA-Tides
-   ../notebooks/Extrapolation.ipynb
+   ../notebooks/Extrapolation
    ../notebooks/Gap-Fill-Tide-Map
    ../notebooks/Plot-Antarctic-Cotidal-Charts
    ../notebooks/Plot-Arctic-Ocean-Map

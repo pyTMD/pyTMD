@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 spatial.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 06/2026: use item() to extract scalars from 0-dimensional arrays
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 04/2026: updated scale factors to add case where reference
         latitude is at the pole
@@ -463,7 +464,7 @@ def to_cartesian(
     # return the cartesian coordinates
     # flattened to singular values if necessary
     if singular_values:
-        return (X[0], Y[0], Z[0])
+        return (X.item(), Y.item(), Z.item())
     else:
         return (X, Y, Z)
 
@@ -517,7 +518,7 @@ def to_sphere(
     # return longitude, latitude and radius
     # flattened to singular values if necessary
     if singular_values:
-        return (lon[0], lat[0], rad[0])
+        return (lon.item(), lat.item(), rad.item())
     else:
         return (lon, lat, rad)
 
@@ -589,7 +590,7 @@ def to_geodetic(
     # return longitude, latitude and height
     # flattened to singular values if necessary
     if singular_values:
-        return (lon[0], lat[0], h[0])
+        return (lon.item(), lat.item(), h.item())
     else:
         return (lon, lat, h)
 
@@ -863,7 +864,7 @@ def to_ENU(
     # return the ENU coordinates
     # flattened to singular values if necessary
     if singular_values:
-        return (E[0], N[0], U[0])
+        return (E.item(), N.item(), U.item())
     else:
         return (E, N, U)
 
@@ -940,7 +941,7 @@ def from_ENU(
     # return the ECEF coordinates
     # flattened to singular values if necessary
     if singular_values:
-        return (x[0], y[0], z[0])
+        return (x.item(), y.item(), z.item())
     else:
         return (x, y, z)
 
@@ -1099,7 +1100,8 @@ def scale_factors(
     scale: np.ndarray
         Scaling factors at input latitudes
     """
-    assert metric.lower() in ["distance", "area"], "Unknown metric"
+    if metric.lower() not in ["distance", "area"]:
+        raise ValueError("Unknown metric")
     # power for scaling factors
     power = 1.0 if metric.lower() == "distance" else 2.0
     # convert latitude to positive radians

@@ -360,8 +360,11 @@ def tide_elevations(
             raise FileNotFoundError("Directory not found")
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert method.lower() in ("linear", "nearest")
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if method.lower() not in ("linear", "nearest"):
+        raise ValueError("Unknown interpolation method")
 
     # get parameters for tide model
     if definition_file is not None:
@@ -383,7 +386,8 @@ def tide_elevations(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
     X, Y = ds.tmd.coords_as(x, y, type=type, crs=crs)
@@ -556,8 +560,11 @@ def tide_currents(
             raise FileNotFoundError("Directory not found")
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert method.lower() in ("linear", "nearest")
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if method.lower() not in ("linear", "nearest"):
+        raise ValueError("Unknown interpolation method")
 
     # get parameters for tide model
     if definition_file is not None:
@@ -573,7 +580,8 @@ def tide_currents(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
     X, Y = dtree.tmd.coords_as(x, y, type=type, crs=crs)
@@ -704,7 +712,8 @@ def tide_masks(
     ds = m.open_dataset(group="z")
 
     # determine input data type based on variable dimensions
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
     X, Y = ds.tmd.coords_as(x, y, type=type, crs=crs)
@@ -767,11 +776,14 @@ def LPET_elevations(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -867,13 +879,19 @@ def LPT_displacements(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ellipsoid.upper() in pyTMD.earth._ellipsoids
-    assert convention.isdigit() and convention in timescale.eop._conventions
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if ellipsoid.upper() not in pyTMD.earth._ellipsoids:
+        raise ValueError("Invalid ellipsoid")
+    _conventions = timescale.eop._conventions
+    if not convention.isdigit() or convention not in _conventions:
+        raise ValueError("Invalid IERS Convention")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1026,14 +1044,21 @@ def OPT_displacements(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ellipsoid.upper() in pyTMD.earth._ellipsoids
-    assert convention.isdigit() and convention in timescale.eop._conventions
-    assert method.lower() in ("linear", "nearest")
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if ellipsoid.upper() not in pyTMD.earth._ellipsoids:
+        raise ValueError("Invalid ellipsoid")
+    _conventions = timescale.eop._conventions
+    if not convention.isdigit() or convention not in _conventions:
+        raise ValueError("Invalid IERS Convention")
+    if method.lower() not in ("linear", "nearest"):
+        raise ValueError("Unknown interpolation method")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1233,19 +1258,19 @@ def _ephemerides_SET(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert tide_system.lower() in ("mean_tide", "tide_free")
-    assert ephemerides.lower() in (
-        "approximate",
-        "kubo",
-        "meeus",
-        "montenbruck",
-        "jpl",
-    )
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if tide_system.lower() not in ("mean_tide", "tide_free"):
+        raise ValueError("Invalid permanent tide system")
+    _methods = ("approximate", "jpl", "kubo", "meeus", "montenbruck")
+    if ephemerides.lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # earth and physical parameters for ellipsoid
     units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
@@ -1419,14 +1444,21 @@ def _catalog_SET(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert tide_system.lower() in ("mean_tide", "tide_free")
-    assert catalog in pyTMD.predict._tide_potential_table.keys()
-    assert ephemerides.lower() in ("cartwright", "meeus", "astro5", "iers")
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    if tide_system.lower() not in ("mean_tide", "tide_free"):
+        raise ValueError("Invalid permanent tide system")
+    if catalog not in pyTMD.predict._tide_potential_table.keys():
+        raise ValueError("Invalid tide potential catalog")
+    _methods = ("astro5", "cartwright", "iers", "meeus")
+    if ephemerides.lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1536,18 +1568,17 @@ def TG_forces(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ephemerides.lower() in (
-        "approximate",
-        "kubo",
-        "meeus",
-        "montenbruck",
-        "jpl",
-    )
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    _methods = ("approximate", "jpl", "kubo", "meeus", "montenbruck")
+    if ephemerides.lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
 
     # earth and physical parameters for ellipsoid
     units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
@@ -1713,18 +1744,17 @@ def GT_accelerations(
     """
 
     # validate input arguments
-    assert standard.lower() in ("gps", "loran", "tai", "utc", "datetime")
-    assert ephemerides.lower() in (
-        "approximate",
-        "kubo",
-        "meeus",
-        "montenbruck",
-        "jpl",
-    )
+    _standards = ("datetime", "gps", "loran", "tai", "utc")
+    if standard.lower() not in _standards:
+        raise ValueError("Unknown time standard")
+    _methods = ("approximate", "jpl", "kubo", "meeus", "montenbruck")
+    if ephemerides.lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    assert type.lower() in ("grid", "drift", "time series")
+    if type.lower() not in ("drift", "grid", "time series"):
+        raise ValueError("Unknown data type")
 
     # earth and physical parameters for ellipsoid
     units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")

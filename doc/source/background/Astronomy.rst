@@ -122,17 +122,22 @@ For instance, the instantaneous (true) obliquity of the ecliptic is:
     \varepsilon = \bar\varepsilon + \Delta\varepsilon
 
 where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
-These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames (see :ref:`Equation 5.5 <eq:5.5>`) :cite:p:`Kaplan:1989cf,Petit:2010tp`.
+These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames [see :ref:`Equation 5.5 <eq:5.5>`] :cite:p:`Kaplan:1989cf,Petit:2010tp`.
 
-The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms (see :ref:`sidereal-time`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
-:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame (see :ref:`ephemerides`) :cite:p:`Petit:2010tp`.
+The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms [see :ref:`sidereal-time`] :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
+:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame [see :ref:`ephemerides`] :cite:p:`Petit:2010tp`.
+
+.. plot:: ./background/obliquity-ecliptic.py
+    :show-source-link: False
+    :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
+    :align: center
 
 .. _ephemerides:
 
 Ephemerides
 -----------
 
-The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface (see :ref:`tide-generating-potential`).
+The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface [see :ref:`tide-generating-potential`].
 Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
 ``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
 The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
@@ -161,4 +166,9 @@ The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for c
 
 where :math:`\psi` is the zenith angle, :math:`\varphi` is the latitude on the Earth's surface, :math:`\delta` is the declination of the celestial body, and :math:`h` is the local hour angle of the celestial body.
 This is equivalent to the dot product between the unit vectors of the celestial body and the position on the Earth's surface.
-``pyTMD`` takes advantage of this relationship in order to calculate the zenith angles of the sun and moon using their positions in Cartesian coordinates (see :ref:`ephemerides`).
+``pyTMD`` takes advantage of this relationship in order to calculate the zenith angles of the sun and moon using their positions in Cartesian coordinates [see :ref:`ephemerides`].
+
+.. plot:: ./background/zenith-angles.py
+    :show-source-link: False
+    :caption: Hour Angles and Zenith Angles of the Sun and Moon
+    :align: center

@@ -130,8 +130,10 @@ class datum:
         else:
             self.name = kwargs["ellipsoid"].upper()
         # validate ellipsoid and units
-        assert self.name in _ellipsoids + ["user_defined"]
-        assert self.units in _units
+        if self.name not in _ellipsoids + ["user_defined"]:
+            raise ValueError("Invalid ellipsoid")
+        if self.units not in _units:
+            raise ValueError("Invalid output units")
 
         # set parameters for ellipsoid
         if self.name in ("CLK66", "NAD27"):

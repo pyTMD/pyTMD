@@ -1,5 +1,5 @@
 """
-test_astro.py (03/2026)
+test_astro.py (06/2026)
 Tests astronomical routines
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,8 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 06/2026: added unit tests for lunisolar coordinates
+        added unit test for ASTRO5 mean longitudes
     Updated 03/2026: test all approximate ECEF methods for lunisolar XYZ
     Updated 10/2025: fetch data from pyTMD developers test data repository
     Updated 04/2025: added test for schureman arguments for FES models
@@ -27,6 +29,24 @@ import pytest
 import numpy as np
 import pyTMD
 import timescale
+
+def test_astro5_longitudes():
+    """Unit test of ASTRO5 mean longitudes
+    """
+    MJD = 55414.0
+    # unit tests using outputs from ASTRO5
+    s = 84.38258839065
+    h = 134.42871924558
+    p = 154.42906832312
+    n = 280.13995017274
+    ps = 283.12213400137
+    # Meeus methods as implemented in ASTRO5
+    S, H, P, N, PP = pyTMD.astro.mean_longitudes(MJD, method='ASTRO5')
+    assert np.isclose(s, S, atol=1e-9)
+    assert np.isclose(h, H, atol=1e-9)
+    assert np.isclose(p, P, atol=1e-9)
+    assert np.isclose(n, N, atol=1e-9)
+    assert np.isclose(ps, PP, atol=1e-9)
 
 def test_mean_longitudes():
     """Test that mean longitudes match between functions
@@ -189,6 +209,64 @@ def test_mean_obliquity():
     mean_obliquity = pyTMD.astro.mean_obliquity(MJD)
     assert np.isclose(expected, mean_obliquity)
 
+def test_solar_latitude():
+    """Unit test of solar latitudes
+    """
+    MJD = 55414.0
+    expected = 7.864631612785473e-05
+    # test latitudes
+    beta_sun = pyTMD.astro.solar_latitude(MJD, ephemerides="VSOP87")
+    assert np.allclose(np.degrees(beta_sun), expected, atol=1e-9)
+
+# parametrize method for determining the solar longitude
+@pytest.mark.parametrize("method", ["Kubo", "Meeus", "VSOP87"])
+def test_solar_longitude(method):
+    """Unit test of solar longitudes
+    """
+    MJD = 55414.0
+    expected = {}
+    expected["Kubo"] = 133.4492296970
+    expected["Meeus"] = 133.4508217718
+    expected["VSOP87"] = 133.4395890896
+    # test longitudes
+    lambda_sun = pyTMD.astro.solar_longitude(MJD, ephemerides=method)
+    assert np.allclose(np.degrees(lambda_sun), expected[method], atol=1e-9)
+
+# parametrize method for determining the solar radius
+@pytest.mark.parametrize("method", ["Kubo", "Meeus", "VSOP87"])
+def test_solar_radius(method):
+    """Unit test of solar distance
+    """
+    MJD = 55414.0
+    # astronomical unit in meters
+    AU = 149597870700.0
+    expected = {}
+    expected["Kubo"] = 1.01436787598
+    expected["Meeus"] = 1.01434694404
+    expected["VSOP87"] = 1.01435432957
+    # test distances
+    r_sun = pyTMD.astro.solar_distance(MJD, ephemerides=method)
+    assert np.allclose(r_sun / AU, expected[method], atol=1e-9)
+
+# parametrize over approximate methods
+@pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus", "VSOP87"])
+def test_solar_approximate(method):
+    """Unit test of solar ECEF coordinates
+    """
+    MJD = 55414.0
+    # astronomical unit in meters
+    AU = 149597870700.0
+    expected = {}
+    expected["Montenbruck"] = (-0.97091717601, -0.0206575736, 0.29291204417)
+    expected["Kubo"] = (-0.9709365152, -0.0206263698, 0.29291433411)
+    expected["Meeus"] = (-0.97091822608, -0.02065299465, 0.29290057914)
+    expected["VSOP87"] = (-0.97091253658, -0.02046266071, 0.29295838337)
+    # calculate approximate solar ephemerides
+    x, y, z = pyTMD.astro.solar_ecef(MJD, ephemerides=method)
+    assert np.allclose(x / AU, expected[method][0], atol=1e-9)
+    assert np.allclose(y / AU, expected[method][1], atol=1e-9)
+    assert np.allclose(z / AU, expected[method][2], atol=1e-9)
+
 # parametrize over approximate methods
 @pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus", "VSOP87"])
 def test_solar_ecef(method):
@@ -211,6 +289,65 @@ def test_solar_ecef(method):
     assert np.allclose(r1, rad1)
     assert np.allclose(r2, rad2)
     assert np.allclose(rad1, rad2, atol=1e9)
+
+# parametrize method for determining the lunar latitude
+@pytest.mark.parametrize("method", ["Kubo", "Meeus"])
+def test_lunar_latitude(method):
+    """Unit test of lunar latitudes
+    """
+    MJD = 55414.0
+    expected = {}
+    expected["Kubo"] = 2.14910406480
+    expected["Meeus"] = 2.14844767017
+    # test latitudes
+    beta_moon = pyTMD.astro.lunar_latitude(MJD, ephemerides=method)
+    assert np.allclose(np.degrees(beta_moon), expected[method], atol=1e-9)
+
+# parametrize method for determining the lunar longitude
+@pytest.mark.parametrize("method", ["Kubo", "Meeus"])
+def test_lunar_longitude(method):
+    """Unit test of lunar longitudes
+    """
+    MJD = 55414.0
+    expected = {}
+    expected["Kubo"] = 77.35268430901
+    expected["Meeus"] = 77.34869495346
+    # test longitudes
+    lambda_moon = pyTMD.astro.lunar_longitude(MJD, ephemerides=method)
+    assert np.allclose(np.degrees(lambda_moon), expected[method], atol=1e-9)
+
+# parametrize method for determining the lunar radius
+@pytest.mark.parametrize("method", ["Kubo", "Meeus"])
+def test_lunar_radius(method):
+    """Unit test of lunar distance
+    """
+    MJD = 55414.0
+    # average lunar distance in meters
+    LD = 384400000.0
+    expected = {}
+    expected["Kubo"] = 0.97788804891
+    expected["Meeus"] = 0.97789382986
+    # test distances
+    r_moon = pyTMD.astro.lunar_distance(MJD, ephemerides=method)
+    assert np.allclose(r_moon / LD, expected[method], atol=1e-9)
+
+# parametrize over approximate methods
+@pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus"])
+def test_lunar_approximate(method):
+    """Unit test of lunar ECEF coordinates
+    """
+    MJD = 55414.0
+    # average lunar distance in meters
+    LD = 384400000.0
+    expected = {}
+    expected["Montenbruck"] = (-0.45993865324, 0.75781577405, 0.41289365334)
+    expected["Kubo"] = (-0.46111374433, 0.75705032428, 0.41290418118)
+    expected["Meeus"] = (-0.46106343499, 0.7570958464, 0.41289058729)
+    # calculate approximate lunar ephemerides
+    x, y, z = pyTMD.astro.lunar_ecef(MJD, ephemerides=method)
+    assert np.allclose(x / LD, expected[method][0], atol=1e-9)
+    assert np.allclose(y / LD, expected[method][1], atol=1e-9)
+    assert np.allclose(z / LD, expected[method][2], atol=1e-9)
 
 # parametrize over approximate methods
 @pytest.mark.parametrize("method", ["Montenbruck", "Kubo", "Meeus"])

@@ -497,9 +497,8 @@ def doodson_number(
     kwargs.setdefault("raise_error", True)
     # validate inputs
     formalisms = ("Cartwright", "Doodson", "Extended")
-    assert kwargs["formalism"].title() in formalisms, (
-        f"Unknown formalism {kwargs['formalism']}"
-    )
+    if kwargs["formalism"].title() not in formalisms:
+        raise ValueError("Unknown formalism")
     # get the coefficients of coefficients
     if isinstance(constituents, str):
         # try to get the Doodson coefficients for constituent
@@ -2639,7 +2638,8 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
 
     # verify list of coefficients
     N = int(kwargs["arguments"])
-    assert (N == 6) or (N == 7)
+    if (N != 6) and (N != 7):
+        raise ValueError("Invalid number of arguments")
     # assert length and verify list
     coef = np.copy(coef[:N]).tolist()
 

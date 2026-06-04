@@ -81,8 +81,8 @@ Similarly, from :cite:t:`Cartwright:1971iz`, the steps for using the catalog met
     a) Calculate the angular frequency (:math:`\Omega`) of the constituent
     b) Calculate the frequency and latitude dependent :term:`Love/Shida numbers <Love and Shida Numbers>`
     c) Calculate the :ref:`spherical harmonics <spherical-harmonics>` for the degree and order of the constituent 
-    d) Calculate the equilibrium phase of the constituent (see :ref:`equilibrium-theory`)
-    e) Rotate the spherical harmonics by the equilibrium phase (see :ref:`spherical-harmonics`)
+    d) Calculate the equilibrium phase of the constituent [see :ref:`equilibrium-theory`]
+    e) Rotate the spherical harmonics by the equilibrium phase [see :ref:`spherical-harmonics`]
     f) Scale the rotated spherical harmonics by the constituent amplitude and the appropriate :term:`Love/Shida numbers <Love and Shida Numbers>`  [see :ref:`Equation 2.1 <eq:2.1>`] to calculate the induced elastic deformation
     g) Add contributions to the total tidal displacement
 
