@@ -1579,7 +1579,7 @@ def _coords(
     # determine coordinate data type if possible
     if (np.ndim(x) == 0) and (np.ndim(y) == 0):
         coord_type = "time series"
-    elif kwargs["type"] is None and kwargs["time"] is not None:
+    elif kwargs["type"] is None and kwargs["time"] is None:
         # must provide time variable to determine data type
         raise ValueError("Must provide time parameter to determine type")
     elif kwargs["type"] is None:

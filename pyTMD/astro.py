@@ -2240,7 +2240,6 @@ def _cartesian(
         Celestial Latitude (radians)
     lmda: float or np.ndarray
         Celestial Longitude (radians)
-    lmda: float or np.ndarray
     radius: float or np.ndarray, default 1.0
         Radius of the sphere
     inclination: float or np.ndarray, default 0.0
