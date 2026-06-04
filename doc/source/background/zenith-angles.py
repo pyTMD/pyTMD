@@ -209,7 +209,7 @@ for ax in fig.axes:
         x, y, z = pyTMD.astro._cartesian(np.radians(lats), np.radians(m))
         ax.plot(x, y, z, color="0.4", lw=0.5)
 
-    # celestial pole and vernal equinox
+    # celestial pole
     ax.quiver(
         0, 0, 0, 0, 0, quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
     )

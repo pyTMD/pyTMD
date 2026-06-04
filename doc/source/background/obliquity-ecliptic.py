@@ -70,6 +70,7 @@ ax.quiver(
     lw=0.5,
     arrow_length_ratio=0.07,
     label="Vernal Equinox",
+    zorder=4,
 )
 ax.text(
     0.0,
@@ -109,7 +110,19 @@ omega = np.radians(1934.136 * ts.T + 235.0)
 epsilon += np.radians(0.00256 * np.cos(omega))
 # convert to position vectors
 x, y, z = pyTMD.astro._cartesian(0, np.radians(lons), inclination=epsilon)
-ax.plot(x, y, z, color="mediumseagreen", lw=0.8, ls="--", label="Ecliptic")
+ax.fill_between(
+    0,
+    0,
+    0,
+    x,
+    y,
+    z,
+    edgecolor="mediumseagreen",
+    facecolor="mediumseagreen",
+    linestyle="--",
+    alpha=0.1,
+    label="Ecliptic",
+)
 
 # add legend
 ax.legend(loc="lower left", fontsize=9, frameon=False)
