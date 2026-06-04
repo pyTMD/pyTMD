@@ -483,7 +483,8 @@ def _infer_semi_diurnal(
     # list of minor constituents
     kwargs.setdefault("minor", None)
     # validate interpolation method
-    assert kwargs["method"].lower() in ("linear", "admittance")
+    if kwargs["method"].lower() not in ("linear", "admittance"):
+        raise ValueError("Invalid interpolation method")
     # major constituents used for inferring semi-diurnal minor tides
     # pivot waves listed in Table 6.7 of the 2010 IERS Conventions
     cindex = ["n2", "m2", "s2"]
@@ -671,7 +672,8 @@ def _infer_diurnal(
     # list of minor constituents
     kwargs.setdefault("minor", None)
     # validate interpolation method
-    assert kwargs["method"].lower() in ("linear", "admittance")
+    if kwargs["method"].lower() not in ("linear", "admittance"):
+        raise ValueError("Invalid interpolation method")
     # major constituents used for inferring diurnal minor tides
     # pivot waves listed in Table 6.7 of the 2010 IERS Conventions
     cindex = ["q1", "o1", "k1"]

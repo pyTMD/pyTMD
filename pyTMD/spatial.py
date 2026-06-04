@@ -1100,7 +1100,8 @@ def scale_factors(
     scale: np.ndarray
         Scaling factors at input latitudes
     """
-    assert metric.lower() in ["distance", "area"], "Unknown metric"
+    if metric.lower() not in ["distance", "area"]:
+        raise ValueError("Unknown metric")
     # power for scaling factors
     power = 1.0 if metric.lower() == "distance" else 2.0
     # convert latitude to positive radians

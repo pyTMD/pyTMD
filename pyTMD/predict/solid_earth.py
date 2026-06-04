@@ -150,9 +150,12 @@ def body_tide(
     # check if user has provided degree-2 Love numbers
     user_degree_2 = (kwargs["h2"] is not None) and (kwargs["l2"] is not None)
     # validate method and output tide system
-    assert method.lower() in ("cartwright", "meeus", "astro5", "iers")
-    assert tide_system.lower() in ("tide_free", "mean_tide")
-    assert catalog in _tide_potential_table
+    if method.lower() not in ("cartwright", "meeus", "astro5", "iers"):
+        raise ValueError("Invalid method for computing mean longitudes")
+    if tide_system.lower() not in ("mean_tide", "tide_free"):
+        raise ValueError("Invalid permanent tide system")
+    if catalog not in _tide_potential_table:
+        raise ValueError("Unknown tide potential catalog")
 
     # convert dates to Modified Julian Days
     MJD = t + _mjd_tide
@@ -445,7 +448,8 @@ def solid_earth_tide(
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
     # validate output tide system
-    assert tide_system.lower() in ("tide_free", "mean_tide")
+    if tide_system.lower() not in ("mean_tide", "tide_free"):
+        raise ValueError("Invalid permanent tide system")
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # radius of the point on the Earth's surface

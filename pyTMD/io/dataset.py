@@ -1518,7 +1518,8 @@ def _transform(
     """
     # set the direction of the transformation
     kwargs.setdefault("direction", "FORWARD")
-    assert kwargs["direction"] in ("FORWARD", "INVERSE", "IDENT")
+    if kwargs["direction"] not in ("FORWARD", "INVERSE", "IDENT"):
+        raise ValueError("Invalid transformation direction")
     # get the coordinate reference system and transform
     source_crs = pyproj.CRS.from_user_input(source_crs)
     transformer = pyproj.Transformer.from_crs(
@@ -1578,11 +1579,11 @@ def _coords(
     # determine coordinate data type if possible
     if (np.ndim(x) == 0) and (np.ndim(y) == 0):
         coord_type = "time series"
-    elif kwargs["type"] is None:
+    elif kwargs["type"] is None and kwargs["time"] is not None:
         # must provide time variable to determine data type
-        assert kwargs["time"] is not None, (
-            "Must provide time parameter when type is not specified"
-        )
+        raise ValueError("Must provide time parameter to determine type")
+    elif kwargs["type"] is None:
+        # auto-detect coordinate data type from input variable dimensions
         coord_type = data_type(x, y, np.ravel(kwargs["time"]))
     else:
         # use provided coordinate data type

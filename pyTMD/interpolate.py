@@ -715,15 +715,16 @@ def slerp(
     # compute the angle between the two points
     s = pyTMD.math.scalar_product(x, y, z, u, v, w) / (r1 * r2)
     # trim angle to range to avoid numerical errors
-    c = np.arccos(np.clip(s, -1.0, 1.0))
-    # if the points are too close, return the first point
-    if c < eps:
-        return x, y, z
+    t = np.arccos(np.clip(s, -1.0, 1.0))
     # set the interpolation points
     ii = np.linspace(0.0, 1.0, n)
     # spherical linear interpolation following Shoemake (1985)
-    a = (np.sin((1.0 - ii) * c) * x + np.sin(ii * c) * u) / np.sin(c)
-    b = (np.sin((1.0 - ii) * c) * y + np.sin(ii * c) * v) / np.sin(c)
-    c = (np.sin((1.0 - ii) * c) * z + np.sin(ii * c) * w) / np.sin(c)
+    a = (np.sin((1.0 - ii) * t) * x + np.sin(ii * t) * u) / np.sin(t)
+    b = (np.sin((1.0 - ii) * t) * y + np.sin(ii * t) * v) / np.sin(t)
+    c = (np.sin((1.0 - ii) * t) * z + np.sin(ii * t) * w) / np.sin(t)
+    # if the points are too close, return the first point
+    a = np.where(t < eps, x, a)
+    b = np.where(t < eps, y, b)
+    c = np.where(t < eps, z, c)
     # return the interpolated points
     return a, b, c

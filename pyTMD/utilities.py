@@ -264,8 +264,8 @@ def import_dependency(
         Imported module
     """
     # check if the module name is a string
-    msg = f"Invalid module name: '{name}'; must be a string"
-    assert isinstance(name, str), msg
+    if not isinstance(name, str):
+        raise TypeError(f"Invalid module name: '{name}'; must be a string")
     # default error if module cannot be imported
     err = f"Missing optional dependency '{name}'. {extra}"
     module = type("module", (), {})

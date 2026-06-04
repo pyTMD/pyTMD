@@ -290,8 +290,9 @@ def legendre(
     # verify values are integers
     l = np.int64(l)
     m = np.int64(m)
-    # assert values
-    assert (m >= 0) and (m <= l), "Order must be between 0 and l"
+    # assert values for spherical harmonic orders
+    if (m < 0) or (m > l):
+        raise ValueError("Order must be between 0 and l")
     # verify x is array
     if isinstance(x, list):
         x = np.atleast_1d(x)

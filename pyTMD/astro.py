@@ -691,11 +691,12 @@ def solar_ecef(
         ECEF coordinates of the sun (meters)
     """
     # determine the solar positions
-    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
-    if ephemerides.lower() in methods:
+    _methods = ["approximate", "kubo", "meeus", "montenbruck", "vsop87"]
+    if ephemerides.lower() in _methods:
         return solar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL" and not jplephem_available:
+        raise ValueError("jplephem is required for JPL ephemerides")
     elif ephemerides.upper() == "JPL":
-        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return solar_ephemerides(MJD, **kwargs)
     else:
         raise ValueError("Invalid ephemerides method")
@@ -725,8 +726,9 @@ def solar_approximate(
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Montenbruck")
-    methods = ["approximate", "montenbruck", "kubo", "meeus", "vsop87"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["approximate", "kubo", "meeus", "montenbruck", "vsop87"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # calculate solar positions using the specified method
@@ -866,8 +868,9 @@ def solar_equatorial(MJD, **kwargs):
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Meeus")
-    methods = ["kubo", "meeus", "vsop87"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["kubo", "meeus", "vsop87"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # check if input is scalar or array
     singular_values = np.ndim(MJD) == 0
     # create timescale from Modified Julian Day (MJD)
@@ -1427,11 +1430,12 @@ def lunar_ecef(
         ECEF coordinates of the moon (meters)
     """
     # determine the lunar positions
-    methods = ["approximate", "montenbruck", "kubo", "meeus"]
-    if ephemerides.lower() in methods:
+    _methods = ["approximate", "kubo", "meeus", "montenbruck"]
+    if ephemerides.lower() in _methods:
         return lunar_approximate(MJD, ephemerides=ephemerides, **kwargs)
+    elif ephemerides.upper() == "JPL" and not jplephem_available:
+        raise ValueError("jplephem is required for JPL ephemerides")
     elif ephemerides.upper() == "JPL":
-        assert jplephem_available, "jplephem is required for JPL ephemerides"
         return lunar_ephemerides(MJD, **kwargs)
     else:
         raise ValueError("Invalid ephemerides method")
@@ -1461,8 +1465,9 @@ def lunar_approximate(
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Montenbruck")
-    methods = ["approximate", "montenbruck", "kubo", "meeus"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["approximate", "kubo", "meeus", "montenbruck"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # create timescale from Modified Julian Day (MJD)
     ts = timescale.time.Timescale(MJD=MJD)
     # calculate lunar positions using the specified method
@@ -1645,12 +1650,13 @@ def lunar_equatorial(MJD, **kwargs):
     right_ascension: np.ndarray
         Right ascension of the moon (radians)
     declination: np.ndarray
-        Declination of the moon (radiansradians)
+        Declination of the moon (radians)
     """
     # default keyword arguments
     kwargs.setdefault("ephemerides", "Meeus")
-    methods = ["kubo", "meeus"]
-    assert kwargs["ephemerides"].lower() in methods
+    _methods = ["kubo", "meeus"]
+    if kwargs["ephemerides"].lower() not in _methods:
+        raise ValueError("Invalid ephemerides method")
     # check if input is scalar or array
     singular_values = np.ndim(MJD) == 0
     # create timescale from Modified Julian Day (MJD)
@@ -2231,9 +2237,10 @@ def _cartesian(
     Parameters
     ----------
     beta: float or np.ndarray
+        Celestial Latitude (radians)
+    lmda: float or np.ndarray
         Celestial Longitude (radians)
     lmda: float or np.ndarray
-        Latitude (radians)
     radius: float or np.ndarray, default 1.0
         Radius of the sphere
     inclination: float or np.ndarray, default 0.0
