@@ -35,7 +35,7 @@ Every tidal constituent corresponds to a specific combination of astronomical cy
 Cartwright Numbers
 ^^^^^^^^^^^^^^^^^^
 
-Cartwright numbers are an ordered list of signed integers for the multipliers of the astronomical arguments [see: :ref:`Equation 1.2 <eq:1.2>`]:
+Cartwright numbers are an ordered list of signed integers for the multipliers of the astronomical arguments [see :ref:`Equation 1.2 <eq:1.2>`]:
 
 .. math::
     \text{Cartwright numbers} = [d_1, d_2, d_3, d_4, d_5, d_6]

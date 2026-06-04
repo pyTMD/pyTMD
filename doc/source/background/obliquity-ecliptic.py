@@ -52,15 +52,6 @@ for m in np.arange(0, 360, 30):
     x, y, z = pyTMD.astro._cartesian(np.radians(lats), np.radians(m))
     ax.plot(x, y, z, color="0.4", lw=0.5)
 
-# obliquity of the ecliptic
-epsilon = pyTMD.astro.mean_obliquity(ts.MJD + ts.tt_ut1)
-# simple correction for principal nutation (radians)
-omega = np.radians(1934.136 * ts.T + 235.0)
-epsilon += np.radians(0.00256 * np.cos(omega))
-# convert to position vectors
-x, y, z = pyTMD.astro._cartesian(0, np.radians(lons), inclination=epsilon)
-ax.plot(x, y, z, color="teal", lw=0.8, ls="--", label="Ecliptic")
-
 # celestial pole and vernal equinox
 ax.quiver(
     0, 0, 0, 0, 0, quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
@@ -69,7 +60,16 @@ ax.quiver(
     0, 0, 0, 0, 0, -quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 ax.quiver(
-    0, 0, 0, quiver_extend, 0, 0, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    quiver_extend,
+    0,
+    0,
+    color="darkorchid",
+    lw=0.5,
+    arrow_length_ratio=0.07,
+    label="Vernal Equinox",
 )
 ax.text(
     0.0,
@@ -99,8 +99,17 @@ ax.text(
     ha="center",
     va="center",
     fontsize=9,
-    color="k",
+    color="darkorchid",
 )
+
+# obliquity of the ecliptic
+epsilon = pyTMD.astro.mean_obliquity(ts.MJD + ts.tt_ut1)
+# simple correction for principal nutation (radians)
+omega = np.radians(1934.136 * ts.T + 235.0)
+epsilon += np.radians(0.00256 * np.cos(omega))
+# convert to position vectors
+x, y, z = pyTMD.astro._cartesian(0, np.radians(lons), inclination=epsilon)
+ax.plot(x, y, z, color="mediumseagreen", lw=0.8, ls="--", label="Ecliptic")
 
 # add legend
 ax.legend(loc="lower left", fontsize=9, frameon=False)

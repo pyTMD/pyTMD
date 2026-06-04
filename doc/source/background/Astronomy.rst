@@ -129,7 +129,7 @@ The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mea
 
 .. plot:: ./background/obliquity-ecliptic.py
     :show-source-link: False
-    :caption: Ecliptical Plane in the Celestial Sphere
+    :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
     :align: center
 
 .. _ephemerides:
@@ -170,5 +170,5 @@ This is equivalent to the dot product between the unit vectors of the celestial 
 
 .. plot:: ./background/zenith-angles.py
     :show-source-link: False
-    :caption: Zenith Angles of the Sun and Moon
+    :caption: Hour Angles and Zenith Angles of the Sun and Moon
     :align: center
