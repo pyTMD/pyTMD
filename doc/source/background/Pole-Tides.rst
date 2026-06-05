@@ -8,6 +8,11 @@ Superimposed on this long-term :term:`precession <Precession>`, the rotation axi
 Load and ocean pole tides are driven by these variations, the corresponding elastic response, and (for the case of the ocean pole tide) the centripetal effects of :term:`polar motion <Polar Motion>` on the ocean :cite:p:`Desai:2002ev,Desai:2015jr`.
 These variations are centimeter scale in both the vertical and horizontal, and should be taken into account when comparing observations over periods longer than two months.
 
+.. plot:: ./background/precession-nutation.py
+    :show-source-link: False
+    :caption: Precession and Nutation of the Earth's Rotation Axis
+    :align: center
+
 Methods
 -------
 

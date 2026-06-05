@@ -24,7 +24,7 @@ proj1 = ccrs.Orthographic(central_longitude=0.0, central_latitude=0.0)
 proj2 = ccrs.Orthographic(central_longitude=180.0, central_latitude=0.0)
 
 # plot spherical harmonics
-fig = plt.figure(num=1, figsize=(8, 6))
+fig = plt.figure(num=1, figsize=(8, 6), facecolor="#fcfcfc")
 for tau in range(0, l + 1):
     # setup subplots
     ax1 = fig.add_subplot(nrows, ncols, tau + 1, projection=proj1)
@@ -54,6 +54,8 @@ for tau in range(0, l + 1):
         ax.coastlines("50m")
         # set global view
         ax.set_global()
+        # set the axes facecolor
+        ax.set_facecolor("#fcfcfc")
         # turn off the axis
         ax.set_axis_off()
 

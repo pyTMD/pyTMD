@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
 # create figure and subplots
-fig = plt.figure(num=1, figsize=(13, 5))
+fig = plt.figure(num=1, figsize=(13, 5), facecolor="#fcfcfc")
 subfig = fig.subfigures(2, 1, hspace=0.05, height_ratios=(1.0, 2.0))
 ax1 = subfig[0].subplots(ncols=1)
 ax2 = subfig[1].subplots(ncols=3, sharey="row")

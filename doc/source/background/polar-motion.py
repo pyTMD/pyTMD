@@ -13,7 +13,7 @@ mx = EOP["x"] - mpx
 my = -(EOP["y"] - mpy)
 
 # create figure and subplots
-fig = plt.figure(num=1, figsize=(8.5, 4))
+fig = plt.figure(num=1, figsize=(8.5, 4), facecolor="#fcfcfc")
 subfig = fig.subfigures(1, 2, wspace=0.05, width_ratios=(1.5, 1.0))
 ax1 = subfig[0].subplots(nrows=2, sharex=True)
 ax2 = subfig[1].subplots()
