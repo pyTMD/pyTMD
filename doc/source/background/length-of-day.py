@@ -10,7 +10,13 @@ MJD1 = np.arange(37680, 55021)
 MJD2 = 48830 + np.arange(1440 * 4) / 1440.0
 
 # plot rotation rate variations
-fig, ax = plt.subplots(num=1, nrows=2, sharex=False, figsize=(8, 4))
+fig, ax = plt.subplots(
+    num=1,
+    nrows=2,
+    sharex=False,
+    figsize=(8, 4),
+    facecolor="#fcfcfc",
+)
 
 # predict rotation rate variations for the time period of Ray (1994)
 ts = timescale.time.Timescale(MJD2)

@@ -17,7 +17,13 @@ leaps = leaps[leaps > ts.gps[0]]
 n_leaps = len(leaps)
 
 # create figure
-fig, ax = plt.subplots(num=1, nrows=2, sharex=True, figsize=(6, 6))
+fig, ax = plt.subplots(
+    num=1,
+    nrows=2,
+    sharex=True,
+    figsize=(6, 6),
+    facecolor="#fcfcfc",
+)
 # plot UT1-UTC and TT-UT1
 ax[0].plot(ts.year, ts.ut1_utc, ".", ms=0.5, c="0.4")
 ax[1].plot(ts.year, tt_ut1, "0.4")

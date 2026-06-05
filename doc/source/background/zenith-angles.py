@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 fig, ax1 = plt.subplots(
-    num=1, ncols=2, figsize=(9.0, 4.5), subplot_kw={"projection": "3d"}
+    num=1,
+    ncols=2,
+    figsize=(9.0, 4.5),
+    subplot_kw={"projection": "3d"},
+    facecolor="#fcfcfc",
 )
 
 # extend of quiver arrows
@@ -316,6 +320,8 @@ ax1[1].fill_between(
 )
 
 for ax in fig.axes:
+    # set the axes facecolor
+    ax.set_facecolor("#fcfcfc")
     # add legend
     ax.legend(loc="lower left", fontsize=9, frameon=False)
     # set the aspect ratio and view angle

@@ -22,7 +22,13 @@ for i, omega in enumerate(omegas):
     )
 
 # create figure and subplots
-fig, ax = plt.subplots(num=1, nrows=3, sharex=True, figsize=(6, 5))
+fig, ax = plt.subplots(
+    num=1,
+    nrows=3,
+    sharex=True,
+    figsize=(6, 5),
+    facecolor="#fcfcfc",
+)
 # plot Love numbers
 for i, key in enumerate(["h", "k", "l"]):
     # remove the largest gradient
