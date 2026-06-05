@@ -1,5 +1,4 @@
 import pyTMD
-import timescale
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -185,8 +184,6 @@ ax.text(
     color="k",
 )
 
-# add legend
-ax.legend(loc="lower left", fontsize=9, frameon=False)
 # set the aspect ratio and view angle
 ax.set_xlim(-0.8, 0.8)
 ax.set_ylim(-0.8, 0.8)
