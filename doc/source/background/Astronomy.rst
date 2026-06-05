@@ -40,13 +40,13 @@ The rates of change of these arguments are the fundamental frequencies of the as
       - solar perigee
       - 21,000 years
 
-The lunar hour angle (:math:`\tau`) can be determined from solar time (:math:`t`) using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
+The lunar hour angle (:math:`\tau`) in degrees can be determined from the solar time (:math:`t`) in hours using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
 
 .. math::
     :label: 7.1
     :name: eq:7.1
 
-    \tau = t - S + H
+    \tau = \frac{360}{24} t - S + H
 
 When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay arguments as the fundamental orbital elements :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp` .
 

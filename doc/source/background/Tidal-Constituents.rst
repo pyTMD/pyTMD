@@ -47,6 +47,8 @@ Cartwright numbers are an ordered list of signed integers for the multipliers of
 - :math:`d_5`: multiples of the mean longitude of the node of the Moon (:math:`N`)
 - :math:`d_6`: multiples of the mean longitude of the perigee of the Sun (:math:`Ps`)
 
+.. _doodson-numbers:
+
 Doodson Numbers
 ^^^^^^^^^^^^^^^
 
@@ -66,3 +68,19 @@ The UKHO Extended Doodson Number (XDO) system was designed to address two limita
 2. **Disambiguation**: the format carries a seventh character encoding the index :math:`k` which resolves ambiguities when constituents share the same Doodson number
 
 The XDO system maps :math:`0` to :math:`\mathrm{Z}`, the range :math:`[1,15]` to :math:`[\mathrm{A},\mathrm{P}]`, and the range :math:`[-8,-1]` to :math:`[\mathrm{R},\mathrm{Y}]`.
+
+Tidal Classifications
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table:: Doodson Number Classification
+    :header-rows: 1
+    :align: center
+
+    * - Classification
+      - Description
+    * - :term:`Species`
+      -  shared :math:`d_1` 
+    * - Group
+      -  shared :math:`d_1` and :math:`d_2`
+    * - Subgroup
+      -  shared :math:`d_1`, :math:`d_2` and :math:`d_3`
