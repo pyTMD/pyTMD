@@ -57,7 +57,7 @@ CTE = pyTMD.constituents._parse_tide_potential_table(table)
 models_table = directory.joinpath("_assets", "constituents.csv")
 fid = models_table.open(mode="w", encoding="utf8")
 # write to csv
-print("Constituent,Doodson Number,Frequency (cpd),Description", file=fid)
+print("Constituent,:ref:`Doodson Number <doodson-numbers>`,Frequency (cpd),Description", file=fid)
 for c, params in cons.items():
     DO = pyTMD.constituents.doodson_number(c).astype(str).zfill(7)
     (i,) = np.nonzero(CTE["DO"] == DO)

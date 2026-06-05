@@ -132,15 +132,51 @@ ax.text(
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
 
+# fill in the quadrants
+x, y, z = pyTMD.interpolate.slerp(1, 0, 0, 0, 1, 0)
+ax.fill_between(
+    0,
+    0,
+    0,
+    x,
+    y,
+    z,
+    color="0.4",
+    hatch="//",
+    alpha=0.1,
+)
+
+x, y, z = pyTMD.interpolate.slerp(1, 0, 0, 0, 0, 1)
+ax.fill_between(
+    0,
+    0,
+    0,
+    x,
+    y,
+    z,
+    color="0.4",
+    hatch="\\\\",
+    alpha=0.1,
+)
+
 # parallels at 30 degree intervals
 for p in np.arange(-60, 90, 30):
     x, y, z = pyTMD.astro._cartesian(np.radians(p), np.radians(lons))
-    ax.plot(x, y, z, color="0.4", lw=0.5)
+    # plot the equator in black and the other parallels in gray
+    if p == 0:
+        ax.plot(x, y, z, color="k", lw=0.8)
+    else:
+        ax.plot(x, y, z, color="0.4", lw=0.5)
 
 # meridians at 30 degree intervals
 for m in np.arange(0, 360, 30):
     x, y, z = pyTMD.astro._cartesian(np.radians(lats), np.radians(m))
-    ax.plot(x, y, z, color="0.4", lw=0.5)
+    # plot the prime meridian and 180 degree meridian in black
+    # and the other meridians in gray
+    if m == 0 or m == 180:
+        ax.plot(x, y, z, color="k", lw=0.8)
+    else:
+        ax.plot(x, y, z, color="0.4", lw=0.5)
 
 # cartesian axes
 ax.quiver(
