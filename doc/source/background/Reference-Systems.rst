@@ -9,6 +9,11 @@ ECEF is a Cartesian coordinate system with :math:`x`, :math:`y`, and :math:`z` d
 The :math:`z` axis is aligned with the Earth's rotation axis, the :math:`x` axis is aligned with the intersection of the prime meridian and the equator, and the :math:`y` axis is aligned with 90\ |degree| east longitude and the equator.
 The :math:`xy` plane is also called the equatorial plane.
 
+.. plot:: ./background/geocentric-cartesian.py
+    :show-source-link: False
+    :caption: Geocentric Cartesian Coordinate System
+    :align: center
+
 Geodetic coordinates (longitude :math:`\lambda`, latitude :math:`\varphi`, and height :math:`h`) are used to describe the position of a point on the Earth with respect to a defined ellipsoid.
 Changing the terrestrial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
 One method of transformation involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 5.1 <eq:5.1>`].
