@@ -20,14 +20,14 @@ The system of equations for solving for :math:`K` number of constituents with :m
     :label: 5.1
     :name: eq:5.1
 
-    \mathbf{h} = \mathbf{M}^\mathsf{T}\mathbf{x} + \mathbf{\sigma}
+    \mathbf{h} = \mathbf{M}^\mathsf{T}\mathbf{x} + \boldsymbol{\sigma}
 
 where:
 
 - :math:`\mathbf{h}` is the observation vector :math:`[h(t_1), \ldots, h(t_N)]`
 - :math:`\mathbf{M}^\mathsf{T}` is the transpose of the design matrix in :ref:`Equation 5.2 <eq:5.2>`
 - :math:`\mathbf{x}` is the parameter vector :math:`[z_0, \ldots, c_\alpha, s_\alpha, c_\beta, s_\beta, \ldots, c_K, s_K]` with terms for the datum offset and the cosine and sine coefficients for each constituent
-- and :math:`\mathbf{\sigma}` is the residual vector (non-tidal signal plus measurement noise)
+- and :math:`\boldsymbol{\sigma}` is the residual vector (non-tidal signal plus measurement noise)
 
 .. math::
     :label: 5.2
@@ -46,7 +46,7 @@ where:
          -f_K(t_1)\sin(G_K(t_1) + u_K(t_1)) & \ldots & -f_K(t_N)\sin(G_K(t_N) + u_K(t_N))
       \end{bmatrix}
 
-Each pair of rows in the design matrix that contain harmonic terms, :math:`f_k(t)\cos(G_k(t) + u_k(t))` and :math:`f_k(t)\sin(G_k(t) + u_k(t))`, encode the time-varying phase of a single tidal constituent :math:`k`.
+Each pair of rows in the design matrix that contain harmonic terms, :math:`f_k(t)\cos(G_k(t) + u_k(t))` and :math:`-f_k(t)\sin(G_k(t) + u_k(t))`, encode the time-varying phase of a single tidal constituent :math:`k`.
 
 The first row of the design matrix (consisting entirely of ones) allows for the encoding of a constant term.
 This will solve for the average elevation or current, and is by default included in the model design matrix.
@@ -63,7 +63,7 @@ The least-squares solution of this system of equations minimizes the residuals o
    :label: 5.3
    :name: eq:5.3
 
-   (\mathbf{h} - \mathbf{M^\mathsf{T}x})^\mathsf{T}(\mathbf{h} - \mathbf{M^\mathsf{T}x})
+   (\mathbf{h} - \mathbf{M}^\mathsf{T}\mathbf{x})^\mathsf{T}(\mathbf{h} - \mathbf{M}^\mathsf{T}\mathbf{x})
 
 The solution vector :math:`\mathbf{\hat{x}}` contains the best estimates of the datum offset along with the cosine and sine terms.
 The harmonic constants for each constituent :math:`A_k` and :math:`\theta_k` are calculated from these cosine and sine coefficients.
@@ -99,7 +99,7 @@ Note that the sine terms are negative in the design matrix, which follows the co
       - ``scipy.linalg.lstsq``
     * - ``'bvls'``
       - Bounded-variable least squares
-      - ``scipy.linalg.lstsq``
+      - ``scipy.optimize.lsq_linear``
 
 
 Nodal Corrections
