@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 polar_motion.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Prediction routines for pole tides and Earth Orientation Parameters (EOPs)
 
 PYTHON DEPENDENCIES:
@@ -19,6 +19,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 04/2026: parallel outputs from earth_orientation and length_of_day
     Written 03/2026: split up prediction functions into separate files
@@ -104,7 +105,7 @@ def load_pole_tide(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - latitude
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ["Y"], XYZ["X"])
+    lmda = np.arctan2(XYZ["Y"], XYZ["X"])
 
     # calculate angular coordinates of mean/secular pole at time
     mpx, mpy, fl = timescale.eop.iers_mean_pole(
@@ -139,27 +140,27 @@ def load_pole_tide(
     S["N"] = (
         dfactor["N"]
         * np.cos(2.0 * theta)
-        * (pm.X * np.cos(phi) + sign_convention * pm.Y * np.sin(phi))
+        * (pm.X * np.cos(lmda) + sign_convention * pm.Y * np.sin(lmda))
     )
     S["E"] = (
         dfactor["E"]
         * np.cos(theta)
-        * (pm.X * np.sin(phi) - sign_convention * pm.Y * np.cos(phi))
+        * (pm.X * np.sin(lmda) - sign_convention * pm.Y * np.cos(lmda))
     )
     S["R"] = (
         dfactor["R"]
         * np.sin(2.0 * theta)
-        * (pm.X * np.cos(phi) + sign_convention * pm.Y * np.sin(phi))
+        * (pm.X * np.cos(lmda) + sign_convention * pm.Y * np.sin(lmda))
     )
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 tools.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (06/2026)
 Jupyter notebook, user interface and plotting tools
 
 PYTHON DEPENDENCIES:
@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
         https://github.com/jupyter-widgets/ipyleaflet
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 10/2025: change default directory for tide models to cache
     Updated 08/2025: use numpy degree to radian conversions
@@ -250,9 +251,9 @@ class leaflet:
 
     # fix longitudes to be -180:180
     def wrap_longitudes(self, lon):
-        phi = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
-        # convert phi from radians to degrees
-        return np.degrees(phi)
+        lmda = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
+        # convert longitudes from radians to degrees
+        return np.degrees(lmda)
 
     # add function for setting marker text if location changed
     def set_marker_text(self, sender):

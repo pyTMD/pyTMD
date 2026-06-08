@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: use item() to extract scalars from 0-dimensional arrays
+       standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 04/2026: updated scale factors to add case where reference
         latitude is at the pole
@@ -347,9 +348,9 @@ def wrap_longitudes(lon: float | np.ndarray):
     lon: float or np.ndarray
         Longitude (degrees east)
     """
-    phi = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
-    # convert phi from radians to degrees
-    return np.degrees(phi)
+    lmda = np.arctan2(np.sin(np.radians(lon)), np.cos(np.radians(lon)))
+    # convert longitudes from radians to degrees
+    return np.degrees(lmda)
 
 
 def to_dms(d: np.ndarray):
@@ -503,12 +504,12 @@ def to_sphere(
     # calculate radius
     rad = np.sqrt(x**2.0 + y**2.0 + z**2.0)
     # calculate angular coordinates
-    # phi: azimuthal angle
-    phi = np.arctan2(y, x)
+    # lmda: azimuthal angle
+    lmda = np.arctan2(y, x)
     # th: polar angle
     th = np.arccos(z / rad)
     # convert to degrees and fix to 0:360
-    lon = np.degrees(phi)
+    lon = np.degrees(lmda)
     if np.any(lon < 0):
         lt0 = np.nonzero(lon < 0)
         lon[lt0] += 360.0

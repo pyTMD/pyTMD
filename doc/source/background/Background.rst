@@ -63,6 +63,12 @@ The information is organized into separate sections, which can be read in any or
 .. grid:: 2 2 4 4
     :padding: 0
 
+    .. grid-item-card::  Spherical Harmonics
+      :text-align: center
+      :link: ./Spherical-Harmonics.html
+
+      :material-outlined:`filter_tilt_shift;5em`
+
     .. grid-item-card::  Glossary
       :text-align: center
       :link: ./Glossary.html
@@ -86,4 +92,5 @@ The information is organized into separate sections, which can be read in any or
     ./Reference-Systems.rst
     ./Time.rst
     ./Astronomy.rst
+    ./Spherical-Harmonics.rst
     ./Glossary.rst

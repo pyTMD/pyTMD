@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 compute.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Calculates tidal elevations for correcting elevation or imagery data
 Calculates tidal currents at locations and times
 
@@ -64,6 +64,7 @@ PROGRAM DEPENDENCIES:
     predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 03/2026: added function for computing tide-generating forces
@@ -928,7 +929,7 @@ def LPT_displacements(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute normal gravity at spatial location
     # p. 80, Eqn.(2-199)
@@ -936,12 +937,12 @@ def LPT_displacements(
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)
@@ -1098,7 +1099,7 @@ def OPT_displacements(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
     # geocentric latitude (degrees)
     latitude_geocentric = 90.0 - np.degrees(theta)
 
@@ -1108,12 +1109,12 @@ def OPT_displacements(
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)
@@ -1302,7 +1303,7 @@ def _ephemerides_SET(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute ephemerides for lunisolar coordinates
     SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
@@ -1327,12 +1328,12 @@ def _ephemerides_SET(
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)
@@ -1618,7 +1619,7 @@ def TG_forces(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute ephemerides for lunisolar coordinates
     SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
@@ -1643,12 +1644,12 @@ def TG_forces(
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)
@@ -1787,7 +1788,7 @@ def GT_accelerations(
     # geocentric colatitude (radians)
     theta = np.pi / 2.0 - np.arctan(XYZ.Z / np.hypot(XYZ.X, XYZ.Y))
     # calculate longitude (radians)
-    phi = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
 
     # compute ephemerides for lunisolar coordinates
     SX, SY, SZ = pyTMD.astro.solar_ecef(ts.MJD, ephemerides=ephemerides)
@@ -1812,12 +1813,12 @@ def GT_accelerations(
 
     # rotation matrix for converting to/from cartesian coordinates
     R = xr.Dataset()
-    R[0, 0] = np.cos(phi) * np.cos(theta)
-    R[0, 1] = -np.sin(phi)
-    R[0, 2] = np.cos(phi) * np.sin(theta)
-    R[1, 0] = np.sin(phi) * np.cos(theta)
-    R[1, 1] = np.cos(phi)
-    R[1, 2] = np.sin(phi) * np.sin(theta)
+    R[0, 0] = np.cos(lmda) * np.cos(theta)
+    R[0, 1] = -np.sin(lmda)
+    R[0, 2] = np.cos(lmda) * np.sin(theta)
+    R[1, 0] = np.sin(lmda) * np.cos(theta)
+    R[1, 1] = np.cos(lmda)
+    R[1, 2] = np.sin(lmda) * np.sin(theta)
     R[2, 0] = -np.sin(theta)
     R[2, 1] = xr.zeros_like(theta)
     R[2, 2] = np.cos(theta)
