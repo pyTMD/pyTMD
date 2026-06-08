@@ -8,6 +8,8 @@ Ocean tides are driven by gravitational undulations due to the relative position
 A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
 Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
+.. _harmonic-method:
+
 Harmonic Method
 ---------------
 
@@ -20,13 +22,12 @@ The tide height (or current) at any time can be estimated through a summation of
     :label: 1.1
     :name: eq:1.1
 
-    h(t) = z_0 +\sum_{k=1}^{n} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
+    h(t) = z_0 +\sum_{k=1}^{K} f_k(t) \left[A_k\cos{\left(G_k(t) + u_k(t) + \theta_k\right)} \right]
 
-where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`n` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`nodal corrections <Nodal Corrections>`].
+where :math:`z_0` is the datum offset, :math:`k` is the constituent number, :math:`K` is the total number of considered constituents, :math:`A_k` and :math:`\theta_k` are the constituent amplitude and phase lag *provided by the tide model*, :math:`G_k` is the equilibrium phase [see :ref:`Equation 1.2 <eq:1.2>`], :math:`f_k(t)` and :math:`u_k(t)` are the nodal amplitude and phase modulations [see :term:`nodal corrections <Nodal Corrections>`].
 Tidal constituents are typically classified into different "species" based on their approximate period: short-period, semi-diurnal, diurnal, and long-period [see :ref:`tab-constituents` and :ref:`spherical-harmonics`].
 
 .. plot:: ./background/spectra.py
-    :show-source-link: False
     :caption: Tidal spectra from :cite:t:`Cartwright:1973em`
     :align: center
 
@@ -39,6 +40,8 @@ Ocean tide models are typically one of following categories:
 .. note::
 
     ``pyTMD`` is not an ocean or load tide model, but rather a tool for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
+
+.. _nodal-corrections:
 
 Nodal Modulations
 -----------------

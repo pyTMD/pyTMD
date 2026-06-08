@@ -2,7 +2,7 @@
 constants
 =========
 
-- Routines for estimating the harmonic constants for ocean tides
+- Harmonic tidal analysis with minor constituent inference
 
 `Source code`__
 
