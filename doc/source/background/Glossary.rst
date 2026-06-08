@@ -66,7 +66,7 @@ Glossary
         tidal oscillations with a near-daily period
 
     Doodson Arguments
-        six fundamental astronomical arguments used to characterise tidal constituents
+        six fundamental astronomical arguments used to characterize tidal constituents
         
         see :ref:`Astronomical Arguments <astronomical-arguments>`, :term:`Delaunay Arguments`, :term:`Harmonic Constituents`
 
