@@ -2,7 +2,7 @@
 """
 constants.py
 Written by Tyler Sutterley (12/2025)
-Routines for estimating the harmonic constants for ocean tides
+Harmonic tidal analysis with minor constituent inference
 
 REFERENCES:
     G. D. Egbert and S. Erofeeva, "Efficient Inverse Modeling of Barotropic
@@ -89,7 +89,7 @@ def constants(
         - ``'lstsq'``: least squares solution
         - ``'gelsy'``: complete orthogonal factorization
         - ``'gelss'``: singular value decomposition (SVD)
-        - ``'gelsd'``: SVD with divide and conquer method
+        - ``'gelsd'``: SVD with divide-and-conquer method
         - ``'bvls'``: bounded-variable least-squares
     order: int, default 0
         Degree of the polynomial to add to fit

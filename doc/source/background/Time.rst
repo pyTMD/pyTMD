@@ -11,16 +11,16 @@ The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight an
 The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the JD by
 
 .. math::
-    :label: 6.1
-    :name: eq:6.1
+    :label: 7.1
+    :name: eq:7.1
 
     MJD = JD - 2400000.5
 
 Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
 
 .. math::
-    :label: 6.2
-    :name: eq:6.2
+    :label: 7.2
+    :name: eq:7.2
 
     T = \frac{JD - 2451545.0}{36525}
 
@@ -54,7 +54,6 @@ Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to conv
 
 
 .. plot:: ./background/deltatime.py
-    :show-source-link: False
     :caption: Delta times between Terrestrial Time (TT) and Universal Time (UT1)
     :align: center
 
@@ -75,16 +74,16 @@ GMST is calculated in ``pyTMD`` using the revised IAU 2000 precession model :cit
 Greenwich Apparent Sidereal Time (GAST) takes into account the apparent short term motions of the :term:`Vernal Equinox` due to :term:`nutation <Nutation>` using the "equation of the equinoxes" (:math:`E_e`).
 
 .. math::
-    :label: 6.3
-    :name: eq:6.3
+    :label: 7.3
+    :name: eq:7.3
 
     GAST = GMST + E_e
 
 The "equation of the equinoxes" describes the difference between the positions of the true (:math:`\Upsilon_T`) and mean (:math:`\Upsilon_M`) equinoxes of date, and is calculated using the following equations:
 
 .. math::
-    :label: 6.4
-    :name: eq:6.4
+    :label: 7.4
+    :name: eq:7.4
 
     E_e &= \Upsilon_T - \Upsilon_M \\
     &= \Delta\psi\cos{\varepsilon} + \sum_k (C'_k \sin{A_k} + S'_k \cos{A_k})
@@ -100,6 +99,5 @@ The Earth's rotation can vary on timescales from hours to centuries, and is infl
 Many of the early estimates of the sub-daily variations in the length of day (LOD) were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.
 
 .. plot:: ./background/length-of-day.py
-    :show-source-link: False
     :caption: Rotation Rate Variations due to a) Diurnal and Semi-Diurnal :cite:p:`Ray:1994dk` and b) Long-Period Tides :cite:p:`Ray:2014fu`. Red lines in b) denote values for the time period used for calculating the short-period tides in a). Variations in b) are dominated by the 18.6 year node tide cycle :cite:p:`Ray:2014fu`. 
     :align: center

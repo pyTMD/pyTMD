@@ -36,6 +36,12 @@ The information is organized into separate sections, which can be read in any or
 .. grid:: 2 2 4 4
     :padding: 0
 
+    .. grid-item-card::  Harmonic Analysis
+      :text-align: center
+      :link: ./Harmonic-Analysis.html
+
+      :material-outlined:`data_object;5em`
+
     .. grid-item-card::  Reference Systems
       :text-align: center
       :link: ./Reference-Systems.html
@@ -54,6 +60,8 @@ The information is organized into separate sections, which can be read in any or
 
       :material-outlined:`bedtime;5em`
 
+.. grid:: 2 2 4 4
+    :padding: 0
 
     .. grid-item-card::  Glossary
       :text-align: center
@@ -74,6 +82,7 @@ The information is organized into separate sections, which can be read in any or
     ./Solid-Earth-Tides.rst
     ./Gravity-Tides.rst
     ./Pole-Tides.rst
+    ./Harmonic-Analysis.rst
     ./Reference-Systems.rst
     ./Time.rst
     ./Astronomy.rst

@@ -10,7 +10,6 @@ These harmonics are solutions of Laplace's equation in spherical coordinates usi
 The degree 2 spherical harmonic terms are the dominant source of tidal excitation, and induce the semi-diurnal (from :math:`Y_2^2`), diurnal (from :math:`Y_2^1`) and long-period (from :math:`Y_2^0`) tides :cite:p:`Ray:2020gn`.
 
 .. plot:: ./background/sphharm.py
-    :show-source-link: False
     :caption: Spherical harmonics for degree 2
     :align: center
 
@@ -79,7 +78,6 @@ The formalism for computing solid Earth tides within the IERS Conventions includ
 Catalogs of tide potential, such as ``HW1995`` [see :ref:`tab-catalogs`], can include even higher degree terms, as well as the potentials related to planetary motion :cite:p:`Hartmann:1995jp`.
 
 .. plot:: ./background/sphharm34.py
-    :show-source-link: False
     :caption: Spherical harmonics for degrees 3 and 4
     :align: center
 

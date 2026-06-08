@@ -38,7 +38,6 @@ However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some
 ``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
 
 .. plot:: ./background/love-numbers.py
-    :show-source-link: False
     :caption: Diurnal frequency dependence of :term:`Love/Shida numbers <Love and Shida Numbers>` from :cite:t:`Wahr:1979vx`
     :align: center
 
