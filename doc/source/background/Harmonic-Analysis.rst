@@ -3,7 +3,7 @@
 Harmonic Analysis
 ==================
 
-Using the `harmonic method <harmonic-method>`_ for tidal prediction solves the *forward problem*.
+Using the :ref:`harmonic method <harmonic-method>` for tidal prediction solves the *forward problem*.
 Given the harmonic amplitude :math:`A_k`  and phase :math:`\theta_k` for constituent :math:`k`, compute the tidal elevation or current at a time and place [see :ref:`Equation 1.1 <eq:1.1>` in :ref:`ocean-load-tides`].
 Additional terms such as the equilibrium phase :math:`G_k(t)` [see :ref:`Equation 1.2 <eq:1.2>`], and :term:`nodal corrections <Nodal Corrections>` :math:`f_k(t)` and :math:`u_k(t)` are calculated using the *prediction* times.
 
@@ -20,12 +20,12 @@ The system of equations for solving for :math:`K` number of constituents with :m
     :label: 5.1
     :name: eq:5.1
 
-    \mathbf{h} = \mathbf{M}\mathbf{x} + \mathbf{\sigma}
+    \mathbf{h} = \mathbf{M}^\mathsf{T}\mathbf{x} + \mathbf{\sigma}
 
 where:
 
 - :math:`\mathbf{h}` is the observation vector :math:`[h(t_1), \ldots, h(t_N)]`
-- :math:`\mathbf{M}` is the design matrix in :ref:`Equation 5.2 <eq:5.2>`
+- :math:`\mathbf{M}^\mathsf{T}` is the transpose of the design matrix in :ref:`Equation 5.2 <eq:5.2>`
 - :math:`\mathbf{x}` is the parameter vector :math:`[z_0, \ldots, c_\alpha, s_\alpha, c_\beta, s_\beta, \ldots, c_K, s_K]` with terms for the datum offset and the cosine and sine coefficients for each constituent
 - and :math:`\mathbf{\sigma}` is the residual vector (non-tidal signal plus measurement noise)
 
@@ -36,12 +36,12 @@ where:
     \mathbf{M} =
       \begin{bmatrix}
          1 & \ldots & 1 \\
-         \ldots & \ldots & \ldots \\
+         \vdots & \ddots & \vdots \\
          f_\alpha(t_1)\cos(G_\alpha(t_1) + u_\alpha(t_1)) & \ldots & f_\alpha(t_N)\cos(G_\alpha(t_N) + u_\alpha(t_N)) \\
          -f_\alpha(t_1)\sin(G_\alpha(t_1) + u_\alpha(t_1)) & \ldots & -f_\alpha(t_N)\sin(G_\alpha(t_N) + u_\alpha(t_N)) \\
          f_\beta(t_1)\cos(G_\beta(t_1) + u_\beta(t_1)) & \ldots & f_\beta(t_N)\cos(G_\beta(t_N) + u_\beta(t_N)) \\
          -f_\beta(t_1)\sin(G_\beta(t_1) + u_\beta(t_1)) & \ldots & -f_\beta(t_N)\sin(G_\beta(t_N) + u_\beta(t_N)) \\
-         \ldots & \ldots & \ldots \\
+         \vdots & \ddots & \vdots \\
          f_K(t_1)\cos(G_K(t_1) + u_K(t_1)) & \ldots & f_K(t_N)\cos(G_K(t_N) + u_K(t_N)) \\
          -f_K(t_1)\sin(G_K(t_1) + u_K(t_1)) & \ldots & -f_K(t_N)\sin(G_K(t_N) + u_K(t_N))
       \end{bmatrix}
@@ -63,7 +63,7 @@ The least-squares solution of this system of equations minimizes the residuals o
    :label: 5.3
    :name: eq:5.3
 
-   (\mathbf{h} - \mathbf{Mx})^\mathsf{T}(\mathbf{h} - \mathbf{Mx})
+   (\mathbf{h} - \mathbf{M^\mathsf{T}x})^\mathsf{T}(\mathbf{h} - \mathbf{M^\mathsf{T}x})
 
 The solution vector :math:`\mathbf{\hat{x}}` contains the best estimates of the datum offset along with the cosine and sine terms.
 The harmonic constants for each constituent :math:`A_k` and :math:`\theta_k` are calculated from these cosine and sine coefficients.
