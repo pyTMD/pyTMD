@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 solid_earth.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Prediction routines for solid Earth (body) tides
 
 PYTHON DEPENDENCIES:
@@ -21,6 +21,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: use numpy hypot function to calculate magnitudes
         moved ellipsoid and love number parameters to earth module
         refactored body tide function to improve computational times
@@ -218,7 +219,7 @@ def body_tide(
     coef = np.zeros((nargs, nrows))
 
     # longitudes and colatitudes in radians
-    phi = np.radians(ds.x)
+    lmda = np.radians(ds.x)
     th = np.radians(90.0 - ds.y)
     # latitude dependence of Love/Shida numbers for degree 2
     dep2 = 1.0 - 1.5 * np.sin(th) ** 2
@@ -358,7 +359,7 @@ def body_tide(
                 hl, ll = params["hl"], params["ll"]
             # spherical harmonic functions and derivatives
             # will need to be rotated by constituent phase
-            Ylm, dYlm = pyTMD.math.sph_harm(l, th, phi, m=m)
+            Ylm, dYlm = pyTMD.math.sph_harm(l, th, lmda, m=m)
             # rotate spherical harmonics and scale by amplitude
             S = params["amplitude"] * Ylm * params["phase"]
             dS = params["amplitude"] * dYlm * params["phase"]

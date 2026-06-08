@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 u"""
 test_pole_tide.py
-Written by Tyler Sutterley (07/2025)
+Written by Tyler Sutterley (06/2026)
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 07/2025: revert load pole tide to IERS 1996 conventions
     Updated 08/2024: add tests for new cartesian pole tides
     Updated 06/2024: use np.clongdouble instead of np.longcomplex
@@ -134,7 +135,7 @@ def test_load_pole_tide_displacements(TYPE):
     latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
     # geocentric colatitude and longitude in radians
     theta = dtr*(90.0 - latitude_geocentric)
-    phi = dtr*lon.flatten()
+    lmda = dtr*lon.flatten()
 
     # compute normal gravity at spatial location
     gamma_0 = units.gamma_0(theta)
@@ -157,22 +158,22 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((ny,nx,nt))
         for i in range(nt):
             SRAD = dfactor*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi) + my[i]*np.sin(phi))
+                (mx[i]*np.cos(lmda) + my[i]*np.sin(lmda))
             # reform grid
             Srad.data[:,:,i] = np.reshape(SRAD, (ny, nx))
             Srad.mask[:,:,i] = np.isnan(Srad.data[:,:,i])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta) * \
-                (mx[i]*np.cos(phi) + my[i]*np.sin(phi))
+                (mx[i]*np.cos(lmda) + my[i]*np.sin(lmda))
             approx[:,:,i] = np.reshape(S, (ny, nx))/1e3
     elif (TYPE == 'drift'):
         Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
         Srad.data[:] = dfactor*np.sin(2.0*theta) * \
-            (mx*np.cos(phi) + my*np.sin(phi))
+            (mx*np.cos(lmda) + my*np.sin(lmda))
         Srad.mask = np.isnan(Srad.data)
         # approximate values from IERS (2010) conventions
         S = -33.0*np.sin(2.0*theta) * \
-            (mx*np.cos(phi) + my*np.sin(phi))
+            (mx*np.cos(lmda) + my*np.sin(lmda))
         approx = S/1e3
     elif (TYPE == 'time series'):
         nstation = len(x)
@@ -181,12 +182,12 @@ def test_load_pole_tide_displacements(TYPE):
         approx = np.zeros((nstation,nt))
         for s in range(nstation):
             SRAD = dfactor[s]*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s]) + my*np.sin(phi[s]))
+                (mx*np.cos(lmda[s]) + my*np.sin(lmda[s]))
             Srad.data[s,:] = np.copy(SRAD)
             Srad.mask[s,:] = np.isnan(Srad.data[s,:])
             # approximate values from IERS (2010) conventions
             S = -33.0*np.sin(2.0*theta[s]) * \
-                (mx*np.cos(phi[s]) + my*np.sin(phi[s]))
+                (mx*np.cos(lmda[s]) + my*np.sin(lmda[s]))
             approx[s,:] = np.copy(S)/1e3
     # replace invalid data with fill values
     Srad.data[Srad.mask] = Srad.fill_value
@@ -427,15 +428,15 @@ def test_predict_ocean_pole_tide():
     latitude_geocentric = np.arctan(Z / np.sqrt(X**2.0 + Y**2.0))/dtr
     # geocentric colatitude and longitude in radians
     theta = dtr*(90.0 - latitude_geocentric)
-    phi = dtr*header['longitude']
+    lmda = dtr*header['longitude']
     # convert pole tide values to cartesian coordinates
     R = np.zeros((3, 3))
-    R[0,0] = np.cos(phi)*np.cos(theta)
-    R[0,1] = -np.sin(phi)
-    R[0,2] = np.cos(phi)*np.sin(theta)
-    R[1,0] = np.sin(phi)*np.cos(theta)
-    R[1,1] = np.cos(phi)
-    R[1,2] = np.sin(phi)*np.sin(theta)
+    R[0,0] = np.cos(lmda)*np.cos(theta)
+    R[0,1] = -np.sin(lmda)
+    R[0,2] = np.cos(lmda)*np.sin(theta)
+    R[1,0] = np.sin(lmda)*np.cos(theta)
+    R[1,1] = np.cos(lmda)
+    R[1,2] = np.sin(lmda)*np.sin(theta)
     R[2,0] = -np.sin(theta)
     R[2,2] = np.cos(theta)
     # calculate pole tide displacements in Cartesian coordinates
@@ -498,25 +499,25 @@ def test_rotation_matrix():
     # colatitude and longitude in radians
     dtr = np.pi/180.0
     theta = dtr*(90.0 - lat)
-    phi = dtr*lon
+    lmda = dtr*lon
     # convert pole tide values to cartesian coordinates
     R = np.zeros((npts, 3, 3))
-    R[:,0,0] = np.cos(phi)*np.cos(theta)
-    R[:,0,1] = -np.sin(phi)
-    R[:,0,2] = np.cos(phi)*np.sin(theta)
-    R[:,1,0] = np.sin(phi)*np.cos(theta)
-    R[:,1,1] = np.cos(phi)
-    R[:,1,2] = np.sin(phi)*np.sin(theta)
+    R[:,0,0] = np.cos(lmda)*np.cos(theta)
+    R[:,0,1] = -np.sin(lmda)
+    R[:,0,2] = np.cos(lmda)*np.sin(theta)
+    R[:,1,0] = np.sin(lmda)*np.cos(theta)
+    R[:,1,1] = np.cos(lmda)
+    R[:,1,2] = np.sin(lmda)*np.sin(theta)
     R[:,2,0] = -np.sin(theta)
     R[:,2,2] = np.cos(theta)
     # rotation matrix for converting from cartesian coordinates
     Rinv = np.zeros((npts, 3, 3))
-    Rinv[:,0,0] = np.cos(phi)*np.cos(theta)
-    Rinv[:,1,0] = -np.sin(phi)
-    Rinv[:,2,0] = np.cos(phi)*np.sin(theta)
-    Rinv[:,0,1] = np.sin(phi)*np.cos(theta)
-    Rinv[:,1,1] = np.cos(phi)
-    Rinv[:,2,1] = np.sin(phi)*np.sin(theta)
+    Rinv[:,0,0] = np.cos(lmda)*np.cos(theta)
+    Rinv[:,1,0] = -np.sin(lmda)
+    Rinv[:,2,0] = np.cos(lmda)*np.sin(theta)
+    Rinv[:,0,1] = np.sin(lmda)*np.cos(theta)
+    Rinv[:,1,1] = np.cos(lmda)
+    Rinv[:,2,1] = np.sin(lmda)*np.sin(theta)
     Rinv[:,0,2] = -np.sin(theta)
     Rinv[:,2,2] = np.cos(theta)
     # verify that the rotation matrix is the inverse of the original

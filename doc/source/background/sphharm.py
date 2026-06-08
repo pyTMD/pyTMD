@@ -11,7 +11,7 @@ lon = np.arange(0 + dlon / 2.0, 360 + dlon / 2.0, dlon)
 gridlon, gridlat = np.meshgrid(lon, lat)
 # colatitude and longitude in radians
 theta = xr.DataArray(np.radians(90.0 - gridlat), dims=("y", "x"))
-phi = xr.DataArray(np.radians(gridlon), dims=("y", "x"))
+lmda = xr.DataArray(np.radians(gridlon), dims=("y", "x"))
 
 # spherical harmonic degree
 l = 2
@@ -30,7 +30,7 @@ for tau in range(0, l + 1):
     ax1 = fig.add_subplot(nrows, ncols, tau + 1, projection=proj1)
     ax2 = fig.add_subplot(nrows, ncols, ncols + tau + 1, projection=proj2)
     # calculate spherical harmonics (and derivatives w.r.t. colatitude)
-    Y_lm, dY_lm = pyTMD.math.sph_harm(l, theta, phi, m=tau)
+    Y_lm, dY_lm = pyTMD.math.sph_harm(l, theta, lmda, m=tau)
     # set the title
     ax1.set_title(f"{species[tau]}\n$l={l}, m={tau}$")
     # add projection text

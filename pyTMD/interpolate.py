@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: added spherical linear interpolation (slerp) function
+        minor refactor of inpaint function to rename some variables
     Updated 05/2026: added parameters to allow for extrapolation with
         inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
         added worker parameter to allow for parallel KD-tree queries
@@ -209,19 +210,18 @@ def inpaint(
     L = np.zeros((ny, nx))
     L += np.broadcast_to(np.cos(np.pi * np.arange(ny) / ny)[:, None], (ny, nx))
     L += np.broadcast_to(np.cos(np.pi * np.arange(nx) / nx)[None, :], (ny, nx))
-    LAMBDA = np.power(2.0 * (2.0 - L), power)
+    lmda = np.power(2.0 * (2.0 - L), power)
 
     # smoothness parameters
     s = np.logspace(s0, -6, N)
     for i in range(N):
         # calculate discrete cosine transform
-        GAMMA = 1.0 / (1.0 + s[i] * LAMBDA)
-        DISCOS = GAMMA * scipy.fftpack.dctn(W * (ZI - z0) + z0, norm="ortho")
+        gamma = 1.0 / (1.0 + s[i] * lmda)
+        discos = gamma * scipy.fftpack.dctn(W * (ZI - z0) + z0, norm="ortho")
+        # calculate inverse discrete cosine transform
+        idiscos = scipy.fftpack.idctn(discos, norm="ortho")
         # update interpolated grid
-        z0 = (
-            epsilon * scipy.fftpack.idctn(DISCOS, norm="ortho")
-            + (1.0 - epsilon) * z0
-        )
+        z0 = epsilon * idiscos + (1.0 - epsilon) * z0
 
     # reset original values
     z0[W] = np.copy(zs[W])
@@ -587,13 +587,13 @@ def _inside_triangle(
         Mask for coordinates
     """
     # simple check to see if areas are valid
-    la = 1.0 - eta - xi
+    lmda = 1.0 - eta - xi
     # all barycentric coordinates should be within 0 to 1
     # and have valid Jacobians (not dividing by 0)
     valid = (
         (np.isfinite(xi) & np.isfinite(eta))
-        & (la >= (0.0 - atol))
-        & (la <= (1.0 + atol))
+        & (lmda >= (0.0 - atol))
+        & (lmda <= (1.0 + atol))
         & (xi >= (0.0 - atol))
         & (xi <= (1.0 + atol))
         & (eta >= (0.0 - atol))

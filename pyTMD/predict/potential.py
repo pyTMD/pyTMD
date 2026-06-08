@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 potential.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Prediction routines for gravity tides and tide-generating forces
 
 PYTHON DEPENDENCIES:
@@ -21,6 +21,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: use numpy hypot function to calculate magnitudes
         moved ellipsoid and love number parameters to earth module
     Updated 03/2026: use table of body tide love numbers for degrees 4+
@@ -615,7 +616,7 @@ def _frequency_dependence_diurnal(
     phi = np.arctan2(XYZ.Z, np.hypot(XYZ.X, XYZ.Y))
     theta = np.pi / 2.0 - phi
     # calculate longitude (radians)
-    la = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
     # compute phase angle of tide potential (Greenwich)
     phase = (
         arguments.tau * coef["tau"]
@@ -628,14 +629,14 @@ def _frequency_dependence_diurnal(
     )
     # rotate spherical harmonic functions by phase angles
     l, m = (2, 1)
-    Ylm, _ = pyTMD.math.sph_harm(l, theta, la, m=m, phase=phase)
+    Ylm, _ = pyTMD.math.sph_harm(l, theta, lmda, m=m, phase=phase)
     # calculate offsets in local coordinates
     GR = (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag).sum(
         dim="constituent", skipna=False
     )
     # rotate to cartesian coordinates
-    GX = GR * np.cos(la) * np.cos(phi)
-    GY = GR * np.sin(la) * np.cos(phi)
+    GX = GR * np.cos(lmda) * np.cos(phi)
+    GY = GR * np.sin(lmda) * np.cos(phi)
     GZ = GR * np.sin(phi)
     # compute as additive correction
     G = xr.Dataset()
@@ -746,7 +747,7 @@ def _frequency_dependence_long_period(
     phi = np.arctan2(XYZ.Z, np.hypot(XYZ.X, XYZ.Y))
     theta = np.pi / 2.0 - phi
     # calculate longitude (radians)
-    la = np.arctan2(XYZ.Y, XYZ.X)
+    lmda = np.arctan2(XYZ.Y, XYZ.X)
     # compute phase angle of tide potential (Greenwich)
     phase = (
         arguments.tau * coef["tau"]
@@ -759,14 +760,14 @@ def _frequency_dependence_long_period(
     )
     # rotate spherical harmonic functions by phase angles
     l, m = (2, 0)
-    Ylm, _ = pyTMD.math.sph_harm(l, theta, la, m=m, phase=phase)
+    Ylm, _ = pyTMD.math.sph_harm(l, theta, lmda, m=m, phase=phase)
     # calculate offsets in local coordinates
     GR = (coef["dG_ip"] * Ylm.real - coef["dG_op"] * Ylm.imag).sum(
         dim="constituent", skipna=False
     )
     # rotate to cartesian coordinates
-    GX = GR * np.cos(la) * np.cos(phi)
-    GY = GR * np.sin(la) * np.cos(phi)
+    GX = GR * np.cos(lmda) * np.cos(phi)
+    GY = GR * np.sin(lmda) * np.cos(phi)
     GZ = GR * np.sin(phi)
     # compute as additive correction
     G = xr.Dataset()

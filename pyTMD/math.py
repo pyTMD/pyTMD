@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 math.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: added kronecker delta function and updated docstrings
     Updated 03/2026: add radius and scalar product functions
         calculate Legendre polynomials using Hofmann-Wellenhof (2006) eq. 1.67
@@ -430,7 +431,7 @@ def _legendre_norm(l: int, m: int):
 def sph_harm(
     l: int,
     theta: np.ndarray,
-    phi: np.ndarray,
+    lmda: np.ndarray,
     m: int = 0,
     phase: float = 0.0,
 ):
@@ -440,7 +441,7 @@ def sph_harm(
 
     .. math::
         Y_l^m = \sqrt{\frac{(2l + 1)(l - m)!}{4\pi(l + m)!}}
-        P_l^m(\cos\theta)e^{i(m\phi + \varphi)}
+        P_l^m(\cos\theta)e^{i(m\lambda + \varphi)}
 
     Parameters
     ----------
@@ -448,8 +449,8 @@ def sph_harm(
         Degree of the spherical harmonics
     theta: np.ndarray
         Colatitude :math:`\theta` (radians)
-    phi: np.ndarray
-        Longitude :math:`\phi` (radians)
+    lmda: np.ndarray
+        Longitude :math:`\lambda` (radians)
     m: int, default 0
         Order of the spherical harmonics (:math:`0` to :math:`l`)
     phase: float, default 0.0
@@ -469,7 +470,7 @@ def sph_harm(
     Plm, dPlm = legendre(l, np.cos(theta), m=m, norm=norm)
     # normalized spherical harmonics of degree l and order m
     dfactor = np.sqrt((2.0 * l + 1.0) / (4.0 * np.pi))
-    Ylm = dfactor * Plm * np.exp(1j * m * phi + 1j * phase)
-    dYlm = dfactor * dPlm * np.exp(1j * m * phi + 1j * phase)
+    Ylm = dfactor * Plm * np.exp(1j * m * lmda + 1j * phase)
+    dYlm = dfactor * dPlm * np.exp(1j * m * lmda + 1j * phase)
     # return values
     return Ylm, dYlm
