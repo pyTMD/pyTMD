@@ -12,7 +12,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: use item() to extract scalars from 0-dimensional arrays
-       standardize use of lambda (lmda) to denote longitudes
+        standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 04/2026: updated scale factors to add case where reference
         latitude is at the pole
