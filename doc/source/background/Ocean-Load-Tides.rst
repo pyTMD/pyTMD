@@ -73,7 +73,7 @@ Prediction
 ----------
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
-``pyTMD`` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
+:py:func:`pyTMD.constituents.arguments` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
 For any given time, :py:func:`pyTMD.astro.mean_longitudes` calculates the longitudes of the moon (:math:`S`), sun (:math:`H`), lunar perigee (:math:`P`), ascending lunar node (:math:`N`) and solar perigee (:math:`Ps`), which are used in combination with the lunar hour angle (:math:`\tau`) and the extended Doodson number (:math:`k`) in a seven-dimensional Fourier series :cite:p:`Doodson:1921kt,Dietrich:1980ua,Pugh:2014di`.
 Each constituent has a particular "Doodson number" describing the polynomial coefficients of each of these astronomical terms in the Fourier series :cite:p:`Doodson:1921kt`. 
 These can be summed together to estimate the equilibrium phase (:math:`G`).
@@ -91,3 +91,16 @@ These can be summed together to estimate the equilibrium phase (:math:`G`).
 Together the Doodson coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used by ``pyTMD`` to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal values :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
 After the determination of the major constituents, :py:func:`pyTMD.predict.infer_minor` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 
+High and Low Water
+------------------
+
+Tide tables list the times and heights of successive :term:`high <High Water Height>` and :term:`low <Low Water Height>` water points at a location, and are a practical summary of tidal predictions.
+The high and low waters correspond to maxima and minima of the tidal time series :math:`h(t)` [:ref:`Equation 1.1 <eq:1.1>`].
+:py:func:`pyTMD.predict.find_peaks` detects the location of these peaks (and troughs) by numerically differentiating the time series :math:`\partial h / \partial t` and then identifying zero crossings of first derivative.
+Zero crossings with a negative gradient correspond to high water (maxima) and those with a positive gradient correspond to low water (minima).
+Note that the accuracies of these detected extrema are directly dependent on the temporal resolution of the prediction data.
+
+.. important::
+    
+    ``pyTMD`` uses times in UTC for all calculations [see :ref:`Time Standards <time-standards>`].
+    Creating a tide table in *local time* requires applying the appropriate time zone and daylight savings time conversions.

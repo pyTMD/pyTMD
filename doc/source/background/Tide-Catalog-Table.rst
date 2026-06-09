@@ -3,7 +3,7 @@
 Tide Potential Catalogs
 -----------------------
 
-``pyTMD`` currently supports the following tide potential catalogs:
+:py:func:`pyTMD.predict.body_tide` currently supports the following tide potential catalogs:
 
 .. _tab-catalogs:
 

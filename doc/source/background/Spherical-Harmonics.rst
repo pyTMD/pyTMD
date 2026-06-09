@@ -24,7 +24,8 @@ Spherical harmonics of degree :math:`l` and order :math:`m` are defined as:
     Y_l^m(\theta, \lambda) = N_l^m\, P_l^m(\cos\theta)\, e^{im\lambda} 
 
 where :math:`P_l^m(x)` are the associated Legendre polynomials and :math:`N_l^m` is a normalization factor :cite:p:`HofmannWellenhof:2006hy,Munk:1960uk`.
-The associated Legendre polynomials of degree :math:`l` and order :math:`m` are calculated in ``pyTMD`` using the explicit formula (1-67) from :cite:t:`HofmannWellenhof:2006hy`:
+:py:func:`pyTMD.math.sph_harm` calculates spherical harmonics using the normalization factor from Equation A5 in :cite:t:`Munk:1966go`.
+The associated Legendre polynomials of degree :math:`l` and order :math:`m` are calculated in :py:func:`pyTMD.math.legendre` using the explicit formula (1-67) from :cite:t:`HofmannWellenhof:2006hy`:
 
 .. math::
     :label: 9.2

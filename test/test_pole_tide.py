@@ -41,11 +41,11 @@ _jd_tide = _jd_mjd + _mjd_tide
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
-@pytest.mark.parametrize("TYPE", ['grid','drift','time series'])
+@pytest.mark.parametrize("TYPE", ['grid','trajectory','time series'])
 def test_load_pole_tide_displacements(TYPE):
 
     # create a test dataset for data type
-    if (TYPE == 'drift'):
+    if (TYPE == 'trajectory'):
         # number of data points
         n_time = 3000
         y = np.random.randint(-90,90,size=n_time)
@@ -88,7 +88,7 @@ def test_load_pole_tide_displacements(TYPE):
     elif (TYPE.lower() == 'grid'):
         x = np.atleast_2d(x)
         y = np.atleast_2d(y)
-    elif TYPE.lower() in ('time series', 'drift'):
+    elif TYPE.lower() in ('time series', 'trajectory'):
         x = np.atleast_1d(x)
         y = np.atleast_1d(y)
 
@@ -166,7 +166,7 @@ def test_load_pole_tide_displacements(TYPE):
             S = -33.0*np.sin(2.0*theta) * \
                 (mx[i]*np.cos(lmda) + my[i]*np.sin(lmda))
             approx[:,:,i] = np.reshape(S, (ny, nx))/1e3
-    elif (TYPE == 'drift'):
+    elif (TYPE == 'trajectory'):
         Srad = np.ma.zeros((nt), fill_value=FILL_VALUE)
         Srad.data[:] = dfactor*np.sin(2.0*theta) * \
             (mx*np.cos(lmda) + my*np.sin(lmda))

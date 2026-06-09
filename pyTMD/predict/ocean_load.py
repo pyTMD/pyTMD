@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
 ocean_load.py
-Written by Tyler Sutterley (05/2026)
-Prediction routines for ocean, load and equilibrium tides
+Written by Tyler Sutterley (06/2026)
+Prediction routines for ocean, load and (long-period) equilibrium tides
 
 REFERENCES:
     G. D. Egbert and S. Erofeeva, "Efficient Inverse Modeling of Barotropic
@@ -27,6 +27,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 06/2026: moved function to find peaks in a tidal time series
     Updated 05/2026: verify unique frequencies in short period inference
         moved ellipsoid and love number parameters to earth module
         updated constituent parameters function can output arrays
@@ -125,6 +126,7 @@ __all__ = [
     "_infer_diurnal",
     "_infer_long_period",
     "equilibrium_tide",
+    "find_peaks",
 ]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
@@ -150,7 +152,7 @@ def time_series(
 
     Returns
     -------
-    darr: xarray.DataArray
+    tpred: xarray.DataArray
         Predicted tidal time series
     """
     # set default keyword arguments
@@ -1212,3 +1214,42 @@ def equilibrium_tide(
     tpred.attrs["constituents"] = constituents
     # return the long-period equilibrium tides
     return tpred.tmd.to_units("meters")
+
+
+def find_peaks(
+    darr: xr.DataArray,
+    dim: str = "time",
+    **kwargs,
+):
+    """
+    Find peaks in an xarray ``DataArray`` using a first order
+    differentiation method
+
+    Parameters
+    ----------
+    darr: xarray.DataArray
+        Input ``DataArray`` containing a signal with peaks
+    dim: str, default 'time'
+        Dimension along which to find peaks
+    kwargs: dict
+        Keyword arguments for ``xarray.DataArray.differentiate``
+
+    Returns
+    -------
+    high_peaks: xarray.DataArray
+        Boolean array indicating locations of high peaks
+    low_peaks: xarray.DataArray
+        Boolean array indicating locations of low peaks
+    """
+    # differentiate to calculate high and low peaks
+    diff = darr.differentiate(dim, **kwargs)
+    # look for zero crossings in the derivative to find peaks
+    # compare the sign of the derivative with the next step
+    sign = np.sign(diff)
+    next_sign = sign.shift({dim: -1})
+    # get the zero crossings to find the high and low peaks
+    # checking the gradient of the sign change gives the peak type
+    high_peaks = (sign >= 0) & (next_sign < 0)
+    low_peaks = (sign <= 0) & (next_sign > 0)
+    # return the peaks
+    return (high_peaks, low_peaks)

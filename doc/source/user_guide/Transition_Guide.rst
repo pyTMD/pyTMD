@@ -216,3 +216,5 @@ Renamed Functions
 
 The ``arguments`` module has been renamed ``constituents`` to better reflect its expanded capabilities from the earliest versions.
 
+In version 3, the ``drift`` type has been renamed to ``trajectory`` to better fit `CF Convention geometry types <https://cfconventions.org/cf-conventions/cf-conventions.html>`_.
+The ``drift`` type is still accepted as an alias for ``trajectory`` for backward compatibility, but the new name is recommended for clarity.

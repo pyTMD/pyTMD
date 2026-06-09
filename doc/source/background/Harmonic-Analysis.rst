@@ -76,7 +76,7 @@ Note that the sine terms are negative in the design matrix, which follows the co
     \hat{A}_k &= \sqrt{\hat{c}_k^2 + \hat{s}_k^2} \\
     \hat{\theta}_k &= \mathrm{arctan2}(-\hat{s}_k, \hat{c}_k)
 
-``pyTMD`` includes several solver options in order to handle rank-deficient systems or include bounds on the solution variables.
+:py:func:`pyTMD.solve.constants` includes several solver options in order to handle rank-deficient systems or include bounds on the solution variables.
 
 .. list-table:: Solver Methods
     :header-rows: 1
@@ -116,6 +116,6 @@ Assuming that the :term:`tidal admittance <Admittance>` varies smoothly with fre
 This can be the case when the record of observations is too short to independently resolve constituents that are close in frequency :cite:p:`Foreman:2009bg`.
 Including inference as part of the fitting process can avoid contaminating the regression of major constituents, and can improve their overall estimation :cite:p:`Foreman:1989dt,Foreman:2009bg`.
 
-In ``pyTMD``, this inference is performed *after* the primary regression using a bootstrap iteration procedure.
+In :py:func:`pyTMD.solve.constants`, this inference is performed *after* the primary regression using a bootstrap iteration procedure.
 After each fit, the time series of the inferred minor constituents is reconstructed and then removed from the observation time series.
 The process is repeated and the observation vector :math:`\mathbf{h}` is continually modified until the specified number of iterations has been reached.

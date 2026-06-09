@@ -125,7 +125,7 @@ where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Ca
 These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames [see :ref:`Equation 6.5 <eq:6.5>`] :cite:p:`Kaplan:1989cf,Petit:2010tp`.
 
 The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms [see :ref:`sidereal-time`] :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
-:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame [see :ref:`ephemerides`] :cite:p:`Petit:2010tp`.
+:py:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame [see :ref:`ephemerides`] :cite:p:`Petit:2010tp`.
 
 .. plot:: ./background/obliquity-ecliptic.py
     :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
@@ -141,10 +141,10 @@ Ephemerides are tables or mathematical representations giving the positions of a
 ``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
 The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
 They are computed from a comprehensive set of observations including spacecraft radio range data, lunar laser range data, and Very Long Baseline Interferometry (VLBI) measurements :cite:p:`Folkner:2014un,Park:2021fa`.
-``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :func:`pyTMD.astro.solar_ephemerides` and :func:`pyTMD.astro.lunar_ephemerides`.
+``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :py:func:`pyTMD.astro.solar_ephemerides` and :py:func:`pyTMD.astro.lunar_ephemerides`.
 The data is provided in the :ref:`celestial reference frame <celestial-reference>`, which ``pyTMD`` transforms to get locations in reference to the Earth.
 
-``pyTMD`` can also use analytical approximations to compute the solar and lunar positions using :func:`pyTMD.astro.solar_approximate` and :func:`pyTMD.astro.lunar_approximate`.
+``pyTMD`` can also use analytical approximations to compute the solar and lunar positions using :py:func:`pyTMD.astro.solar_approximate` and :py:func:`pyTMD.astro.lunar_approximate`.
 These express the solar and lunar coordinates as a truncated trigonometric or polynomial series :cite:p:`Meeus:1991vh`.
 They are less accurate than using ephemerides, but are faster to compute and do not require downloading the kernel files.
 

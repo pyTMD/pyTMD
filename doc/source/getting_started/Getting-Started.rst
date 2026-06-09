@@ -4,7 +4,7 @@ Getting Started
 
 .. tip::
 
-    See the `background material <../background/Ocean-Load-Tides.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
+    See the `background material <../background/Background.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
 
 .. note::
 
@@ -201,7 +201,7 @@ For models with multiple constituent files, the files can be found using a ``glo
 Programs
 ########
 
-``pyTMD.compute`` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
+:py:mod:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
 compute the corresponding tidal elevation or currents.
 
@@ -225,6 +225,32 @@ The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in lati
 Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
+
+Data Types
+##########
+
+The :py:mod:`pyTMD.compute` functions accept a ``type`` parameter that defines the relationship between the spatial and temporal coordinates and create the output ``xarray.DataArray`` dimensions.
+The three valid data types in ``pyTMD`` are:
+
+- ``'trajectory'``
+
+    * **When to Use:** Spatiotemporal coordinates are arrays of the same length and each element represents a single observation
+    * **Typical Applications:** drift buoys, ship tracks, airborne or satellite altimetry, instruments that move through space
+    * **Output Dimensions**: ``(time, )``
+
+- ``'time series'``
+
+    * **When to Use:** Spatial coordinates are fixed to location(s) and the temporal coordinate is an array of times
+    * **Typical Applications:** tide gauges, GNSS stations, ocean bottom pressure recorders, moored current meters, instruments that stay in place
+    * **Output Dimensions**: ``(time, )`` or ``(station, time)``
+
+- ``'grid'``
+
+    * **When to Use:** Spatial coordinates define a 2-dimensional grid and the temporal coordinate is either a scalar or an array of times
+    * **Typical Applications:** tide maps, raster imagery, satellite imagery, gridded products, model outputs 
+    * **Output Dimensions**: ``(y, x)`` or ``(y, x, time)``
+
+If the ``type`` argument is set to ``None`` in a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
 
 Interpolation
 #############
