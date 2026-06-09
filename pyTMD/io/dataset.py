@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -20,6 +20,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 06/2026: moved peak finding algorithm to prediction module
+        drift type renamed to trajectory. drift still accepted as an alias
     Updated 05/2026: added parameters to allow for extrapolation with
         inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
     Updated 04/2026: add barycentric interpolation for unstructured grids
@@ -1243,15 +1245,10 @@ class DataArray:
         low_peaks: xarray.DataArray
             Boolean array indicating locations of low tide peaks
         """
-        # differentiate to calculate high and low tides
-        diff = self._da.differentiate("time", **kwargs)
-        # look for zero crossings in the derivative to find peaks
-        # compare the sign of the derivative with the next time step
-        sign = np.sign(diff)
-        next_sign = sign.shift(time=-1)
-        # get the zero crossings to find the high and low tides
-        high_peaks = (sign >= 0) & (next_sign < 0)
-        low_peaks = (sign <= 0) & (next_sign > 0)
+        from pyTMD.predict import find_peaks as _find_peaks
+
+        # find the high and low tides using a first order differentiation
+        high_peaks, low_peaks = _find_peaks(self._da, dim="time", **kwargs)
         # return the peaks
         return (high_peaks, low_peaks)
 
@@ -1558,7 +1555,7 @@ def _coords(
         If not provided: must specify ``time`` parameter to auto-detect
 
         - ``None``: determined from input variable dimensions
-        - ``'drift'``: drift buoys or satellite/airborne altimetry
+        - ``'trajectory'``: drift buoys or satellite/airborne altimetry
         - ``'grid'``: spatial grids or images
         - ``'time series'``: time series at a single point
     time: np.ndarray or None, default None
@@ -1585,10 +1582,15 @@ def _coords(
     elif kwargs["type"] is None:
         # auto-detect coordinate data type from input variable dimensions
         coord_type = data_type(x, y, np.ravel(kwargs["time"]))
-    else:
+    elif isinstance(kwargs["type"], str) and kwargs["type"].lower() == "drift":
+        # handle legacy 'drift' type for trajectory data
+        coord_type = "trajectory"
+    elif isinstance(kwargs["type"], str):
         # use provided coordinate data type
         # and verify that it is lowercase
         coord_type = kwargs.get("type").lower()
+    else:
+        raise ValueError("Coordinate data type must be a string")
     # convert coordinates to a new coordinate reference system
     if (coord_type == "grid") and (np.size(x) != np.size(y)):
         gridx, gridy = np.meshgrid(x, y)
@@ -1614,7 +1616,7 @@ def _coords(
     elif coord_type == "grid":
         X = xr.DataArray(mx, dims=("y", "x"))
         Y = xr.DataArray(my, dims=("y", "x"))
-    elif coord_type == "drift":
+    elif coord_type == "trajectory":
         X = xr.DataArray(mx, dims=("time"))
         Y = xr.DataArray(my, dims=("time"))
     elif coord_type == "time series":
@@ -1622,5 +1624,8 @@ def _coords(
         Y = xr.DataArray(my, dims=("station"))
     else:
         raise ValueError(f"Unknown coordinate data type: {coord_type}")
+    # set attributes for coordinate type
+    X.attrs["type"] = coord_type
+    Y.attrs["type"] = coord_type
     # return the transformed coordinates
     return (X, Y)

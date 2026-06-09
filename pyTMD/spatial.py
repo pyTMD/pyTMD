@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 06/2026: use item() to extract scalars from 0-dimensional arrays
         standardize use of lambda (lmda) to denote longitudes
+        drift type renamed to trajectory to better fit CF conventions
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 04/2026: updated scale factors to add case where reference
         latitude is at the pole
@@ -132,7 +133,7 @@ def data_type(
     String denoting input data type
 
         - ``'time series'``
-        - ``'drift'``
+        - ``'trajectory'``
         - ``'grid'``
     """
     xsize = np.size(x)
@@ -141,7 +142,7 @@ def data_type(
     if (xsize == 1) and (ysize == 1) and (tsize >= 1):
         return "time series"
     elif (xsize == ysize) & (xsize == tsize):
-        return "drift"
+        return "trajectory"
     elif (np.ndim(x) > 1) & (xsize == ysize):
         return "grid"
     elif xsize != ysize:

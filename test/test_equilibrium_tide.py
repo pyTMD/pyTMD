@@ -24,7 +24,7 @@ import pyTMD.math
 import timescale.time
 
 # PURPOSE: test the estimation of long-period equilibrium tides
-@pytest.mark.parametrize("TYPE", ['grid','drift'])
+@pytest.mark.parametrize("TYPE", ['grid', 'trajectory'])
 @pytest.mark.parametrize("include_anelasticity", [False, True])
 def test_equilibrium_tide(TYPE, include_anelasticity):
     """
@@ -33,7 +33,7 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     Cartwright-Tayler-Edden tables
     """
     # create a test dataset for data type
-    if (TYPE == 'drift'):
+    if (TYPE == 'trajectory'):
         # number of data points
         n_time = 3000
         lon = np.zeros((n_time))

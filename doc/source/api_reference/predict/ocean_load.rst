@@ -23,3 +23,5 @@ ocean_load
 .. autofunction:: pyTMD.predict._infer_long_period
 
 .. autofunction:: pyTMD.predict.equilibrium_tide
+
+.. autofunction:: pyTMD.predict.find_peaks

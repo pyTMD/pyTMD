@@ -11,8 +11,8 @@ import pyTMD.spatial
 
 # PURPOSE: test the data type function
 def test_data_type():
-    # test drift type
-    exp = "drift"
+    # test trajectory type
+    exp = "trajectory"
     # number of data points
     npts = 30
     ntime = 30
@@ -326,6 +326,7 @@ def test_polar_scaling():
         lat, reference_latitude=90.0, metric="area"
     )
     assert np.allclose(1.0 / test, expected**2)
+
 
 # PURPOSE: test polar stereographic area scaling factors
 def test_area_scaling():

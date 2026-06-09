@@ -65,6 +65,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
+        drift type renamed to trajectory. drift still accepted as an alias
     Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 05/2026: moved datum ellipsoidal parameters to earth module
     Updated 03/2026: added function for computing tide-generating forces
@@ -261,7 +262,7 @@ def tide_elevations(
     buffer: int | float = 0,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     method: str = "linear",
     extrapolate: bool = False,
@@ -298,11 +299,11 @@ def tide_elevations(
         Input coordinate reference system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -387,7 +388,10 @@ def tide_elevations(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
@@ -466,7 +470,7 @@ def tide_currents(
     buffer: int | float = 0,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     method: str = "linear",
     extrapolate: bool = False,
@@ -503,11 +507,11 @@ def tide_currents(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -581,7 +585,10 @@ def tide_currents(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
@@ -661,7 +668,7 @@ def tide_masks(
     model: str | None = None,
     definition_file: str | pathlib.Path | IOBase | None = None,
     crs: str | int = 4326,
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     method: str = "linear",
     **kwargs,
 ):
@@ -682,6 +689,12 @@ def tide_masks(
         Tide model definition file for use
     crs: str or int, default: 4326 (WGS84 Latitude and Longitude)
         Input coordinate system
+    type: str or NoneType, default 'trajectory'
+        Input data type
+
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
+            - ``'grid'``: spatial grids or images
+            - ``'time series'``: time series at a single point
     method: str, default 'linear'
         Interpolation method from ``xarray``
 
@@ -712,8 +725,10 @@ def tide_masks(
     # open model as dataset
     ds = m.open_dataset(group="z")
 
-    # determine input data type based on variable dimensions
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in coordinate reference system of model
@@ -735,7 +750,7 @@ def LPET_elevations(
     delta_time: np.ndarray,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     **kwargs,
 ):
@@ -754,11 +769,11 @@ def LPET_elevations(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -783,7 +798,10 @@ def LPET_elevations(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
@@ -819,7 +837,7 @@ def LPT_displacements(
     delta_time: np.ndarray,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     convention: str = "2018",
@@ -842,11 +860,11 @@ def LPT_displacements(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -891,7 +909,10 @@ def LPT_displacements(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
@@ -978,7 +999,7 @@ def OPT_displacements(
     delta_time: np.ndarray,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     convention: str = "2018",
@@ -1002,11 +1023,11 @@ def OPT_displacements(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -1058,7 +1079,10 @@ def OPT_displacements(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
@@ -1190,7 +1214,7 @@ def _ephemerides_SET(
     delta_time: np.ndarray,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     tide_system: str = "tide_free",
@@ -1214,11 +1238,11 @@ def _ephemerides_SET(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -1270,7 +1294,10 @@ def _ephemerides_SET(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # earth and physical parameters for ellipsoid
     units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
@@ -1368,7 +1395,7 @@ def _catalog_SET(
     delta_time: np.ndarray,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     catalog: str = "CTE1973",
     tide_system: str = "tide_free",
@@ -1393,11 +1420,11 @@ def _catalog_SET(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -1458,7 +1485,10 @@ def _catalog_SET(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
@@ -1504,7 +1534,7 @@ def TG_forces(
     h: float | np.ndarray = 0.0,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     ephemerides: str = "Montenbruck",
@@ -1529,11 +1559,11 @@ def TG_forces(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -1578,7 +1608,10 @@ def TG_forces(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
 
     # earth and physical parameters for ellipsoid
@@ -1687,7 +1720,7 @@ def GT_accelerations(
     h: float | np.ndarray = 0.0,
     crs: str | int = 4326,
     epoch: list | tuple = (2000, 1, 1, 0, 0, 0),
-    type: str | None = "drift",
+    type: str | None = "trajectory",
     standard: str = "UTC",
     ellipsoid: str = "WGS84",
     ephemerides: str = "Montenbruck",
@@ -1711,11 +1744,11 @@ def GT_accelerations(
         Input coordinate system
     epoch: tuple, default (2000,1,1,0,0,0)
         Time period for calculating delta times
-    type: str or NoneType, default 'drift'
+    type: str or NoneType, default 'trajectory'
         Input data type
 
             - ``None``: determined from input variable dimensions
-            - ``'drift'``: drift buoys or satellite/airborne altimetry
+            - ``'trajectory'``: drift buoys or satellite/airborne altimetry
             - ``'grid'``: spatial grids or images
             - ``'time series'``: time series at a single point
     standard: str, default 'UTC'
@@ -1754,7 +1787,10 @@ def GT_accelerations(
     # determine input data type based on variable dimensions
     if not type:
         type = pyTMD.spatial.data_type(x, y, delta_time)
-    if type.lower() not in ("drift", "grid", "time series"):
+    # handle legacy 'drift' type for trajectory data
+    if type.lower() == "drift":
+        type = "trajectory"
+    elif type.lower() not in ("trajectory", "grid", "time series"):
         raise ValueError("Unknown data type")
 
     # earth and physical parameters for ellipsoid

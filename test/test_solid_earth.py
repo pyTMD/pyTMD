@@ -256,10 +256,10 @@ def test_solid_earth_radial(method):
     tide_expected = tide_earth - tide_earth_free2mean
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
+        crs=4326, type='trajectory', standard='datetime', ellipsoid='WGS84',
         ephemerides=method)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        crs=4326, type='drift', standard='datetime', ellipsoid='WGS84',
+        crs=4326, type='trajectory', standard='datetime', ellipsoid='WGS84',
         tide_system='mean_tide', ephemerides=method)
     # as using estimated ephemerides, assert within 1/2 mm
     assert np.allclose(tide_earth, tide_free, atol=5e-4)
@@ -312,10 +312,10 @@ def test_body_tides(catalog, method):
     assert np.allclose(tide_expected, tide_mean['R'], atol=2e-3)
     # predict radial solid earth tides
     tide_free = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        crs=4326, type='drift', standard='datetime', tide_system='tide_free',
+        crs=4326, type='trajectory', standard='datetime', tide_system='tide_free',
         method='catalog', ephemerides=method, catalog=catalog)
     tide_mean = pyTMD.compute.SET_displacements(longitudes, latitudes, times,
-        crs=4326, type='drift', standard='datetime', tide_system='mean_tide',
+        crs=4326, type='trajectory', standard='datetime', tide_system='mean_tide',
         method='catalog', ephemerides=method, catalog=catalog)
     # since we are using simplified body tides: assert within 2 mm
     assert np.allclose(tide_earth, tide_free, atol=2e-3)

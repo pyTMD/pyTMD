@@ -27,7 +27,7 @@ df = pd.read_parquet("pytmd-test.parquet")
 ts = timescale.from_deltatime(df.time, epoch=(2018, 1, 1), standard="GPS")
 
 # create xarray DataArrays for coordinates in crs of model
-x, y = ds.tmd.coords_as(df.x, df.y, type="drift", crs=3031)
+x, y = ds.tmd.coords_as(df.x, df.y, type="trajectory", crs=3031)
 # interpolate to points
 local = ds.tmd.interp(x, y, method="linear")
 

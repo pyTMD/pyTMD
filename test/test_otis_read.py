@@ -603,8 +603,8 @@ class Test_CATS2008:
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_elevations(x, y, delta_time,
             directory=self.directory, model='CATS2008',
-            epoch=timescale.time._j2000_epoch, type='drift', standard='UTC',
-            crs=3031, extrapolate=True)
+            epoch=timescale.time._j2000_epoch, type='trajectory',
+            standard='UTC', crs=3031, extrapolate=True)
         assert np.any(tide)
 
     # PURPOSE: test the tide currents wrapper function
@@ -623,8 +623,8 @@ class Test_CATS2008:
         # calculate tide drift corrections
         tide = pyTMD.compute.tide_currents(x, y, delta_time,
             directory=self.directory, model='CATS2008',
-            epoch=timescale.time._j2000_epoch, type='drift', standard='UTC',
-            crs=3031, extrapolate=True)
+            epoch=timescale.time._j2000_epoch, type='trajectory',
+            standard='UTC', crs=3031, extrapolate=True)
         # iterate over zonal and meridional currents
         for key,val in tide.items():
             assert np.any(val)
