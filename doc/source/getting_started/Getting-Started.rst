@@ -201,7 +201,7 @@ For models with multiple constituent files, the files can be found using a ``glo
 Programs
 ########
 
-:py:class:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
+:py:mod:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
 compute the corresponding tidal elevation or currents.
 
@@ -229,7 +229,7 @@ For other projected models, a formatted coordinate reference system (CRS) descri
 Data Types
 ##########
 
-The :py:class:`pyTMD.compute` functions accept a ``type`` parameter that defines the relationship between the spatial and temporal coordinates and create the output ``xarray.DataArray`` dimensions.
+The :py:mod:`pyTMD.compute` functions accept a ``type`` parameter that defines the relationship between the spatial and temporal coordinates and create the output ``xarray.DataArray`` dimensions.
 The three valid data types in ``pyTMD`` are:
 
 - ``'trajectory'``
@@ -241,7 +241,7 @@ The three valid data types in ``pyTMD`` are:
 - ``'time series'``
 
     * **When to Use:** Spatial coordinates are fixed to location(s) and the temporal coordinate is an array of times
-    * **Typical Applications:** tide gauges, GNSS stations, ocean bottom pressure recorders, moored current meters, instruments that stays in place
+    * **Typical Applications:** tide gauges, GNSS stations, ocean bottom pressure recorders, moored current meters, instruments that stay in place
     * **Output Dimensions**: ``(time, )`` or ``(station, time)``
 
 - ``'grid'``
@@ -250,7 +250,7 @@ The three valid data types in ``pyTMD`` are:
     * **Typical Applications:** tide maps, raster imagery, satellite imagery, gridded products, model outputs 
     * **Output Dimensions**: ``(y, x)`` or ``(y, x, time)``
 
-If the ``type`` parameter is not specified to a :py:class:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
+If the ``type`` parameter is not specified to a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
 
 Interpolation
 #############
