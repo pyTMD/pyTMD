@@ -250,7 +250,7 @@ The three valid data types in ``pyTMD`` are:
     * **Typical Applications:** tide maps, raster imagery, satellite imagery, gridded products, model outputs 
     * **Output Dimensions**: ``(y, x)`` or ``(y, x, time)``
 
-If the ``type`` parameter is not specified to a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
+If the ``type`` argument is set to `None` in a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
 
 Interpolation
 #############
