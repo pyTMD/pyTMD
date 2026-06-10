@@ -17,7 +17,13 @@ Recipes
       :text-align: center
       :link: ./Transition_Guide.html
 
-      :material-outlined:`autorenew;5em`
+      :octicon:`rocket;5em`
+
+    .. grid-item-card:: Time Zones
+      :text-align: center
+      :link: ./Time_Zones.html
+
+      :material-outlined:`history;5em`
 
 .. toctree::
     :maxdepth: 1
@@ -26,3 +32,4 @@ Recipes
 
     ./Cloud_Access.rst
     ./Transition_Guide.rst
+    ./Time_Zones.rst
