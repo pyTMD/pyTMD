@@ -91,6 +91,8 @@ These can be summed together to estimate the equilibrium phase (:math:`G`).
 Together the Doodson coefficients and additional nodal corrections (:math:`f` and :math:`u`) are used by ``pyTMD`` to calculate the frequencies and 18.6-year modulations of the tidal constituents, and enable the accurate determination of tidal values :cite:p:`Schureman:1958ty,Dietrich:1980ua`.
 After the determination of the major constituents, :py:func:`pyTMD.predict.infer_minor` can estimate the amplitudes of minor constituents using inference methods :cite:p:`Schureman:1958ty,Ray:2017jx`.
 
+.. _high-low-water:
+
 High and Low Water
 ------------------
 
@@ -102,5 +104,5 @@ Note that the accuracies of these detected extrema are directly dependent on the
 
 .. important::
     
-    ``pyTMD`` uses times in UTC for all calculations [see :ref:`Time Standards <time-standards>`].
+    ``pyTMD`` uses times in UTC for all calculations [see :ref:`Time Standards <time-standards>` and :ref:`time-zones`].
     Creating a tide table in *local time* requires applying the appropriate time zone and daylight savings time conversions.

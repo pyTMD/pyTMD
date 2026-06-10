@@ -67,7 +67,7 @@ The information is organized into separate sections, which can be read in any or
       :text-align: center
       :link: ./Spherical-Harmonics.html
 
-      :material-outlined:`filter_tilt_shift;5em`
+      :octicon:`globe;5em`
 
     .. grid-item-card::  Glossary
       :text-align: center
