@@ -171,6 +171,12 @@ cmd = "make {{ builder }} {{ flags }}"
 cwd = "doc"
 description = "Create documentation with sphinx"
 
+[tool.pixi.feature.doc.tasks.clean-docs]
+args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
+cmd = "make clean && make {{ builder }} {{ flags }}"
+cwd = "doc"
+description = "Remove build artifacts and rebuild the documentation with sphinx"
+
 [tool.pixi.feature.dev.tasks.fetch]
 cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout=360)'"
 description = "Fetch data needed to run the pytest suite"
