@@ -34,13 +34,6 @@ ATLAS netCDF formatted data use netCDF4 files for each constituent and variable 
 GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
 FES also provides unstructured ("native") netCDF4 files, which contain data for all constituents on a finite element mesh.
-``pyTMD`` uses ``pint`` to handle the units of the model constituent data and convert them into standard sets of units.
-
-    - ``z``: tidal elevations in meters (:math:`m`)
-    - ``u``: zonal tidal currents in centimeters per second (:math:`cm/s`)
-    - ``U``: zonal tidal transports in square meters per second (:math:`m^2/s`)
-    - ``v``: meridional tidal currents in centimeters per second (:math:`cm/s`)
-    - ``V``: meridional tidal transports in square meters per second (:math:`m^2/s`)
 
 Data Access
 ###########
@@ -198,15 +191,19 @@ For models with multiple constituent files, the files can be found using a ``glo
         - ``units``: units of the model constituent data
 
 
-Programs
-########
+Units
+#####
 
-:py:mod:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
-These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
-compute the corresponding tidal elevation or currents.
+``pyTMD`` uses ``pint`` to handle the units of the model constituent data and convert them into standard sets of units.
 
-.. include:: Compute-Tides.ipynb
-   :parser: myst_nb.docutils_
+    - ``z``: tidal elevations in meters (:math:`m`)
+    - ``u``: zonal tidal currents in centimeters per second (:math:`cm/s`)
+    - ``U``: zonal tidal transports in square meters per second (:math:`m^2/s`)
+    - ``v``: meridional tidal currents in centimeters per second (:math:`cm/s`)
+    - ``V``: meridional tidal transports in square meters per second (:math:`m^2/s`)
+
+``pint`` can also convert the tide prediction data into other sets of units (e.g. feet, knots, etc).
+
 
 Time
 ####
@@ -217,6 +214,7 @@ For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 ``pyTMD`` uses the ``timescale`` library to convert different time formats to the necessary time format of a given program.
 ``timescale`` can also parse date strings describing the units and epoch of relative times, or the calendar date of measurement for geotiff formats.
 
+
 Spatial Coordinates
 ###################
 
@@ -225,6 +223,18 @@ The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in lati
 Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
+
+
+Programs
+########
+
+:py:mod:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
+These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
+compute the corresponding tidal elevation or currents.
+
+.. include:: Compute-Tides.ipynb
+   :parser: myst_nb.docutils_
+
 
 Data Types
 ##########

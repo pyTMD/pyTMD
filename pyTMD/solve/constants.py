@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 constants.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (06/2026)
 Harmonic tidal analysis with minor constituent inference
 
 REFERENCES:
@@ -26,6 +26,7 @@ PROGRAM DEPENDENCIES:
     predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
+    Updated 06/2026: create xarray Dataset at the end of the fit loop
     Updated 12/2025: merge minor constituent inference into main iteration loop
     Updated 11/2025: output as xarray Dataset of complex harmonic constants
     Updated 10/2025: added option to infer minor constituents (post-fit)
@@ -158,6 +159,8 @@ def constants(
 
     # initial heights for fits
     hcorr = np.copy(ht)
+    # xarray dataset for fit results
+    ds = xr.Dataset()
     # parameter array
     p = np.zeros(M.shape[1])
     # total number of fit iterations
@@ -168,17 +171,6 @@ def constants(
     for i in range(iterations):
         # remove inferred minor constituents from height time series
         if (i > 0) and infer_minor:
-            # indices for the sine and cosine terms
-            # skip over the polynomial terms
-            isin = 2 * np.arange(nc) + order + 2
-            icos = 2 * np.arange(nc) + order + 1
-            # complex model amplitudes for major constituents
-            darr = xr.DataArray(
-                p[icos] + 1j * p[isin],
-                coords=dict(constituent=constituents),
-                dims=["constituent"],
-            )
-            ds = darr.to_dataset(dim="constituent")
             # inferred minor constituent time series
             hminor = pyTMD.predict.infer_minor(
                 t,
@@ -189,6 +181,7 @@ def constants(
             )
             # corrected height (without minor constituents)
             hcorr = ht - hminor.values
+
         # use a least-squares fit to solve for parameters
         # can optionally use a bounded-variable least-squares fit
         if solver == "lstsq":
@@ -202,14 +195,20 @@ def constants(
                 M, hcorr, method=solver, bounds=bounds, max_iter=max_iter
             ).x
 
-    # calculate amplitude and phase for each constituent
-    ds = xr.Dataset(coords=dict(constituent=constituents))
-    # for each constituent
-    for k, c in enumerate(constituents):
         # indices for the sine and cosine terms
         # skip over the polynomial terms
-        isin = 2 * k + order + 2
-        icos = 2 * k + order + 1
-        ds[c] = xr.DataArray(p[icos] + 1j * p[isin])
+        isin = 2 * np.arange(nc) + order + 2
+        icos = 2 * np.arange(nc) + order + 1
+        # complex model amplitudes for major constituents
+        darr = xr.DataArray(
+            p[icos] + 1j * p[isin],
+            coords=dict(constituent=constituents),
+            dims=["constituent"],
+        )
+        # convert to xarray dataset
+        # if iterating: data will be used to infer minor constituents
+        # if not iterating (or at end of iteration): will be returned
+        ds = darr.to_dataset(dim="constituent")
+
     # return the xarray dataset
     return ds

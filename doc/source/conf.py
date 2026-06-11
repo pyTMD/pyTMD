@@ -102,8 +102,14 @@ if on_rtd:
         "Plot-ATLAS-Compact.ipynb",
     ]
     nb_output_stderr = "remove-warn"
-else:
+elif on_github:
     nb_execution_mode = "off"
+else:
+    nb_execution_mode = "auto"
+    nb_execution_excludepatterns = [
+        "notebooks/*.ipynb",
+    ]
+    nb_output_stderr = "remove-warn"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
