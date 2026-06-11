@@ -15,6 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
+        make centering of map on marker location optional
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 10/2025: change default directory for tide models to cache
     Updated 08/2025: use numpy degree to radian conversions
@@ -137,6 +138,7 @@ class leaflet:
         kwargs.setdefault("full_screen_control", False)
         kwargs.setdefault("layer_control", True)
         kwargs.setdefault("marker_control", False)
+        kwargs.setdefault("center_marker", False)
         kwargs.setdefault("scale_control", False)
         kwargs.setdefault("zoom_control", False)
         # create basemap in projection
@@ -234,12 +236,14 @@ class leaflet:
             # watch marker widgets for changes
             self.marker.observe(self.set_marker_text)
             self.marker_text.observe(self.set_marker_location)
-            self.map.observe(self.set_map_center)
             # add control for marker location
             marker_control = ipyleaflet.WidgetControl(
                 widget=self.marker_text, position="bottomright"
             )
             self.map.add(marker_control)
+        # add control for centering map on marker
+        if kwargs["marker_control"] and kwargs["center_marker"]:
+            self.map.observe(self.set_map_center)
 
     # convert points to EPSG:4326
     def transform(self, x, y, proj4def):
@@ -278,3 +282,7 @@ class leaflet:
             lon = self.wrap_longitudes(lon)
             self.cursor.value = """Latitude: {d[0]:8.4f}\u00b0,
                 Longitude: {d[1]:8.4f}\u00b0""".format(d=[lat, lon])
+
+    def display(self):
+        """Display the leaflet map"""
+        return IPython.display.display(self.map)
