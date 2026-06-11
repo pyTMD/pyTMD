@@ -159,6 +159,8 @@ def constants(
 
     # initial heights for fits
     hcorr = np.copy(ht)
+    # xarray dataset for fit results
+    ds = xr.Dataset()
     # parameter array
     p = np.zeros(M.shape[1])
     # total number of fit iterations
