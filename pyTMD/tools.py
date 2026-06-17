@@ -15,7 +15,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
-        make centering of map on marker location optional
+        simpify ipyleaflet marker control by not having text option
     Updated 12/2025: no longer subclassing pathlib.Path for working directories
     Updated 10/2025: change default directory for tide models to cache
     Updated 08/2025: use numpy degree to radian conversions
@@ -138,7 +138,6 @@ class leaflet:
         kwargs.setdefault("full_screen_control", False)
         kwargs.setdefault("layer_control", True)
         kwargs.setdefault("marker_control", False)
-        kwargs.setdefault("center_marker", False)
         kwargs.setdefault("scale_control", False)
         kwargs.setdefault("zoom_control", False)
         # create basemap in projection
@@ -213,7 +212,10 @@ class leaflet:
             self.map.add(scale_control)
         # add control for cursor position
         if kwargs["cursor_control"]:
-            self.cursor = ipywidgets.Label()
+            lat = kwargs["center"][0]
+            lon = self.wrap_longitudes(kwargs["center"][1])
+            value = f"Latitude: {lat:8.4f}\u00b0, Longitude: {lon:8.4f}\u00b0"
+            self.cursor = ipywidgets.Label(value=value)
             cursor_control = ipyleaflet.WidgetControl(
                 widget=self.cursor, position="bottomleft"
             )
@@ -227,23 +229,8 @@ class leaflet:
                 location=kwargs["center"], draggable=True
             )
             self.map.add(self.marker)
-            # add text with marker location
-            self.marker_text = ipywidgets.Text(
-                value="{0:0.8f},{1:0.8f}".format(*kwargs["center"]),
-                description="Lat/Lon:",
-                disabled=False,
-            )
             # watch marker widgets for changes
-            self.marker.observe(self.set_marker_text)
-            self.marker_text.observe(self.set_marker_location)
-            # add control for marker location
-            marker_control = ipyleaflet.WidgetControl(
-                widget=self.marker_text, position="bottomright"
-            )
-            self.map.add(marker_control)
-        # add control for centering map on marker
-        if kwargs["marker_control"] and kwargs["center_marker"]:
-            self.map.observe(self.set_map_center)
+            self.marker.observe(self.set_map_center, names="location")
 
     # convert points to EPSG:4326
     def transform(self, x, y, proj4def):
@@ -259,21 +246,9 @@ class leaflet:
         # convert longitudes from radians to degrees
         return np.degrees(lmda)
 
-    # add function for setting marker text if location changed
-    def set_marker_text(self, sender):
-        LAT, LON = self.marker.location
-        self.marker_text.value = "{0:0.8f},{1:0.8f}".format(
-            LAT, self.wrap_longitudes(LON)
-        )
-
     # add function for setting map center if location changed
     def set_map_center(self, sender):
         self.map.center = self.marker.location
-
-    # add function for setting marker location if text changed
-    def set_marker_location(self, sender):
-        LAT, LON = [float(i) for i in self.marker_text.value.split(",")]
-        self.marker.location = (LAT, LON)
 
     # handle cursor movements for label
     def handle_interaction(self, **kwargs):
