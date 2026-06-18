@@ -1,8 +1,8 @@
 .. _release-v1.0.8:
 
-##################
+==================
 `Release v1.0.8`__
-##################
+==================
 
 - ``docs``: slimmer environment file for prevent overutilization when building on `readthedocs`
 - ``docs``: updated structure of documentation

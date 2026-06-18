@@ -1,7 +1,8 @@
 .. _pole-tides:
 
+==========
 Pole Tides
-##########
+==========
 
 The Earth's rotation axis is inclined at an angle of 23.5 degrees to the celestial pole, and precesses about the celestial pole approximately once every 26,000 years :cite:p:`Kantha:2000vo`.
 Superimposed on this long-term :term:`precession <Precession>`, the rotation axis of the Earth shifts with respect to its mean pole location due to :term:`nutation <Nutation>`, :term:`Chandler wobble <Chandler Wobble>`, annual variations, and other processes :cite:p:`Wahr:1985gr,Desai:2002ev,Agnew:2015kw`.
@@ -13,7 +14,7 @@ These variations are centimeter scale in both the vertical and horizontal, and s
     :align: center
 
 Methods
--------
+=======
 
 The formalism for estimating the pole tides within ``pyTMD`` is also based upon `IERS Conventions <https://iers-conventions.obspm.fr/>`_.
 For ocean pole tides, :py:func:`pyTMD.predict.ocean_pole_tide` uses the equilibrium response model from :cite:t:`Desai:2002ev` as recommended by IERS Conventions :cite:p:`Petit:2010tp`.

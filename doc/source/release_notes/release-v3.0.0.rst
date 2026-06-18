@@ -1,8 +1,8 @@
 .. _release-v3.0.0:
 
-##################
+==================
 `Release v3.0.0`__
-##################
+==================
 
 * ``refactor``: rewrite ``io`` routines to use xarray `(#486) <https://github.com/pyTMD/pyTMD/pull/486>`_
 * ``feat``: unit-aware conversions with ``pint`` `(#486) <https://github.com/pyTMD/pyTMD/pull/486>`_

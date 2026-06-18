@@ -13,6 +13,12 @@ Recipes
 
       :octicon:`rocket;5em`
 
+    .. grid-item-card:: Lazy Loading Tidal Data
+      :text-align: center
+      :link: ./Chunking.html
+
+      :material-outlined:`layers;5em`
+
     .. grid-item-card:: Cloud Data Access
       :text-align: center
       :link: ./Cloud-Access.html
@@ -25,14 +31,14 @@ Recipes
 
       :material-outlined:`crop;5em`
 
+.. grid:: 2 2 4 4
+    :padding: 0
+
     .. grid-item-card:: Extrapolation Methods
       :text-align: center
       :link: ./Extrapolation.html
 
       :material-outlined:`auto_fix_high;5em`
-
-.. grid:: 2 2 4 4
-    :padding: 0
 
     .. grid-item-card:: Tidal Aliasing
       :text-align: center
@@ -53,6 +59,7 @@ Recipes
     :caption: Recipes
 
     ./Transition-Guide.rst
+    ./Chunking.ipynb
     ./Cloud-Access.rst
     ./Cropping.ipynb
     ./Extrapolation.ipynb

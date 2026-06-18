@@ -1,8 +1,8 @@
 .. _release-v2.0.4:
 
-##################
+==================
 `Release v2.0.4`__
-##################
+==================
 
 * ``feat``: add basic file searching with glob strings in definition files for `#183 <https://github.com/pyTMD/pyTMD/issues/183>`_ (`#187 <https://github.com/pyTMD/pyTMD/pull/187>`_)
 * ``feat``: add parser for extracting constituents from filenames (`#187 <https://github.com/pyTMD/pyTMD/pull/187>`_)

@@ -1,8 +1,8 @@
 .. _release-v2.2.4:
 
-##################
+==================
 `Release v2.2.4`__
-##################
+==================
 
 * ``fix``: use numpy ``power`` function over using ``pow`` `(#408) <https://github.com/pyTMD/pyTMD/pull/408>`_
 * ``feat``: use Barycentric Dynamical Time for JPL ephemerides `(#410) <https://github.com/pyTMD/pyTMD/pull/410>`_

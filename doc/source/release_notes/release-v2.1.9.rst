@@ -1,8 +1,8 @@
 .. _release-v2.1.9:
 
-##################
+==================
 `Release v2.1.9`__
-##################
+==================
 
 * ``feat``: add spherical harmonic functions `(#362) <https://github.com/pyTMD/pyTMD/pull/362>`_
 * ``refactor``: move generic ``astro`` functions to ``math.py`` `(#362) <https://github.com/pyTMD/pyTMD/pull/362>`_

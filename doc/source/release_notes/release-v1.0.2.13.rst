@@ -1,8 +1,8 @@
 .. _release-v1.0.2.13:
 
-#####################
+=====================
 `Release v1.0.2.13`__
-#####################
+=====================
 
 - switching primary branch to ``main``
 - generalize ``build_opener`` function for different Earthdata instances

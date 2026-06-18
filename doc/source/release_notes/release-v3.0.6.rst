@@ -1,8 +1,8 @@
 .. _release-v3.0.6:
 
-##################
+==================
 `Release v3.0.6`__
-##################
+==================
 
 * ``refactor``: split prediction functions into 4 modules `(#549) <https://github.com/pyTMD/pyTMD/pull/549>`_
 * ``feat``: tinkering with calculating gravity tides `(#549) <https://github.com/pyTMD/pyTMD/pull/549>`_

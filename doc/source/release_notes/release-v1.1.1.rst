@@ -1,8 +1,8 @@
 .. _release-v1.1.1:
 
-##################
+==================
 `Release v1.1.1`__
-##################
+==================
 
 - ``fix``: invert current masks for OTIS/ATLAS
 - ``fix``: add encoding to reading leap second files

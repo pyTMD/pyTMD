@@ -1,8 +1,8 @@
 .. _release-v2.0.7:
 
-##################
+==================
 `Release v2.0.7`__
-##################
+==================
 
 * ``feat``: added model parameters for `CATS2008-v2023` (`#229 <https://github.com/pyTMD/pyTMD/pull/229>`_)
 * ``refactor``: changed ``ESR`` netCDF4 format to ``TMD3`` format (`#229 <https://github.com/pyTMD/pyTMD/pull/229>`_)

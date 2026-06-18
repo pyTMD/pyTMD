@@ -1,8 +1,8 @@
 .. _release-v2.2.6:
 
-##################
+==================
 `Release v2.2.6`__
-##################
+==================
 
 * ``fix``: ``codespell`` typo fixing `(#423) <https://github.com/pyTMD/pyTMD/pull/423>`_
 * ``feat``: added extrapolation option for FES2014 download `(#424) <https://github.com/pyTMD/pyTMD/pull/424>`_

@@ -1,8 +1,8 @@
 .. _release-v2.0.0:
 
-##################
+==================
 `Release v2.0.0`__
-##################
+==================
 
 - ``refactor``: single implicit import of ``pyTMD`` tools (`#130 <https://github.com/pyTMD/pyTMD/pull/130>`_)
 - ``refactor``: reorganization of tide model readers under ``io`` (`#132 <https://github.com/pyTMD/pyTMD/pull/132>`_)

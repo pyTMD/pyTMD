@@ -1,8 +1,8 @@
 .. _release-v1.0.2.9:
 
-####################
+====================
 `Release v1.0.2.9`__
-####################
+====================
 
 - added test for GOT models using perth3 outputs from `GOT4.7`
 - `GOT4.7` tide model data is stored on s3

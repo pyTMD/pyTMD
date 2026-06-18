@@ -1,8 +1,8 @@
 .. _release-v1.0.9:
 
-##################
+==================
 `Release v1.0.9`__
-##################
+==================
 
 - ``refactor``: Removed all ICESat, ICESat-2 and OIB code as proposed in `#72 <https://github.com/pyTMD/pyTMD/discussions/72>`_
 

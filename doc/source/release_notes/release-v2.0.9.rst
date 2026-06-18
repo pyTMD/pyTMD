@@ -1,8 +1,8 @@
 .. _release-v2.0.9:
 
-##################
+==================
 `Release v2.0.9`__
-##################
+==================
 
 * ``fix``: scaling factors for TPXO9-atlas currents for `#241 <https://github.com/pyTMD/pyTMD/discussions/241>`_ (`#243 <https://github.com/pyTMD/pyTMD/pull/243>`_)
 * ``refactor``: renamed tidal ellipse function (`#243 <https://github.com/pyTMD/pyTMD/pull/243>`_)

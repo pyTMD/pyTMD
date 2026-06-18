@@ -1,8 +1,8 @@
 .. _release-v3.0.1:
 
-##################
+==================
 `Release v3.0.1`__
-##################
+==================
 
 * ``docs``: add citation to JOSS manuscript `(#502) <https://github.com/pyTMD/pyTMD/pull/502>`_
 * ``refactor``: moved JPL kernel download function to ``datasets`` `(#503) <https://github.com/pyTMD/pyTMD/pull/503>`_

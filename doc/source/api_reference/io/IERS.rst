@@ -10,7 +10,7 @@ IERS
     is accessible from the US Naval Observatory (USNO)
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

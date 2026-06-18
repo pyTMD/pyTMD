@@ -8,7 +8,7 @@ GOT
    * ``GOT-netcdf``
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

@@ -1,8 +1,8 @@
 .. _release-v2.1.0:
 
-##################
+==================
 `Release v2.1.0`__
-##################
+==================
 
 * ``fix``: revert TPXO9-atlas currents changes to separate dicts for `#258 <https://github.com/pyTMD/pyTMD/issues/258>`_ (`#259 <https://github.com/pyTMD/pyTMD/pull/259>`_)
 * ``test``: fix ``u`` and ``v`` for TPXO9-atlas netCDF (`#259 <https://github.com/pyTMD/pyTMD/pull/259>`_)

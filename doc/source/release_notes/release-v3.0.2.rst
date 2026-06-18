@@ -1,8 +1,8 @@
 .. _release-v3.0.2:
 
-##################
+==================
 `Release v3.0.2`__
-##################
+==================
 
 * ``feat``: can now download TPXO files directly from box `(#513) <https://github.com/pyTMD/pyTMD/pull/513>`_
 * ``fix``: figured out how to configure the box tokens `(#513) <https://github.com/pyTMD/pyTMD/pull/513>`_

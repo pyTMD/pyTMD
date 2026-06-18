@@ -3,7 +3,7 @@ Citation Information
 ====================
 
 References
-##########
+==========
 
 This work was initially supported by an appointment to the NASA Postdoctoral
 Program (NPP) at NASA Goddard Space Flight Center (GSFC), administered by
@@ -14,7 +14,7 @@ It is currently supported under the NASA Cryospheric Sciences Program
 .. admonition:: Please consider citing our article in the Journal of Open Source Software (JOSS):
 
     T. C. Sutterley, S. L. Howard, L. Padman, and M. Siegfried,
-    "pyTMD: Python-based tidal prediction software," 
+    "pyTMD: Python-based tidal prediction software,"
     *Journal of Open Source Software*, 10(116), 8566 (2025).
     `doi: 10.21105/joss.08566 <https://doi.org/10.21105/joss.08566>`_
     :download:`BibTeX <./Sutterley-2025ko.bib>`
@@ -23,7 +23,7 @@ It is currently supported under the NASA Cryospheric Sciences Program
 .. _80NSSC21K0911: https://app.dimensions.ai/details/grant/grant.13210572
 
 Dependencies
-############
+============
 
 This software is also dependent on other commonly used Python packages:
 
@@ -53,7 +53,7 @@ Optional Dependencies
 - `zarr: Chunked, compressed, N-dimensional arrays in Python <https://zarr.readthedocs.io/en/stable/>`_
 
 Credits
-#######
+=======
 
 The Tidal Model Driver (TMD) Matlab Toolbox was developed by Laurie Padman, Lana Erofeeva and Susan Howard.
 An updated version of the TMD Matlab Toolbox (TMD3) was developed by Chad Greene.
@@ -66,7 +66,7 @@ An updated and more versatile version of the NASA GSFC tidal prediction software
 The pyFES prediction software was funded and supported by CNES and the FES model is distributed by AVISO.
 
 Data Citations
-##############
+--------------
 
 Internally, ``pyTMD`` includes datasets from the following:
 
@@ -84,7 +84,7 @@ Internally, ``pyTMD`` includes datasets from the following:
 
 
 Disclaimer
-##########
+==========
 
 This package includes software developed at NASA Goddard Space Flight Center (GSFC) and the University
 of Washington Applied Physics Laboratory (UW-APL).

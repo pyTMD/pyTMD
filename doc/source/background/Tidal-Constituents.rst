@@ -1,7 +1,8 @@
 :orphan:
 
+========================
 Major Tidal Constituents
-------------------------
+========================
 
 .. _tab-constituents:
 
@@ -14,15 +15,15 @@ Major Tidal Constituents
 From :cite:t:`Doodson:1921kt,Cartwright:1971iz,Cartwright:1973em`
 
 Compound Constituents
----------------------
+=====================
 
-Two or more constituents can interact harmonically in shallow-water to form overtides or compound constituents. 
+Two or more constituents can interact harmonically in shallow-water to form overtides or compound constituents.
 The properties of these compound constituents can be derived from the properties of their parent constituents.
 
 .. _constituent-notation:
 
 Constituent Notations
----------------------
+=====================
 
 Every tidal constituent corresponds to a specific combination of astronomical cycles [see :ref:`astronomical-arguments`], and several notation systems exist for encoding that combination compactly.
 
@@ -33,7 +34,7 @@ Every tidal constituent corresponds to a specific combination of astronomical cy
 - **Extended Doodson numbers (XDO)**: compact and human-readable representation used by the UK Hydrographic Office (UKHO)
 
 Cartwright Numbers
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Cartwright numbers are an ordered list of signed integers for the multipliers of the astronomical arguments [see :ref:`Equation 1.2 <eq:1.2>`]:
 
@@ -50,7 +51,7 @@ Cartwright numbers are an ordered list of signed integers for the multipliers of
 .. _doodson-numbers:
 
 Doodson Numbers
-^^^^^^^^^^^^^^^
+---------------
 
 Doodson numbers are an unsigned notion where the second through sixth multipliers (:math:`d_{2-6}`) are encoded by adding 5 (the first digit :math:`d_1` is not offset).
 This offset maps the range of multipliers :math:`[-5, +4]` into :math:`[0, 9]`.
@@ -60,7 +61,7 @@ This encoding can be extended by mapping :math:`+5` to :math:`\mathrm{X}`, :math
     \text{Doodson number} = \{d_1\}\{d_2+5\}\{d_3+5\}.\{d_4+5\}\{d_5+5\}\{d_6+5\}
 
 Extended Doodson Numbers
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 The UKHO Extended Doodson Number (XDO) system was designed to address two limitations of the standard Doodson notation:
 
@@ -70,7 +71,7 @@ The UKHO Extended Doodson Number (XDO) system was designed to address two limita
 The XDO system maps :math:`0` to :math:`\mathrm{Z}`, the range :math:`[1,15]` to :math:`[\mathrm{A},\mathrm{P}]`, and the range :math:`[-8,-1]` to :math:`[\mathrm{R},\mathrm{Y}]`.
 
 Tidal Classifications
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 .. list-table:: Doodson Number Classification
     :header-rows: 1
@@ -79,7 +80,7 @@ Tidal Classifications
     * - Classification
       - Description
     * - :term:`Species`
-      -  shared :math:`d_1` 
+      -  shared :math:`d_1`
     * - Group
       -  shared :math:`d_1` and :math:`d_2`
     * - Subgroup

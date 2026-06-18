@@ -1,8 +1,8 @@
 .. _release-v1.0.2.18:
 
-#####################
+=====================
 `Release v1.0.2.18`__
-#####################
+=====================
 
 - Simplified inputs to netcdf, GOT and FES tide read programs to be similar to binary OTIS program
 - Added `TPXO9-atlas-v4` in `single constituent OTIS file format <https://www.tpxo.net/global/tpxo9-atlas>`_

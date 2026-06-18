@@ -1,5 +1,6 @@
 .. _spherical-harmonics:
 
+===================
 Spherical Harmonics
 ===================
 
@@ -13,7 +14,7 @@ The degree 2 spherical harmonic terms are the dominant source of tidal excitatio
 
 
 Mathematical Definition
------------------------
+=======================
 
 Spherical harmonics of degree :math:`l` and order :math:`m` are defined as:
 
@@ -21,7 +22,7 @@ Spherical harmonics of degree :math:`l` and order :math:`m` are defined as:
     :label: 9.1
     :name: eq:9.1
 
-    Y_l^m(\theta, \lambda) = N_l^m\, P_l^m(\cos\theta)\, e^{im\lambda} 
+    Y_l^m(\theta, \lambda) = N_l^m\, P_l^m(\cos\theta)\, e^{im\lambda}
 
 where :math:`P_l^m(x)` are the associated Legendre polynomials and :math:`N_l^m` is a normalization factor :cite:p:`HofmannWellenhof:2006hy,Munk:1960uk`.
 :py:func:`pyTMD.math.sph_harm` calculates spherical harmonics using the normalization factor from Equation A5 in :cite:t:`Munk:1966go`.
@@ -42,8 +43,8 @@ The first few (unnormalized) Legendre polynomials are:
     :class: flat
 
     * - :math:`P_0^0(x) = 1`
-      - 
-      - 
+      -
+      -
     * - :math:`P_1^0(x) = x`
       - :math:`P_1^1(x) = \sqrt{1-x^2}`
       -
@@ -54,7 +55,7 @@ The first few (unnormalized) Legendre polynomials are:
 .. _tide-generating-potential:
 
 Tide-Generating Potential
---------------------------
+=========================
 
 The gravitational potential :math:`W` at a location on Earth's surface :math:`(\varphi, \lambda)` from a planetary body (such as the Moon or Sun) can be expanded into spherical harmonics as the following:
 
@@ -76,7 +77,7 @@ The cosine of the :ref:`zenith angle <zenith-angle>` (:math:`\cos\psi`) can also
              = \frac{\mathbf{r}\cdot\mathbf{R}}{|\mathbf{r}\mathbf{R}|}
 
 Higher-Degree Terms
---------------------
+===================
 
 Global asymmetry in the tide potential can lead to a dependence on higher degree harmonics, most notably the degree 3 and 4 terms.
 These terms are small compared to those of degree 2, but have been detected at both local and global scales :cite:p:`Ray:2020gn`.

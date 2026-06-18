@@ -1,8 +1,8 @@
 .. _release-v2.2.5:
 
-##################
+==================
 `Release v2.2.5`__
-##################
+==================
 
 * ``feat``: add option to include higher order polynomials in solution `(#411) <https://github.com/pyTMD/pyTMD/pull/411>`_
 * ``feat``: add option to reduce to a set of constituents for `#412 <https://github.com/pyTMD/pyTMD/issues/412>`_ `(#413) <https://github.com/pyTMD/pyTMD/pull/413>`_

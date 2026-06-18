@@ -1,8 +1,8 @@
 .. _release-v2.1.7:
 
-##################
+==================
 `Release v2.1.7`__
-##################
+==================
 
 * ``docs``: improve description of optional dependencies in examples
 * ``fix``: use case insensitive assertions of string argument values (`#340 <https://github.com/pyTMD/pyTMD/pull/340>`_)

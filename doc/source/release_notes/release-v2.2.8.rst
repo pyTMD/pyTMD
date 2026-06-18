@@ -1,8 +1,8 @@
 .. _release-v2.2.8:
 
-##################
+==================
 `Release v2.2.8`__
-##################
+==================
 
 * ``docs``: convert ``README`` to markdown `(#450) <https://github.com/pyTMD/pyTMD/pull/450>`_
 * ``docs``: update contribution guidelines `(#450) <https://github.com/pyTMD/pyTMD/pull/450>`_

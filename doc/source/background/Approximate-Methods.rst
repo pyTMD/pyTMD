@@ -14,7 +14,7 @@
       - :cite:t:`Meeus:1991vh`
     * - ``'VSOP87'``
       - |heavy_check_mark|
-      - 
+      -
       - :cite:t:`Bretagnon:1988wg`
     * - ``'Montenbruck'``
       - |heavy_check_mark|

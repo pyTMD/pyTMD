@@ -1,8 +1,8 @@
 .. _release-v3.0.5:
 
-##################
+==================
 `Release v3.0.5`__
-##################
+==================
 
 * ``fix``: output data as a ``DataArray`` from ``extrapolate`` for `#537 <https://github.com/pyTMD/pyTMD/issues/537>`_ `(#538) <https://github.com/pyTMD/pyTMD/pull/538>`_
 * ``feat``: allow caching of the KD-tree during extrapolation `(#540) <https://github.com/pyTMD/pyTMD/pull/540>`_

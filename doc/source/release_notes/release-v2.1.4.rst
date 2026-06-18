@@ -1,8 +1,8 @@
 .. _release-v2.1.4:
 
-##################
+==================
 `Release v2.1.4`__
-##################
+==================
 
 * ``feat``: added crop and bounds keywords for trimming model data for `#95 <https://github.com/pyTMD/pyTMD/issues/309>`_ (`#313 <https://github.com/pyTMD/pyTMD/pull/313>`_)
 * ``fix``: ``FES2022-extrapolated`` outputs have zeroed out inland water bodies for `#309 <https://github.com/pyTMD/pyTMD/issues/309>`_ (`#314 <https://github.com/pyTMD/pyTMD/pull/314>`_)

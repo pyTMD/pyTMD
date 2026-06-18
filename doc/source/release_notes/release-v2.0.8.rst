@@ -1,8 +1,8 @@
 .. _release-v2.0.8:
 
-##################
+==================
 `Release v2.0.8`__
-##################
+==================
 
 * ``feat``: add option to run with parquet tabular files (`#236 <https://github.com/pyTMD/pyTMD/pull/236>`_)
 * ``feat``: add function to invert field mapping keys and values  (`#235 <https://github.com/pyTMD/pyTMD/pull/235>`_)

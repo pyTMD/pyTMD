@@ -1,8 +1,8 @@
 .. _release-v2.0.5:
 
-##################
+==================
 `Release v2.0.5`__
-##################
+==================
 
 * ``feat``: function to convert a string with time zone information to ``datetime`` (`#203 <https://github.com/pyTMD/pyTMD/pull/203>`_)
 * ``feat``: added option to change connection timeout to arcticdata and AVISO for `#202 <https://github.com/pyTMD/pyTMD/issues/202>`_ (`#205 <https://github.com/pyTMD/pyTMD/pull/205>`_)

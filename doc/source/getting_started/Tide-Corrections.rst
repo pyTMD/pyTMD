@@ -18,15 +18,15 @@
       - |heavy_check_mark|
     * - Coastal Tide Gauges
       - |heavy_check_mark|
-      - 
-      - 
-      - 
+      -
+      -
+      -
       - |heavy_check_mark|
     * - Grounded GNSS stations
-      - 
+      -
       - |heavy_check_mark|
       - |heavy_check_mark|
       - |heavy_check_mark|
-      - 
+      -
 
 .. |heavy_check_mark|      unicode:: U+2714 .. HEAVY CHECK MARK

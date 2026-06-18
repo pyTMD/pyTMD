@@ -1,8 +1,8 @@
 .. _release-v3.0.4:
 
-##################
+==================
 `Release v3.0.4`__
-##################
+==================
 
 * ``fix``: check if units attributes are valid for `#524 <https://github.com/pyTMD/pyTMD/discussions/524>`_ `(#528) <https://github.com/pyTMD/pyTMD/pull/528>`_
 * ``docs``: add compute tides demo notebook `(#529) <https://github.com/pyTMD/pyTMD/pull/529>`_

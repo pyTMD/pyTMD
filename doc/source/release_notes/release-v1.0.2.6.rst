@@ -1,8 +1,8 @@
 .. _release-v1.0.2.6:
 
-####################
+====================
 `Release v1.0.2.6`__
-####################
+====================
 
 - Adds delta time and leap second downloading from the NASA GSFC CDDIS https server with authentication from NASA Earthdata
 - updates list of models for OIB and ICESat-2 to include `TPX09-atlas-v2`

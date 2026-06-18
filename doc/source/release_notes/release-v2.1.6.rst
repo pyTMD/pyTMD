@@ -1,8 +1,8 @@
 .. _release-v2.1.6:
 
-##################
+==================
 `Release v2.1.6`__
-##################
+==================
 
 * ``refactor``: use JSON database for known model parameters for `#328 <https://github.com/pyTMD/pyTMD/issues/328>`_ (`#329 <https://github.com/pyTMD/pyTMD/pull/329>`_)
 * ``feat``: added new ``TPXO10-atlas-v2`` to list of models (`#329 <https://github.com/pyTMD/pyTMD/pull/329>`_)

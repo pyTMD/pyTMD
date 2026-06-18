@@ -1,8 +1,8 @@
 .. _release-v2.2.7:
 
-##################
+==================
 `Release v2.2.7`__
-##################
+==================
 
 * ``docs``: published rendered versions of notebooks for `#394 <https://github.com/pyTMD/pyTMD/issues/394>`_ `(#432) <https://github.com/pyTMD/pyTMD/pull/432>`_
 * ``refactor``: move NOAA webservices API query functions to module `(#433) <https://github.com/pyTMD/pyTMD/pull/433>`_

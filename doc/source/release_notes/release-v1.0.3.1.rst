@@ -1,8 +1,8 @@
 .. _release-v1.0.3.1:
 
-####################
+====================
 `Release v1.0.3.1`__
-####################
+====================
 
 - conda and docker releases
 - add new `Gr1km-v2` 1km Greenland model from ESR

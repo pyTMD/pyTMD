@@ -1,8 +1,8 @@
 .. _release-v2.2.1:
 
-##################
+==================
 `Release v2.2.1`__
-##################
+==================
 
 * ``docs``: front page with cards and icons `(#374) <https://github.com/pyTMD/pyTMD/pull/374>`_
 * ``fix``: updated ftp directory for FES2022 ocean tide model `(#376) <https://github.com/pyTMD/pyTMD/pull/376>`_

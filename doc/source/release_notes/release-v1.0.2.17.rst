@@ -1,8 +1,8 @@
 .. _release-v1.0.2.17:
 
-#####################
+=====================
 `Release v1.0.2.17`__
-#####################
+=====================
 
 - nearest-neighbor extrapolation using KD-Trees
 - merged ``convert_julian`` and ``convert_calendar_decimal`` to ``time`` module
