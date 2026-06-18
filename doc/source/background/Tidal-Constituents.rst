@@ -17,7 +17,7 @@ From :cite:t:`Doodson:1921kt,Cartwright:1971iz,Cartwright:1973em`
 Compound Constituents
 =====================
 
-Two or more constituents can interact harmonically in shallow-water to form overtides or compound constituents. 
+Two or more constituents can interact harmonically in shallow-water to form overtides or compound constituents.
 The properties of these compound constituents can be derived from the properties of their parent constituents.
 
 .. _constituent-notation:
@@ -80,7 +80,7 @@ Tidal Classifications
     * - Classification
       - Description
     * - :term:`Species`
-      -  shared :math:`d_1` 
+      -  shared :math:`d_1`
     * - Group
       -  shared :math:`d_1` and :math:`d_2`
     * - Subgroup

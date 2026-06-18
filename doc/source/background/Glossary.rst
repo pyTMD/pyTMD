@@ -60,7 +60,7 @@ Glossary
 
     Delaunay Arguments
         five fundamental orbital elements used as the basis variables in nutation calculations
-        
+
         see :ref:`Astronomical Arguments <astronomical-arguments>`, :term:`Doodson Arguments`, :term:`Nutation`
 
     Diurnal Tide
@@ -68,7 +68,7 @@ Glossary
 
     Doodson Arguments
         six fundamental astronomical arguments used to characterize tidal constituents
-        
+
         see :ref:`Astronomical Arguments <astronomical-arguments>`, :term:`Delaunay Arguments`, :term:`Harmonic Constituents`
 
     Doodson Number
@@ -216,7 +216,7 @@ Glossary
 
     Semi-diurnal Tide
         tidal oscillations with an approximate half-day period
-    
+
     Shallow-water Tide
         additional tidal constituents necessary for shallow seas that are heavily dependent on ocean bathymetry and coastline geometry
 
@@ -256,7 +256,7 @@ Glossary
     Vernal Equinox
         intersection of the Earth's equatorial plane and the Earth's :term:`ecliptic <Ecliptic>`
 
-        see :term:`Equinox` 
+        see :term:`Equinox`
 
     Vertical Datum
         reference coordinate surface used for vertical positions

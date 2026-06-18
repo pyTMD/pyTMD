@@ -4,7 +4,7 @@ OTIS
 
 - Reads OTIS format tidal solutions provided by Oregon State University and ESR
 
-   * multi-constituent ``OTIS`` binary 
+   * multi-constituent ``OTIS`` binary
    * ``ATLAS-compact`` binary
    * single-constituent ``OTIS`` binary
    * ``TMD3`` consolidated netCDF4

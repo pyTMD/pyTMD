@@ -68,7 +68,7 @@ Sidereal time is based on the rotation of the Earth with respect to distant cele
 This timescale is slightly different from Universal Time (UT1), which is calculated based on the Earth's rotation with respect to the sun.
 As the Earth rotates 360 degrees in approximately 23 hours, 56 minutes and 4 seconds, the difference between a mean sidereal day and solar day is about 3 minutes and 56 seconds.
 Because the rotation rate of Earth is variable, both sidereal time and Universal Time are irregular with respect to atomic time :cite:p:`Urban:2013vl`.
-For every meridian, there is a local sidereal time, which is calculated with respect to an :term:`equinox <Equinox>`. 
+For every meridian, there is a local sidereal time, which is calculated with respect to an :term:`equinox <Equinox>`.
 
 Greenwich Mean Sidereal Time (GMST) is the angle between the Greenwich meridian and the average position of the :term:`Vernal Equinox`.
 GMST is calculated in ``pyTMD`` using the revised IAU 2000 precession model :cite:p:`Capitaine:2005hw,Urban:2013vl`.
@@ -89,7 +89,7 @@ The "equation of the equinoxes" describes the difference between the positions o
     E_e &= \Upsilon_T - \Upsilon_M \\
     &= \Delta\psi\cos{\varepsilon} + \sum_k (C'_k \sin{A_k} + S'_k \cos{A_k})
 
-where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is the obliquity of the ecliptic, and the series expansion of "complementary terms" describe the combined effects of precession and nutation :cite:p:`Kaplan:2005kj,Petit:2010tp,Urban:2013vl` .
+where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is the obliquity of the ecliptic, and the series expansion of "complementary terms" describe the combined effects of precession and nutation :cite:p:`Kaplan:2005kj,Petit:2010tp,Urban:2013vl`.
 
 Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longitudinal position in degrees East from the Greenwich meridian.
 
@@ -100,5 +100,5 @@ The Earth's rotation can vary on timescales from hours to centuries, and is infl
 Many of the early estimates of the sub-daily variations in the length of day (LOD) were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.
 
 .. plot:: ./background/length-of-day.py
-    :caption: Rotation Rate Variations due to a) Diurnal and Semi-Diurnal :cite:p:`Ray:1994dk` and b) Long-Period Tides :cite:p:`Ray:2014fu`. Red lines in b) denote values for the time period used for calculating the short-period tides in a). Variations in b) are dominated by the 18.6 year node tide cycle :cite:p:`Ray:2014fu`. 
+    :caption: Rotation Rate Variations due to a) Diurnal and Semi-Diurnal :cite:p:`Ray:1994dk` and b) Long-Period Tides :cite:p:`Ray:2014fu`. Red lines in b) denote values for the time period used for calculating the short-period tides in a). Variations in b) are dominated by the 18.6 year node tide cycle :cite:p:`Ray:2014fu`.
     :align: center

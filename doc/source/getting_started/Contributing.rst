@@ -29,7 +29,7 @@ Requesting a Feature
 ====================
 
 Check the `project issues tab <https://github.com/pyTMD/pyTMD/issues>`_ to see if the feature has already been suggested.
-If not, please submit a new issue describing your requested feature or enhancement .
+If not, please submit a new issue describing your requested feature or enhancement.
 Please give your feature request both a clear title and description.
 Let us know if this is something you would like to contribute to ``pyTMD`` in your description as well.
 

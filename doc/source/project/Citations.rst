@@ -14,7 +14,7 @@ It is currently supported under the NASA Cryospheric Sciences Program
 .. admonition:: Please consider citing our article in the Journal of Open Source Software (JOSS):
 
     T. C. Sutterley, S. L. Howard, L. Padman, and M. Siegfried,
-    "pyTMD: Python-based tidal prediction software," 
+    "pyTMD: Python-based tidal prediction software,"
     *Journal of Open Source Software*, 10(116), 8566 (2025).
     `doi: 10.21105/joss.08566 <https://doi.org/10.21105/joss.08566>`_
     :download:`BibTeX <./Sutterley-2025ko.bib>`

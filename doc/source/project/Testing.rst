@@ -14,7 +14,7 @@ Test Data Access
 
 The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
 For project developers, the data files can be fetched from a permanent open research repository (``figshare`` or ``zenodo``) using the :py:func:`pyTMD.datasets.fetch_test_data` function.
-These files accessed similarly during `continuous integration (CI) testing <./Testing.html#continuous-integration>`_.
+These files are similarly accessed during `continuous integration (CI) testing <./Testing.html#continuous-integration>`_.
 
 Fetching the data using ``pixi``:
 
@@ -46,7 +46,7 @@ Coverage reports can be generated using the ``pytest-cov`` plugin (which is inst
 
 .. code-block:: bash
 
-    pytest --cov pyTMD --cov-report=term 
+    pytest --cov pyTMD --cov-report=term
 
 .. code-block:: bash
 

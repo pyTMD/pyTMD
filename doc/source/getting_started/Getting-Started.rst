@@ -90,7 +90,7 @@ Presently, the following models and their directories are parameterized within `
    :width: 100%
 
 .. tip::
-    See :ref:`tab-currents` for the table of directories for models with tidal currents. 
+    See :ref:`tab-currents` for the table of directories for models with tidal currents.
 
 For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
 If you wish to add a new model to the ``pyTMD`` database, please see the `contribution guidelines <./Contributing.html>`_.
@@ -263,7 +263,7 @@ The three valid data types in ``pyTMD`` are:
 - ``'grid'``
 
     * **When to Use:** Spatial coordinates define a 2-dimensional grid and the temporal coordinate is either a scalar or an array of times
-    * **Typical Applications:** tide maps, raster imagery, satellite imagery, gridded products, model outputs 
+    * **Typical Applications:** tide maps, raster imagery, satellite imagery, gridded products, model outputs
     * **Output Dimensions**: ``(y, x)`` or ``(y, x, time)``
 
 If the ``type`` argument is set to ``None`` in a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.

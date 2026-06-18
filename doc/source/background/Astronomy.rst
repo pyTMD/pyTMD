@@ -49,7 +49,7 @@ The lunar hour angle (:math:`\tau`) in degrees can be determined from the solar 
 
     \tau = \frac{360}{24} t - S + H
 
-When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay arguments as the fundamental orbital elements :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp` .
+When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay arguments as the fundamental orbital elements :cite:p:`Woolard:1953wp,Capitaine:2003fx,Petit:2010tp`.
 
 .. list-table:: Delaunay Arguments
     :header-rows: 1
@@ -76,7 +76,7 @@ When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay argu
     * - :math:`\Omega`
       - ascending lunar node
       - 18.61 years
-      
+
 From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:
 
 .. math::
