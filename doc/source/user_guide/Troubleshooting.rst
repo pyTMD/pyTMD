@@ -58,7 +58,7 @@ If the model files are not found, try the following checks:
 
 - **Check 1:** Is the model in the :ref:`database <model-database>`?
 - **Check 2:** Are the model files :ref:`downloaded locally <data-access>`?
-- **Check 3:** Is the :ref:`directory <directories>` set correctly (if using a custom model directory)?r
+- **Check 3:** Is the :ref:`directory <directories>` set correctly (if using a custom model directory)?
 - **Check 4:** Does the directory path exist and contain the expected files? [see :ref:`Elevation Directory Table <directories>` and :ref:`Current Directory Table <tab-currents>`]
 
 Predictions Are Slow
