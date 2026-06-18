@@ -1,12 +1,13 @@
 .. _astronomy:
 
+=========
 Astronomy
-#########
+=========
 
 .. _astronomical-arguments:
 
 Arguments
----------
+=========
 
 The tide potential is a function of the position of the sun and moon with respect to the Earth.
 The complete movements of the three bodies in three dimensions are very complicated, and typically require the use of numerical :term:`ephemerides <Ephemerides>` :cite:p:`Pugh:2014di`.
@@ -102,7 +103,7 @@ And conversely:
     Ps &= F + \Omega - l' - D
 
 Nutation
---------
+========
 
 The angle between the equator and the orbital plane of Earth around the Sun (the :term:`ecliptic <Ecliptic>`) defines the inclination of the Earth's rotation axis (:term:`obliquity <Obliquity>` of the ecliptic).
 :term:`Nutations <Nutation>` are the periodic oscillations of the Earth's rotation axis around its mean position, which arise from the time-varying torques exerted on Earth's equatorial bulge :cite:p:`Dehant:2015vb,Woolard:1953wp`.
@@ -134,7 +135,7 @@ The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mea
 .. _ephemerides:
 
 Ephemerides
------------
+===========
 
 The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface [see :ref:`tide-generating-potential`].
 Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
@@ -153,7 +154,7 @@ They are less accurate than using ephemerides, but are faster to compute and do 
 .. _zenith-angle:
 
 Zenith Angles
--------------
+=============
 
 The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
 

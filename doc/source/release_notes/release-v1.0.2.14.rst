@@ -1,8 +1,8 @@
 .. _release-v1.0.2.14:
 
-#####################
+=====================
 `Release v1.0.2.14`__
-#####################
+=====================
 
 - added model constituents from `TPXO9-atlas-v3`
 - add ATLAS compact and netCDF testing (v2) modules

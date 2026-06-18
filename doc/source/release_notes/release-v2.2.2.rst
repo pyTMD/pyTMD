@@ -1,8 +1,8 @@
 .. _release-v2.2.2:
 
-##################
+==================
 `Release v2.2.2`__
-##################
+==================
 
 * ``docs``: add notebook comparing NOAA predictions with MSL `(#386) <https://github.com/pyTMD/pyTMD/pull/386>`_
 * ``docs``: infer minor constituents in NOAA station comparison `(#387) <https://github.com/pyTMD/pyTMD/pull/387>`_

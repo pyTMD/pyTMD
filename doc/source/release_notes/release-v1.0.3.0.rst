@@ -1,8 +1,8 @@
 .. _release-v1.0.3.0:
 
-####################
+====================
 `Release v1.0.3.0`__
-####################
+====================
 
 - preparations for conda-forge release
 - semantic versioning with ``setuptools_scm``

@@ -1,8 +1,8 @@
 .. _release-v3.0.7:
 
-##################
+==================
 `Release v3.0.7`__
-##################
+==================
 
 * ``docs``: clean up notebooks and drop duplicate content `(#563) <https://github.com/pyTMD/pyTMD/pull/563>`_
 * ``refactor``: parallel outputs from ``earth_orientation`` and ``length_of_day`` `(#564) <https://github.com/pyTMD/pyTMD/pull/564>`_

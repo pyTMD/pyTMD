@@ -1,7 +1,8 @@
 .. _solid-earth-tides:
 
+=================
 Solid Earth Tides
-#################
+=================
 
 The total gravitational potential at a position on the Earth's surface due to a celestial object is directly related to the distance between the Earth and the object, and the mass of that object :cite:p:`Agnew:2015kw,Wahr:1981ea`.
 Similar to ocean tides, solid Earth tides (or body tides) are tidal deformations due to changes in the gravitational potential :cite:p:`Agnew:2015kw,Doodson:1921kt,Meeus:1991vh,Montenbruck:1989uk`.
@@ -12,7 +13,7 @@ The Earth's tidal deformation is largely considered to be elastic and to a very 
 .. _love-and-shida-numbers:
 
 Love and Shida Numbers
-----------------------
+======================
 
 The elastic response of the Earth to the tidal potential is calculated using :term:`Love/Shida numbers <Love and Shida Numbers>` [:ref:`Equation 2.1 <eq:2.1>`].
 Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Lambeck:1980ic,Munk:1960uk`.
@@ -42,7 +43,7 @@ However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some
     :align: center
 
 Methods
--------
+=======
 
 Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two methods:
 
@@ -57,7 +58,7 @@ Some catalogs additionally include the potentials induced by the motions of the 
 
 
 Ephemerides Method
-^^^^^^^^^^^^^^^^^^
+------------------
 
 From :cite:t:`Mathews:1997js`, the steps for using the ephemerides method to calculate the solid Earth tide displacements at the location and times of interest are:
 
@@ -69,7 +70,7 @@ From :cite:t:`Mathews:1997js`, the steps for using the ephemerides method to cal
 6) Convert the :term:`permanent tide system <Permanent Tide>` (if necessary)
 
 Catalog Method
-^^^^^^^^^^^^^^
+--------------
 
 Similarly, from :cite:t:`Cartwright:1971iz`, the steps for using the catalog method are:
 
@@ -86,7 +87,7 @@ Similarly, from :cite:t:`Cartwright:1971iz`, the steps for using the catalog met
     g) Add contributions to the total tidal displacement
 
 Permanent Tide
---------------
+==============
 
 In addition to the ups and downs of tides, there is a considerable portion of tidal potential and displacement that does not vary in time, a ":term:`permanent tide <Permanent Tide>`" that is due to the Earth being in the presence of the Sun and Moon (and other planetary bodies).
 The `Earth is lower in polar areas and higher in equatorial areas <https://www.ngs.noaa.gov/PUBS_LIB/EGM96_GEOID_PAPER/egm96_geoid_paper.html>`_ than it would without those gravitational effects.

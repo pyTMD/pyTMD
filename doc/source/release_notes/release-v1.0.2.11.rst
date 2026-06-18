@@ -1,8 +1,8 @@
 .. _release-v1.0.2.11:
 
-#####################
+=====================
 `Release v1.0.2.11`__
-#####################
+=====================
 
 - replaced ``griddata`` with `scipy regular grid interpolators <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_
 - allow small extrapolations with bilinear interpolation

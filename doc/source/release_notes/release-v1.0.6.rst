@@ -1,8 +1,8 @@
 .. _release-v1.0.6:
 
-##################
+==================
 `Release v1.0.6`__
-##################
+==================
 
 - ``fix``: extrapolate for equirectangular case to address `#87 <https://github.com/pyTMD/pyTMD/issues/87>`_
 - ``feat``: added global Empirical Ocean Tide (`EOT`) models

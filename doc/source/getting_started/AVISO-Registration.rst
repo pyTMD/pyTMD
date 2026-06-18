@@ -2,8 +2,9 @@
 
 .. _aviso-registration:
 
+======================
 Registering with AVISO
-----------------------
+======================
 
 The FES tide models are available through the AVISO+ data portal.
 Registering for an account is free, and provides access to a variety of oceanographic datasets.

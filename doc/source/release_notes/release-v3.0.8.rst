@@ -1,8 +1,8 @@
 .. _release-v3.0.8:
 
-##################
+==================
 `Release v3.0.8`__
-##################
+==================
 
 * ``feat``: added inverse distance weighting (IDW) extrapolation `(#577) <https://github.com/pyTMD/pyTMD/pull/577>`_
 * ``refactor``: move ellipsoid and love number parameters to ``earth`` module `(#577) <https://github.com/pyTMD/pyTMD/pull/577>`_

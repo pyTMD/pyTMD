@@ -1,8 +1,8 @@
 .. _release-v2.0.1:
 
-##################
+==================
 `Release v2.0.1`__
-##################
+==================
 
 * ``feat``: default geotiff output as cog
 * ``feat``: added default field mapping for reading from netCDF4/HDF5 (`#152 <https://github.com/pyTMD/pyTMD/pull/152>`_)

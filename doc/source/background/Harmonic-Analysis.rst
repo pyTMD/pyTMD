@@ -1,7 +1,8 @@
 .. _harmonic-analysis:
 
+=================
 Harmonic Analysis
-==================
+=================
 
 Using the :ref:`harmonic method <harmonic-method>` for tidal prediction solves the *forward problem*.
 Given the harmonic amplitude :math:`A_k`  and phase :math:`\theta_k` for constituent :math:`k`, compute the tidal elevation or current at a time and place [see :ref:`Equation 1.1 <eq:1.1>` in :ref:`ocean-load-tides`].
@@ -12,7 +13,7 @@ Given a time series of observed tidal elevations or currents, estimate the ampli
 In this problem, the additional terms of the equilibrium phase :math:`G_k(t)` and nodal corrections :math:`f_k(t)` and :math:`u_k(t)` are calculated from the *observation* times.
 
 Design Matrix
--------------
+=============
 
 The system of equations for solving for :math:`K` number of constituents with :math:`N` number of observations at times :math:`t_1, \ldots, t_N` is:
 
@@ -55,7 +56,7 @@ Augmenting the design matrix to include more polynomial terms will simultaneousl
 If the time series is long enough to statistically resolve them, including higher-order polynomial terms can also solve for trends or accelerations in the data.
 
 Least-Squares Solution
-----------------------
+======================
 
 The least-squares solution of this system of equations minimizes the residuals of
 
@@ -103,14 +104,14 @@ Note that the sine terms are negative in the design matrix, which follows the co
 
 
 Nodal Corrections
------------------
+=================
 
 The nodal corrections :math:`f_k(t)` and :math:`u_k(t)` are evaluated at each observation time and included directly into the design matrix :ref:`Equation 5.2 <eq:5.2>`.
 The amplitude :math:`\hat{A}_k`  and phase :math:`\hat{\theta}_k` estimated from the least-squares solution represent those at a "standard" epoch, and, in a perfect solution, free of the 18.6-year nodal modulation [see :ref:`nodal-corrections` in :ref:`ocean-load-tides`].
 The fitted harmonic constants should be able to be directly compared with outputs from tide models or tide tables.
 
 Minor Constituent Inference
----------------------------
+===========================
 
 Assuming that the :term:`tidal admittance <Admittance>` varies smoothly with frequency, the amplitudes and phases of minor constituents can be inferred from the major constituents :cite:p:`Foreman:1989dt,Munk:1966go,Zetler:1975uv`.
 This can be the case when the record of observations is too short to independently resolve constituents that are close in frequency :cite:p:`Foreman:2009bg`.

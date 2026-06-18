@@ -6,7 +6,7 @@ Welcome to the documentation for ``pyTMD``, a Python-based tidal prediction soft
 This documentation is intended to explain how to compute ocean, solid Earth, load and pole tide variations using the set of ``pyTMD`` programs.
 
 Introduction
-------------
+============
 
 .. grid:: 2 2 4 4
     :padding: 0
@@ -36,7 +36,7 @@ Introduction
       :material-outlined:`apps;5em`
 
 Contribute
-----------
+==========
 
 .. grid:: 2 2 4 4
     :padding: 0
@@ -66,7 +66,7 @@ Contribute
       :material-outlined:`bug_report;5em`
 
 Project Details
----------------
+===============
 
 .. grid:: 2 2 4 4
     :padding: 0
@@ -115,6 +115,7 @@ Project Details
 
     user_guide/Examples.rst
     user_guide/Recipes.rst
+    user_guide/Troubleshooting.rst
 
 .. toctree::
     :maxdepth: 1

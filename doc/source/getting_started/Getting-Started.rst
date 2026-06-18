@@ -35,6 +35,8 @@ GOT formatted data use ascii or netCDF4 files for each height constituent (``z``
 FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
 FES also provides unstructured ("native") netCDF4 files, which contain data for all constituents on a finite element mesh.
 
+.. _data-access:
+
 Data Access
 ###########
 
@@ -47,6 +49,8 @@ Other tide models may require manual downloading due to licensing agreements or 
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
 OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
 See the model links in :ref:`directories` for the references to specific tide models.
+
+.. _model-database:
 
 Model Database
 ##############
@@ -215,6 +219,8 @@ For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 ``timescale`` can also parse date strings describing the units and epoch of relative times, or the calendar date of measurement for geotiff formats.
 
 
+.. _spatial-coordinates:
+
 Spatial Coordinates
 ###################
 
@@ -261,6 +267,8 @@ The three valid data types in ``pyTMD`` are:
     * **Output Dimensions**: ``(y, x)`` or ``(y, x, time)``
 
 If the ``type`` argument is set to ``None`` in a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
+
+.. _interpolation:
 
 Interpolation
 #############

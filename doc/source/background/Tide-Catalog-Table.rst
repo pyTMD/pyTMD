@@ -1,7 +1,8 @@
 :orphan:
 
+=======================
 Tide Potential Catalogs
------------------------
+=======================
 
 :py:func:`pyTMD.predict.body_tide` currently supports the following tide potential catalogs:
 

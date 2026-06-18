@@ -1,8 +1,8 @@
 .. _release-v2.2.9:
 
-##################
+==================
 `Release v2.2.9`__
-##################
+==================
 
 * ``refactor``: generalize the calculation of body tides for degrees 3+ `(#467) <https://github.com/pyTMD/pyTMD/pull/467>`_
 * ``docs``: added IERS Conventions references for Love number calculations `(#467) <https://github.com/pyTMD/pyTMD/pull/467>`_

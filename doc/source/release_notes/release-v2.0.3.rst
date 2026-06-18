@@ -1,8 +1,8 @@
 .. _release-v2.0.3:
 
-##################
+==================
 `Release v2.0.3`__
-##################
+==================
 
 * ``feat``: add basic variable typing to function inputs (`#174 <https://github.com/pyTMD/pyTMD/pull/174>`_)
 * ``feat``: added "one-liners" for long-period equilibrium tide (LPET), load pole tide (LPT) and ocean pole tide (OPT) (`#176 <https://github.com/pyTMD/pyTMD/pull/176>`_)

@@ -1,8 +1,8 @@
 .. _release-v1.0.2.16:
 
-#####################
+=====================
 `Release v1.0.2.16`__
-#####################
+=====================
 
 - added ICESat GLA12 programs computing tides, LPT, OPT, and LPET
 - added ICESat-2 ATL11 programs for tides and LPET

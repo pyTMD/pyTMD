@@ -1,8 +1,8 @@
 .. _release-v1.0.7:
 
-##################
+==================
 `Release v1.0.7`__
-##################
+==================
 
 - ``fix``: improvements for compact ATLAS reads
 - ``feat``: added ESR netCDF4 formats to list of model types

@@ -1,8 +1,8 @@
 .. _release-v1.0.2.12:
 
-#####################
+=====================
 `Release v1.0.2.12`__
-#####################
+=====================
 
 - add spatial program for reading/writing ascii, netCDF and HDF5
 - generalize LPET, LPT, OPT and tide scripts to use csv, netCDF4 or HDF5

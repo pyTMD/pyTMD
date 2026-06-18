@@ -1,8 +1,8 @@
 .. _release-v1.0.4.0:
 
-####################
+====================
 `Release v1.0.4.0`__
-####################
+====================
 
 - ``refactor``: use model class for files and attributes
 - ``feat``: can use numpy datetime arrays as input time variable

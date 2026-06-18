@@ -1,7 +1,8 @@
 .. _time-fundamentals:
 
+====
 Time
-####
+====
 
 ``pyTMD`` uses the ``timescale`` library to manage conversions between time scales.
 A uniform time scale expresses dates as the count of time elapsed since a :term:`reference epoch <Epoch>`.
@@ -27,7 +28,7 @@ Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern
 .. _time-standards:
 
 Standards
----------
+=========
 
 ``timescale`` and ``pyTMD`` are both reliant on the International Earth Rotation Service (IERS) for the schedule of leap seconds and estimates of delta times.
 `Tables of leap seconds <https://github.com/pyTMD/timescale/blob/main/timescale/data/leap-seconds.list>`_ are used to convert from GPS, LORAN and TAI times.
@@ -43,7 +44,7 @@ The Earth's rate of rotation is unpredictable and is measured through astronomic
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
 
 Dynamical Time
---------------
+==============
 
 Dynamical time is the independent variable in the equations of motion for bodies in the solar system.
 Terrestrial Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
@@ -60,7 +61,7 @@ Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to conv
 .. _sidereal-time:
 
 Sidereal Time
--------------
+=============
 
 While the Earth rotates about its axis, it also moves in its orbit around the Sun.
 Sidereal time is based on the rotation of the Earth with respect to distant celestial objects.
@@ -93,7 +94,7 @@ where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is th
 Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longitudinal position in degrees East from the Greenwich meridian.
 
 Variations in Length of Day
----------------------------
+===========================
 
 The Earth's rotation can vary on timescales from hours to centuries, and is influenced by a number of factors including ocean tides :cite:p:`Petit:2010tp`.
 Many of the early estimates of the sub-daily variations in the length of day (LOD) were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.

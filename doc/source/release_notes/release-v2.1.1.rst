@@ -1,8 +1,8 @@
 .. _release-v2.1.1:
 
-##################
+==================
 `Release v2.1.1`__
-##################
+==================
 
 * ``refactor``: made the inference of minor constituents an option (`#272 <https://github.com/pyTMD/pyTMD/pull/272>`_)
 * ``refactor``: 1-liners in ``compute.py`` (`#272 <https://github.com/pyTMD/pyTMD/pull/272>`_)

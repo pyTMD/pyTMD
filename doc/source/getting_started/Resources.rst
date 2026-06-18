@@ -5,7 +5,7 @@ Resources
 =========
 
 Books and Articles
-##################
+==================
 
 - `NOAA - Manual of Harmonic Analysis and Prediction of Tides <https://tidesandcurrents.noaa.gov/publications/SpecialPubNo98.pdf>`_
 - `NOAA - Computer Applications of Tides in the National Ocean Survey <https://tidesandcurrents.noaa.gov/publications/SpecialPubNo98Suppl.pdf>`_
@@ -14,7 +14,7 @@ Books and Articles
 - `USNO - The Explanatory Supplement to the Astronomical Almanac <https://aa.usno.navy.mil/publications/exp_supp>`_
  
 Ocean and Load Tide Resources
-#############################
+=============================
 
 - `Arctic Tidal Constituent Atlas (ArcTiCA) <https://doi.org/10.18739/A2VT1GR64>`_
 - `ESR Polar Tide Models <https://www.esr.org/data-products/polar-tide-models/>`_
@@ -26,7 +26,7 @@ Ocean and Load Tide Resources
 - `University of Hawai'i Sea Level Center <https://uhslc.soest.hawaii.edu/>`_
 
 Pole Tide Resources
-###################
+===================
 
 - `IERS Conventions (2010) <https://iers-conventions.obspm.fr/>`_
 - `IERS Earth Orientation Center <https://hpiers.obspm.fr/eop-pc/index.php>`_
@@ -35,7 +35,7 @@ Pole Tide Resources
 - `IERS Earth Orientation Parameters (EOP) from NASA Crustal Dynamics Data Information System (CDDIS) <https://www.earthdata.nasa.gov/centers/cddis-daac/iers-rapid-service-prediction-center-earth-orientation-parameters>`_
 
 Software
-########
+========
 
 - `ESR Tide Model Driver (TMD) Matlab Toolbox <https://www.esr.org/research/polar-tide-models/tmd-software/>`_
 - `OSU Tidal Prediction Software (OTPS) <https://www.tpxo.net/otps>`_
@@ -46,11 +46,11 @@ Software
 - `Antarctic Tide Gauge (AntTG) Database Tools <https://github.com/EarthAndSpaceResearch/AntTG_Database_Tools>`_
 
 Tutorials
-#########
+=========
 
 - `Tidal Analysis and Prediction with pyTMD <https://github.com/pyTMD/pyTMD-tutorial>`_
 
 Alternative Data Sources
-########################
+========================
 
 - `astropy-iers-data <https://github.com/astropy/astropy-iers-data>`_

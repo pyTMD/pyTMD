@@ -1,8 +1,8 @@
 .. _release-v1.0.5:
 
-##################
+==================
 `Release v1.0.5`__
-##################
+==================
 
 - ``refactor``: using python logging for handling verbose output
 - ``fix``: Operation IceBridge functions for geotrajectory outputs

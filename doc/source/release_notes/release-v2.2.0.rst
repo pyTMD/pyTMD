@@ -1,8 +1,8 @@
 .. _release-v2.2.0:
 
-##################
+==================
 `Release v2.2.0`__
-##################
+==================
 
 * ``fix``: "unsupported operand type(s) for | error" `(#373) <https://github.com/pyTMD/pyTMD/pull/373>`_
 

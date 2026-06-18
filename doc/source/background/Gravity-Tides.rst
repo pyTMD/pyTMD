@@ -1,5 +1,6 @@
 .. _gravity-tides:
 
+=============
 Gravity Tides
 =============
 

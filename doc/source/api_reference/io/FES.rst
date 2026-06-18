@@ -9,7 +9,7 @@ FES
    * ``FES-native``
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

@@ -1,8 +1,8 @@
 .. _release-v2.2.3:
 
-##################
+==================
 `Release v2.2.3`__
-##################
+==================
 
 * ``feat``: add parsing more constituents for `#351 <https://github.com/pyTMD/pyTMD/issues/351>`_ `(#395) <https://github.com/pyTMD/pyTMD/pull/395>`_
 * ``docs``: add figure for tidal spectra `(#395) <https://github.com/pyTMD/pyTMD/pull/395>`_

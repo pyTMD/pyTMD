@@ -1,8 +1,8 @@
 .. _release-v2.0.6:
 
-##################
+==================
 `Release v2.0.6`__
-##################
+==================
 
 * ``feat``: improve conversion of ``timescale`` to ``datetime`` arrays (`#220 <https://github.com/pyTMD/pyTMD/pull/220>`_)
 * ``docs``: update ``graphviz`` fonts (`#220 <https://github.com/pyTMD/pyTMD/pull/220>`_)

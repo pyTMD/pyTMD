@@ -1,8 +1,8 @@
 .. _release-v2.1.2:
 
-##################
+==================
 `Release v2.1.2`__
-##################
+==================
 
 * ``refactor``: use ``timescale`` for EOP and temporal operations (`#300 <https://github.com/pyTMD/pyTMD/pull/300>`_)
 * ``docs``: fix ``netCDF4`` urls (`#300 <https://github.com/pyTMD/pyTMD/pull/300>`_)

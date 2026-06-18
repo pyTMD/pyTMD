@@ -5,7 +5,7 @@ NOAA
 - Query and parsing functions for the `NOAA Tides and Currents webservices API <https://tidesandcurrents.noaa.gov/>`_
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

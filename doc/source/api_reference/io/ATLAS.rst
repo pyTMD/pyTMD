@@ -5,7 +5,7 @@ ATLAS
 - Reads ``ATLAS-netcdf`` tidal solutions provided by Oregon State University
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

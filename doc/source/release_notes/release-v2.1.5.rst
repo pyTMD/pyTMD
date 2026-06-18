@@ -1,8 +1,8 @@
 .. _release-v2.1.5:
 
-##################
+==================
 `Release v2.1.5`__
-##################
+==================
 
 * ``feat``: adding GOT5.5 and GOT download program (`#316 <https://github.com/pyTMD/pyTMD/pull/316>`_)
 * ``refactor``: renamed format for ``ATLAS`` to ``ATLAS-compact`` (`#316 <https://github.com/pyTMD/pyTMD/pull/316>`_)

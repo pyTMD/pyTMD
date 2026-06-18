@@ -10,7 +10,8 @@ Running the test suite requires a `dev installation <../getting_started/Install.
     python -m pip install --editable '.[dev]'
 
 Test Data Access
-^^^^^^^^^^^^^^^^
+================
+
 The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
 For project developers, the data files can be fetched from a permanent open research repository (``figshare`` or ``zenodo``) using the :py:func:`pyTMD.datasets.fetch_test_data` function.
 These files accessed similarly during `continuous integration (CI) testing <./Testing.html#continuous-integration>`_.
@@ -22,7 +23,7 @@ Fetching the data using ``pixi``:
     pixi run fetch
 
 Running the Test Suite
-^^^^^^^^^^^^^^^^^^^^^^
+======================
 
 Using the ``pytest`` command:
 
@@ -39,7 +40,7 @@ Using ``pixi``:
 The test suite is run in verbose mode as a default.
 
 Coverage Reports
-^^^^^^^^^^^^^^^^
+----------------
 
 Coverage reports can be generated using the ``pytest-cov`` plugin (which is installed with the dev installation).
 
@@ -52,7 +53,7 @@ Coverage reports can be generated using the ``pytest-cov`` plugin (which is inst
     pixi run coverage
 
 Parallelization
-^^^^^^^^^^^^^^^
+---------------
 
 As a default, the ``pytest`` suite is run in parallel using the ``pytest-xdist`` plugin (which is also installed with the dev installation).
 To run in series and disable parallelization, set the number of processes to 0:
@@ -66,7 +67,8 @@ To run in series and disable parallelization, set the number of processes to 0:
     pixi run test "-n 0"
 
 Continuous Integration
-^^^^^^^^^^^^^^^^^^^^^^
+======================
+
 We use `GitHub Actions <https://github.com/pyTMD/pyTMD/actions>`_ continuous integration (CI) services to build and test the project on Linux (``ubuntu-latest``), Mac (``macos-latest``), and Windows (``windows-latest``) Operating Systems.
 The configuration files for this service are in the `GitHub workflows <https://github.com/pyTMD/pyTMD/tree/main/.github/workflows>`_ directory.
 Most of the workflows use ``pixi`` to install the required dependencies and build the custom environment.

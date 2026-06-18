@@ -10,7 +10,7 @@ OTIS
    * ``TMD3`` consolidated netCDF4
 
 Calling Sequence
-----------------
+================
 
 .. code-block:: python
 

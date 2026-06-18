@@ -1,7 +1,8 @@
 .. _reference-systems:
 
+=================
 Reference Systems
-#################
+=================
 
 Cartesian coordinate systems are represented by three perpendicular axes that are defined with respect to an origin, and with directions defined for each axis :cite:p:`Urban:2013vl`.
 Locations of planetary bodies and satellites can be determined in an Earth-centered Earth-Fixed coordinate system (ECEF) :cite:p:`Meeus:1991vh,Montenbruck:1989uk`.
@@ -53,7 +54,7 @@ In general, objects move with respect to the coordinate system, and the coordina
 Coordinate system definitions, such as the International Terrestrial Reference Frame (ITRF), will often include a time component to account for these changes.
 
 Geocentric Coordinates
-----------------------
+======================
 
 Similar to ECEF cartesian coordinates, geocentric coordinates are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
 Geocentric coordinates are used to estimate :ref:`spherical-harmonics` coefficients, and for performing coordinate system rotations.
@@ -66,7 +67,7 @@ Geocentric longitudes are identical to geodetic longitudes, but geocentric latit
 .. _celestial-reference:
 
 Celestial Reference Systems
----------------------------
+===========================
 
 Celestial reference systems are used to describe the positions of celestial bodies in the sky.
 Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math:`\mathbf{x}_{TRS}`) reference systems involves a set of transformation matrices for frame bias (:math:`\mathbf{B}`), precession (:math:`\mathbf{P}`), nutation (:math:`\mathbf{N}`), Earth's rotation (:math:`\mathbf{T}`), and polar motion (:math:`\mathbf{W}`) :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Urban:2013vl`.
@@ -80,7 +81,7 @@ Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math
 In ``pyTMD``, these transformations are used to convert planetary :term:`ephemerides <Ephemerides>` from a celestial reference frame to a terrestrial reference frame.
 
 Geoid Height
-------------
+============
 
 The height above mean sea level of a point on the Earth is defined with respect to an irregular surface known as the :term:`geoid <Geoid>`.
 The :term:`geoid <Geoid>` is the instantaneous shape of the Earth's gravitational field, which would coincide with global mean sea level if the oceans were at rest.

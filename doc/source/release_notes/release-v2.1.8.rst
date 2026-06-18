@@ -1,8 +1,8 @@
 .. _release-v2.1.8:
 
-##################
+==================
 `Release v2.1.8`__
-##################
+==================
 
 * ``docs``: fix repository url fetch from ``Project-URL``
 * ``docs``: update ``CITATION.cff`` to add version information

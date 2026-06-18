@@ -1,8 +1,8 @@
 .. _release-v1.1.2:
 
-##################
+==================
 `Release v1.1.2`__
-##################
+==================
 
 - ``fix``: MEEUS solar perigee rate
 - ``fix``: slimmer doc build for readthedocs

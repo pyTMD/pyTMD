@@ -1,7 +1,8 @@
 .. _ocean-load-tides:
 
+====================
 Ocean and Load Tides
-####################
+====================
 
 The rise and fall of the oceanic tides are a major source of the vertical variability of the ocean surface.
 Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, moon and sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
@@ -11,7 +12,7 @@ Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltm
 .. _harmonic-method:
 
 Harmonic Method
----------------
+===============
 
 ``pyTMD`` uses the harmonic method for tide prediction, which is based on harmonic analysis and decomposition.
 Here, tidal oscillations for both ocean and load tides are decomposed into a series of tidal constituents (or partial tides) of particular frequencies.
@@ -44,7 +45,7 @@ Ocean tide models are typically one of following categories:
 .. _nodal-corrections:
 
 Nodal Modulations
------------------
+=================
 
 The moon's orbital plane precesses (rotates) in space and completes one revolution approximately every 18.6 years :cite:p:`Dronkers:1975hm`.
 This precession causes the maximum declination of the moon to vary between approximately 18 and 28 degrees, with the average equal to the Earth's equatorial inclination (approximately 23 degrees) :cite:p:`Schureman:1958ty`.
@@ -56,7 +57,7 @@ Both of these modulations need to be taken into account to properly predict the 
 .. _equilibrium-theory:
 
 Equilibrium Theory
-------------------
+==================
 
 Under the equilibrium theory of tides, the Earth is a spherical body with a uniform distribution of water over its surface :cite:p:`Doodson:1921kt`.
 In this model, the oceanic surface instantaneously responds to the tide-producing forces of the moon and sun, and is not influenced by inertia, currents or the irregular distribution of land :cite:p:`Schureman:1958ty`.
@@ -70,7 +71,7 @@ For tides in the diurnal band, a resonance from the Earth's free core nutation (
 This resonance affects the instantaneous elastic response of the solid Earth to tidal loading :cite:p:`Wahr:1979vx`.
 
 Prediction
-----------
+==========
 
 ``pyTMD.io`` contains routines for reading major constituent values from commonly available tide models, and interpolating those values to spatial locations.
 :py:func:`pyTMD.constituents.arguments` uses the astronomical argument formalism outlined in :cite:t:`Doodson:1921kt` for the prediction of ocean and load tides. 
@@ -94,7 +95,7 @@ After the determination of the major constituents, :py:func:`pyTMD.predict.infer
 .. _high-low-water:
 
 High and Low Water
-------------------
+==================
 
 Tide tables list the times and heights of successive :term:`high <High Water Height>` and :term:`low <Low Water Height>` water points at a location, and are a practical summary of tidal predictions.
 The high and low waters correspond to maxima and minima of the tidal time series :math:`h(t)` [:ref:`Equation 1.1 <eq:1.1>`].
