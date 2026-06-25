@@ -198,7 +198,7 @@ The variables are then converted to default sets of units: meters for elevation 
 Removed Functions
 =================
 
-Each model format (``'ATLAS'``, ``'FES'``, ``'GOT'``, ``'OTIS'``, etc) previously had two functions for reading model constituents: 
+Each model format (``'ATLAS'``, ``'FES'``, ``'GOT'``, ``'OTIS'``, etc) previously had two functions for reading model constituents:
 ``extract_constants`` was used to read model data and interpolate to a specific location, and ``read_constants`` was used to read the full model grid.
 The ``constituents`` class stored the model constituents from ``read_constants`` and had some methods for calculating amplitude and phase.
 

@@ -4,6 +4,79 @@
 Astronomy
 =========
 
+.. _ephemerides:
+
+Ephemerides
+===========
+
+The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface [see :ref:`tide-generating-potential`].
+Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
+``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
+The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
+They are computed from a comprehensive set of observations including spacecraft radio range data, lunar laser range data, and Very Long Baseline Interferometry (VLBI) measurements :cite:p:`Folkner:2014un,Park:2021fa`.
+``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :py:func:`pyTMD.astro.solar_ephemerides` and :py:func:`pyTMD.astro.lunar_ephemerides`.
+The data is provided in the :ref:`celestial reference frame <celestial-reference>`, which ``pyTMD`` transforms to get locations in reference to the Earth.
+
+``pyTMD`` can also use analytical approximations to compute the solar and lunar positions using :py:func:`pyTMD.astro.solar_approximate` and :py:func:`pyTMD.astro.lunar_approximate`.
+These express the solar and lunar coordinates as a truncated trigonometric or polynomial series :cite:p:`Meeus:1991vh`.
+They are less accurate than using ephemerides, but are faster to compute and do not require downloading the kernel files.
+
+.. include:: Approximate-Methods.rst
+
+.. _zenith-angle:
+
+Zenith Angles
+=============
+
+The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
+
+.. math::
+    :label: 8.5
+    :name: eq:8.5
+
+    \cos\psi = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos h
+
+where :math:`\psi` is the zenith angle, :math:`\varphi` is the latitude on the Earth's surface, :math:`\delta` is the declination of the celestial body, and :math:`h` is the local hour angle of the celestial body.
+This is equivalent to the dot product between the unit vectors of the celestial body and the position on the Earth's surface.
+``pyTMD`` takes advantage of this relationship in order to calculate the zenith angles of the sun and moon using their positions in Cartesian coordinates [see :ref:`ephemerides`].
+
+.. plot:: ./background/zenith-angles.py
+    :caption: Hour Angles and Zenith Angles of the Moon and Sun
+    :align: center
+
+.. _nutation:
+
+Nutation
+========
+
+The angle between the equator and the orbital plane of Earth around the Sun (the :term:`ecliptic <Ecliptic>`) defines the inclination of the Earth's rotation axis (:term:`obliquity <Obliquity>` of the ecliptic).
+:term:`Nutations <Nutation>` are the periodic oscillations of the Earth's rotation axis around its mean position, which arise from the time-varying torques exerted on Earth's equatorial bulge :cite:p:`Dehant:2015vb,Woolard:1953wp`.
+These largely short-period wobbles have durations ranging from subdaily to multi-annual, which are superimposed on the much slower :term:`precession <Precession>` of the rotation axis :cite:p:`Dehant:2015vb`.
+The Earth's nutation is conventionally resolved into two components measured with respect to the :term:`ecliptic <Ecliptic>` :cite:p:`Dehant:2015vb,Meeus:1991vh`:
+
+- **Nutation in longitude** (:math:`\Delta\psi`)\ **:** shift in the position of the true :term:`vernal equinox <Vernal Equinox>` along the ecliptic
+- **Nutation in obliquity** (:math:`\Delta\varepsilon`)\ **:** variation in the tilt of Earth's equator with respect to the ecliptic
+
+These two quantities help define the orientation of the true equator and equinox of date relative to the mean equator and :term:`equinox <Equinox>`.
+For instance, the instantaneous (true) obliquity of the ecliptic is:
+
+.. math::
+    :label: 8.4
+    :name: eq:8.4
+
+    \varepsilon = \bar\varepsilon + \Delta\varepsilon
+
+where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
+These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames [see :ref:`Equation 6.5 <eq:6.5>`] :cite:p:`Kaplan:1989cf,Petit:2010tp`.
+
+The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms [see :ref:`sidereal-time`] :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
+:py:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame [see :ref:`ephemerides`] :cite:p:`Petit:2010tp`.
+
+.. plot:: ./background/obliquity-ecliptic.py
+    :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
+    :align: center
+
+
 .. _astronomical-arguments:
 
 Arguments
@@ -40,6 +113,10 @@ The rates of change of these arguments are the fundamental frequencies of the as
     * - :math:`Ps`
       - solar perigee
       - 21,000 years
+
+.. plot:: ./background/mean-longitudes.py
+    :caption: Mean Longitudes of the Moon (:math:`S`) and Sun (:math:`H`)
+    :align: center
 
 The lunar hour angle (:math:`\tau`) in degrees can be determined from the solar time (:math:`t`) in hours using the mean longitudes of the moon (:math:`S`) and sun (:math:`H`):
 
@@ -101,73 +178,3 @@ And conversely:
     P &= F + \Omega - l\\
     N &= \Omega = -N' \\
     Ps &= F + \Omega - l' - D
-
-Nutation
-========
-
-The angle between the equator and the orbital plane of Earth around the Sun (the :term:`ecliptic <Ecliptic>`) defines the inclination of the Earth's rotation axis (:term:`obliquity <Obliquity>` of the ecliptic).
-:term:`Nutations <Nutation>` are the periodic oscillations of the Earth's rotation axis around its mean position, which arise from the time-varying torques exerted on Earth's equatorial bulge :cite:p:`Dehant:2015vb,Woolard:1953wp`.
-These largely short-period wobbles have durations ranging from subdaily to multi-annual, which are superimposed on the much slower :term:`precession <Precession>` of the rotation axis :cite:p:`Dehant:2015vb`.
-The Earth's nutation is conventionally resolved into two components measured with respect to the :term:`ecliptic <Ecliptic>` :cite:p:`Dehant:2015vb,Meeus:1991vh`:
-
-- **Nutation in longitude** (:math:`\Delta\psi`)\ **:** shift in the position of the true :term:`vernal equinox <Vernal Equinox>` along the ecliptic
-- **Nutation in obliquity** (:math:`\Delta\varepsilon`)\ **:** variation in the tilt of Earth's equator with respect to the ecliptic
-
-These two quantities help define the orientation of the true equator and equinox of date relative to the mean equator and :term:`equinox <Equinox>`.
-For instance, the instantaneous (true) obliquity of the ecliptic is:
-
-.. math::
-    :label: 8.4
-    :name: eq:8.4
-
-    \varepsilon = \bar\varepsilon + \Delta\varepsilon
-
-where :math:`\bar\varepsilon` is the mean obliquity :cite:p:`Capitaine:2003fx,Capitaine:2003fw`.
-These nutation angles (:math:`\Delta\psi` and :math:`\Delta\varepsilon`) and the mean obliquity (:math:`\bar\varepsilon`) are combined when forming the nutation rotation matrix (:math:`\mathbf{N}`) used in the transformation from :ref:`celestial <celestial-reference>` to terrestrial reference frames [see :ref:`Equation 6.5 <eq:6.5>`] :cite:p:`Kaplan:1989cf,Petit:2010tp`.
-
-The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mean Sidereal Time (GMST) defines the "equation of the equinoxes", which is calculated using the :term:`nutation <Nutation>` terms along with higher-order complementary terms [see :ref:`sidereal-time`] :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`.
-:py:func:`pyTMD.astro.itrs` calculates GAST when forming the ITRS rotation matrix for converting a :ref:`celestial reference frame <celestial-reference>` to an Earth-centered Earth-fixed (ECEF) reference frame [see :ref:`ephemerides`] :cite:p:`Petit:2010tp`.
-
-.. plot:: ./background/obliquity-ecliptic.py
-    :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
-    :align: center
-
-.. _ephemerides:
-
-Ephemerides
-===========
-
-The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface [see :ref:`tide-generating-potential`].
-Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
-``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
-The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
-They are computed from a comprehensive set of observations including spacecraft radio range data, lunar laser range data, and Very Long Baseline Interferometry (VLBI) measurements :cite:p:`Folkner:2014un,Park:2021fa`.
-``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :py:func:`pyTMD.astro.solar_ephemerides` and :py:func:`pyTMD.astro.lunar_ephemerides`.
-The data is provided in the :ref:`celestial reference frame <celestial-reference>`, which ``pyTMD`` transforms to get locations in reference to the Earth.
-
-``pyTMD`` can also use analytical approximations to compute the solar and lunar positions using :py:func:`pyTMD.astro.solar_approximate` and :py:func:`pyTMD.astro.lunar_approximate`.
-These express the solar and lunar coordinates as a truncated trigonometric or polynomial series :cite:p:`Meeus:1991vh`.
-They are less accurate than using ephemerides, but are faster to compute and do not require downloading the kernel files.
-
-.. include:: Approximate-Methods.rst
-
-.. _zenith-angle:
-
-Zenith Angles
-=============
-
-The :term:`zenith angles <Zenith Angle>` of the sun and moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
-
-.. math::
-    :label: 8.5
-    :name: eq:8.5
-
-    \cos\psi = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos h
-
-where :math:`\psi` is the zenith angle, :math:`\varphi` is the latitude on the Earth's surface, :math:`\delta` is the declination of the celestial body, and :math:`h` is the local hour angle of the celestial body.
-This is equivalent to the dot product between the unit vectors of the celestial body and the position on the Earth's surface.
-``pyTMD`` takes advantage of this relationship in order to calculate the zenith angles of the sun and moon using their positions in Cartesian coordinates [see :ref:`ephemerides`].
-
-.. plot:: ./background/zenith-angles.py
-    :caption: Hour Angles and Zenith Angles of the Sun and Moon
-    :align: center

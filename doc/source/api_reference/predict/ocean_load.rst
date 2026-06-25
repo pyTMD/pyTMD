@@ -22,6 +22,16 @@ ocean_load
 
 .. autofunction:: pyTMD.predict._infer_long_period
 
+.. autofunction:: pyTMD.predict.minor_admittance
+
+.. autofunction:: pyTMD.predict._admittance_short_period
+
+.. autofunction:: pyTMD.predict._admittance_semi_diurnal
+
+.. autofunction:: pyTMD.predict._admittance_diurnal
+
+.. autofunction:: pyTMD.predict._admittance_long_period
+
 .. autofunction:: pyTMD.predict.equilibrium_tide
 
 .. autofunction:: pyTMD.predict.find_peaks

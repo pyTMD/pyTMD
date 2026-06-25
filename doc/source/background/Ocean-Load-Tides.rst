@@ -54,6 +54,10 @@ Conversely, when the moon is at its minimum declination, the difference causes t
 The moon's perigee also varies with a period of approximately 8.8 years, which causes (smaller) modulations in tidal amplitudes :cite:p:`Dronkers:1975hm`.
 Both of these modulations need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations [see :term:`nodal corrections <Nodal Corrections>`].
 
+.. plot:: ./background/lunar-nodal-cycle.py
+    :caption: Lunar Orbits over the 18.6-year Nodal Cycle
+    :align: center
+
 .. _equilibrium-theory:
 
 Equilibrium Theory

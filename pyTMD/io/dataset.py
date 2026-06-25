@@ -22,6 +22,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 06/2026: moved peak finding algorithm to prediction module
         drift type renamed to trajectory. drift still accepted as an alias
+        added function to infer minor constituents and add to dataset
     Updated 05/2026: added parameters to allow for extrapolation with
         inverse distance weighting (IDW) in addition to nearest-neighbors (NN)
     Updated 04/2026: add barycentric interpolation for unstructured grids
@@ -939,6 +940,37 @@ class Dataset:
             )
         # return xarray dataset
         return other
+
+    def minor_admittances(self, **kwargs):
+        """
+        Interpolate admittances for minor constituents from ``Dataset``
+        :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt`
+
+        Parameters
+        ----------
+        kwargs: dict
+            Keyword arguments for admittance interpolation functions
+
+        Returns
+        -------
+        ds: xarray.Dataset
+            Merged ``Dataset`` with interpolated minor constituents
+        """
+        from pyTMD.predict.ocean_load import minor_admittance
+
+        # copy dataset
+        ds = self._ds.copy()
+        # interpolate admittances for each species
+        other = minor_admittance(self._ds, **kwargs)
+        # merge datasets with minor constituents into original dataset
+        ds = xr.merge(
+            [ds, other],
+            combine_attrs=combine_attrs,
+            join="outer",
+            compat="override",
+        )
+        # return xarray dataset
+        return ds
 
     def node_equilibrium(self):
         """
