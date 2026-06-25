@@ -330,7 +330,7 @@ def _infer_short_period(
     # raise exception or log error
     msg = "Not enough constituents to infer short-period tides"
     if (nz < 6) and kwargs["raise_exception"]:
-        raise Exception(msg)
+        raise ValueError(msg)
     elif nz < 6:
         logging.debug(msg)
         return 0.0
@@ -764,10 +764,10 @@ def _admittance_short_period(
     # raise exception or log error
     msg = "Not enough constituents to infer short-period tides"
     if (nz < 6) and kwargs["raise_exception"]:
-        raise Exception(msg)
+        raise ValueError(msg)
     elif nz < 6:
         logging.debug(msg)
-        return
+        return None
     # major constituents as a dataarray
     dmajor = ds.tmd.to_dataarray().rename(constituent="major")
 
@@ -880,7 +880,7 @@ def _admittance_short_period(
     msg = "No short-period tidal constituents to infer"
     if not any(constituents):
         logging.debug(msg)
-        return
+        return None
 
     # create dictionary of admittances
     admit = dict(dims=("constituent", "major"), coords={})
@@ -941,10 +941,10 @@ def _admittance_semi_diurnal(
     # raise exception or log error
     msg = "Not enough constituents to infer semi-diurnal tides"
     if (nz < 3) and kwargs["raise_exception"]:
-        raise Exception(msg)
+        raise ValueError(msg)
     elif nz < 3:
         logging.debug(msg)
-        return
+        return None
 
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
@@ -1025,7 +1025,7 @@ def _admittance_semi_diurnal(
     msg = "No semi-diurnal tidal constituents to infer"
     if not any(constituents):
         logging.debug(msg)
-        return
+        return None
 
     # convert minor constituent parameters to dataset
     arg = xr.Dataset(
@@ -1111,10 +1111,10 @@ def _admittance_diurnal(
     # raise exception or log error
     msg = "Not enough constituents to infer diurnal tides"
     if (nz < 3) and kwargs["raise_exception"]:
-        raise Exception(msg)
+        raise ValueError(msg)
     elif nz < 3:
         logging.debug(msg)
-        return
+        return None
 
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
@@ -1211,7 +1211,7 @@ def _admittance_diurnal(
     msg = "No diurnal tidal constituents to infer"
     if not any(constituents):
         logging.debug(msg)
-        return
+        return None
 
     # convert minor constituent parameters to dataset
     arg = xr.Dataset(
@@ -1291,10 +1291,10 @@ def _admittance_long_period(
     # raise exception or log error
     msg = "Not enough constituents to infer long-period tides"
     if (nz < 3) and kwargs["raise_exception"]:
-        raise Exception(msg)
+        raise ValueError(msg)
     elif nz < 3:
         logging.debug(msg)
-        return
+        return None
 
     # angular frequencies for major constituents
     omajor = pyTMD.constituents.frequency(cindex, **kwargs)
@@ -1389,7 +1389,7 @@ def _admittance_long_period(
     msg = "No long-period tidal constituents to infer"
     if not any(constituents):
         logging.debug(msg)
-        return
+        return None
 
     # convert minor constituent parameters to dataset
     arg = xr.Dataset(
