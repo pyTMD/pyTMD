@@ -1,3 +1,5 @@
+.. _tide-glossary:
+
 ========
 Glossary
 ========

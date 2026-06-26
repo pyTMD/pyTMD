@@ -7,8 +7,8 @@ Contribution Guidelines
 ``pyTMD`` is an open source project.
 We welcome any help in maintaining and developing the software and documentation.
 Anyone at *any career stage and with any level of coding experience* can contribute towards the development of ``pyTMD``.
-Please read our `code of conduct <./Code-of-Conduct.html>`_ before contributing to ``pyTMD`` development.
-You will be recognized for your work by being listed as one of the `project contributors <../project/Contributors.html>`_.
+Please read our :ref:`code of conduct <code-of-conduct>` before contributing to ``pyTMD`` development.
+You will be recognized for your work by being listed as one of the :ref:`project contributors <contributors>`.
 
 .. note::
 
@@ -21,7 +21,7 @@ Ways to Contribute
 1) Fixing typographical or coding errors
 2) Submitting bug reports or feature requests through the use of `GitHub issues <https://github.com/pyTMD/pyTMD/issues>`_
 3) Improving documentation and testing
-4) Sharing use cases and examples (such as `Jupyter Notebooks <../user_guide/Examples.html>`_)
+4) Sharing use cases and examples (such as :ref:`Jupyter Notebooks <examples>`)
 5) Providing code for everyone to use
 6) Adding model providers to the database
 
@@ -45,13 +45,13 @@ Contributing Code
 =================
 
 We follow a standard Forking Workflow for code changes and additions.
-Submitted code goes through the pull request process for `continuous integration (CI) testing <../project/Testing.html#continuous-integration>`_ and comments.
+Submitted code goes through the pull request process for :ref:`continuous integration (CI) testing <ci-testing>` and comments.
 
 General Guidelines
 ------------------
 
 - Make each pull request as small and simple as possible
-- `Commit messages should be clear and describe the changes <./Contributing.html#semantic-commit-messages>`_
+- :ref:`Commit messages should be clear and describe the changes <semantic-commits>`
 - Larger changes should be broken down into their basic components and integrated separately
 - Bug fixes should be their own pull requests with an associated `GitHub issue <https://github.com/pyTMD/pyTMD/issues>`_
 - Write a descriptive pull request message with a clear title
@@ -71,7 +71,7 @@ Steps to Contribute
 Adding Examples
 ---------------
 
-Examples may be in the form of executable scripts or interactive `Jupyter Notebooks <../user_guide/Examples.html>`_.
+Examples may be in the form of executable scripts or interactive :ref:`Jupyter Notebooks <examples>`.
 Fully working (but unrendered) examples should be submitted with the same steps as above.
 Many examples can be rendered when the project documentation is built on `Read the Docs <https://about.readthedocs.com/>`_.
 
@@ -80,6 +80,8 @@ Adding Model Providers
 
 Model providers can be added to their respective `JSON files <https://github.com/pyTMD/pyTMD/tree/main/providers>`_.
 The main database can then be updated by running the `merge providers <https://github.com/pyTMD/pyTMD/blob/main/providers/_providers_to_database.py>`_ script.
+
+.. _semantic-commits:
 
 Semantic Commit Messages
 ------------------------
@@ -99,5 +101,5 @@ where ``<type>`` is one of the following:
 - ``docs``: changing the documentation
 - ``style``: changing the line order or adding comments
 - ``refactor``: changing the names of variables or programs
-- ``ci``: changing the `continuous integration <../project/Testing.html#continuous-integration>`_ configuration files or scripts
-- ``test``: adding or updating `continuous integration tests <../project/Testing.html#continuous-integration>`_
+- ``ci``: changing the :ref:`continuous integration <ci-testing>` configuration files or scripts
+- ``test``: adding or updating :ref:`continuous integration tests <ci-testing>`
