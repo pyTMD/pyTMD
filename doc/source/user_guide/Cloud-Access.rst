@@ -3,7 +3,7 @@ Cloud Data Access
 =================
 
 .. important::
-  Running these example recipes requires an `aws installation <../getting_started/Install.html>`_ to include the optional dependencies.
+  Running these example recipes requires an :ref:`aws installation <development-install>` to include the optional dependencies.
 
 Access a model hosted on s3
 ===========================

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (05/2026)
+Written by Tyler Sutterley (06/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,8 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 06/2026: can use an environment variable to set cache directory
+        this overrides the default platform-specific cache directory
     Updated 05/2026: add exists to URL class to check if URL is valid
         added function to get the github url of an item in the project repo
         added keyword arguments to allow for encrypted ftp connections
@@ -192,8 +194,19 @@ def get_cache_path(
     appname: str, default 'pytmd'
         Application name
     """
-    # get platform-specific cache directory
-    filepath = platformdirs.user_cache_path(appname=appname, ensure_exists=True)
+    # check for custom environment variable for cache directory
+    cache_dir = os.environ.get("PYTMD_CACHE_DIR")
+    if cache_dir:
+        # custom environment variable for cache directory
+        filepath = pathlib.Path(cache_dir).expanduser().absolute()
+        # ensure that the cache directory exists
+        filepath.mkdir(parents=True, exist_ok=True)
+    else:
+        # platform-specific cache directory
+        filepath = platformdirs.user_cache_path(
+            appname=appname, ensure_exists=True
+        )
+    # append relative path to cache directory
     if isinstance(relpath, list):
         # use *splat operator to extract from list
         filepath = filepath.joinpath(*relpath)

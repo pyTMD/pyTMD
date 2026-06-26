@@ -4,14 +4,10 @@ Getting Started
 
 .. tip::
 
-    See the `background material <../background/Background.html>`_ and `glossary <../background/Glossary.html>`_ for more information on the theory and methods used in ``pyTMD``.
-
-.. note::
-
-    If you have previously used ``pyTMD``, check out the :ref:`transition-guide-v3` for information on changes incorporated in Version 3.
+    See the :ref:`Jupyter notebooks <examples>` and :ref:`recipes <recipes>` as a quickstart guide for using ``pyTMD``.
 
 Tide Corrections
-################
+================
 
 Different measurement techniques can have different `vertical datums <https://www.esr.org/data-products/antarctic_tg_database/ocean-tide-and-ocean-tide-loading/>`_, and require different sets of tidal corrections.
 Tide gauges measure the height of the ocean surface *relative to the land* upon which they are situated (*ocean tides only*).
@@ -19,49 +15,9 @@ Satellite altimeters measure the height of the ocean surface *relative to the ce
 
 .. include:: Tide-Corrections.rst
 
-Tide Model Formats
-##################
-
-Ocean and load tide constituent files are available from different modeling groups in different formats.
-``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
-Choosing a model is often a balance between the spatial resolution of the model, the accuracy of the model (e.g. the underlying physics and if it included data assimilation), the number of constituents included in the model, and the geographic region of interest.
-Another non-trivial consideration is if the model is openly available for download or if it requires registration and/or manual downloading.
-Post on the ``pyTMD`` `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_ if you want more information or help choosing a model.
-
-OTIS and ATLAS formatted data use binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
-They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
-ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
-GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
-FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
-FES also provides unstructured ("native") netCDF4 files, which contain data for all constituents on a finite element mesh.
-
-.. _data-access:
-
-Data Access
-###########
-
-Some tide models can be programmatically downloaded using the fetching routines in ``pyTMD.datasets``.
-OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the :py:func:`pyTMD.datasets.fetch_arcticdata` function.
-GOT models can be downloaded from the NASA GSFC server using the :py:func:`pyTMD.datasets.fetch_gsfc_got` function.
-Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the :py:func:`pyTMD.datasets.fetch_aviso_fes` function.
-
-Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
-TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
-OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
-See the model links in :ref:`directories` for the references to specific tide models.
-
-.. _model-database:
-
-Model Database
-##############
-
-``pyTMD`` comes parameterized with models for the prediction of tidal elevations and currents.
-All presently available models are stored within a `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
-
-.. include:: Model-Database.ipynb
-   :parser: myst_nb.docutils_
-
-``pyTMD`` currently supports several solutions from the following tide models:
+``pyTMD`` is intended to be able to compute ocean, solid Earth, load and pole tide variations to support the different measurement techniques.
+For ocean and load tides, ``pyTMD`` uses pre-computed tidal constituent files of amplitude and phase provided by tide modeling groups.
+Versions of the following tide models are currently supported [see :ref:`model-selection`]:
 
 - Arctic Ocean (AO) and Greenland coast (Gr) tidal simulations :cite:p:`Padman:2004hv`
 - Circum-Antarctic Tidal Simulations (CATS) :cite:p:`Padman:2008ec`
@@ -72,16 +28,81 @@ All presently available models are stored within a `JSON database <https://githu
 - Technical University of Denmark (DTU) tide models :cite:p:`Andersen:2023ei`
 - TOPEX/POSEIDON (TPXO) global tide models :cite:p:`Egbert:2002ge`
 
+
+.. _model-selection:
+
+Choosing a Model
+================
+
+``pyTMD`` can access the harmonic constituents for the OTIS, GOT and FES families of ocean and load tide models.
+Choosing a model is often a balance between the spatial resolution of the model, the accuracy of the model (e.g. the underlying physics and if it included data assimilation), the number of constituents included in the model, and the geographic region of interest.
+Another non-trivial consideration is if the model is openly available for download or if it requires registration and/or manual downloading.
+Post on the ``pyTMD`` `discussions board <https://github.com/pyTMD/pyTMD/discussions>`_ if you want more information or help choosing a model.
+
+
+Tide Model Formats
+==================
+
+OTIS and ATLAS
+--------------
+
+OTIS and ATLAS formatted data use binary files to store the constituent data for either heights (``z``) or zonal and meridional transports (``u``, ``v``).
+They can be either a single file containing all the constituents (compact) or multiple files each containing a single constituent.
+ATLAS netCDF formatted data use netCDF4 files for each constituent and variable type (``z``, ``u``, ``v``).
+OTIS and ATLAS binary files can be read via the routines in :py:mod:`pyTMD.io.OTIS` and ATLAS netCDF files via the routines in :py:mod:`pyTMD.io.ATLAS`.
+
+GOT
+---
+
+GOT formatted data use ascii or netCDF4 files for each height constituent (``z``).
+Both ascii and netCDF4 files can be read via the routines in :py:mod:`pyTMD.io.GOT`.
+
+FES
+---
+
+FES formatted data use either ascii (1999, 2004) or netCDF4 (2012, 2014) files for each constituent and variable type (``z``, ``u``, ``v``).
+FES also provides unstructured ("native") netCDF4 files, which contain data for all constituents on a finite element mesh.
+All FES files can be read via the routines in :py:mod:`pyTMD.io.FES`.
+
+
+.. _data-access:
+
+Data Access
+===========
+
+Some tide models can be programmatically downloaded using the fetching routines in :py:mod:`pyTMD.datasets`.
+OTIS-formatted Arctic Ocean models can be downloaded from the NSF ArcticData server using the :py:func:`pyTMD.datasets.fetch_arcticdata` function.
+GOT models can be downloaded from the NASA GSFC server using the :py:func:`pyTMD.datasets.fetch_gsfc_got` function.
+Users registered with AVISO [see :ref:`aviso-registration`] can download FES models from their FTP server using the :py:func:`pyTMD.datasets.fetch_aviso_fes` function.
+
+Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
+TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
+OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
+See the model links in :ref:`directories` for the references to specific tide models.
+
+
+.. _model-database:
+
+Model Database
+==============
+
+``pyTMD`` comes with a  `JSON database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_ of models for the prediction of tidal elevations and currents.
+An updated version of the database can be downloaded from the `project <https://github.com/pyTMD/pyTMD>`_ using the :py:func:`pyTMD.datasets.fetch_database` function.
+
+.. include:: Model-Database.ipynb
+   :parser: myst_nb.docutils_
+
+
 .. _directories:
 
 Directories
-###########
+===========
 
 ``pyTMD`` uses a tree structure for storing and accessing the tidal constituent data.
-This structure was chosen based on the different formats of each tide model.
 The base of the tree structure (in the table below as ``<model_path>``) can be the default ``pyTMD`` cache directory or a user-specified (external) directory.
-Several models can be programmatically downloaded from their providers to their parameterized directories using the fetching routines in ``pyTMD.datasets``.
+The default cache directory is set by the ``platformdirs`` package, but can be overridden on a machine by setting the ``PYTMD_CACHE_DIR`` environment variable.
 
+The tree structure was chosen based on the different formats of each tide model.
 Presently, the following models and their directories are parameterized within ``pyTMD``:
 
 .. csv-table::
@@ -92,18 +113,19 @@ Presently, the following models and their directories are parameterized within `
 .. tip::
     See :ref:`tab-currents` for the table of directories for models with tidal currents.
 
-For other tide models, the model parameters can be set with a `model definition file <./Getting-Started.html#definition-files>`_.
-If you wish to add a new model to the ``pyTMD`` database, please see the `contribution guidelines <./Contributing.html>`_.
+For other tide models, the model parameters can be set with a :ref:`model definition file <definition-files>`.
+If you wish to add a new model to the ``pyTMD`` database, please see the :ref:`contribution guidelines <contributing>`.
 
 .. note::
     Any model parameterized with a definition file or added to the database will have to fit a presently supported file standard.
 
+
 .. _definition-files:
 
 Definition Files
-################
+================
 
-For models not currently within the ``pyTMD`` `database <./Getting-Started.html#model-database>`_, the model parameters can be set in :py:class:`pyTMD.io.model` with a definition file in JSON format.
+For models not currently within the ``pyTMD`` :ref:`database <model-database>`, the model parameters can be set in :py:class:`pyTMD.io.model` with a definition file in JSON format.
 The JSON definition files follow a similar structure as the main ``pyTMD`` database, but for individual entries.
 The JSON format directly maps the parameter names with their values stored in the appropriate data type (strings, lists, numbers, booleans, etc).
 While still human readable, the JSON format is both interoperable and more easily machine readable.
@@ -116,7 +138,7 @@ For models with multiple constituent files, the files can be found using a ``glo
 
     * ``format``: ``OTIS``, ``ATLAS-compact`` or ``TMD3``
     * ``name``: tide model name
-    * ``projection``: `model spatial projection <./Getting-Started.html#spatial-coordinates>`_.
+    * ``projection``: :ref:`model spatial projection <spatial-coordinates>`.
     * ``z``:
 
         - ``grid_file``: path to model grid file
@@ -196,7 +218,7 @@ For models with multiple constituent files, the files can be found using a ``glo
 
 
 Units
-#####
+=====
 
 ``pyTMD`` uses ``pint`` to handle the units of the model constituent data and convert them into standard sets of units.
 
@@ -210,7 +232,7 @@ Units
 
 
 Time
-####
+====
 
 The default time in ``pyTMD`` is days (UTC) since a given epoch.
 For ocean, load and equilibrium tide programs, the epoch is 1992-01-01T00:00:00.
@@ -222,7 +244,7 @@ For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 .. _spatial-coordinates:
 
 Spatial Coordinates
-###################
+===================
 
 The default coordinate system in ``pyTMD`` is WGS84 geodetic coordinates in latitude and longitude.
 ``pyTMD`` uses ``pyproj`` to convert from different coordinate systems and datums.
@@ -230,9 +252,27 @@ Some regional tide models are projected in a different coordinate system.
 These models have their coordinate reference system (CRS) information stored as PROJ descriptors in the `JSON model database <https://github.com/pyTMD/pyTMD/blob/main/pyTMD/data/database.json>`_:
 For other projected models, a formatted coordinate reference system (CRS) descriptor (e.g. ``PROJ``, ``WKT``, or ``EPSG`` code) can be used.
 
+.. _interpolation:
+
+Interpolation
+=============
+
+For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
+
+.. important::
+    If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.
+    Verify that the coordinates are in the model domain and coordinate reference system.
+
+For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm [see :ref:`extrapolate-demo`].
+The default maximum extrapolation distance is 10 kilometers.
+This default distance may not be a large enough extrapolation for some applications and models.
+
+.. warning::
+    The extrapolation cutoff can be set to any distance (including infinite), but should be used with caution in cases such as estuaries, narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
+
 
 Programs
-########
+========
 
 :py:mod:`pyTMD.compute` calculates tide predictions for use with ``numpy`` arrays or ``pandas`` dataframes.
 These are a series of functions that take ``x``, ``y``, and ``time`` coordinates and
@@ -243,7 +283,7 @@ compute the corresponding tidal elevation or currents.
 
 
 Data Types
-##########
+==========
 
 The :py:mod:`pyTMD.compute` functions accept a ``type`` parameter that defines the relationship between the spatial and temporal coordinates and create the output ``xarray.DataArray`` dimensions.
 The three valid data types in ``pyTMD`` are:
@@ -268,20 +308,6 @@ The three valid data types in ``pyTMD`` are:
 
 If the ``type`` argument is set to ``None`` in a :py:mod:`pyTMD.compute` function, :py:func:`pyTMD.spatial.data_type` will try to auto-detect it based on the dimension sizes.
 
-.. _interpolation:
+.. tip::
 
-Interpolation
-#############
-
-For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
-
-.. important::
-    If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.
-    Verify that the coordinates are in the model domain and coordinate reference system.
-
-For coastal or near-grounded points, the model can be extrapolated outside the model domain with :py:func:`pyTMD.interpolate.extrapolate` using a nearest-neighbor (NN) or inverse distance weighting (IDW) algorithm [see :ref:`extrapolate-demo`].
-The default maximum extrapolation distance is 10 kilometers.
-This default distance may not be a large enough extrapolation for some applications and models.
-
-.. warning::
-    The extrapolation cutoff can be set to any distance (including infinite), but should be used with caution in cases such as estuaries, narrow fjords or ice sheet grounding zones :cite:p:`Padman:2018cv`.
+    See the :ref:`background material <background>` and :ref:`glossary <tide-glossary>` for more information on the theory and methods.

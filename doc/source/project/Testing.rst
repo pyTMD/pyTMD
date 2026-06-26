@@ -3,7 +3,7 @@ Testing
 =======
 
 ``pyTMD`` uses the ``pytest`` framework to run tests and verify outputs.
-Running the test suite requires a `dev installation <../getting_started/Install.html>`_ of the ``pyTMD`` package to include all of the optional dependencies.
+Running the test suite requires a :ref:`dev installation <development-install>` of the ``pyTMD`` package to include all of the optional dependencies.
 
 .. code-block:: bash
 
@@ -12,9 +12,9 @@ Running the test suite requires a `dev installation <../getting_started/Install.
 Test Data Access
 ================
 
-The test suite requires access to some tide model data files [see `Data Access <../getting_started/Getting-Started.html#data-access>`_].
+The test suite requires access to some tide model data files [see :ref:`Data Access <data-access>`].
 For project developers, the data files can be fetched from a permanent open research repository (``figshare`` or ``zenodo``) using the :py:func:`pyTMD.datasets.fetch_test_data` function.
-These files are similarly accessed during `continuous integration (CI) testing <./Testing.html#continuous-integration>`_.
+These files are similarly accessed during :ref:`continuous integration (CI) testing <ci-testing>`.
 
 Fetching the data using ``pixi``:
 
@@ -65,6 +65,8 @@ To run in series and disable parallelization, set the number of processes to 0:
 .. code-block:: bash
 
     pixi run test "-n 0"
+
+.. _ci-testing:
 
 Continuous Integration
 ======================

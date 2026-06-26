@@ -5,9 +5,9 @@ Examples
 ========
 
 .. important::
-  Running the example notebooks requires a `full installation <../getting_started/Install.html>`_ to include all of the optional dependencies.
+  Running the example notebooks requires a full :ref:`installation <development-install>` to include all of the optional dependencies.
 
-  Some notebooks require first downloading a tide model [see details on `data access <../getting_started/Getting-Started.html#data-access>`_].
+  Some notebooks require first downloading a tide model [see details on :ref:`data access <data-access>`].
 
 .. toctree::
    :maxdepth: 1
@@ -106,4 +106,4 @@ Examples
 
 
 .. tip::
-  More examples can be found on the `Recipes <./Recipes.html>`_ page and in the `Tutorials <https://github.com/pyTMD/pyTMD-tutorial>`_ repository!
+  More examples can be found on the :ref:`recipes` page and in the `Tutorials <https://github.com/pyTMD/pyTMD-tutorial>`_ repository!
