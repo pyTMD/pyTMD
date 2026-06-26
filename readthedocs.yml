@@ -16,7 +16,7 @@ build:
         - asdf install pixi latest
         - asdf global pixi latest
     install:
-        - pixi install -e doc
+        - pixi install -e dev
     build:
         html:
           - pixi run -e dev sphinx-build -T -b html doc/source $READTHEDOCS_OUTPUT/html
