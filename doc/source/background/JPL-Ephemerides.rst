@@ -12,7 +12,7 @@ The SPK and other binary files are distributed by the NASA Jet Propulsion Labora
 
 .. note::
 
-   ``pyTMD`` reads SPK files through the `jplephem <https://pypi.org/project/jplephem/>`_ library.
+   ``pyTMD`` reads SPK files through the ``jplephem`` library :cite:p:`Rhodes:2011to`.
 
 Development Ephemerides
 =======================
