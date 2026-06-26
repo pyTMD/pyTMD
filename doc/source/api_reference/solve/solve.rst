@@ -1,6 +1,6 @@
-=====
-solve
-=====
+===============
+``pyTMD.solve``
+===============
 
 Solve functions for estimating ocean tides
 

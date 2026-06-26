@@ -1,6 +1,6 @@
-===========
-reduce_otis
-===========
+==============================
+``pyTMD.datasets.reduce_otis``
+==============================
 
 - Reduces OTIS-format tidal files to a regional subset
 

@@ -1,6 +1,6 @@
-=====
-earth
-=====
+===============
+``pyTMD.earth``
+===============
 
 - Calculates Earth parameters and Body Tide Love numbers
 - Provides gravitational and ellipsoidal parameters from :cite:t:`HofmannWellenhof:2006hy,Petit:2010tp`

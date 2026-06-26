@@ -1,6 +1,6 @@
-=======
-spatial
-=======
+=================
+``pyTMD.spatial``
+=================
 
 - Spatial transformation routines
 

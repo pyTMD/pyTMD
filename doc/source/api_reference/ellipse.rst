@@ -1,6 +1,6 @@
-=======
-ellipse
-=======
+=================
+``pyTMD.ellipse``
+=================
 
 - Expresses the amplitudes and phases for the `u` and `v` components in terms of four ellipse parameters using Foreman's formula :cite:p:`Foreman:1989dt`
 

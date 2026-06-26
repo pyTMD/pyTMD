@@ -1,6 +1,6 @@
-=========
-potential
-=========
+===========================
+``pyTMD.predict.potential``
+===========================
 
 - Predict gravity tides and tide-generating forces
 

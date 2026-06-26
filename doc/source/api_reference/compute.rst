@@ -1,6 +1,6 @@
-=======
-compute
-=======
+=================
+``pyTMD.compute``
+=================
 
 - Calculates tidal elevations at points and times
 

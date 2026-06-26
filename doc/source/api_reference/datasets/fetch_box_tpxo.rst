@@ -1,6 +1,6 @@
-==============
-fetch_box_tpxo
-==============
+=================================
+``pyTMD.datasets.fetch_box_tpxo``
+=================================
 
 - Downloads TPXO ATLAS global tide models from the `box file sharing service <https://developer.box.com/guides/>`_
 

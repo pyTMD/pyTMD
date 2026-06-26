@@ -1,6 +1,6 @@
-============
-constituents
-============
+======================
+``pyTMD.constituents``
+======================
 
 - Calculates constituent parameters and nodal arguments
 

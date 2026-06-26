@@ -113,28 +113,10 @@ Project Details
     :hidden:
     :caption: User Guide
 
+    api_reference/API-Reference.rst
     user_guide/Examples.rst
     user_guide/Recipes.rst
     user_guide/Troubleshooting.rst
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-    :caption: API Reference
-
-    api_reference/astro.rst
-    api_reference/compute.rst
-    api_reference/constituents.rst
-    api_reference/datasets/datasets.rst
-    api_reference/earth.rst
-    api_reference/ellipse.rst
-    api_reference/interpolate.rst
-    api_reference/io/io.rst
-    api_reference/math.rst
-    api_reference/predict/predict.rst
-    api_reference/solve/solve.rst
-    api_reference/spatial.rst
-    api_reference/utilities.rst
 
 .. toctree::
     :maxdepth: 1

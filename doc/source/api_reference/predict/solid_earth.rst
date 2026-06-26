@@ -1,6 +1,6 @@
-===========
-solid_earth
-===========
+=============================
+``pyTMD.predict.solid_earth``
+=============================
 
 - Predicts solid Earth (body) tides
 

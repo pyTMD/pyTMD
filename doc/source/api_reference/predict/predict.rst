@@ -1,6 +1,6 @@
-=======
-predict
-=======
+=================
+``pyTMD.predict``
+=================
 
 Prediction functions for ocean, load, equilibrium and solid earth tides
 

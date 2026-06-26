@@ -1,6 +1,6 @@
-==
-io
-==
+============
+``pyTMD.io``
+============
 
 Input/output functions for reading and writing tidal data
 

@@ -1,6 +1,6 @@
-===============
-fetch_test_data
-===============
+==================================
+``pyTMD.datasets.fetch_test_data``
+==================================
 
 - Downloads model files necessary to run the ``pyTMD`` test suite
 - Test files are meant for *development and continuous integration purposes only*

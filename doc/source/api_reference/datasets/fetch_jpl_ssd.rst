@@ -1,6 +1,6 @@
-=============
-fetch_jpl_ssd
-=============
+================================
+``pyTMD.datasets.fetch_jpl_ssd``
+================================
 
 - Download planetary ephemerides kernels from the JPL Solar System Dynamics server
 
