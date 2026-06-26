@@ -33,7 +33,7 @@ User Guide
       :text-align: center
       :link: ./api_reference/API-Reference.html
 
-      :material-outlined:`format_list_bulleted;5em`
+      :material-outlined:`list_alt;5em`
 
     .. grid-item-card::  Background
       :text-align: center
