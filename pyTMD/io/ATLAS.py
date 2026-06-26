@@ -258,7 +258,7 @@ def open_atlas_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask [see ``xarray.open_dataset``]
     compressed: bool, default False
         Input file is ``gzip`` compressed
 

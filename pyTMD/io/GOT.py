@@ -302,7 +302,7 @@ def open_got_netcdf(
     input_file: str or pathlib.Path
         Model file
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask [see ``xarray.open_dataset``]
     compressed: bool, default False
         Input file is ``gzip`` compressed
 

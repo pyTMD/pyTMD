@@ -12,7 +12,7 @@ Ephemerides
 The geocentric positions of the Sun and Moon determine the magnitude of the major tide-generating potentials at locations on the Earth's surface [see :ref:`tide-generating-potential`].
 Ephemerides are tables or mathematical representations giving the positions of astronomical bodies as a function of time.
 ``pyTMD`` can calculate these positions using either high-precision numerical `ephemerides from JPL <https://ssd.jpl.nasa.gov/planets/orbits.html>`_  or one of several analytical approximations.
-The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels".
+The JPL ephemerides are numerically integrated solutions to the equations of motion for the planets, sun and moon and are provided in the form of binary "kernels" [see :ref:`jpl-ephemerides`].
 They are computed from a comprehensive set of observations including spacecraft radio range data, lunar laser range data, and Very Long Baseline Interferometry (VLBI) measurements :cite:p:`Folkner:2014un,Park:2021fa`.
 ``pyTMD`` uses the ``jplephem`` package to read the JPL ephemeris kernels using :py:func:`pyTMD.astro.solar_ephemerides` and :py:func:`pyTMD.astro.lunar_ephemerides`.
 The data is provided in the :ref:`celestial reference frame <celestial-reference>`, which ``pyTMD`` transforms to get locations in reference to the Earth.

@@ -43,6 +43,8 @@ Universal Time (UT1) is effectively the mean solar time and is based on the true
 The Earth's rate of rotation is unpredictable and is measured through astronomical observations, predominantly from Very Long Baseline Interferometry (VLBI).
 `Coordinated Universal Time (UTC) <https://crf.usno.navy.mil/ut1-utc>`_ is based on International Atomic Time (TAI) with leap seconds added to keep it within 0.9 seconds of UT1.
 
+.. _dynamical-time:
+
 Dynamical Time
 ==============
 
