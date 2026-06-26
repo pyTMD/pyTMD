@@ -62,7 +62,7 @@ Ephemerides Method
 
 From :cite:t:`Mathews:1997js`, the steps for using the ephemerides method to calculate the solid Earth tide displacements at the location and times of interest are:
 
-1) Compute positions of the Sun and Moon in ECEF coordinates (:math:`X`, :math:`Y` and :math:`Z`)
+1) Compute positions of the Sun and Moon in ECEF coordinates (:math:`X`, :math:`Y` and :math:`Z`) [see :ref:`ephemerides`]
 2) Calculate frequency-independent deformations using "nominal" :term:`Love/Shida number <Love and Shida Numbers>` values
 3) Include contributions from the :term:`Love/Shida number <Love and Shida Numbers>` out-of-phase (imaginary) components
 4) Include contributions from the :term:`Love/Shida number <Love and Shida Numbers>` latitudinal dependency for degree 2
