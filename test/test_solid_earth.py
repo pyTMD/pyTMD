@@ -46,7 +46,7 @@ def test_out_of_phase_diurnal():
     LXYZ = xr.Dataset(data_vars=dict(
         X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
     ))
-    # factors for sun and moon
+    # factors for Sun and Moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
     # expected results
@@ -74,7 +74,7 @@ def test_out_of_phase_semidiurnal():
     LXYZ = xr.Dataset(data_vars=dict(
         X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
     ))
-    # factors for sun and moon
+    # factors for Sun and Moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
     # expected results
@@ -102,7 +102,7 @@ def test_latitude_dependence():
     LXYZ = xr.Dataset(data_vars=dict(
         X=-179996231.920342, Y=-312468450.131567, Z=-169288918.592160
     ))
-    # factors for sun and moon
+    # factors for Sun and Moon
     F2_solar = 0.163271964478954
     F2_lunar = 0.321989090026845
     # expected results

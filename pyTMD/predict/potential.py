@@ -64,7 +64,7 @@ def generating_force(
 ):
     r"""
     Compute the tide-generating force due to the gravitational
-    attraction of the moon and sun :cite:p:`Tamura:1982wx,Tamura:1987tp`
+    attraction of the Moon and Sun :cite:p:`Tamura:1982wx,Tamura:1987tp`
 
     Parameters
     ----------
@@ -73,9 +73,9 @@ def generating_force(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     lmax: int, default 4
         Maximum degree of spherical harmonic expansion
     GM: float, default 3.986004418e14
@@ -95,7 +95,7 @@ def generating_force(
     kwargs.setdefault("lmax", 4)
     # gravitational constants (m^3 s^-2)
     kwargs.setdefault("GM", 3.986004418e14)
-    # mass ratios between earth and sun/moon
+    # mass ratios between earth and Sun/Moon
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
 
@@ -103,10 +103,10 @@ def generating_force(
     MJD = t + _mjd_tide
     # Earth's radius at the given latitude (meters)
     radius = pyTMD.math.radius(XYZ.X, XYZ.Y, XYZ.Z)
-    # distance between the Earth and the sun/moon
+    # distance between the Earth and the Sun/Moon
     solar_radius = pyTMD.math.radius(SXYZ.X, SXYZ.Y, SXYZ.Z)
     lunar_radius = pyTMD.math.radius(LXYZ.X, LXYZ.Y, LXYZ.Z)
-    # cosine of angles between vectors of the point and the sun/moon
+    # cosine of angles between vectors of the point and the Sun/Moon
     solar_scalar = pyTMD.math.scalar_product(
         XYZ.X, XYZ.Y, XYZ.Z, SXYZ.X, SXYZ.Y, SXYZ.Z
     ) / (radius * solar_radius)
@@ -118,7 +118,7 @@ def generating_force(
     solar_unit_vector = SXYZ / solar_radius
     lunar_unit_vector = LXYZ / lunar_radius
 
-    # factors for sun and moon using IAU estimates of mass ratios
+    # factors for Sun and Moon using IAU estimates of mass ratios
     GM_solar = kwargs["mass_ratio_solar"] * kwargs["GM"]
     GM_lunar = kwargs["mass_ratio_lunar"] * kwargs["GM"]
     # gravitational parameters
@@ -179,7 +179,7 @@ def gravity_tide(
 ):
     r"""
     Compute the estimated gravity tides due to the gravitational
-    attraction of the moon and sun :cite:p:`Tamura:1987tp,Hartmann:1995jp`
+    attraction of the Moon and Sun :cite:p:`Tamura:1987tp,Hartmann:1995jp`
 
     Parameters
     ----------
@@ -188,9 +188,9 @@ def gravity_tide(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
@@ -230,7 +230,7 @@ def gravity_tide(
     kwargs.setdefault("J2", _iers.J2)
     # gravitational constants (m^3 s^-2)
     kwargs.setdefault("GM", 3.986004418e14)
-    # mass ratios between earth and sun/moon
+    # mass ratios between earth and Sun/Moon
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
 
@@ -242,10 +242,10 @@ def gravity_tide(
     rad_e = a_axis * (1.0 - kwargs["flat"]) ** (1.0 / 3.0)
     # sine of geocentric latitude
     sinphi = XYZ["Z"] / radius
-    # distance between the Earth and the sun/moon
+    # distance between the Earth and the Sun/Moon
     solar_radius = pyTMD.math.radius(SXYZ.X, SXYZ.Y, SXYZ.Z)
     lunar_radius = pyTMD.math.radius(LXYZ.X, LXYZ.Y, LXYZ.Z)
-    # cosine of angles between vectors of the point and the sun/moon
+    # cosine of angles between vectors of the point and the Sun/Moon
     solar_scalar = pyTMD.math.scalar_product(
         XYZ.X, XYZ.Y, XYZ.Z, SXYZ.X, SXYZ.Y, SXYZ.Z
     ) / (radius * solar_radius)
@@ -255,7 +255,7 @@ def gravity_tide(
     # unit vectors for dimensions
     unit_vector = XYZ / radius
 
-    # factors for sun and moon using IAU estimates of mass ratios
+    # factors for Sun and Moon using IAU estimates of mass ratios
     GM_solar = kwargs["mass_ratio_solar"] * kwargs["GM"]
     GM_lunar = kwargs["mass_ratio_lunar"] * kwargs["GM"]
     # gravitational parameters
@@ -326,13 +326,13 @@ def _out_of_phase(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     F2_solar: np.ndarray
-        Factors for the sun
+        Factors for the Sun
     F2_lunar: np.ndarray
-        Factors for the moon
+        Factors for the Moon
 
     Returns
     -------
@@ -340,7 +340,7 @@ def _out_of_phase(
         Gravity tide corrections
     """
     # compute diurnal and semi-diurnal corrections separately
-    # for both the sun and moon
+    # for both the Sun and Moon
     G = _out_of_phase_diurnal(XYZ, SXYZ, F2_solar)
     G += _out_of_phase_diurnal(XYZ, LXYZ, F2_lunar)
     G += _out_of_phase_semidiurnal(XYZ, SXYZ, F2_solar)
@@ -365,9 +365,9 @@ def _out_of_phase_diurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     dh2: float, default -0.0025
         Love number correction for the diurnal band
     dk2: float, default -0.00144
@@ -435,9 +435,9 @@ def _out_of_phase_semidiurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     dh2: float, default -0.0022
         Love number correction for the semi-diurnal band
     dk2: float, default -0.0013

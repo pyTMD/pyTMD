@@ -24,7 +24,7 @@ epsilon = np.radians(23.43929111)
 rad_e = 6.3781e6
 rad_m = 1.7375e6
 rad_s = 6.957e8
-# distances between the Earth and the sun/moon (meters)
+# distances between the Earth and the Sun/Moon (meters)
 AU = 1.495978707e11
 LD = 3.84399e8
 

@@ -30,7 +30,7 @@ _century = 36525.0
 # centuries since J2000 epoch
 T = (MJD - _mjd_j2000) / _century
 
-# compute the right ascension and declination of the moon/sun
+# compute the right ascension and declination of the Moon/Sun
 lunar_right_ascension, lunar_declination = pyTMD.astro.lunar_equatorial(MJD)
 solar_right_ascension, solar_declination = pyTMD.astro.solar_equatorial(MJD)
 

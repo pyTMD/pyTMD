@@ -51,7 +51,7 @@ DE "long" kernels are much larger files and designed for lower-precision applica
      - ``de441.bsp``
 
 
-``DE440s.bsp`` is the default kernel used by ``pyTMD`` as it is a small and covers the satellite era.
+``DE440s.bsp`` is the default kernel used by ``pyTMD`` as it is a small file covering the modern era.
 If locally unavailable, the kernel file is automatically downloaded from the JPL server when calling :py:func:`pyTMD.astro.solar_ephemerides` or :py:func:`pyTMD.astro.lunar_ephemerides`.
 
 .. tip::
