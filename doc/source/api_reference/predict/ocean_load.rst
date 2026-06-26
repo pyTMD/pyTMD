@@ -1,6 +1,6 @@
-==========
-ocean_load
-==========
+============================
+``pyTMD.predict.ocean_load``
+============================
 
 - Predict tidal values using harmonic constants
 - Infer tidal values for minor constituents using major constituents

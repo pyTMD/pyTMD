@@ -62,8 +62,8 @@ def test_equilibrium_tide(TYPE, include_anelasticity):
     computed = pyTMD.compute.LPET_elevations(lon, lat, delta_time,
         crs=4326, epoch=EPOCH, type=TYPE, standard='GPS')
 
-    # longitude of moon
-    # longitude of sun
+    # longitude of Moon
+    # longitude of Sun
     # longitude of lunar perigee
     # longitude of ascending lunar node
     PHC = np.array([290.21,280.12,274.35,343.51])

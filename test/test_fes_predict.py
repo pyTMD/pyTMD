@@ -120,7 +120,7 @@ def test_verify_FES2014(directory, CROP):
 
 # parametrize over correction types
 @pytest.mark.parametrize("corrections", ["FES", "OTIS"])
-# PURPOSE: Tests that the inferrence methods match
+# PURPOSE: Tests that the inference methods match
 def test_infer_FES2014(directory, corrections):
     # model parameters for FES2014
     m = pyTMD.io.model(directory).from_database('FES2014', group='z')

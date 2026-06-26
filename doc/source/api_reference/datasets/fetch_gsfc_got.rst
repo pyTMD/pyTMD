@@ -1,6 +1,6 @@
-==============
-fetch_gsfc_got
-==============
+=================================
+``pyTMD.datasets.fetch_gsfc_got``
+=================================
 
 - Download `Goddard Ocean Tide (GOT) models <https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models>`_
 

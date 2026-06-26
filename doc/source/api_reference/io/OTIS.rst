@@ -1,6 +1,6 @@
-====
-OTIS
-====
+=================
+``pyTMD.io.OTIS``
+=================
 
 - Reads OTIS format tidal solutions provided by Oregon State University and ESR
 

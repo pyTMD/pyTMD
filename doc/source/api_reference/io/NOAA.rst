@@ -1,6 +1,6 @@
-====
-NOAA
-====
+=================
+``pyTMD.io.NOAA``
+=================
 
 - Query and parsing functions for the `NOAA Tides and Currents webservices API <https://tidesandcurrents.noaa.gov/>`_
 

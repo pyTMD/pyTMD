@@ -1,6 +1,6 @@
-====
-IERS
-====
+=================
+``pyTMD.io.IERS``
+=================
 
 - Reads ocean pole load tide coefficients provided by IERS as computed by :cite:t:`Desai:2002ev` and :cite:t:`Desai:2015jr`
 - See `materials from Chapter 7 of the IERS Conventions <https://webtai.bipm.org/iers/convupdt/convupdt_c7.html>`_

@@ -25,7 +25,7 @@ Glossary
         see :term:`Perigee`
 
     Aphelion
-        point of an orbit where a celestial body is furthest from the sun
+        point of an orbit where a celestial body is furthest from the Sun
 
         see :term:`Perihelion`
 
@@ -78,7 +78,7 @@ Glossary
         tidal variations of the surface of the solid Earth, frequently split into the :term:`body <Body Tide>` and :term:`load tides <Load Tide>`
 
     Ecliptic
-        mean plane of the orbit of the Earth around the sun
+        mean plane of the orbit of the Earth around the Sun
 
     Ephemerides
         plural of :term:`Ephemeris`
@@ -96,7 +96,7 @@ Glossary
         hypothetical tide produced solely by lunisolar gravitational forces under :term:`Equilibrium Theory`, in the absence of ocean dynamics or terrestrial constraints
 
     Equinox
-        the ascending node of the Earth's orbit about the sun, and the point on the equatorial plane where it meets the ecliptic plane
+        the ascending node of the Earth's orbit about the Sun, and the point on the equatorial plane where it meets the ecliptic plane
 
     Flattening
         ratio of the difference between the semi-major and semi-minor axes of an ellipsoid to the semi-major axis
@@ -184,7 +184,7 @@ Glossary
         see :term:`Apogee`
 
     Perihelion
-        point of an orbit where a celestial body is closest to the sun
+        point of an orbit where a celestial body is closest to the Sun
 
         see :term:`Aphelion`
 
@@ -262,7 +262,7 @@ Glossary
         reference coordinate surface used for vertical positions
 
     Zenith Angle
-        angle between the local vertical and the line of sight to a celestial body, such as the sun or moon
+        angle between the local vertical and the line of sight to a celestial body, such as the Sun or Moon
 
     Zero Tide
         model with permanent direct tidal effects removed, but indirect loading effects retained

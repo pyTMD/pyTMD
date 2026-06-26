@@ -1,6 +1,6 @@
-=====
-ATLAS
-=====
+==================
+``pyTMD.io.ATLAS``
+==================
 
 - Reads ``ATLAS-netcdf`` tidal solutions provided by Oregon State University
 

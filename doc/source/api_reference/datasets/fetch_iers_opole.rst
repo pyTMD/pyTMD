@@ -1,6 +1,6 @@
-================
-fetch_iers_opole
-================
+===================================
+``pyTMD.datasets.fetch_iers_opole``
+===================================
 
 - Download ocean pole tide map file from the IERS server
 

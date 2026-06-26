@@ -1,6 +1,6 @@
-===
-GOT
-===
+================
+``pyTMD.io.GOT``
+================
 
 - Reads files for Richard Ray's Goddard Ocean Tide (GOT) models
 

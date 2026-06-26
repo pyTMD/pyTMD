@@ -1,6 +1,6 @@
-=========
-constants
-=========
+=========================
+``pyTMD.solve.constants``
+=========================
 
 - Harmonic tidal analysis with minor constituent inference
 

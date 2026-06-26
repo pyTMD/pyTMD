@@ -1,6 +1,6 @@
-===========
-interpolate
-===========
+=====================
+``pyTMD.interpolate``
+=====================
 
 - Interpolators for spatial data
 

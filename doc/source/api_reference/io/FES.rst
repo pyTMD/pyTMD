@@ -1,6 +1,6 @@
-===
-FES
-===
+================
+``pyTMD.io.FES``
+================
 
 - Reads Finite Element Solution (FES), Empirical Ocean Tide (EOT), and Hamburg direct data Assimilation Methods for Tides (HAMTIDE) models
 

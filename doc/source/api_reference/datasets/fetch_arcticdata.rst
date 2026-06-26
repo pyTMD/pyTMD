@@ -1,6 +1,6 @@
-================
-fetch_arcticdata
-================
+===================================
+``pyTMD.datasets.fetch_arcticdata``
+===================================
 
 - Download Arctic Ocean Tide Models from the `NSF ArcticData <https://arcticdata.io>`_ archive
 

@@ -1,6 +1,6 @@
-=========
-utilities
-=========
+===================
+``pyTMD.utilities``
+===================
 
 Download and management utilities for syncing files
 

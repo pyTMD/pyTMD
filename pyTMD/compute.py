@@ -288,7 +288,7 @@ def tide_elevations(
     definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask [see ``xarray.open_dataset``]
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list, np.ndarray or NoneType, default None
@@ -488,7 +488,7 @@ def tide_currents(
     definition_file: str, pathlib.Path, io.IOBase or NoneType, default None
         Tide model definition file for use
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask [see ``xarray.open_dataset``]
     crop: bool, default False
         Crop tide model data to (buffered) bounds
     bounds: list, np.ndarray or NoneType, default None

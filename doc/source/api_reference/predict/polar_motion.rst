@@ -1,6 +1,6 @@
-============
-polar_motion
-============
+==============================
+``pyTMD.predict.polar_motion``
+==============================
 
 - Predicts ocean and load pole tides
 

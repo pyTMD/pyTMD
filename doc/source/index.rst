@@ -8,7 +8,7 @@ This documentation is intended to explain how to compute ocean, solid Earth, loa
 Introduction
 ============
 
-.. grid:: 2 2 4 4
+.. grid:: 2 2 2 2
     :padding: 0
 
     .. grid-item-card::  Installation
@@ -23,6 +23,18 @@ Introduction
 
       :material-outlined:`hiking;5em`
 
+User Guide
+===========
+
+.. grid:: 2 2 4 4
+    :padding: 0
+
+    .. grid-item-card::  API Reference
+      :text-align: center
+      :link: ./api_reference/API-Reference.html
+
+      :material-outlined:`list_alt;5em`
+
     .. grid-item-card::  Background
       :text-align: center
       :link: ./background/Background.html
@@ -34,6 +46,13 @@ Introduction
       :link: ./user_guide/Examples.html
 
       :material-outlined:`apps;5em`
+
+    .. grid-item-card::  Troubleshooting
+      :text-align: center
+      :link: ./user_guide/Troubleshooting.html
+
+      :material-outlined:`build_circle;5em`
+
 
 Contribute
 ==========
@@ -103,7 +122,6 @@ Project Details
 
     getting_started/Install.ipynb
     getting_started/Getting-Started.rst
-    background/Background.rst
     getting_started/Contributing.rst
     getting_started/Code-of-Conduct.rst
     getting_started/Resources.rst
@@ -113,28 +131,11 @@ Project Details
     :hidden:
     :caption: User Guide
 
+    api_reference/API-Reference.rst
+    background/Background.rst
     user_guide/Examples.rst
     user_guide/Recipes.rst
     user_guide/Troubleshooting.rst
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-    :caption: API Reference
-
-    api_reference/astro.rst
-    api_reference/compute.rst
-    api_reference/constituents.rst
-    api_reference/datasets/datasets.rst
-    api_reference/earth.rst
-    api_reference/ellipse.rst
-    api_reference/interpolate.rst
-    api_reference/io/io.rst
-    api_reference/math.rst
-    api_reference/predict/predict.rst
-    api_reference/solve/solve.rst
-    api_reference/spatial.rst
-    api_reference/utilities.rst
 
 .. toctree::
     :maxdepth: 1

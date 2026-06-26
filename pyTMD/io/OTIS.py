@@ -479,7 +479,7 @@ def open_tmd3_dataset(
             - ``'v'``: meridional currents
             - ``'V'``: meridional depth-averaged transport
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask (see ``xarray.open_dataset``)
+        Variable chunk sizes for dask [see ``xarray.open_dataset``]
 
     Returns
     -------

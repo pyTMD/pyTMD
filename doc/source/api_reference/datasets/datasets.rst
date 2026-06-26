@@ -1,6 +1,6 @@
-========
-datasets
-========
+==================
+``pyTMD.datasets``
+==================
 
 Utilities for fetching and managing tidal datasets
 

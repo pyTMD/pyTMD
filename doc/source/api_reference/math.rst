@@ -1,6 +1,6 @@
-====
-math
-====
+==============
+``pyTMD.math``
+==============
 
 - Special functions of mathematical physics
 

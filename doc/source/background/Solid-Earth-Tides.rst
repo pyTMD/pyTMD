@@ -50,7 +50,7 @@ Within ``pyTMD``, the tidal deformation of the Earth can be modeled using two me
 1) :py:func:`pyTMD.predict.solid_earth_tide` uses :term:`ephemerides <Ephemerides>` and the formalism described in the `IERS Conventions <https://iers-conventions.obspm.fr/>`_, which are based on :cite:t:`Wahr:1981ea` and :cite:t:`Mathews:1997js`
 2) :py:func:`pyTMD.predict.body_tide` uses tide potential catalogs :cite:p:`Wenzel:1997kn` and the spherical harmonic formalism described in :cite:t:`Cartwright:1971iz`.
 
-For the ephemerides method, analytical approximate positions for the sun and moon can be calculated, or high-resolution numerical ephemerides for the sun and moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
+For the ephemerides method, analytical approximate positions for the Sun and Moon can be calculated, or high-resolution numerical ephemerides for the Sun and Moon can be downloaded from the `Jet Propulsion Laboratory <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 These astronomical positions are used to estimate the instantaneous tide potential impacting the solid Earth :cite:p:`Merriam:1992kg`.
 
 Most tide potential catalogs have for each tidal constituent, the :ref:`spherical harmonic <spherical-harmonics>` degree and order, the :ref:`Doodson arguments <astronomical-arguments>` and the potential amplitude :cite:p:`Cartwright:1971iz`.
@@ -62,7 +62,7 @@ Ephemerides Method
 
 From :cite:t:`Mathews:1997js`, the steps for using the ephemerides method to calculate the solid Earth tide displacements at the location and times of interest are:
 
-1) Compute positions of the sun and moon in ECEF coordinates (:math:`X`, :math:`Y` and :math:`Z`)
+1) Compute positions of the Sun and Moon in ECEF coordinates (:math:`X`, :math:`Y` and :math:`Z`) [see :ref:`ephemerides`]
 2) Calculate frequency-independent deformations using "nominal" :term:`Love/Shida number <Love and Shida Numbers>` values
 3) Include contributions from the :term:`Love/Shida number <Love and Shida Numbers>` out-of-phase (imaginary) components
 4) Include contributions from the :term:`Love/Shida number <Love and Shida Numbers>` latitudinal dependency for degree 2

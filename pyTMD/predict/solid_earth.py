@@ -87,7 +87,7 @@ def body_tide(
 ):
     """
     Compute the solid Earth tides due to the gravitational
-    attraction of the moon and sun using the approach of
+    attraction of the Moon and Sun using the approach of
     :cite:t:`Cartwright:1971iz` adjusting the degree-2 Love numbers
     for a near-diurnal frequency dependence :cite:p:`Mathews:1995go`
 
@@ -395,7 +395,7 @@ def solid_earth_tide(
 ):
     """
     Compute the solid Earth tides in Cartesian coordinates
-    due to the gravitational attraction of the moon and sun
+    due to the gravitational attraction of the Moon and Sun
     :cite:p:`Mathews:1991kv,Mathews:1997js,Ries:1992ip,Wahr:1981ea`
 
     Parameters
@@ -405,9 +405,9 @@ def solid_earth_tide(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     a_axis: float, default 6378136.3
@@ -445,7 +445,7 @@ def solid_earth_tide(
     kwargs.setdefault("l2", 0.0847)
     kwargs.setdefault("h3", 0.292)
     kwargs.setdefault("l3", 0.015)
-    # mass ratios between earth and sun/moon
+    # mass ratios between earth and Sun/Moon
     kwargs.setdefault("mass_ratio_solar", 332946.0482)
     kwargs.setdefault("mass_ratio_lunar", 0.0123000371)
     # validate output tide system
@@ -457,10 +457,10 @@ def solid_earth_tide(
     radius = pyTMD.math.radius(XYZ["X"], XYZ["Y"], XYZ["Z"])
     # sine of geocentric latitude
     sinphi = XYZ["Z"] / radius
-    # distance between the Earth and the sun/moon
+    # distance between the Earth and the Sun/Moon
     solar_radius = pyTMD.math.radius(SXYZ["X"], SXYZ["Y"], SXYZ["Z"])
     lunar_radius = pyTMD.math.radius(LXYZ["X"], LXYZ["Y"], LXYZ["Z"])
-    # cosine of angles between vectors of the point and the sun/moon
+    # cosine of angles between vectors of the point and the Sun/Moon
     solar_scalar = pyTMD.math.scalar_product(
         XYZ["X"], XYZ["Y"], XYZ["Z"], SXYZ["X"], SXYZ["Y"], SXYZ["Z"]
     ) / (radius * solar_radius)
@@ -471,7 +471,7 @@ def solid_earth_tide(
     unit_vector = XYZ / radius
     solar_unit_vector = SXYZ / solar_radius
     lunar_unit_vector = LXYZ / lunar_radius
-    # factors for sun and moon using IAU estimates of mass ratios
+    # factors for Sun and Moon using IAU estimates of mass ratios
     K_solar = kwargs["mass_ratio_solar"] * a_axis**3 / solar_radius**2
     K_lunar = kwargs["mass_ratio_lunar"] * a_axis**3 / lunar_radius**2
     # factors for degree 2
@@ -556,13 +556,13 @@ def _out_of_phase(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     F2_solar: np.ndarray
-        Factors for the sun
+        Factors for the Sun
     F2_lunar: np.ndarray
-        Factors for the moon
+        Factors for the Moon
 
     Returns
     -------
@@ -570,7 +570,7 @@ def _out_of_phase(
         Solid Earth tide corrections
     """
     # compute diurnal and semi-diurnal corrections separately
-    # for both the sun and moon
+    # for both the Sun and Moon
     D = _out_of_phase_diurnal(XYZ, SXYZ, F2_solar)
     D += _out_of_phase_diurnal(XYZ, LXYZ, F2_lunar)
     D += _out_of_phase_semidiurnal(XYZ, SXYZ, F2_solar)
@@ -595,9 +595,9 @@ def _out_of_phase_diurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     dh2: float, default -0.0025
         Love number correction for the diurnal band
     dl2: float, default -0.0007
@@ -667,9 +667,9 @@ def _out_of_phase_semidiurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     dh2: float, default -0.0022
         Love number correction for the semi-diurnal band
     dl2: float, default -0.0007
@@ -740,13 +740,13 @@ def _latitude_dependence(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     SXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun
     LXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Moon
     F2_solar: np.ndarray
-        Factors for the sun
+        Factors for the Sun
     F2_lunar: np.ndarray
-        Factors for the moon
+        Factors for the Moon
 
     Returns
     -------
@@ -754,7 +754,7 @@ def _latitude_dependence(
         Solid Earth tide corrections
     """
     # compute diurnal and semi-diurnal corrections separately
-    # for both the sun and moon
+    # for both the Sun and Moon
     D = _latitude_dependence_diurnal(XYZ, SXYZ, F2_solar)
     D += _latitude_dependence_diurnal(XYZ, LXYZ, F2_lunar)
     D += _latitude_dependence_semidiurnal(XYZ, SXYZ, F2_solar)
@@ -778,9 +778,9 @@ def _latitude_dependence_diurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     L1: float, default 0.0012
         Love/Shida number correction for the diurnal band
 
@@ -842,9 +842,9 @@ def _latitude_dependence_semidiurnal(
     XYZ: xr.Dataset
         Dataset with cartesian coordinates
     LSXYZ: xr.Dataset
-        Dataset with Earth-centered Earth-fixed coordinates of the sun or moon
+        Dataset with Earth-centered Earth-fixed coordinates of the Sun or Moon
     F2: np.ndarray
-        Factors for the sun or moon
+        Factors for the Sun or Moon
     L1: float, default 0.0024
         Love/Shida number correction for the semi-diurnal band
 

@@ -428,8 +428,8 @@ def coefficients_table(
     # modified Doodson coefficients for constituents
     # using 7 index variables: tau, s, h, p, n, pp, k
     # tau: mean lunar time
-    # s: mean longitude of moon
-    # h: mean longitude of sun
+    # s: mean longitude of Moon
+    # h: mean longitude of Sun
     # p: mean longitude of lunar perigee
     # n: mean longitude of ascending lunar node
     # pp: mean longitude of solar perigee
@@ -1398,7 +1398,7 @@ def group_modulation(
     Parameters
     ----------
     h: np.ndarray
-        Mean longitude of sun (degrees)
+        Mean longitude of Sun (degrees)
     n: np.ndarray
         Mean longitude of ascending lunar node (degrees)
     p: np.ndarray
@@ -1421,7 +1421,7 @@ def group_modulation(
     Np = -np.radians(n)
     P = np.radians(p)
     Ps = np.radians(ps)
-    # mean anomaly of the sun
+    # mean anomaly of the Sun
     lp = H - Ps
 
     # set constituents to be iterable
@@ -1929,8 +1929,8 @@ def _arguments_table(**kwargs):
     # modified Doodson coefficients for constituents
     # using 7 index variables: tau, s, h, p, n, pp, k
     # tau: mean lunar time
-    # s: mean longitude of moon
-    # h: mean longitude of sun
+    # s: mean longitude of Moon
+    # h: mean longitude of Sun
     # p: mean longitude of lunar perigee
     # n: mean longitude of ascending lunar node
     # pp: mean longitude of solar perigee
@@ -1957,8 +1957,8 @@ def _minor_table(**kwargs):
     # modified Doodson coefficients for constituents
     # using 7 index variables: tau, s, h, p, n, pp, k
     # tau: mean lunar time
-    # s: mean longitude of moon
-    # h: mean longitude of sun
+    # s: mean longitude of Moon
+    # h: mean longitude of Sun
     # p: mean longitude of lunar perigee
     # n: mean longitude of ascending lunar node
     # pp: mean longitude of solar perigee
@@ -2264,7 +2264,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     MJD = np.array([51544.5, 51544.55])
     # time interval in seconds
     deltat = 86400.0 * (MJD[1] - MJD[0])
-    # calculate the mean longitudes of the sun and moon
+    # calculate the mean longitudes of the Sun and Moon
     s, h, p, n, pp = pyTMD.astro.mean_longitudes(MJD, method=kwargs["method"])
 
     # number of temporal values
@@ -2349,8 +2349,8 @@ def _parse_tide_potential_table(
         names.append("l")
         formats.append("i")
     # tau: spherical harmonic dependence (order)
-    # s: coefficient for mean longitude of moon
-    # h: coefficient for mean longitude of sun
+    # s: coefficient for mean longitude of Moon
+    # h: coefficient for mean longitude of Sun
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
@@ -2408,8 +2408,8 @@ def _parse_rotation_rate_table():
     names.append("row")
     formats.append("i")
     # tau: spherical harmonic dependence (order)
-    # s: coefficient for mean longitude of moon
-    # h: coefficient for mean longitude of sun
+    # s: coefficient for mean longitude of Moon
+    # h: coefficient for mean longitude of Sun
     # p: coefficient for mean longitude of lunar perigee
     # n: coefficient for mean longitude of ascending lunar node
     # pp: coefficient for mean longitude of solar perigee
@@ -2648,8 +2648,8 @@ def _to_constituent_id(coef: list | np.ndarray, **kwargs):
     # modified Doodson coefficients for constituents
     # using 7 index variables: tau, s, h, p, n, pp, k
     # tau: mean lunar time
-    # s: mean longitude of moon
-    # h: mean longitude of sun
+    # s: mean longitude of Moon
+    # h: mean longitude of Sun
     # p: mean longitude of lunar perigee
     # n: mean longitude of ascending lunar node
     # pp: mean longitude of solar perigee

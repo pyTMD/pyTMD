@@ -1,6 +1,6 @@
-=======
-dataset
-=======
+====================
+``pyTMD.io.dataset``
+====================
 
 ``xarray`` extensions for tidal model data
 
