@@ -162,7 +162,7 @@ From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arg
 
     \gamma &= \tau + S \\
     l &= S - P \\
-    l' &= h - Ps \\
+    l' &= H - Ps \\
     F &= S - N \\
     D &= S - H \\
     \Omega &= N = -N' \\
