@@ -45,7 +45,7 @@ However, for a rotating, ellipsoidal Earth, the Love/Shida numbers have some dep
 
 Additionally, the Earth's mantle is not perfectly elastic, and there is a small phase lag between the tidal forcing and the deformation response.
 Complex Love numbers contain a *real part* describing the in-phase (elastic) response and an *imaginary part* describing the out-of-phase (dissipative) response :cite:p:`Wahr:1981ea,Petit:2010tp`.
-``pyTMD`` computes the frequency-dependent corrections and with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
+``pyTMD`` computes both the frequency-dependent corrections and the dissipative responses following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
 
 Combinations of Love/Shida numbers can derive additional quantities :cite:p:`Baker:1984tq,Farrell:1970tn,Cartwright:1999tj,Merriam:1973wi,Munk:1960uk`:
 
