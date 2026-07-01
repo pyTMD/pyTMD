@@ -9,14 +9,8 @@ Similar to ocean tides, solid Earth tides (or body tides) are tidal deformations
 However, while ocean tides are apparent to observers on the coast, solid Earth tides are typically more difficult to observe due to the reference frame of the observer moving.
 The Earth's tidal deformation is largely considered to be elastic and to a very high degree instantaneous.
 
-
-.. _love-and-shida-numbers:
-
-Love and Shida Numbers
-======================
-
-The elastic response of the Earth to the tidal potential is calculated using :term:`Love/Shida numbers <Love and Shida Numbers>` [:ref:`Equation 2.1 <eq:2.1>`].
-Love and Shida numbers describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Lambeck:1980ic,Munk:1960uk`.
+The elastic response of the Earth to the tidal potential is calculated using :ref:`love-and-shida-numbers` [:ref:`Equation 2.1 <eq:2.1>`].
+:term:`Love/Shida numbers <Love and Shida Numbers>` describe the elastic response of the Earth in terms of vertical displacement (:math:`h`), gravitational potential (:math:`k`) and horizontal displacement (:math:`l`) :cite:p:`Lambeck:1980ic,Munk:1960uk`.
 
 .. math::
     :label: 2.1
@@ -25,22 +19,6 @@ Love and Shida numbers describe the elastic response of the Earth in terms of ve
     S_r &= \frac{1}{g}\sum_{l=2}^{\infty} h_l V_l \\
     S_\varphi &= \frac{1}{g}\sum_{l=2}^{\infty} l_l \frac{\partial V_l}{\partial\varphi} \\
     S_\lambda &= \frac{1}{g}\sum_{l=2}^{\infty} l_l \frac{\partial V_l}{\sin\varphi\partial\lambda}
-
-Combinations of Love/Shida numbers can be used to calculate additional quantities, such as the displacement of the Earth's ocean surface with respect to the Earth's tidally deformed crust :cite:p:`Baker:1984tq,Munk:1960uk`.
-
-.. math::
-    :label: 2.2
-    :name: eq:2.2
-
-    \gamma_2 = 1 + k_2 - h_2
-
-For a spherical, non-rotating Earth, the Love and Shida numbers are largely independent of tidal frequency as the tidal periods are longer than the Earth's free oscillation periods :cite:p:`Baker:1984tq,Wahr:1979vx,Wahr:1981ea`.
-However, for a rotating, ellipsoidal Earth, the Love and Shida numbers have some dependence on tidal frequency, with resonances particularly in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea,Lambeck:1980ic,Ray:2017jx`.
-``pyTMD`` computes these frequency-dependent corrections along with the dissipative mantle anelasticity corrections following :cite:t:`Mathews:1997js` and :cite:t:`Wahr:1981ea`.
-
-.. plot:: ./background/love-numbers.py
-    :caption: Diurnal frequency dependence of :term:`Love/Shida numbers <Love and Shida Numbers>` from :cite:t:`Wahr:1979vx`
-    :align: center
 
 Methods
 =======
@@ -86,6 +64,8 @@ Similarly, from :cite:t:`Cartwright:1971iz`, the steps for using the catalog met
     f) Scale the rotated spherical harmonics by the constituent amplitude and the appropriate :term:`Love/Shida numbers <Love and Shida Numbers>`  [see :ref:`Equation 2.1 <eq:2.1>`] to calculate the induced elastic deformation
     g) Add contributions to the total tidal displacement
 
+.. _permanent-tide:
+
 Permanent Tide
 ==============
 
@@ -97,8 +77,7 @@ Alternatively, the permanent tide components can be added back in order to calcu
 The radial difference in terms of latitude between the ":term:`mean tide <Mean Tide>`" and ":term:`tide-free <Tide-Free>`" systems is:
 
 .. math::
-    :label: 2.3
-    :name: eq:2.3
+    :label: 2.2
+    :name: eq:2.2
 
     \delta r(\varphi) = -0.120582 \left(\frac{3}{2} \sin^2 \varphi - \frac{1}{2} \right)
-

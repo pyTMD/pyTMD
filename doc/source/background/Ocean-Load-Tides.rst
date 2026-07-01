@@ -6,7 +6,7 @@ Ocean and Load Tides
 
 The rise and fall of the oceanic tides are a major source of the vertical variability of the ocean surface.
 Ocean tides are driven by gravitational undulations due to the relative positions of the Earth, Moon and Sun, and the centripetal acceleration due to the Earth's rotation :cite:p:`Doodson:1921kt,Meeus:1991vh`.
-A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas.
+A secondary tidal effect, known as load tides, is due to the elastic response of the Earth's crust to ocean tidal loading, which produces deformation of both the sea floor and adjacent land areas [see :ref:`load-love-numbers`].
 Ocean tides can be observed using float gauges, GPS stations, gravimeters, tiltmeters, pressure recorders, and satellite altimeters.
 
 .. _harmonic-method:

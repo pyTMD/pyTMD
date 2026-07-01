@@ -104,7 +104,7 @@ Glossary
         ratio of the difference between the semi-major and semi-minor axes of an ellipsoid to the semi-major axis
 
     Free Core Nutation
-        Nearly diurnal deviations in the motion of the pole of rotation due to the resonant motion of the Earth's core relative to the mantle
+        nearly diurnal deviations in the motion of the pole of rotation due to the resonant motion of the Earth's core relative to the mantle
 
         see :term:`Nutation`
 
@@ -119,6 +119,9 @@ Glossary
 
     Geoid
         equipotential surface coinciding with the ocean surface in the absence of astronomical or dynamical effects
+
+    Gravimetric Factor
+        Combination of :term:`Love/Shida numbers <Love and Shida Numbers>` describing the relation between the surface gravity change and the tidal potential
 
     Harmonic Analysis
         mathematical process by which the tides are separated into :term:`harmonic constituents <Harmonic Constituents>`
@@ -225,7 +228,7 @@ Glossary
     Sidereal day
         time it takes for a celestial body to make one complete rotation relative to the stars
 
-    Solid Earth Tide
+    :abbr:`Solid Earth Tide (also called a body tide)`
         deformation of the solid Earth due to gravitational forces
 
     Species
@@ -233,8 +236,8 @@ Glossary
 
         see :term:`Semi-diurnal Tide`, :term:`Diurnal Tide`, and :term:`Long Period Tide`
 
-    Spring Tide
-        tides of the greatest amplitude within a 15-day cycle, sometimes called a :term:`king tide <King Tide>`
+    :abbr:`Spring Tide (also called a king tide)`
+        tides of the greatest amplitude within a 15-day cycle
 
         see :term:`Neap Tide`
 
@@ -254,6 +257,9 @@ Glossary
 
     Tide-Free
         model with direct and indirect permanent tidal effects removed
+
+    :abbr:`Tilt Factor (also called the tide reducing factor)`
+        Combination of :term:`Love/Shida numbers <Love and Shida Numbers>` describing the displacement of the Earth's ocean surface with respect to the Earth's tidally-deformed crust
 
     Vernal Equinox
         intersection of the Earth's equatorial plane and the Earth's :term:`ecliptic <Ecliptic>`

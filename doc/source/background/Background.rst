@@ -71,6 +71,12 @@ The information is organized into separate sections, which can be read in any or
 
       :octicon:`globe;5em`
 
+    .. grid-item-card::  Love Numbers
+      :text-align: center
+      :link: ./Love-Numbers.html
+
+      :material-outlined:`favorite_border;5em`
+
     .. grid-item-card::  Glossary
       :text-align: center
       :link: ./Glossary.html
@@ -95,4 +101,5 @@ The information is organized into separate sections, which can be read in any or
     ./Time.rst
     ./Astronomy.rst
     ./Spherical-Harmonics.rst
+    ./Love-Numbers.rst
     ./Glossary.rst

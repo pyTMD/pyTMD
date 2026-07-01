@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
+        added citations to W. E. Farrell's PhD thesis on gravity tides
     Updated 05/2026: use numpy hypot function to calculate magnitudes
         moved ellipsoid and love number parameters to earth module
     Updated 03/2026: use table of body tide love numbers for degrees 4+
@@ -178,8 +179,8 @@ def gravity_tide(
     **kwargs,
 ):
     r"""
-    Compute the estimated gravity tides due to the gravitational
-    attraction of the Moon and Sun :cite:p:`Tamura:1987tp,Hartmann:1995jp`
+    Compute the estimated gravity tides due to the gravitational attraction
+    of the Moon and Sun :cite:p:`Farrell:1970tn,Hartmann:1995jp,Tamura:1987tp`
 
     Parameters
     ----------
@@ -357,8 +358,8 @@ def _out_of_phase_diurnal(
     dk2: float = -0.00144,
 ):
     """
-    Computes the out-of-phase corrections induced by mantle
-    anelasticity in the diurnal band :cite:p:`Petit:2010tp`
+    Computes the out-of-phase corrections induced by mantle anelasticity
+    in the diurnal band :cite:p:`Farrell:1970tn,Petit:2010tp`
 
     Parameters
     ----------
@@ -427,8 +428,8 @@ def _out_of_phase_semidiurnal(
     dk2: float = -0.0013,
 ):
     """
-    Computes the out-of-phase corrections induced by mantle
-    anelasticity in the semi-diurnal band :cite:p:`Petit:2010tp`
+    Computes the out-of-phase corrections induced by mantle anelasticity
+    in the semi-diurnal band :cite:p:`Farrell:1970tn,Petit:2010tp`
 
     Parameters
     ----------

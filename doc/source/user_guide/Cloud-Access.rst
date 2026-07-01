@@ -1,3 +1,5 @@
+.. _cloud-access:
+
 =================
 Cloud Data Access
 =================
