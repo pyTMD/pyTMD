@@ -51,13 +51,23 @@ Verify your coordinates are in the model's :ref:`coordinate reference system <sp
 
 If extrapolating over an extended distance (e.g. ``np.inf``), the returned values may be interpolated from a location far from the intended point [see :ref:`interpolation` and :ref:`Extrapolation <extrapolate-demo>`].
 
+- **Check 4:** Are you comparing against the correct units and reference frame?
+
+``pyTMD`` uses a :ref:`default set of units <units>` for displacements, currents and transports.
+For all predictions, the output ``xarray.DataArray`` should have attributes describing the data variable, including their units.
+Check that the units of the output variables match those expected.
+
+Additionally, for ocean and load tides, unless there is a ``z0`` term, the default :term:`tide datum <Tidal Datum>` will be in reference to the mean level and not a local datum.
+For solid Earth tides, the default :ref:`tide system <permanent-tide>` is ``tide-free`` and not ``mean-tide`` as ``pyTMD`` tries to follow IERS conventions where possible.
+Check that the reference frame and datum of the output variables matches those expected.
+
 Model Not Found
 ===============
 
 If the model files are not found, try the following checks:
 
 - **Check 1:** Is the model in the :ref:`database <model-database>`?
-- **Check 2:** Are the model files :ref:`downloaded locally <data-access>`?
+- **Check 2:** Are the model files :ref:`downloaded locally <data-access>` or accessible from the :ref:`cloud <cloud-access>`?
 - **Check 3:** Is the :ref:`directory <directories>` set correctly (if using a custom model directory)?
 - **Check 4:** Does the directory path exist and contain the expected files? [see :ref:`Elevation Directory Table <directories>` and :ref:`Current Directory Table <tab-currents>`]
 

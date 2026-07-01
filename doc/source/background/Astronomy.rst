@@ -57,6 +57,10 @@ The Earth's nutation is conventionally resolved into two components measured wit
 - **Nutation in longitude** (:math:`\Delta\psi`)\ **:** shift in the position of the true :term:`vernal equinox <Vernal Equinox>` along the ecliptic
 - **Nutation in obliquity** (:math:`\Delta\varepsilon`)\ **:** variation in the tilt of Earth's equator with respect to the ecliptic
 
+.. plot:: ./background/nutation-angles.py
+    :caption: Nutation in longitude (:math:`\Delta\psi`) and obliquity (:math:`\Delta\varepsilon`) over the 18.6-year lunar nodal cycle
+    :align: center
+
 These two quantities help define the orientation of the true equator and equinox of date relative to the mean equator and :term:`equinox <Equinox>`.
 For instance, the instantaneous (true) obliquity of the ecliptic is:
 
@@ -162,7 +166,7 @@ From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arg
 
     \gamma &= \tau + S \\
     l &= S - P \\
-    l' &= h - Ps \\
+    l' &= H - Ps \\
     F &= S - N \\
     D &= S - H \\
     \Omega &= N = -N' \\
