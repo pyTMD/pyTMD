@@ -95,6 +95,10 @@ where :math:`\Delta\psi` is the nutation in longitude, :math:`\varepsilon` is th
 
 Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longitudinal position in degrees East from the Greenwich meridian.
 
+.. plot:: ./background/sidereal-time.py
+    :caption: Relationship between Sidereal Time Angular Positions :cite:p:`Urban:2013vl`
+    :align: center
+
 Variations in Length of Day
 ===========================
 

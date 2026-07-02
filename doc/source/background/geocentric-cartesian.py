@@ -10,8 +10,8 @@ fig, ax = plt.subplots(
     facecolor="#fcfcfc",
 )
 
-# extend of quiver arrows
-quiver_extend = 1.25
+# quiver arrow radius
+arrow_radius = 1.25
 
 # circles for the sphere
 lons = np.linspace(0, 360, 360)
@@ -183,17 +183,17 @@ for m in np.arange(0, 360, 30):
 
 # cartesian axes
 ax.quiver(
-    0, 0, 0, quiver_extend, 0, 0, color="k", lw=0.5, arrow_length_ratio=0.07
+    0, 0, 0, arrow_radius, 0, 0, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 ax.quiver(
-    0, 0, 0, 0, quiver_extend, 0, color="k", lw=0.5, arrow_length_ratio=0.07
+    0, 0, 0, 0, arrow_radius, 0, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 ax.quiver(
-    0, 0, 0, 0, 0, quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
+    0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 
 ax.text(
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     0.0,
     0.0,
     "x",
@@ -204,7 +204,7 @@ ax.text(
 )
 ax.text(
     0.0,
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     0.0,
     "y",
     ha="center",
@@ -215,7 +215,7 @@ ax.text(
 ax.text(
     0.0,
     0.0,
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     "z",
     ha="center",
     va="bottom",

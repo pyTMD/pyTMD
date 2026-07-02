@@ -11,8 +11,8 @@ fig, ax = plt.subplots(
     facecolor="#fcfcfc",
 )
 
-# extend of quiver arrows
-quiver_extend = 1.25
+# quiver arrow radius
+arrow_radius = 1.25
 
 # Modified Julian Day for calculations
 MJD = 61120.5
@@ -57,16 +57,16 @@ for m in np.arange(0, 360, 30):
 
 # celestial pole and vernal equinox
 ax.quiver(
-    0, 0, 0, 0, 0, quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
+    0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 ax.quiver(
-    0, 0, 0, 0, 0, -quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
+    0, 0, 0, 0, 0, -arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
 )
 ax.quiver(
     0,
     0,
     0,
-    quiver_extend,
+    arrow_radius,
     0,
     0,
     color="darkorchid",
@@ -78,7 +78,7 @@ ax.quiver(
 ax.text(
     0.0,
     0.0,
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     "NCP",
     ha="center",
     va="bottom",
@@ -88,7 +88,7 @@ ax.text(
 ax.text(
     0.0,
     0.0,
-    -quiver_extend - 0.1,
+    -arrow_radius - 0.1,
     "SCP",
     ha="center",
     va="top",
@@ -96,7 +96,7 @@ ax.text(
     color="k",
 )
 ax.text(
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     0.0,
     0.0,
     "\u2648",
