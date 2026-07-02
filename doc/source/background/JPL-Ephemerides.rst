@@ -6,7 +6,7 @@
 JPL Ephemerides
 ===============
 
-``pyTMD`` can read planetary ephemeris data to compute high-resolution positions of the Moon and Sun.
+``pyTMD`` can read planetary ephemeris data to compute `high-resolution positions of the Moon and Sun <https://ssd.jpl.nasa.gov/planets/orbits.html>`_.
 The data come from `Spacecraft and Planet Kernel (SPK) <https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/spk.html>`_ files storing the positions (and possibly velocities) of solar-system bodies :cite:p:`Park:2021fa`.
 The SPK and other binary files are distributed by the NASA Jet Propulsion Laboratory `Navigation and Ancillary Information Facility (NAIF) <https://naif.jpl.nasa.gov/naif/index.html>`_ :cite:p:`Acton:1996jf`.
 

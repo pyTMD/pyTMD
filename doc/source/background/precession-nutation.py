@@ -10,8 +10,8 @@ fig, ax = plt.subplots(
     facecolor="#fcfcfc",
 )
 
-# extend of quiver arrows
-quiver_extend = 3.25
+# quiver arrow radius
+arrow_radius = 3.25
 # circles for the sphere
 lons = np.linspace(0, 360, 360)
 lats = np.linspace(-90, 90, 180)
@@ -71,7 +71,7 @@ ax.quiver(
     0,
     0,
     0,
-    quiver_extend,
+    arrow_radius,
     color="mediumseagreen",
     linewidth=1.5,
     arrow_length_ratio=0.07,
@@ -79,7 +79,7 @@ ax.quiver(
 ax.text(
     0.0,
     0.0,
-    quiver_extend + 0.1,
+    arrow_radius + 0.1,
     "Ecliptic\nPole",
     ha="center",
     va="bottom",
@@ -93,16 +93,16 @@ ax.quiver(
     0,
     0,
     0,
-    quiver_extend * np.sin(epsilon),
-    quiver_extend * np.cos(epsilon),
+    arrow_radius * np.sin(epsilon),
+    arrow_radius * np.cos(epsilon),
     color="k",
     linewidth=1.5,
     arrow_length_ratio=0.07,
 )
 ax.text(
     0,
-    quiver_extend * np.sin(epsilon) + 0.1,
-    quiver_extend * np.cos(epsilon) + 0.1,
+    arrow_radius * np.sin(epsilon) + 0.1,
+    arrow_radius * np.cos(epsilon) + 0.1,
     "CNP",
     va="center",
     ha="center",
