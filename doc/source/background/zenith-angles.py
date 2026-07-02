@@ -12,8 +12,8 @@ fig, ax1 = plt.subplots(
     facecolor="#fcfcfc",
 )
 
-# extend of quiver arrows
-quiver_extend = 1.25
+# quiver arrow radius
+arrow_radius = 1.25
 
 # observer position in radians
 lat = np.radians(38.992222)  # observer latitude
@@ -57,17 +57,17 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend * X,
-        quiver_extend * Y,
-        quiver_extend * Z,
+        arrow_radius * X,
+        arrow_radius * Y,
+        arrow_radius * Z,
         color="darkorchid",
         lw=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
-        quiver_extend * X + 0.1,
-        quiver_extend * Y,
-        quiver_extend * Z + 0.1,
+        arrow_radius * X + 0.1,
+        arrow_radius * Y,
+        arrow_radius * Z + 0.1,
         "Observer",
         ha="center",
         va="center",
@@ -85,17 +85,17 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend * LX,
-        quiver_extend * LY,
-        quiver_extend * LZ,
+        arrow_radius * LX,
+        arrow_radius * LY,
+        arrow_radius * LZ,
         color="mediumseagreen",
         lw=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
-        quiver_extend * LX + 0.1,
-        quiver_extend * LY,
-        quiver_extend * LZ + 0.1,
+        arrow_radius * LX + 0.1,
+        arrow_radius * LY,
+        arrow_radius * LZ + 0.1,
         "Moon",
         ha="center",
         va="center",
@@ -112,17 +112,17 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend * SX,
-        quiver_extend * SY,
-        quiver_extend * SZ,
+        arrow_radius * SX,
+        arrow_radius * SY,
+        arrow_radius * SZ,
         color="dodgerblue",
         lw=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
-        quiver_extend * SX + 0.1,
-        quiver_extend * SY + 0.1,
-        quiver_extend * SZ,
+        arrow_radius * SX + 0.1,
+        arrow_radius * SY + 0.1,
+        arrow_radius * SZ,
         "Sun",
         ha="center",
         va="center",
@@ -215,7 +215,7 @@ for ax in fig.axes:
 
     # celestial pole
     ax.quiver(
-        0, 0, 0, 0, 0, quiver_extend, color="k", lw=0.5, arrow_length_ratio=0.07
+        0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
     )
     ax.quiver(
         0,
@@ -223,7 +223,7 @@ for ax in fig.axes:
         0,
         0,
         0,
-        -quiver_extend,
+        -arrow_radius,
         color="k",
         lw=0.5,
         arrow_length_ratio=0.07,
@@ -231,7 +231,7 @@ for ax in fig.axes:
     ax.text(
         0.0,
         0.0,
-        quiver_extend + 0.1,
+        arrow_radius + 0.1,
         "NCP",
         ha="center",
         va="bottom",
@@ -241,7 +241,7 @@ for ax in fig.axes:
     ax.text(
         0.0,
         0.0,
-        -quiver_extend - 0.1,
+        -arrow_radius - 0.1,
         "SCP",
         ha="center",
         va="top",

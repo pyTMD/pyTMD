@@ -11,8 +11,8 @@ fig, ax1 = plt.subplots(
     facecolor="#fcfcfc",
 )
 
-# extend of quiver arrows
-quiver_extend = 1.25
+# quiver arrow radius
+arrow_radius = 1.25
 # circles for the sphere
 lons = np.linspace(0, 360, 360)
 lats = np.linspace(-90, 90, 180)
@@ -57,7 +57,7 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend,
+        arrow_radius,
         color="mediumseagreen",
         linewidth=0.5,
         arrow_length_ratio=0.07,
@@ -65,7 +65,7 @@ for ax in fig.axes:
     ax.text(
         0.0,
         0.0,
-        quiver_extend + 0.1,
+        arrow_radius + 0.1,
         "Ecliptic Pole",
         ha="center",
         va="bottom",
@@ -89,16 +89,16 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend * np.sin(epsilon),
-        quiver_extend * np.cos(epsilon),
+        arrow_radius * np.sin(epsilon),
+        arrow_radius * np.cos(epsilon),
         color="k",
         linewidth=0.5,
         arrow_length_ratio=0.07,
     )
     ax.text(
         0,
-        quiver_extend * np.sin(epsilon) + 0.1,
-        quiver_extend * np.cos(epsilon) + 0.1,
+        arrow_radius * np.sin(epsilon) + 0.1,
+        arrow_radius * np.cos(epsilon) + 0.1,
         "CNP",
         va="center",
         ha="center",
@@ -111,7 +111,7 @@ for ax in fig.axes:
         0,
         0,
         0,
-        quiver_extend,
+        arrow_radius,
         0,
         0,
         color="darkorchid",
@@ -121,7 +121,7 @@ for ax in fig.axes:
         zorder=4,
     )
     ax.text(
-        quiver_extend + 0.1,
+        arrow_radius + 0.1,
         0.0,
         0.0,
         "\u2648",
@@ -156,9 +156,9 @@ ax1[0].plot(
 SX, SY, SZ = pyTMD.astro._cartesian(0, np.radians(S), inclination=inclination)
 ax1[0].plot_surface(X + SX[0], Y + SY[0], Z + SZ[0], color="red", alpha=0.3)
 ax1[0].text(
-    quiver_extend * SX[0],
-    quiver_extend * SY[0],
-    quiver_extend * SZ[0],
+    arrow_radius * SX[0],
+    arrow_radius * SY[0],
+    arrow_radius * SZ[0],
     "Moon",
     ha="center",
     va="center",
@@ -189,9 +189,9 @@ X, Y, Z = pyTMD.astro._cartesian(th, ph, radius=radius)
 HX, HY, HZ = pyTMD.astro._cartesian(0, np.radians(H))
 ax1[1].plot_surface(X + HX[0], Y + HY[0], Z + HZ[0], color="red", alpha=0.3)
 ax1[1].text(
-    quiver_extend * HX[0],
-    quiver_extend * HY[0],
-    quiver_extend * HZ[0],
+    arrow_radius * HX[0],
+    arrow_radius * HY[0],
+    arrow_radius * HZ[0],
     "Sun",
     ha="center",
     va="center",
