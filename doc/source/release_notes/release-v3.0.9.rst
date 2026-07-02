@@ -5,7 +5,7 @@
 ==================
 
 * ``docs``: add "edit on github" link `(#591) <https://github.com/pyTMD/pyTMD/pull/591>`_
-* ``fix``: resolve constituent file paths with ``from_dict`` for  `#417 <https://github.com/pyTMD/pyTMD/issues/#417>`_ `(#592) <https://github.com/pyTMD/pyTMD/pull/592>`_
+* ``fix``: resolve constituent file paths with ``from_dict`` for  `#417 <https://github.com/pyTMD/pyTMD/issues/417>`_ `(#592) <https://github.com/pyTMD/pyTMD/pull/592>`_
 * ``test``: added a regression test asserting ``from_dict`` and ``from_file`` produce equivalent models both with and without a model directory. `(#592) <https://github.com/pyTMD/pyTMD/pull/592>`_
 * ``feat``: added lunisolar equatorial coordinate functions `(#593) <https://github.com/pyTMD/pyTMD/pull/593>`_
 * ``docs``: added constituent notations `(#593) <https://github.com/pyTMD/pyTMD/pull/593>`_
@@ -73,5 +73,7 @@
 * ``docs``: add sidereal time plot with GMST/GAST/LMST `(#608) <https://github.com/pyTMD/pyTMD/pull/608>`_
 * ``docs``: fix duplicate cell id in ``Cropping.ipynb`` `(#608) <https://github.com/pyTMD/pyTMD/pull/608>`_
 * ``docs``: improve references to JPL ephemerides background `(#608) <https://github.com/pyTMD/pyTMD/pull/608>`_
+* ``docs``: adjust geoid height svg fonts
+* ``docs``: adjust nutation angle arcsecond symbol
 
 .. __: https://github.com/pyTMD/pyTMD/releases/tag/3.0.9
