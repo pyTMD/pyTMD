@@ -41,7 +41,8 @@ def linterp(a, b, radius=1.0, n=100):
     return x, y
 
 
-fig, ax = plt.subplots(figsize=(6, 6), facecolor="#fcfcfc")
+facecolor = "#fcfcfc"
+fig, ax = plt.subplots(figsize=(6, 6), facecolor=facecolor)
 # quiver arrow radius
 arrow_radius = 5.0
 
@@ -67,8 +68,9 @@ ax.fill_between(x, y, y2=-y, color=color, alpha=0.3)
 
 # Earth rotation direction
 radius = 0.75
+center = 270
 color = "dodgerblue"
-x, y = linterp(270 - 30, 270 + 30, radius=radius)
+x, y = linterp(center - 30, center + 30, radius=radius)
 ax.plot(x, y, color=color)
 ax.annotate(
     "",
@@ -77,9 +79,10 @@ ax.annotate(
     color=color,
     arrowprops=dict(arrowstyle="->", color=color, mutation_scale=15),
 )
+xm, ym = cartesian(center, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean() - 0.1,
+    xm,
+    ym - 0.1,
     "Earth\nrotation",
     color=color,
     ha="center",
@@ -132,21 +135,22 @@ ax.annotate(
     color=color,
     arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
 )
-ax.text(x + 0.1, y, "Observer", color=color, ha="left", va="top")
+ax.text(x + 0.1, y, "Observer\nMeridian", color=color, ha="left", va="center")
 
 # longitude: observer to prime meridian
 radius = 1.25
 color = "0.4"
 x, y = linterp(lmda, pm, radius=radius)
 ax.plot(x, y, color=color)
+xm, ym = cartesian((lmda + pm) / 2.0, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean(),
+    xm,
+    ym,
     r"$\lambda$",
     color=color,
     ha="center",
     va="center",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w"),
+    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 
 # LMST: observer to mean vernal equinox
@@ -161,14 +165,15 @@ ax.annotate(
     color=color,
     arrowprops=dict(arrowstyle="->", color=color, mutation_scale=15),
 )
+xm, ym = cartesian((lmda + ve_mean) / 2.0, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean(),
+    xm,
+    ym,
     "LMST",
     color=color,
     ha="center",
     va="center",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w"),
+    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 # reference circle for LMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -186,14 +191,15 @@ ax.annotate(
     color=color,
     arrowprops=dict(arrowstyle="->", color=color, mutation_scale=15),
 )
+xm, ym = cartesian((pm + ve_mean) / 2.0, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean(),
+    xm,
+    ym,
     "GMST",
     color=color,
     ha="center",
     va="center",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w"),
+    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 # reference circle for GMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -211,14 +217,15 @@ ax.annotate(
     color=color,
     arrowprops=dict(arrowstyle="->", color=color, mutation_scale=15),
 )
+xm, ym = cartesian((pm + ve_apparent) / 2.0, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean(),
+    xm,
+    ym,
     "GAST",
     color=color,
     ha="center",
     va="center",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w"),
+    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 # reference circle for GAST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -230,18 +237,19 @@ radius = 4.25
 color = "darkorange"
 x, y = linterp(ve_apparent, ve_mean, radius=radius)
 ax.plot(x, y, color=color)
+xm, ym = cartesian((ve_apparent + ve_mean) / 2.0, radius=radius)
 ax.text(
-    x.mean(),
-    y.mean(),
+    xm,
+    ym,
     r"$E_e$",
     color=color,
     ha="center",
     va="center",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w"),
+    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 
 # set the axes facecolor
-ax.set_facecolor("#fcfcfc")
+ax.set_facecolor(facecolor)
 ax.set_aspect("equal")
 ax.axis("off")
 fig.tight_layout()
