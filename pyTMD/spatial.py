@@ -450,7 +450,7 @@ def to_cartesian(
     lon = np.atleast_1d(np.copy(lon)).astype(np.float64)
     lat = np.atleast_1d(np.copy(lat)).astype(np.float64)
     # fix coordinates to be 0:360
-    lon[lon < 0] += 360.0
+    lon = np.where(lon < 0, lon + 360, lon)
     # Linear eccentricity and first numerical eccentricity
     lin_ecc = np.sqrt((2.0 * flat - flat**2) * a_axis**2)
     ecc1 = lin_ecc / a_axis
@@ -460,15 +460,15 @@ def to_cartesian(
     # prime vertical radius of curvature
     N = a_axis / np.sqrt(1.0 - ecc1**2.0 * np.sin(latitude_geodetic_rad) ** 2.0)
     # calculate X, Y and Z from geodetic latitude and longitude
-    X = (N + h) * np.cos(latitude_geodetic_rad) * np.cos(np.radians(lon))
-    Y = (N + h) * np.cos(latitude_geodetic_rad) * np.sin(np.radians(lon))
-    Z = (N * (1.0 - ecc1**2.0) + h) * np.sin(latitude_geodetic_rad)
+    x = (N + h) * np.cos(latitude_geodetic_rad) * np.cos(np.radians(lon))
+    y = (N + h) * np.cos(latitude_geodetic_rad) * np.sin(np.radians(lon))
+    z = (N * (1.0 - ecc1**2.0) + h) * np.sin(latitude_geodetic_rad)
     # return the cartesian coordinates
     # flattened to singular values if necessary
     if singular_values:
-        return (X.item(), Y.item(), Z.item())
+        return (x.item(), y.item(), z.item())
     else:
-        return (X, Y, Z)
+        return (x, y, z)
 
 
 def to_sphere(
@@ -511,9 +511,7 @@ def to_sphere(
     th = np.arccos(z / rad)
     # convert to degrees and fix to 0:360
     lon = np.degrees(lmda)
-    if np.any(lon < 0):
-        lt0 = np.nonzero(lon < 0)
-        lon[lt0] += 360.0
+    lon = np.where(lon < 0.0, lon + 360.0, lon)
     # convert to degrees and fix to -90:90
     lat = 90.0 - np.degrees(th)
     np.clip(lat, -90, 90, out=lat)

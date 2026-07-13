@@ -53,9 +53,8 @@ def test_arctic_projection():
     # convert latitude and longitude from projected coordinates
     ln = np.arctan2(y, x) * 180.0 / np.pi
     lt = 90.0 - np.sqrt(x**2 + y**2) / 111.7
-    # adjust longitudes to be -180:180
-    (ii,) = np.nonzero(ln < 0)
-    ln[ii] += 360.0
+    # adjust longitudes to be 0:360
+    ln = np.where(ln < 0, ln + 360.0, ln)
     # calculate great circle distance between inputs and outputs
     cdist = np.arccos(
         np.sin(lat * np.pi / 180.0) * np.sin(lt * np.pi / 180.0)
