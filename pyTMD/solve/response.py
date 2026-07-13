@@ -75,6 +75,8 @@ def response(
     kwargs.setdefault("a_axis", 6378137.0)
     kwargs.setdefault("flat", 1.0 / 298.257223563)
     kwargs.setdefault("ephemerides", "approximate")
+    # maximum degree of spherical harmonic expansion
+    kwargs.setdefault("lmax", 3)
     # distances between the Earth and the sun/moon (meters)
     kwargs.setdefault("AU", 1.495978707e11)
     kwargs.setdefault("LD", 3.84399e8)
@@ -118,25 +120,27 @@ def response(
     SXYZ = pyTMD.astro.solar_ecef(t + 48622.0, **kwargs)
     # lunar ephemerides (convert time to Modified Julian Days)
     LXYZ = pyTMD.astro.lunar_ecef(t + 48622.0, **kwargs)
-    # spherical harmonics for degree and order
-    Ylm, _ = pyTMD.math.sph_harm(2, theta, phi, m=0, phase=0.0)
-    # gravitational potentials
-    US = _gravitational(
-        XYZ,
-        SXYZ,
-        l=2,
-        mass_ratio=kwargs["mass_ratio_solar"],
-        distance=kwargs["AU"],
-        **kwargs,
-    )
-    UL = _gravitational(
-        XYZ,
-        LXYZ,
-        l=2,
-        mass_ratio=kwargs["mass_ratio_lunar"],
-        distance=kwargs["LD"],
-        **kwargs,
-    )
+    # for each spherical harmonic degree
+    for l in range(2, kwargs["lmax"] + 1):
+        # spherical harmonics for degree and order
+        Ylm, _ = pyTMD.math.sph_harm(l, theta, phi, m=0, phase=0.0)
+        # gravitational potentials
+        US = _gravitational(
+            XYZ,
+            SXYZ,
+            l=l,
+            mass_ratio=kwargs["mass_ratio_solar"],
+            distance=kwargs["AU"],
+            **kwargs,
+        )
+        UL = _gravitational(
+            XYZ,
+            LXYZ,
+            l=l,
+            mass_ratio=kwargs["mass_ratio_lunar"],
+            distance=kwargs["LD"],
+            **kwargs,
+        )
     # radiational function
     RS = _radiational(
         XYZ,
@@ -163,7 +167,7 @@ def _gravitational(XYZ: np.ndarray, LSXYZ: np.ndarray, l: int, **kwargs):
 
     Returns
     -------
-    grav: np.ndarray
+    potential: np.ndarray
         gravitational potential of the sun or moon
     """
     # default keyword arguments
@@ -185,9 +189,9 @@ def _gravitational(XYZ: np.ndarray, LSXYZ: np.ndarray, l: int, **kwargs):
     # k values from Munk and Cartwright (1966)
     k = a_axis * kwargs["mass_ratio"] * (a_axis / lunisolar_radius) ** (l + 1)
     # gravitational potential of the sun and moon
-    grav = k * Pl * (kwargs["distance"] / lunisolar_radius) ** (l + 1)
+    potential = k * Pl * (kwargs["distance"] / lunisolar_radius) ** (l + 1)
     # return the gravitational potential
-    return grav
+    return potential
 
 
 def _radiational(XYZ: np.ndarray, SXYZ: np.ndarray, l: int, **kwargs):
@@ -206,7 +210,7 @@ def _radiational(XYZ: np.ndarray, SXYZ: np.ndarray, l: int, **kwargs):
 
     Returns
     -------
-    solar_rad: np.ndarray
+    radiation: np.ndarray
         radiation function of the sun
     """
     # default keyword arguments
@@ -228,10 +232,10 @@ def _radiational(XYZ: np.ndarray, SXYZ: np.ndarray, l: int, **kwargs):
     ) / (radius * solar_radius)
     solar_zenith = np.arccos(solar_scalar)
     # create radiation function
-    solar_rad = S * (AU / solar_radius) * kappa * solar_scalar**l
+    radiation = S * (AU / solar_radius) * kappa * solar_scalar**l
     # radiation is only valid during the day
-    solar_rad = np.where(solar_zenith < (np.pi / 2.0), solar_rad, 0.0)
-    return solar_rad
+    radiation = np.where(solar_zenith < (np.pi / 2.0), radiation, 0.0)
+    return radiation
 
 
 def _kappa(l: int, xi: float) -> float:
