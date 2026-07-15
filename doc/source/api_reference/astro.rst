@@ -74,6 +74,8 @@
 
 .. autofunction:: pyTMD.astro._correct_aberration
 
+.. autofunction:: pyTMD.astro._meeus_table_22A
+
 .. autofunction:: pyTMD.astro._meeus_table_47A
 
 .. autofunction:: pyTMD.astro._meeus_table_47B
