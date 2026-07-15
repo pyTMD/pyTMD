@@ -492,9 +492,8 @@ def delaunay_arguments(MJD: np.ndarray, **kwargs):
             [134.96298, 477198.867398, 0.0086972, 1.0 / 56250.0]
         )
         Mp = polynomial_sum(lunar_anomaly, T)
-        # mean anomaly of the Sun (degrees)
         solar_anomaly = np.array(
-            [357.52772, 35999.05034, -0.0001603, 1.0 / 300000.0]
+            [357.52772, 35999.05034, -0.0001603, -1.0 / 300000.0]
         )
         M = polynomial_sum(solar_anomaly, T)
         # mean argument of the Moon (degrees)
