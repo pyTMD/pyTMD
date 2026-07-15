@@ -54,6 +54,8 @@
 
 .. autofunction:: pyTMD.astro.gast
 
+.. autofunction:: pyTMD.astro.eqeq
+
 .. autofunction:: pyTMD.astro.itrs
 
 .. autofunction:: pyTMD.astro._cartesian

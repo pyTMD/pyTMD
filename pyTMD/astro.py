@@ -20,6 +20,7 @@ REFERENCES:
 UPDATE HISTORY:
     Updated 07/2026: added more options to compute mean obliquity
         added more options to compute nutation angles (dpsi, deps)
+        split equation of the equinoxes into a separate function
         added more options to compute equation of the equinoxes
     Updated 06/2026: added functions to lunisolar equatorial coordinates
     Updated 03/2026: added functions to compute the geocentric positions
@@ -121,6 +122,7 @@ __all__ = [
     "lunar_longitude",
     "lunar_distance",
     "gast",
+    "eqeq",
     "itrs",
     "_cartesian",
     "_eqeq_complement",
@@ -649,7 +651,7 @@ def mean_obliquity(MJD: np.ndarray, **kwargs):
         - ``'Capitaine'``: coefficients from :cite:t:`Capitaine:2003fx`
         - ``'Laskar'``: coefficients from :cite:t:`Laskar:1986wu`
         - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
-        - ``'USNO'``: coefficients from US Naval Office
+        - ``'USNO'``: coefficients from US Naval Observatory
 
     Returns
     -------
@@ -2270,7 +2272,7 @@ def gast(T: float | np.ndarray, **kwargs):
             - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
             - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
             - ``'IERS'``: IERS Greenwich Sidereal Time tables
-            - ``'USNO'``: US Naval Office Approximate relation
+            - ``'USNO'``: US Naval Observatory Approximate relation
 
     Returns
     -------
@@ -2281,54 +2283,80 @@ def gast(T: float | np.ndarray, **kwargs):
     kwargs.setdefault("method", "IERS")
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
-    # convert dynamical time to modified Julian days
-    MJD = ts.tt - _jd_mjd
-    if kwargs["method"].upper() == "IERS":
-        # estimate the mean obliquity
-        epsilon = mean_obliquity(MJD)
-        # estimate the nutation in longitude and obliquity
-        dpsi, deps = _nutation_angles(T)
-        # estimate the complementary terms
-        c = _eqeq_complement(T)
-        # traditional equation of the equinoxes
-        eqeq = dpsi * np.cos(epsilon + deps) + c
-    elif kwargs["method"].upper() == "USNO":
-        # estimate the mean obliquity
-        epsilon = mean_obliquity(MJD, method="USNO")
-        # mean longitude of Sun (degrees)
-        solar_longitude = np.array([280.47, 36000.8])
-        H = polynomial_sum(solar_longitude, T)
-        # mean longitude of the ascending node of the Moon (degrees)
-        lunar_node = np.array([125.04, -1934.14])
-        Om = polynomial_sum(lunar_node, T)
-        # normalize and convert to radians
-        H = np.radians(normalize_angle(H))
-        Om = np.radians(normalize_angle(Om))
-        # estimate the nutation in longitude
-        dpsi = -319e-6 * np.sin(Om) - 24e-6 * np.sin(2.0 * H)
-        # approximate equation of the equinox from the US Naval Office
-        # with coefficients converted from hours to radians
-        hour2rad = ts.tau / 24.0
-        eqeq = hour2rad * dpsi * np.cos(epsilon)
-    elif kwargs["method"].title() == "Meeus":
-        # estimate the mean obliquity
-        epsilon = mean_obliquity(MJD, **kwargs)
-        # estimate the nutation in longitude and obliquity
-        dpsi, deps = _nutation_angles(T, **kwargs)
-        # equation of the equinoxes without polynomial terms
-        eqeq = dpsi * np.cos(epsilon + deps)
-    elif kwargs["method"].lower() == "approximate":
-        # estimate the mean obliquity
-        epsilon = mean_obliquity(MJD, method="Meeus")
-        # estimate the nutation in longitude and obliquity
-        dpsi, deps = _nutation_angles(T, **kwargs)
-        # approximate equation of the equinoxes without polynomial terms
-        eqeq = dpsi * np.cos(epsilon + deps)
+    # calculate equation of the equinoxes and convert to fractions
+    eqofeq = eqeq(T, **kwargs) / ts.tau
     # calculate Greenwich Apparent Sidereal Time
-    # convert equation of the equinoxes to fractions
-    GAST = np.mod(ts.st + eqeq / ts.tau, 1.0)
+    GAST = np.mod(ts.st + eqofeq, 1.0)
     # return the times
     return GAST
+
+
+def eqeq(
+    T: float | np.ndarray,
+    include_complement: bool = True,
+    **kwargs,
+):
+    """Difference between the actual (GAST) and mean (GMST) sidereal times
+    at Greenwich via the Equation of the Equinoxes
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
+
+    Parameters
+    ----------
+    T: np.ndarray
+        Centuries since 2000-01-01T12:00:00
+    include_complement: bool, default True
+        Include the complementary higher-order polynomial terms
+    method: str, default 'IERS'
+        Method for calculating the equation of the equinoxes
+
+            - ``'IERS'``: IERS Greenwich Sidereal Time tables
+            - ``'Meeus'``: Meeus Astronomical Algorithms tables
+            - ``'USNO'``: US Naval Observatory simplified relation
+            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
+
+    Returns
+    -------
+    eqofeq: np.ndarray
+        Equation of the Equinoxes (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "IERS")
+    # create timescale from centuries relative to 2000-01-01T12:00:00
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
+    # convert dynamical time to modified Julian days
+    MJD = ts.tt - _jd_mjd
+    # estimate the mean obliquity
+    # estimate the nutations in longitude and obliquity
+    if kwargs["method"].upper() == "IERS":
+        # equation of the equinox using tables from IERS conventions
+        epsilon = mean_obliquity(MJD)
+        dpsi, deps = _nutation_angles(T)
+    elif kwargs["method"].title() == "Meeus":
+        # equation of the equinox using Table 22.A of Meeus (1991)
+        # mean obliquity using Meeus equation 22.3
+        epsilon = mean_obliquity(MJD, method="Laskar")
+        # nutation in longitude and obliquity from Table 22.A
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    elif kwargs["method"].lower() == "approximate":
+        # approximate equation of the equinox from Meeus (1991)
+        # mean obliquity using Meeus equation 22.2
+        epsilon = mean_obliquity(MJD, method="Meeus")
+        # approximate nutation in longitude and obliquity
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    elif kwargs["method"].upper() == "USNO":
+        # approximate equation of the equinox from the USNO
+        # https://aa.usno.navy.mil/faq/GAST
+        # estimate the mean obliquity
+        epsilon = mean_obliquity(MJD, **kwargs)
+        # approximate nutation in longitude and obliquity
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    # estimate the equation of the equinoxes in radians
+    eqofeq = dpsi * np.cos(epsilon + deps)
+    # include the complementary polynomial terms
+    if include_complement:
+        eqofeq += _eqeq_complement(T)
+    # return the equation of the equinoxes
+    return eqofeq
 
 
 def itrs(
@@ -2591,8 +2619,8 @@ def _frame_bias_matrix():
 def _nutation_angles(T: float | np.ndarray, **kwargs):
     """
     Calculate nutation rotation angles using tables
-    from IERS Conventions :cite:p:`Petit:2010tp`
-    or Table 22.A from :cite:t:`Meeus:1991vh`
+    from IERS Conventions :cite:p:`Petit:2010tp`, Table 22.A from
+    :cite:t:`Meeus:1991vh`, or simplified relations
 
     Parameters
     ----------
@@ -2601,16 +2629,17 @@ def _nutation_angles(T: float | np.ndarray, **kwargs):
     method: str, default 'IERS'
         Method for calculating the nutation angles
 
-            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
             - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
             - ``'IERS'``: IERS Greenwich Sidereal Time tables
+            - ``'USNO'``: US Naval Observatory simplified relation
+            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
 
     Returns
     -------
     dpsi: np.ndarray
-        Nutation in longitude
+        Nutation in longitude (radians)
     deps: np.ndarray
-        Nutation in obliquity of the ecliptic
+        Nutation in obliquity of the ecliptic (radians)
     """
     # set default keyword arguments
     kwargs.setdefault("method", "IERS")
@@ -2694,6 +2723,22 @@ def _nutation_angles(T: float | np.ndarray, **kwargs):
         # convert from arcseconds to radians
         dpsi = asec2rad(dpsi)
         deps = asec2rad(deps)
+    elif kwargs["method"].upper() == "USNO":
+        # mean longitude of Sun (degrees)
+        solar_longitude = np.array([280.47, 36000.8])
+        H = polynomial_sum(solar_longitude, ts.T)
+        # mean longitude of the ascending node of the Moon (degrees)
+        lunar_node = np.array([125.04, -1934.14])
+        Om = polynomial_sum(lunar_node, ts.T)
+        # normalize and convert to radians
+        H = np.radians(normalize_angle(H))
+        Om = np.radians(normalize_angle(Om))
+        # approximate nutation in longitude and obliquity
+        dpsi = -319e-6 * np.sin(Om) - 24e-6 * np.sin(2.0 * H)
+        deps = 170e-6 * np.cos(Om) + 11e-6 * np.cos(2.0 * H)
+        # convert nutations from hours to radians
+        dpsi = ts.tau * dpsi / 24.0
+        deps = ts.tau * deps / 24.0
     # return nutation angles
     return dpsi, deps
 
@@ -2895,7 +2940,7 @@ def _meeus_table_22A():
     # column 9: coefficient of the drift in the cosine term for the nutation
     #     in obliquity (1e-4 arcseconds)
     names = ("D", "M", "Mp", "F", "Om", "psi", "dpsi", "eps", "deps")
-    formats = ("i", "i", "i", "i", "i", "f", "f", "f", "f")
+    formats = ("i4", "i4", "i4", "i4", "i4", "f8", "f8", "f8", "f8")
     table_22A = np.array(
         [
             (0, 0, 0, 0, 1, -171996.0, -174.2, 92025.0, 8.9),
@@ -2983,7 +3028,7 @@ def _meeus_table_47A():
     # column 6: coefficient of the cosine term for lunar distance
     #     units: meters (1e-3 kilometers)
     names = ("D", "M", "Mp", "F", "sigmaL", "sigmaR")
-    formats = ("i", "i", "i", "i", "f", "f")
+    formats = ("i4", "i4", "i4", "i4", "f8", "f8")
     table_47A = np.array(
         [
             (0, 0, 1, 0, 6288774.0, -20905355.0),
@@ -3066,7 +3111,7 @@ def _meeus_table_47B():
     # column 5: coefficient of the sine term for lunar latitude
     #     units: microdegrees (1e-6 degrees)
     names = ("D", "M", "Mp", "F", "sigmaB")
-    formats = ("i", "i", "i", "i", "f")
+    formats = ("i4", "i4", "i4", "i4", "f8")
     table_47B = np.array(
         [
             (0, 0, 0, 1, 5128122.0),
@@ -3165,23 +3210,23 @@ def _parse_table_5_2e():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
@@ -3228,23 +3273,23 @@ def _parse_table_5_3a():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
@@ -3291,23 +3336,23 @@ def _parse_table_5_3b():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
