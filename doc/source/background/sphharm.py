@@ -4,6 +4,13 @@ import xarray as xr
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # latitude and longitude
 dlon, dlat = 0.625, 0.5
 lat = np.arange(-90 + dlat / 2.0, 90 + dlat / 2.0, dlat)
@@ -24,7 +31,7 @@ proj1 = ccrs.Orthographic(central_longitude=0.0, central_latitude=0.0)
 proj2 = ccrs.Orthographic(central_longitude=180.0, central_latitude=0.0)
 
 # plot spherical harmonics
-fig = plt.figure(num=1, figsize=(8, 6), facecolor="#fcfcfc")
+fig = plt.figure(num=1, figsize=(8, 6))
 for tau in range(0, l + 1):
     # setup subplots
     ax1 = fig.add_subplot(nrows, ncols, tau + 1, projection=proj1)
@@ -36,9 +43,9 @@ for tau in range(0, l + 1):
     # add projection text
     if tau == 0:
         proj_text = "Projection centered on 0.0\u00b0E"
-        ax1.text(0.0, -0.06, proj_text, fontsize=8, transform=ax1.transAxes)
+        ax1.text(0.0, -0.06, proj_text, fontsize=9, transform=ax1.transAxes)
         proj_text = "Projection centered on 180.0\u00b0E"
-        ax2.text(0.0, -0.06, proj_text, fontsize=8, transform=ax2.transAxes)
+        ax2.text(0.0, -0.06, proj_text, fontsize=9, transform=ax2.transAxes)
     # for each subplot axis
     for ax in (ax1, ax2):
         # plot the surface
@@ -54,8 +61,6 @@ for tau in range(0, l + 1):
         ax.coastlines("50m")
         # set global view
         ax.set_global()
-        # set the axes facecolor
-        ax.set_facecolor("#fcfcfc")
         # turn off the axis
         ax.set_axis_off()
 

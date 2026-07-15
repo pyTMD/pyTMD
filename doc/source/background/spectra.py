@@ -3,8 +3,14 @@ import pyTMD.constituents
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # create figure and subplots
-fig = plt.figure(num=1, figsize=(13, 5), facecolor="#fcfcfc")
+fig = plt.figure(num=1, figsize=(13, 5))
 subfig = fig.subfigures(2, 1, hspace=0.05, height_ratios=(1.0, 2.0))
 ax1 = subfig[0].subplots(ncols=1)
 ax2 = subfig[1].subplots(ncols=3, sharey="row")
@@ -66,7 +72,7 @@ for i, line in enumerate(CTE):
         if (f >= fr[0]) and (f <= fr[1]) and (cons in major[j]):
             ax2[j].semilogy([f, f], [0.0, amp], color="red", zorder=2)
             ax2[j].text(
-                f, 1.5 * amp, cons, color="red", fontsize=10, ha="center"
+                f, 1.5 * amp, cons, color="red", fontsize=11, ha="center"
             )
             break
         elif (f >= fr[0]) and (f <= fr[1]):
@@ -113,9 +119,9 @@ ax1.get_xaxis().set_tick_params(which="both", direction="in")
 ax1.get_yaxis().set_tick_params(which="both", direction="in")
 [val.set_linewidth(1.5) for key, val in ax1.spines.items()]
 # # add x and y labels
-ax1.set_ylabel("Amplitude [cm]", fontsize=10)
-ax2[0].set_ylabel("Amplitude [cm]", fontsize=10)
-ax2[1].set_xlabel("Frequency [cpd]", fontsize=10)
+ax1.set_ylabel("Amplitude [cm]", fontsize=11)
+ax2[0].set_ylabel("Amplitude [cm]", fontsize=11)
+ax2[1].set_xlabel("Frequency [cpd]", fontsize=11)
 # set titles
 ax1.set_title("Tidal Spectra", fontsize=12)
 # adjust subplots

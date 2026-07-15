@@ -4,12 +4,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 fig, ax1 = plt.subplots(
     num=1,
     ncols=2,
     figsize=(9.0, 4.5),
     subplot_kw={"projection": "3d"},
-    facecolor="#fcfcfc",
 )
 
 # quiver arrow radius
@@ -61,7 +67,7 @@ for ax in fig.axes:
         arrow_radius * Y,
         arrow_radius * Z,
         color="darkorchid",
-        lw=0.8,
+        linewidth=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
@@ -69,9 +75,9 @@ for ax in fig.axes:
         arrow_radius * Y,
         arrow_radius * Z + 0.1,
         "Observer",
-        ha="center",
-        va="center",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="center",
+        fontsize=10,
         color="darkorchid",
         bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
     )
@@ -89,7 +95,7 @@ for ax in fig.axes:
         arrow_radius * LY,
         arrow_radius * LZ,
         color="mediumseagreen",
-        lw=0.8,
+        linewidth=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
@@ -97,9 +103,9 @@ for ax in fig.axes:
         arrow_radius * LY,
         arrow_radius * LZ + 0.1,
         "Moon",
-        ha="center",
-        va="center",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="center",
+        fontsize=10,
         color="mediumseagreen",
         bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
     )
@@ -116,7 +122,7 @@ for ax in fig.axes:
         arrow_radius * SY,
         arrow_radius * SZ,
         color="dodgerblue",
-        lw=0.8,
+        linewidth=0.8,
         arrow_length_ratio=0.07,
     )
     ax.text(
@@ -124,9 +130,9 @@ for ax in fig.axes:
         arrow_radius * SY + 0.1,
         arrow_radius * SZ,
         "Sun",
-        ha="center",
-        va="center",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="center",
+        fontsize=10,
         color="dodgerblue",
         bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
     )
@@ -137,14 +143,14 @@ for ax in fig.axes:
     ax.plot(
         *mu,
         color="darkorchid",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     ax.plot(
         *ml,
         color="darkorchid",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
 
     # meridian from celestial pole to body position
@@ -160,14 +166,14 @@ for ax in fig.axes:
     ax.plot(
         *mu,
         color="mediumseagreen",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     ax.plot(
         *ml,
         color="mediumseagreen",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     mu = pyTMD.interpolate.slerp(0, 0, 1, SX, SY, SZ)
     ml = pyTMD.interpolate.slerp(
@@ -181,14 +187,14 @@ for ax in fig.axes:
     ax.plot(
         *mu,
         color="dodgerblue",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     ax.plot(
         *ml,
         color="dodgerblue",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
 
     # parallels at 30 degree intervals
@@ -201,21 +207,29 @@ for ax in fig.axes:
                 y,
                 z,
                 color="darkorange",
-                lw=0.8,
-                ls="--",
+                linewidth=0.8,
+                linestyle="--",
                 label="Celestial Equator",
             )
         else:
-            ax.plot(x, y, z, color="0.4", lw=0.5)
+            ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
     # meridians at 30 degree intervals
     for m in np.arange(0, 360, 30):
         x, y, z = pyTMD.astro._cartesian(np.radians(lats), np.radians(m))
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
     # celestial pole
     ax.quiver(
-        0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
+        0,
+        0,
+        0,
+        0,
+        0,
+        arrow_radius,
+        color="k",
+        linewidth=0.5,
+        arrow_length_ratio=0.07,
     )
     ax.quiver(
         0,
@@ -225,7 +239,7 @@ for ax in fig.axes:
         0,
         -arrow_radius,
         color="k",
-        lw=0.5,
+        linewidth=0.5,
         arrow_length_ratio=0.07,
     )
     ax.text(
@@ -233,9 +247,9 @@ for ax in fig.axes:
         0.0,
         arrow_radius + 0.1,
         "NCP",
-        ha="center",
-        va="bottom",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="bottom",
+        fontsize=10,
         color="k",
     )
     ax.text(
@@ -243,9 +257,9 @@ for ax in fig.axes:
         0.0,
         -arrow_radius - 0.1,
         "SCP",
-        ha="center",
-        va="top",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="top",
+        fontsize=10,
         color="k",
     )
 
@@ -320,10 +334,8 @@ ax1[1].fill_between(
 )
 
 for ax in fig.axes:
-    # set the axes facecolor
-    ax.set_facecolor("#fcfcfc")
     # add legend
-    ax.legend(loc="lower left", fontsize=9, frameon=False)
+    ax.legend(loc="lower left", fontsize=10, frameon=False)
     # set the aspect ratio and view angle
     ax.set_xlim(-0.8, 0.8)
     ax.set_ylim(-0.8, 0.8)

@@ -2,6 +2,12 @@ import timescale
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # read IERS daily polar motion values
 EOP = timescale.eop.iers_daily_EOP()
 ts = timescale.time.Timescale(EOP["MJD"])
@@ -13,7 +19,7 @@ mx = EOP["x"] - mpx
 my = -(EOP["y"] - mpy)
 
 # create figure and subplots
-fig = plt.figure(num=1, figsize=(8.5, 4), facecolor="#fcfcfc")
+fig = plt.figure(num=1, figsize=(8.5, 4))
 subfig = fig.subfigures(1, 2, wspace=0.05, width_ratios=(1.5, 1.0))
 ax1 = subfig[0].subplots(nrows=2, sharex=True)
 ax2 = subfig[1].subplots()
@@ -24,9 +30,9 @@ ax1[0].plot(ts.year, mpx, color="red", label="Secular")
 ax1[1].plot(ts.year, EOP["y"], color="0.4", label="IERS")
 ax1[1].plot(ts.year, mpy, color="red", label="Secular")
 # set axis labels
-ax1[0].set_ylabel("X Pole [asec]", fontsize=10, labelpad=0)
-ax1[1].set_ylabel("Y Pole [asec]", fontsize=10, labelpad=8)
-ax1[1].set_xlabel("Time [yr]", fontsize=10)
+ax1[0].set_ylabel("X Pole [asec]", fontsize=11, labelpad=0)
+ax1[1].set_ylabel("Y Pole [asec]", fontsize=11, labelpad=8)
+ax1[1].set_xlabel("Time [yr]", fontsize=11)
 labels = ["a)", "b)"]
 for i, label in enumerate(labels):
     ax1[i].tick_params(which="both", direction="in")
@@ -46,11 +52,11 @@ for line in lgd.get_lines():
 
 # plot deviation from mean/secular pole
 sc = ax2.scatter(mx, my, c=ts.year, cmap="plasma_r", s=0.5)
-ax2.axhline(0, color="0.4", ls="--", lw=0.5)
-ax2.axvline(0, color="0.4", ls="--", lw=0.5)
+ax2.axhline(0, color="0.4", linestyle="--", linewidth=0.5)
+ax2.axvline(0, color="0.4", linestyle="--", linewidth=0.5)
 # add axis labels
-ax2.set_xlabel("X Pole [asec]", fontsize=10)
-ax2.set_ylabel("Y Pole [asec]", fontsize=10, labelpad=3)
+ax2.set_xlabel("X Pole [asec]", fontsize=11)
+ax2.set_ylabel("Y Pole [asec]", fontsize=11, labelpad=3)
 at = offsetbox.AnchoredText(
     "c)",
     loc=2,
@@ -61,7 +67,7 @@ at = offsetbox.AnchoredText(
 )
 ax2.axes.add_artist(at)
 # add title
-ax2.set_title("Deviation from Secular Pole", fontsize=10)
+ax2.set_title("Deviation from Secular Pole", fontsize=11)
 # set axis limits
 ax2.set_xlim([-0.35, 0.35])
 ax2.set_ylim([-0.35, 0.35])
@@ -75,12 +81,22 @@ cbar_ax = subfig[1].add_axes([0.12, 0.085, 0.87, 0.04])
 # extend = add extension triangles to upper and lower bounds
 # options: neither, both, min, max
 cbar = subfig[1].colorbar(
-    sc, cax=cbar_ax, extend="neither", drawedges=False, orientation="horizontal"
+    sc,
+    cax=cbar_ax,
+    extend="neither",
+    drawedges=False,
+    orientation="horizontal",
 )
 # rasterized colorbar to remove lines
 cbar.solids.set_rasterized(True)
 # Add label to the colorbar
-cbar.ax.set_title("Time [yr]", fontsize=10, rotation=0, y=-1.75, va="top")
+cbar.ax.set_title(
+    "Time [yr]",
+    fontsize=11,
+    rotation=0,
+    y=-1.75,
+    verticalalignment="top",
+)
 cbar.ax.xaxis.set_label_coords(1.075, 0.5)
 # set tick parameters
 cbar.ax.tick_params(which="both", width=1, length=5, direction="in")

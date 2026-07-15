@@ -4,6 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # create a timescale object from a range of dates
 start_date = np.array("1980-01-01", dtype="datetime64[D]")
 end_date = np.array(datetime.datetime.now(), dtype="datetime64[D]")
@@ -22,7 +28,6 @@ fig, ax = plt.subplots(
     nrows=2,
     sharex=True,
     figsize=(6, 6),
-    facecolor="#fcfcfc",
 )
 # plot UT1-UTC and TT-UT1
 ax[0].plot(ts.year, ts.ut1_utc, ".", ms=0.5, c="0.4")
@@ -37,11 +42,11 @@ for leap in leaps:
         ts.year[ii],
         tt_ut1[ii],
         "-*",
-        lw=0,
+        linewidth=0,
         color=next(plot_colors),
         label=label,
     )
-    ax[0].axvline(ts.year[ii], color=l.get_color(), lw=0.5)
+    ax[0].axvline(ts.year[ii], color=l.get_color(), linewidth=0.5)
 # set axis labels
 ax[0].set_ylabel("UT1-UTC [s]", labelpad=2)
 ax[1].set_ylabel("TT-UT1 [s]")

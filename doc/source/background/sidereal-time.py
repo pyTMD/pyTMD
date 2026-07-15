@@ -4,6 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pyTMD.interpolate import slerp
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 
 def cartesian(
     phi: float | np.ndarray,
@@ -41,10 +48,7 @@ def linterp(a, b, radius=1.0, n=100):
     return x, y
 
 
-facecolor = "#fcfcfc"
-fig, ax1 = plt.subplots(
-    ncols=2, sharex=True, sharey=True, figsize=(10, 5), facecolor=facecolor
-)
+fig, ax1 = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(10, 5))
 # quiver arrow radius
 arrow_radius = 5.0
 
@@ -85,7 +89,14 @@ for ax in fig.axes:
         color=color,
         arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
     )
-    ax.text(x, y, "Mean \u2648", color=color, ha="center", va="bottom")
+    ax.text(
+        x,
+        y,
+        r"Mean $\Upsilon$",
+        color=color,
+        horizontalalignment="center",
+        verticalalignment="bottom",
+    )
 
     # prime meridian (Greenwich)
     color = "0.4"
@@ -98,7 +109,12 @@ for ax in fig.axes:
         arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
     )
     ax.text(
-        x + 0.1, y, "Greenwich\nMeridian", color=color, ha="left", va="center"
+        x + 0.1,
+        y,
+        "Greenwich\nMeridian",
+        color=color,
+        horizontalalignment="left",
+        verticalalignment="center",
     )
 
 # Earth rotation direction
@@ -120,8 +136,8 @@ ax1[0].text(
     ym - 0.1,
     "Earth\nrotation",
     color=color,
-    ha="center",
-    va="top",
+    horizontalalignment="center",
+    verticalalignment="top",
 )
 
 # true (apparent) vernal equinox
@@ -134,7 +150,14 @@ ax1[0].annotate(
     color=color,
     arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
 )
-ax1[0].text(x, y, "True \u2648", color=color, ha="left", va="bottom")
+ax1[0].text(
+    x,
+    y,
+    r"True $\Upsilon$",
+    color=color,
+    horizontalalignment="left",
+    verticalalignment="bottom",
+)
 
 # observer meridian
 color = "darkorchid"
@@ -147,7 +170,12 @@ ax1[0].annotate(
     arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
 )
 ax1[0].text(
-    x + 0.1, y, "Observer\nMeridian", color=color, ha="left", va="center"
+    x + 0.1,
+    y,
+    "Observer\nMeridian",
+    color=color,
+    horizontalalignment="left",
+    verticalalignment="center",
 )
 
 # mean sun
@@ -160,7 +188,14 @@ ax1[1].annotate(
     color=color,
     arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
 )
-ax1[1].text(x, y, "Mean \u2609", color=color, ha="left", va="bottom")
+ax1[1].text(
+    x,
+    y,
+    r"Mean $\odot$",
+    color=color,
+    horizontalalignment="left",
+    verticalalignment="bottom",
+)
 
 # true (apparent) solar sun
 color = "red"
@@ -172,7 +207,14 @@ ax1[1].annotate(
     color=color,
     arrowprops=dict(arrowstyle="<-", color=color, mutation_scale=15),
 )
-ax1[1].text(x, y, "True \u2609", color=color, ha="center", va="bottom")
+ax1[1].text(
+    x,
+    y,
+    r"True $\odot$",
+    color=color,
+    horizontalalignment="center",
+    verticalalignment="bottom",
+)
 
 # longitude: observer to prime meridian
 radius = 1.25
@@ -185,8 +227,8 @@ ax1[0].text(
     ym,
     r"$\lambda$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 
@@ -201,13 +243,13 @@ ax1[0].text(
     ym,
     "LMST",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 # reference circle for LMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[0].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[0].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # GMST: prime meridian to mean vernal equinox
 radius = 3.5
@@ -220,13 +262,13 @@ ax1[0].text(
     ym,
     "GMST",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 # reference circle for GMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[0].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[0].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # GAST: prime meridian to true (apparent) vernal equinox
 radius = 2.75
@@ -239,13 +281,13 @@ ax1[0].text(
     ym,
     "GAST",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 # reference circle for GAST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[0].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[0].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # equation of equinoxes (eqeq)
 # difference between mean and apparent vernal equinox
@@ -259,8 +301,8 @@ ax1[0].text(
     ym,
     r"$E_e$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 
@@ -275,13 +317,13 @@ ax1[1].text(
     ym,
     r"$\alpha_M$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 # reference circle for RA mean
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[1].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[1].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # true solar right ascension: mean vernal equinox to true sun
 radius = 2.75
@@ -294,13 +336,13 @@ ax1[1].text(
     ym,
     r"$\alpha_T$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
 )
 # reference circle for RA apparent
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[1].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[1].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # Greenwich mean hour angle (GHA): prime meridian to mean sun
 radius = 1.25
@@ -313,13 +355,13 @@ ax1[1].text(
     ym,
     r"$\text{GHA}_M$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 # reference circle for GHA mean
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[1].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[1].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # Greenwich true hour angle (GHA): prime meridian to true sun
 radius = 2.0
@@ -332,13 +374,13 @@ ax1[1].text(
     ym,
     r"$\text{GHA}_T$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 # reference circle for GHA apparent
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
-ax1[1].plot(x, y, color=color, lw=0.7, ls="--", alpha=0.2)
+ax1[1].plot(x, y, color=color, linewidth=0.7, linestyle="--", alpha=0.2)
 
 # equation of time (eot)
 # difference between mean and apparent solar longitude
@@ -352,8 +394,8 @@ ax1[1].text(
     ym,
     r"$E_{oT}$",
     color=color,
-    ha="center",
-    va="center",
+    horizontalalignment="center",
+    verticalalignment="center",
     bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
 )
 
