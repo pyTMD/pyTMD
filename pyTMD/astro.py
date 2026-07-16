@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 astro.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (07/2026)
 Astronomical and nutation routines
 
 PYTHON DEPENDENCIES:
@@ -18,6 +18,10 @@ REFERENCES:
     Oliver Montenbruck, Practical Ephemeris Calculations, 1989.
 
 UPDATE HISTORY:
+    Updated 07/2026: added more options to compute mean obliquity
+        added more options to compute nutation angles (dpsi, deps)
+        split equation of the equinoxes into a separate function
+        added more options to compute equation of the equinoxes
     Updated 06/2026: added functions to lunisolar equatorial coordinates
     Updated 03/2026: added functions to compute the geocentric positions
         of the Sun and Moon (latitude, longitude and distance)
@@ -118,6 +122,7 @@ __all__ = [
     "lunar_longitude",
     "lunar_distance",
     "gast",
+    "eqeq",
     "itrs",
     "_cartesian",
     "_eqeq_complement",
@@ -128,6 +133,7 @@ __all__ = [
     "_polar_motion_matrix",
     "_precession_matrix",
     "_correct_aberration",
+    "_meeus_table_22A",
     "_meeus_table_47A",
     "_meeus_table_47B",
     "_parse_table_5_2e",
@@ -165,9 +171,9 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
     method: str, default 'Cartwright'
         Method for calculating mean longitudes
 
-            - ``'Cartwright'``: use coefficients from David Cartwright
-            - ``'Meeus'``: use coefficients from Meeus Astronomical Algorithms
-            - ``'ASTRO5'``: use Meeus Astronomical coefficients from ``ASTRO5``
+            - ``'Cartwright'``: coefficients from David Cartwright
+            - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
+            - ``'ASTRO5'``: Meeus Astronomical coefficients from ``ASTRO5``
             - ``'IERS'``: convert from IERS Delaunay arguments
 
     Returns
@@ -448,7 +454,7 @@ def doodson_arguments(
     return (TAU, S, H, P, Np, Ps)
 
 
-def delaunay_arguments(MJD: np.ndarray):
+def delaunay_arguments(MJD: np.ndarray, **kwargs):
     r"""
     Computes astronomical phase angles for the five primary Delaunay
     Arguments of Nutation: :math:`l`, :math:`l'`, :math:`F`,
@@ -459,6 +465,11 @@ def delaunay_arguments(MJD: np.ndarray):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    method: str, default 'IERS'
+        Method for calculating Delaunay Arguments
+
+            - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
+            - ``'IERS'``: coefficients from IERS Conventions
 
     Returns
     -------
@@ -473,42 +484,78 @@ def delaunay_arguments(MJD: np.ndarray):
     N: np.ndarray
         Mean longitude of ascending lunar node (radians)
     """
+    # set default keyword arguments
+    kwargs.setdefault("method", "IERS")
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
-    # 360 degrees
-    circle = 1296000
-    # mean anomaly of the Moon (arcseconds)
-    lunar_anomaly = np.array(
-        [485868.249036, 1717915923.2178, 31.8792, 0.051635, -2.447e-04]
-    )
-    l = polynomial_sum(lunar_anomaly, T)
-    # mean anomaly of the Sun (arcseconds)
-    solar_anomaly = np.array(
-        [1287104.79305, 129596581.0481, -0.5532, 1.36e-4, -1.149e-05]
-    )
-    lp = polynomial_sum(solar_anomaly, T)
-    # mean argument of the Moon (arcseconds)
-    # (angular distance from the ascending node)
-    lunar_argument = np.array(
-        [335779.526232, 1739527262.8478, -12.7512, -1.037e-3, 4.17e-6]
-    )
-    F = polynomial_sum(lunar_argument, T)
-    # mean elongation of the Moon from the Sun (arcseconds)
-    lunisolar_elongation = np.array(
-        [1072260.70369, 1602961601.2090, -6.3706, 6.593e-3, -3.169e-05]
-    )
-    D = polynomial_sum(lunisolar_elongation, T)
-    # mean longitude of the ascending node of the Moon (arcseconds)
-    lunar_node = np.array(
-        [450160.398036, -6962890.5431, 7.4722, 7.702e-3, -5.939e-05]
-    )
-    N = polynomial_sum(lunar_node, T)
-    # take the modulus of each and convert to radians
-    l = asec2rad(normalize_angle(l, circle=circle))
-    lp = asec2rad(normalize_angle(lp, circle=circle))
-    F = asec2rad(normalize_angle(F, circle=circle))
-    D = asec2rad(normalize_angle(D, circle=circle))
-    N = asec2rad(normalize_angle(N, circle=circle))
+    if kwargs["method"].title() == "Meeus":
+        # mean anomaly of the Moon (degrees)
+        lunar_anomaly = np.array(
+            [134.96298, 477198.867398, 0.0086972, 1.0 / 56250.0]
+        )
+        Mp = polynomial_sum(lunar_anomaly, T)
+        solar_anomaly = np.array(
+            [357.52772, 35999.05034, -0.0001603, -1.0 / 300000.0]
+        )
+        M = polynomial_sum(solar_anomaly, T)
+        # mean argument of the Moon (degrees)
+        # (angular distance from the ascending node)
+        lunar_argument = np.array(
+            [92.27191, 483202.017538, -0.0036825, 1.0 / 327270.0]
+        )
+        F = polynomial_sum(lunar_argument, T)
+        # mean elongation of the Moon from the Sun (degrees)
+        lunisolar_elongation = np.array(
+            [297.85036, 445267.111480, -0.0019142, 1.0 / 189474.0]
+        )
+        D = polynomial_sum(lunisolar_elongation, T)
+        # mean longitude of the ascending node of the Moon (degrees)
+        lunar_node = np.array(
+            [125.04452, -1934.136261, 0.0020708, 1.0 / 450000.0]
+        )
+        Om = polynomial_sum(lunar_node, T)
+        # take the modulus of each and convert to radians
+        # use IERS naming scheme for anomalies and longitudes
+        l = np.radians(normalize_angle(Mp))
+        lp = np.radians(normalize_angle(M))
+        F = np.radians(normalize_angle(F))
+        D = np.radians(normalize_angle(D))
+        N = np.radians(normalize_angle(Om))
+    elif kwargs["method"].upper() == "IERS":
+        # mean anomaly of the Moon (arcseconds)
+        lunar_anomaly = np.array(
+            [485868.249036, 1717915923.2178, 31.8792, 0.051635, -2.447e-04]
+        )
+        l = polynomial_sum(lunar_anomaly, T)
+        # mean anomaly of the Sun (arcseconds)
+        solar_anomaly = np.array(
+            [1287104.79305, 129596581.0481, -0.5532, 1.36e-4, -1.149e-05]
+        )
+        lp = polynomial_sum(solar_anomaly, T)
+        # mean argument of the Moon (arcseconds)
+        # (angular distance from the ascending node)
+        lunar_argument = np.array(
+            [335779.526232, 1739527262.8478, -12.7512, -1.037e-3, 4.17e-6]
+        )
+        F = polynomial_sum(lunar_argument, T)
+        # mean elongation of the Moon from the Sun (arcseconds)
+        lunisolar_elongation = np.array(
+            [1072260.70369, 1602961601.2090, -6.3706, 6.593e-3, -3.169e-05]
+        )
+        D = polynomial_sum(lunisolar_elongation, T)
+        # mean longitude of the ascending node of the Moon (arcseconds)
+        lunar_node = np.array(
+            [450160.398036, -6962890.5431, 7.4722, 7.702e-3, -5.939e-05]
+        )
+        N = polynomial_sum(lunar_node, T)
+        # full turn (360 degrees)
+        circle = 1296000
+        # take the modulus of each and convert to radians
+        l = asec2rad(normalize_angle(l, circle=circle))
+        lp = asec2rad(normalize_angle(lp, circle=circle))
+        F = asec2rad(normalize_angle(F, circle=circle))
+        D = asec2rad(normalize_angle(D, circle=circle))
+        N = asec2rad(normalize_angle(N, circle=circle))
     # return as tuple
     return (l, lp, F, D, N)
 
@@ -590,7 +637,7 @@ def schureman_arguments(P: np.ndarray, N: np.ndarray):
     return (I, xi, nu, Qa, Qu, Ra, Ru, nu_p, nu_s)
 
 
-def mean_obliquity(MJD: np.ndarray):
+def mean_obliquity(MJD: np.ndarray, **kwargs):
     """Mean obliquity of the ecliptic
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw`
 
@@ -598,19 +645,57 @@ def mean_obliquity(MJD: np.ndarray):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
+    method: str, default "Capitaine"
+        Method for determining the mean obliquity
+
+        - ``'Capitaine'``: coefficients from :cite:t:`Capitaine:2003fx`
+        - ``'Laskar'``: coefficients from :cite:t:`Laskar:1986wu`
+        - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
+        - ``'USNO'``: coefficients from US Naval Observatory
 
     Returns
     -------
     epsilon: np.ndarray
         Mean obliquity of the ecliptic (radians)
     """
+    kwargs.setdefault("method", "Capitaine")
     # convert from MJD to centuries relative to 2000-01-01T12:00:00
     T = (MJD - _mjd_j2000) / _century
+    # 10000 Julian years
+    U = T / 100.0
     # mean obliquity of the ecliptic (arcseconds)
-    epsilon0 = np.array(
-        [84381.406, -46.836769, -1.831e-4, 2.00340e-4, -5.76e-07, -4.34e-08]
-    )
-    return asec2rad(polynomial_sum(epsilon0, T))
+    if kwargs["method"].title() == "Capitaine":
+        # coefficients for the mean obliquity
+        epsilon0 = np.array(
+            [84381.406, -4683.6769, -1.831, 2003.4, -57.6, -434.0]
+        )
+    elif kwargs["method"].title() == "Meeus":
+        # coefficients for the mean obliquity (IAU1976)
+        epsilon0 = np.array([84381.448, -4681.50, -5.9, 1813.0])
+    elif kwargs["method"].title() == "Laskar":
+        # coefficients for the mean obliquity
+        epsilon0 = np.array(
+            [
+                84381.448,
+                -4680.93,
+                -1.55,
+                1999.25,
+                -51.38,
+                -249.67,
+                -39.05,
+                7.12,
+                27.87,
+                5.79,
+                2.45,
+            ]
+        )
+    elif kwargs["method"].upper() == "USNO":
+        # coefficients for the mean obliquity
+        # https://aa.usno.navy.mil/faq/sun_approx
+        # https://aa.usno.navy.mil/faq/GAST
+        epsilon0 = np.array([84381.45, -4700.0])
+    # convert from arcseconds to radians
+    return asec2rad(polynomial_sum(epsilon0, U))
 
 
 def equation_of_time(MJD: np.ndarray):
@@ -912,7 +997,7 @@ def solar_latitude(
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    ephemerides: str, default Meeus
+    ephemerides: str, default 'Meeus'
         Method for calculating the latitude
 
     Returns
@@ -1223,8 +1308,10 @@ def solar_longitude(
             H += -0.00569 - 0.00478 * np.sin(omega)
     else:
         raise ValueError("Invalid ephemerides method")
+    # full turn (360 degrees)
+    circle = 360.0
     # take the modulus and convert to radians
-    H = np.radians(normalize_angle(H, circle=360.0))
+    H = np.radians(normalize_angle(H, circle=circle))
     # return the longitude of the Sun
     return H
 
@@ -2019,8 +2106,10 @@ def lunar_longitude(
             S += a * np.cos(np.radians(b + c * T))
     else:
         raise ValueError("Invalid ephemerides method")
+    # full turn (360 degrees)
+    circle = 360.0
     # take the modulus and convert to radians
-    S = np.radians(normalize_angle(S, circle=360.0))
+    S = np.radians(normalize_angle(S, circle=circle))
     # return the longitude of the Moon
     return S
 
@@ -2169,7 +2258,7 @@ def lunar_distance(
     return R
 
 
-def gast(T: float | np.ndarray):
+def gast(T: float | np.ndarray, **kwargs):
     """Greenwich Apparent Sidereal Time (GAST)
     :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
 
@@ -2177,19 +2266,97 @@ def gast(T: float | np.ndarray):
     ----------
     T: np.ndarray
         Centuries since 2000-01-01T12:00:00
+    method: str, default 'IERS'
+        Method for calculating the equation of the equinoxes
+
+            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
+            - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
+            - ``'IERS'``: IERS Greenwich Sidereal Time tables
+            - ``'USNO'``: US Naval Observatory Approximate relation
+
+    Returns
+    -------
+    GAST: np.ndarray
+        Greenwich Apparent Sidereal Time (fractions of a day)
     """
+    # set default keyword arguments
+    kwargs.setdefault("method", "IERS")
+    # create timescale from centuries relative to 2000-01-01T12:00:00
+    ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
+    # calculate equation of the equinoxes and convert to fractions
+    eqofeq = eqeq(T, **kwargs) / ts.tau
+    # calculate Greenwich Apparent Sidereal Time
+    GAST = np.mod(ts.st + eqofeq, 1.0)
+    # return the times
+    return GAST
+
+
+def eqeq(
+    T: float | np.ndarray,
+    include_complement: bool = True,
+    **kwargs,
+):
+    """Difference between the actual (GAST) and mean (GMST) sidereal times
+    at Greenwich via the Equation of the Equinoxes
+    :cite:p:`Capitaine:2003fx,Capitaine:2003fw,Petit:2010tp`
+
+    Parameters
+    ----------
+    T: np.ndarray
+        Centuries since 2000-01-01T12:00:00
+    include_complement: bool, default True
+        Include the complementary higher-order polynomial terms
+    method: str, default 'IERS'
+        Method for calculating the equation of the equinoxes
+
+            - ``'IERS'``: IERS Greenwich Sidereal Time tables
+            - ``'Meeus'``: Meeus Astronomical Algorithms tables
+            - ``'USNO'``: US Naval Observatory simplified relation
+            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
+
+    Returns
+    -------
+    eqofeq: np.ndarray
+        Equation of the Equinoxes (radians)
+    """
+    # set default keyword arguments
+    kwargs.setdefault("method", "IERS")
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # convert dynamical time to modified Julian days
     MJD = ts.tt - _jd_mjd
     # estimate the mean obliquity
-    epsilon = mean_obliquity(MJD)
-    # estimate the nutation in longitude and obliquity
-    dpsi, deps = _nutation_angles(T)
-    # traditional equation of the equinoxes
-    c = _eqeq_complement(T)
-    eqeq = dpsi * np.cos(epsilon + deps) + c
-    return np.mod(ts.st + eqeq / 24.0, 1.0)
+    # estimate the nutations in longitude and obliquity
+    if kwargs["method"].upper() == "IERS":
+        # equation of the equinox using tables from IERS conventions
+        epsilon = mean_obliquity(MJD)
+        dpsi, deps = _nutation_angles(T)
+    elif kwargs["method"].title() == "Meeus":
+        # equation of the equinox using Table 22.A of Meeus (1991)
+        # mean obliquity using Meeus equation 22.3
+        epsilon = mean_obliquity(MJD, method="Laskar")
+        # nutation in longitude and obliquity from Table 22.A
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    elif kwargs["method"].lower() == "approximate":
+        # approximate equation of the equinox from Meeus (1991)
+        # mean obliquity using Meeus equation 22.2
+        epsilon = mean_obliquity(MJD, method="Meeus")
+        # approximate nutation in longitude and obliquity
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    elif kwargs["method"].upper() == "USNO":
+        # approximate equation of the equinox from the USNO
+        # https://aa.usno.navy.mil/faq/GAST
+        # estimate the mean obliquity
+        epsilon = mean_obliquity(MJD, **kwargs)
+        # approximate nutation in longitude and obliquity
+        dpsi, deps = _nutation_angles(T, **kwargs)
+    # estimate the equation of the equinoxes in radians
+    eqofeq = dpsi * np.cos(epsilon + deps)
+    # include the complementary polynomial terms
+    if include_complement:
+        eqofeq += _eqeq_complement(T)
+    # return the equation of the equinoxes
+    return eqofeq
 
 
 def itrs(
@@ -2442,65 +2609,138 @@ def _frame_bias_matrix():
     B[2, 0] = xi0
     B[2, 1] = eta0
     # second-order corrections to diagonal elements
-    B[0, 0] = 1.0 - 0.5 * (da0**2 + xi0**2)
-    B[1, 1] = 1.0 - 0.5 * (da0**2 + eta0**2)
-    B[2, 2] = 1.0 - 0.5 * (eta0**2 + xi0**2)
+    B[0, 0] = 1.0 - 0.5 * np.hypot(da0, xi0) ** 2
+    B[1, 1] = 1.0 - 0.5 * np.hypot(da0, eta0) ** 2
+    B[2, 2] = 1.0 - 0.5 * np.hypot(eta0, xi0) ** 2
     # return the rotation matrix
     return B
 
 
-def _nutation_angles(T: float | np.ndarray):
+def _nutation_angles(T: float | np.ndarray, **kwargs):
     """
     Calculate nutation rotation angles using tables
-    from IERS Conventions :cite:p:`Petit:2010tp`
+    from IERS Conventions :cite:p:`Petit:2010tp`, Table 22.A from
+    :cite:t:`Meeus:1991vh`, or simplified relations
 
     Parameters
     ----------
     T: np.ndarray
         Centuries since 2000-01-01T12:00:00
+    method: str, default 'IERS'
+        Method for calculating the nutation angles
+
+            - ``'Meeus'``: coefficients from Meeus Astronomical Algorithms
+            - ``'IERS'``: IERS Greenwich Sidereal Time tables
+            - ``'USNO'``: US Naval Observatory simplified relation
+            - ``'approximate'``: :cite:t:`Meeus:1991vh` simplified relation
 
     Returns
     -------
     dpsi: np.ndarray
-        Nutation in longitude
+        Nutation in longitude (radians)
     deps: np.ndarray
-        Nutation in obliquity of the ecliptic
+        Nutation in obliquity of the ecliptic (radians)
     """
+    # set default keyword arguments
+    kwargs.setdefault("method", "IERS")
     # create timescale from centuries relative to 2000-01-01T12:00:00
     ts = timescale.time.Timescale(MJD=T * _century + _mjd_j2000)
     # difference to convert to Barycentric Dynamical Time (TDB)
     tdb2 = getattr(ts, "tdb_tt") if hasattr(ts, "tdb_tt") else 0.0
     # convert dynamical time to modified Julian days
     MJD = ts.tt + tdb2 - _jd_mjd
-    # get the fundamental arguments in radians
-    l, lp, F, D, Om = delaunay_arguments(MJD)
+    # estimate the nutation in longitude and obliquity
     # non-polynomial terms in the equation of the equinoxes
-    # parse IERS lunisolar longitude table
-    l0, l1 = _parse_table_5_3a()
-    n0 = np.c_[l0["l"], l0["lp"], l0["F"], l0["D"], l0["Om"]]
-    n1 = np.c_[l1["l"], l1["lp"], l1["F"], l1["D"], l1["Om"]]
-    arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
-    arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
-    dpsi = (
-        np.dot(l0["As"], np.sin(arg0))
-        + np.dot(l0["Ac"], np.cos(arg0))
-        + ts.T * np.dot(l1["As"], np.sin(arg1))
-        + ts.T * np.dot(l1["Ac"], np.cos(arg1))
-    )
-    # parse IERS lunisolar obliquity table
-    o0, o1 = _parse_table_5_3b()
-    n0 = np.c_[o0["l"], o0["lp"], o0["F"], o0["D"], o0["Om"]]
-    n1 = np.c_[o1["l"], o1["lp"], o1["F"], o1["D"], o1["Om"]]
-    arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
-    arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
-    deps = (
-        np.dot(o0["Bs"], np.sin(arg0))
-        + np.dot(o0["Bc"], np.cos(arg0))
-        + ts.T * np.dot(o1["Bs"], np.sin(arg1))
-        + ts.T * np.dot(o1["Bc"], np.cos(arg1))
-    )
-    # convert to radians
-    return (masec2rad(dpsi), masec2rad(deps))
+    if kwargs["method"].upper() == "IERS":
+        # nutation angles from IERS Conventions
+        # get the fundamental arguments in radians
+        l, lp, F, D, Om = delaunay_arguments(MJD)
+        # parse IERS lunisolar longitude table
+        l0, l1 = _parse_table_5_3a()
+        n0 = np.c_[l0["l"], l0["lp"], l0["F"], l0["D"], l0["Om"]]
+        n1 = np.c_[l1["l"], l1["lp"], l1["F"], l1["D"], l1["Om"]]
+        arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
+        arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
+        dpsi = (
+            np.dot(l0["As"], np.sin(arg0))
+            + np.dot(l0["Ac"], np.cos(arg0))
+            + ts.T * np.dot(l1["As"], np.sin(arg1))
+            + ts.T * np.dot(l1["Ac"], np.cos(arg1))
+        )
+        # parse IERS lunisolar obliquity table
+        o0, o1 = _parse_table_5_3b()
+        n0 = np.c_[o0["l"], o0["lp"], o0["F"], o0["D"], o0["Om"]]
+        n1 = np.c_[o1["l"], o1["lp"], o1["F"], o1["D"], o1["Om"]]
+        arg0 = np.dot(n0, np.c_[l, lp, F, D, Om].T)
+        arg1 = np.dot(n1, np.c_[l, lp, F, D, Om].T)
+        deps = (
+            np.dot(o0["Bs"], np.sin(arg0))
+            + np.dot(o0["Bc"], np.cos(arg0))
+            + ts.T * np.dot(o1["Bs"], np.sin(arg1))
+            + ts.T * np.dot(o1["Bc"], np.cos(arg1))
+        )
+        # convert from microarcseconds to radians
+        dpsi = masec2rad(dpsi)
+        deps = masec2rad(deps)
+    elif kwargs["method"].title() == "Meeus":
+        # compute the Delaunay arguments (Meeus)
+        Mp, M, F, D, Om = delaunay_arguments(MJD, method="Meeus")
+        # nutation angles from Meeus table 22A
+        t22 = _meeus_table_22A()
+        n = np.c_[t22["D"], t22["M"], t22["Mp"], t22["F"], t22["Om"]]
+        arg = np.dot(n, np.c_[D, M, Mp, F, Om].T)
+        # calculate nutation angles (0.0001")
+        dpsi = np.dot(t22["psi"], np.sin(arg)) + ts.T * np.dot(
+            t22["dpsi"], np.sin(arg)
+        )
+        deps = np.dot(t22["eps"], np.cos(arg)) + ts.T * np.dot(
+            t22["deps"], np.cos(arg)
+        )
+        # convert from 1e-4 arcseconds to radians
+        dpsi = masec2rad(100.0 * dpsi)
+        deps = masec2rad(100.0 * deps)
+    elif kwargs["method"].lower() == "approximate":
+        # compute the Delaunay arguments (Meeus)
+        Mp, M, F, D, Om = delaunay_arguments(MJD, method="Meeus")
+        # mean longitude of Moon
+        S = F + Om
+        # mean longitude of Sun
+        H = F + Om - D
+        # estimate the nutation in longitude (arcseconds)
+        dpsi = (
+            -17.20 * np.sin(Om)
+            - 1.32 * np.sin(2.0 * H)
+            - 0.23 * np.sin(2.0 * S)
+            + 0.21 * np.sin(2.0 * Om)
+        )
+        # estimate the nutation in obliquity (arcseconds)
+        deps = (
+            9.20 * np.cos(Om)
+            + 0.57 * np.cos(2.0 * H)
+            + 0.10 * np.cos(2.0 * S)
+            - 0.09 * np.cos(2.0 * Om)
+        )
+        # convert from arcseconds to radians
+        dpsi = asec2rad(dpsi)
+        deps = asec2rad(deps)
+    elif kwargs["method"].upper() == "USNO":
+        # mean longitude of Sun (degrees)
+        solar_longitude = np.array([280.47, 36000.8])
+        H = polynomial_sum(solar_longitude, ts.T)
+        # mean longitude of the ascending node of the Moon (degrees)
+        lunar_node = np.array([125.04, -1934.14])
+        Om = polynomial_sum(lunar_node, ts.T)
+        # normalize and convert to radians
+        H = np.radians(normalize_angle(H))
+        Om = np.radians(normalize_angle(Om))
+        # approximate nutation in longitude and obliquity
+        dpsi = -319e-6 * np.sin(Om) - 24e-6 * np.sin(2.0 * H)
+        deps = 170e-6 * np.cos(Om) + 11e-6 * np.cos(2.0 * H)
+        # convert nutations from hours to radians
+        dpsi = ts.tau * dpsi / 24.0
+        deps = ts.tau * deps / 24.0
+    # return nutation angles
+    return dpsi, deps
 
 
 def _nutation_matrix(
@@ -2593,13 +2833,13 @@ def _precession_matrix(T: float | np.ndarray):
     )
     omega = asec2rad(polynomial_sum(omega0, T))
     # planetary precession
-    chi0 = np.array(
+    xi0 = np.array(
         [0.0, 10.556403, -2.3814292, -1.21197e-3, 1.70663e-4, -5.60e-8]
     )
-    chi = asec2rad(polynomial_sum(chi0, T))
+    xi = asec2rad(polynomial_sum(xi0, T))
     # compute trigonometric terms
-    coschi = np.cos(chi)
-    sinchi = np.sin(chi)
+    cosxi = np.cos(xi)
+    sinxi = np.sin(xi)
     cospsi = np.cos(-psi)
     sinpsi = np.sin(-psi)
     cosomega = np.cos(-omega)
@@ -2608,27 +2848,27 @@ def _precession_matrix(T: float | np.ndarray):
     sineps = np.sin(asec2rad(epsilon0))
     # compute elements of precession rotation matrix
     P = np.zeros((3, 3, len(np.atleast_1d(T))))
-    P[0, 0, :] = coschi * cospsi - sinpsi * sinchi * cosomega
+    P[0, 0, :] = cosxi * cospsi - sinpsi * sinxi * cosomega
     P[0, 1, :] = (
-        coschi * sinpsi * coseps
-        + sinchi * cosomega * cospsi * coseps
-        - sineps * sinchi * sinomega
+        cosxi * sinpsi * coseps
+        + sinxi * cosomega * cospsi * coseps
+        - sineps * sinxi * sinomega
     )
     P[0, 2, :] = (
-        coschi * sinpsi * sineps
-        + sinchi * cosomega * cospsi * sineps
-        + coseps * sinchi * sinomega
+        cosxi * sinpsi * sineps
+        + sinxi * cosomega * cospsi * sineps
+        + coseps * sinxi * sinomega
     )
-    P[1, 0, :] = -sinchi * cospsi - sinpsi * coschi * cosomega
+    P[1, 0, :] = -sinxi * cospsi - sinpsi * cosxi * cosomega
     P[1, 1, :] = (
-        -sinchi * sinpsi * coseps
-        + coschi * cosomega * cospsi * coseps
-        - sineps * coschi * sinomega
+        -sinxi * sinpsi * coseps
+        + cosxi * cosomega * cospsi * coseps
+        - sineps * cosxi * sinomega
     )
     P[1, 2, :] = (
-        -sinchi * sinpsi * sineps
-        + coschi * cosomega * cospsi * sineps
-        + coseps * coschi * sinomega
+        -sinxi * sinpsi * sineps
+        + cosxi * cosomega * cospsi * sineps
+        + coseps * cosxi * sinomega
     )
     P[2, 0, :] = sinpsi * sinomega
     P[2, 1, :] = -sinomega * cospsi * coseps - sineps * cosomega
@@ -2680,6 +2920,99 @@ def _correct_aberration(
     return (x, y, z)
 
 
+def _meeus_table_22A():
+    """
+    Coefficients for the periodic terms in nutation in longitude
+    and obliquity from Table 22.A of :cite:t:`Meeus:1991vh`
+    """
+    # table 22.A from Meeus (1991)
+    # column 1: mean elongation of the Moon
+    # column 2: suns mean anomaly
+    # column 3: moons mean anomaly
+    # column 4: moons argument of latitude
+    # column 5: mean longitude of the moon's ascending node
+    # column 6: coefficient of sine term for the nutation in longitude
+    #     units: 1e-4 arcseconds
+    # column 7: coefficient of the drift in the sine term for the nutation
+    #     in longitude (1e-4 arcseconds)
+    # column 8: coefficient of cosine term for the nutation in obliquity
+    #     units: 1e-4 arcseconds
+    # column 9: coefficient of the drift in the cosine term for the nutation
+    #     in obliquity (1e-4 arcseconds)
+    names = ("D", "M", "Mp", "F", "Om", "psi", "dpsi", "eps", "deps")
+    formats = ("i4", "i4", "i4", "i4", "i4", "f8", "f8", "f8", "f8")
+    table_22A = np.array(
+        [
+            (0, 0, 0, 0, 1, -171996.0, -174.2, 92025.0, 8.9),
+            (-2, 0, 0, 2, 2, -13187.0, -1.6, 5736.0, -3.1),
+            (0, 0, 0, 2, 2, -2274.0, -0.2, 977.0, -0.5),
+            (0, 0, 0, 0, 2, 2062.0, 0.2, -895, 0.5),
+            (0, 1, 0, 0, 0, 1426.0, -3.4, 54.0, -0.1),
+            (0, 0, 1, 0, 0, 712.0, 0.1, -7.0, 0.0),
+            (-2, 1, 0, 2, 2, -517.0, 1.2, 224.0, -0.6),
+            (0, 0, 0, 2, 1, -386.0, -0.4, 200.0, 0.0),
+            (0, 0, 1, 2, 2, -301.0, 0.0, 129.0, -0.1),
+            (-2, -1, 0, 2, 2, 217.0, -0.5, -95.0, 0.3),
+            (-2, 0, 1, 0, 0, -158.0, 0.0, 0.0, 0.0),
+            (-2, 0, 0, 2, 1, 129.0, 0.1, -70.0, 0.0),
+            (0, 0, -1, 2, 2, 123.0, 0.0, -53.0, 0.0),
+            (2, 0, 0, 0, 0, 63.0, 0.0, 0.0, 0.0),
+            (0, 0, 1, 0, 1, 63.0, 0.1, -33.0, 0.0),
+            (2, 0, -1, 2, 2, -59.0, 0.0, 26.0, 0.0),
+            (0, 0, -1, 0, 1, -58.0, -0.1, 32.0, 0.0),
+            (0, 0, 1, 2, 1, -51.0, 0.0, 27.0, 0.0),
+            (-2, 0, 2, 0, 0, 48.0, 0.0, 0.0, 0.0),
+            (0, 0, -2, 2, 1, 46.0, 0.0, -24.0, 0.0),
+            (2, 0, 0, 2, 2, -38.0, 0.0, 16.0, 0.0),
+            (0, 0, 2, 2, 2, -31.0, 0.0, 13.0, 0.0),
+            (0, 0, 2, 0, 0, 29.0, 0.0, 0.0, 0.0),
+            (-2, 0, 1, 2, 2, 29.0, 0.0, -12.0, 0.0),
+            (0, 0, 0, 2, 0, 26.0, 0.0, 0.0, 0.0),
+            (-2, 0, 0, 2, 0, -22.0, 0.0, 0.0, 0.0),
+            (0, 0, -1, 2, 1, 21.0, 0.0, -10.0, 0.0),
+            (0, 2, 0, 0, 0, 17.0, -0.1, 0.0, 0.0),
+            (2, 0, -1, 0, 1, 16.0, 0.0, -8.0, 0.0),
+            (-2, 2, 0, 2, 2, -16.0, 0.1, 7.0, 0.0),
+            (0, 1, 0, 0, 1, -15.0, 0.0, 9.0, 0.0),
+            (-2, 0, 1, 0, 1, -13.0, 0.0, 7.0, 0.0),
+            (0, -1, 0, 0, 1, -12.0, 0.0, 6.0, 0.0),
+            (0, 0, 2, -2, 0, 11.0, 0.0, 0.0, 0.0),
+            (2, 0, -1, 2, 1, -10, 0.0, 5.0, 0.0),
+            (2, 0, 1, 2, 2, -8.0, 0.0, 3.0, 0.0),
+            (0, 1, 0, 2, 2, 7.0, 0.0, -3.0, 0.0),
+            (-2, 1, 1, 0, 0, -7.0, 0.0, 0.0, 0.0),
+            (0, -1, 0, 2, 2, -7.0, 0.0, 3.0, 0.0),
+            (2, 0, 0, 2, 1, -7.0, 0.0, 3.0, 0.0),
+            (2, 0, 1, 0, 0, 6.0, 0.0, 0.0, 0.0),
+            (-2, 0, 2, 2, 2, 6.0, 0.0, -3.0, 0.0),
+            (-2, 0, 1, 2, 1, 6.0, 0.0, -3.0, 0.0),
+            (2, 0, -2, 0, 1, -6.0, 0.0, 3.0, 0.0),
+            (2, 0, 0, 0, 1, -6.0, 0.0, 3.0, 0.0),
+            (0, -1, 1, 0, 0, 5.0, 0.0, 0.0, 0.0),
+            (-2, -1, 0, 2, 1, -5.0, 0.0, 3.0, 0.0),
+            (-2, 0, 0, 0, 1, -5.0, 0.0, 3.0, 0.0),
+            (0, 0, 2, 2, 1, -5.0, 0.0, 3.0, 0.0),
+            (-2, 0, 2, 0, 1, 4.0, 0.0, 0.0, 0.0),
+            (-2, 1, 0, 2, 1, 4.0, 0.0, 0.0, 0.0),
+            (0, 0, 1, -2, 0, 4.0, 0.0, 0.0, 0.0),
+            (-1, 0, 1, 0, 0, -4.0, 0.0, 0.0, 0.0),
+            (-2, 1, 0, 0, 0, -4.0, 0.0, 0.0, 0.0),
+            (1, 0, 0, 0, 0, -4.0, 0.0, 0.0, 0.0),
+            (0, 0, 1, 2, 0, 3.0, 0.0, 0.0, 0.0),
+            (0, 0, -2, 2, 2, -3.0, 0.0, 0.0, 0.0),
+            (-1, -1, 1, 0, 0, -3.0, 0.0, 0.0, 0.0),
+            (0, 1, 1, 0, 0, -3.0, 0.0, 0.0, 0.0),
+            (0, -1, 1, 2, 2, -3.0, 0.0, 0.0, 0.0),
+            (2, -1, -1, 2, 2, -3.0, 0.0, 0.0, 0.0),
+            (0, 0, 3, 2, 2, -3.0, 0.0, 0.0, 0.0),
+            (2, -1, 0, 2, 2, -3.0, 0.0, 0.0, 0.0),
+        ],
+        dtype=np.dtype({"names": names, "formats": formats}),
+    )
+    # return the table of coefficients
+    return table_22A
+
+
 def _meeus_table_47A():
     """
     Coefficients for the periodic terms in lunar longitude
@@ -2694,69 +3027,72 @@ def _meeus_table_47A():
     #     units: microdegrees (1e-6 degrees)
     # column 6: coefficient of the cosine term for lunar distance
     #     units: meters (1e-3 kilometers)
+    names = ("D", "M", "Mp", "F", "sigmaL", "sigmaR")
+    formats = ("i4", "i4", "i4", "i4", "f8", "f8")
     table_47A = np.array(
         [
-            [0, 0, 1, 0, 6288774.0, -20905355.0],
-            [2, 0, -1, 0, 1274027.0, -3699111.0],
-            [2, 0, 0, 0, 658314.0, -2955968.0],
-            [0, 0, 2, 0, 213618.0, -569925.0],
-            [0, 1, 0, 0, -185116.0, 48888.0],
-            [0, 0, 0, 2, -114332.0, -3149.0],
-            [2, 0, -2, 0, 58793.0, 246158.0],
-            [2, -1, -1, 0, 57066.0, -152138.0],
-            [2, 0, 1, 0, 53322.0, -170733.0],
-            [2, -1, 0, 0, 45758.0, -204586.0],
-            [0, 1, -1, 0, -40923.0, -129620.0],
-            [1, 0, 0, 0, -34720.0, 108743.0],
-            [0, 1, 1, 0, -30383.0, 104755.0],
-            [2, 0, 0, -2, 15327.0, 10321.0],
-            [0, 0, 1, 2, -12528.0, 0.0],
-            [0, 0, 1, -2, 10980.0, 79661.0],
-            [4, 0, -1, 0, 10675.0, -34782.0],
-            [0, 0, 3, 0, 10034.0, -23210.0],
-            [4, 0, -2, 0, 8548.0, -21636.0],
-            [2, 1, -1, 0, -7888.0, 24208.0],
-            [2, 1, 0, 0, -6766.0, 30824.0],
-            [1, 0, -1, 0, -5163.0, -8379.0],
-            [1, 1, 0, 0, 4987.0, -16675.0],
-            [2, -1, 1, 0, 4036.0, -12831.0],
-            [2, 0, 2, 0, 3994.0, -10445.0],
-            [4, 0, 0, 0, 3861.0, -11650.0],
-            [2, 0, -3, 0, 3665.0, 14403.0],
-            [0, 1, -2, 0, -2689.0, -7003.0],
-            [2, 0, -1, 2, -2602.0, 0.0],
-            [2, -1, -2, 0, 2390.0, 10056.0],
-            [1, 0, 1, 0, -2348.0, 6322.0],
-            [2, -2, 0, 0, 2236.0, -9884.0],
-            [0, 1, 2, 0, -2120.0, 5751.0],
-            [0, 2, 0, 0, -2069.0, 0.0],
-            [2, -2, -1, 0, 2048.0, -4950.0],
-            [2, 0, 1, -2, -1773.0, 4130.0],
-            [2, 0, 0, 2, -1595.0, 0.0],
-            [4, -1, -1, 0, 1215.0, -3958.0],
-            [0, 0, 2, 2, -1110.0, 0.0],
-            [3, 0, -1, 0, -892.0, 3258.0],
-            [2, 1, 1, 0, -810.0, 2616.0],
-            [4, -1, -2, 0, 759.0, -1897.0],
-            [0, 2, -1, 0, -713.0, -2117.0],
-            [2, 2, -1, 0, -700.0, 2354.0],
-            [2, 1, -2, 0, 691.0, 0.0],
-            [2, -1, 0, -2, 596.0, 0.0],
-            [4, 0, 1, 0, 549.0, -1423.0],
-            [0, 0, 4, 0, 537.0, -1117.0],
-            [4, -1, 0, 0, 520.0, -1571.0],
-            [1, 0, -2, 0, -487.0, -1739.0],
-            [2, 1, 0, -2, -399.0, 0.0],
-            [0, 0, 2, -2, -381.0, -4421.0],
-            [1, 1, 1, 0, 351.0, 0.0],
-            [3, 0, -2, 0, -340.0, 0.0],
-            [4, 0, -3, 0, 330.0, 0.0],
-            [2, -1, 2, 0, 327.0, 0.0],
-            [0, 2, 1, 0, -323.0, 1165.0],
-            [1, 1, -1, 0, 299.0, 0.0],
-            [2, 0, 3, 0, 394.0, 0.0],
-            [2, 0, -1, -2, 0.0, 8752.0],
-        ]
+            (0, 0, 1, 0, 6288774.0, -20905355.0),
+            (2, 0, -1, 0, 1274027.0, -3699111.0),
+            (2, 0, 0, 0, 658314.0, -2955968.0),
+            (0, 0, 2, 0, 213618.0, -569925.0),
+            (0, 1, 0, 0, -185116.0, 48888.0),
+            (0, 0, 0, 2, -114332.0, -3149.0),
+            (2, 0, -2, 0, 58793.0, 246158.0),
+            (2, -1, -1, 0, 57066.0, -152138.0),
+            (2, 0, 1, 0, 53322.0, -170733.0),
+            (2, -1, 0, 0, 45758.0, -204586.0),
+            (0, 1, -1, 0, -40923.0, -129620.0),
+            (1, 0, 0, 0, -34720.0, 108743.0),
+            (0, 1, 1, 0, -30383.0, 104755.0),
+            (2, 0, 0, -2, 15327.0, 10321.0),
+            (0, 0, 1, 2, -12528.0, 0.0),
+            (0, 0, 1, -2, 10980.0, 79661.0),
+            (4, 0, -1, 0, 10675.0, -34782.0),
+            (0, 0, 3, 0, 10034.0, -23210.0),
+            (4, 0, -2, 0, 8548.0, -21636.0),
+            (2, 1, -1, 0, -7888.0, 24208.0),
+            (2, 1, 0, 0, -6766.0, 30824.0),
+            (1, 0, -1, 0, -5163.0, -8379.0),
+            (1, 1, 0, 0, 4987.0, -16675.0),
+            (2, -1, 1, 0, 4036.0, -12831.0),
+            (2, 0, 2, 0, 3994.0, -10445.0),
+            (4, 0, 0, 0, 3861.0, -11650.0),
+            (2, 0, -3, 0, 3665.0, 14403.0),
+            (0, 1, -2, 0, -2689.0, -7003.0),
+            (2, 0, -1, 2, -2602.0, 0.0),
+            (2, -1, -2, 0, 2390.0, 10056.0),
+            (1, 0, 1, 0, -2348.0, 6322.0),
+            (2, -2, 0, 0, 2236.0, -9884.0),
+            (0, 1, 2, 0, -2120.0, 5751.0),
+            (0, 2, 0, 0, -2069.0, 0.0),
+            (2, -2, -1, 0, 2048.0, -4950.0),
+            (2, 0, 1, -2, -1773.0, 4130.0),
+            (2, 0, 0, 2, -1595.0, 0.0),
+            (4, -1, -1, 0, 1215.0, -3958.0),
+            (0, 0, 2, 2, -1110.0, 0.0),
+            (3, 0, -1, 0, -892.0, 3258.0),
+            (2, 1, 1, 0, -810.0, 2616.0),
+            (4, -1, -2, 0, 759.0, -1897.0),
+            (0, 2, -1, 0, -713.0, -2117.0),
+            (2, 2, -1, 0, -700.0, 2354.0),
+            (2, 1, -2, 0, 691.0, 0.0),
+            (2, -1, 0, -2, 596.0, 0.0),
+            (4, 0, 1, 0, 549.0, -1423.0),
+            (0, 0, 4, 0, 537.0, -1117.0),
+            (4, -1, 0, 0, 520.0, -1571.0),
+            (1, 0, -2, 0, -487.0, -1739.0),
+            (2, 1, 0, -2, -399.0, 0.0),
+            (0, 0, 2, -2, -381.0, -4421.0),
+            (1, 1, 1, 0, 351.0, 0.0),
+            (3, 0, -2, 0, -340.0, 0.0),
+            (4, 0, -3, 0, 330.0, 0.0),
+            (2, -1, 2, 0, 327.0, 0.0),
+            (0, 2, 1, 0, -323.0, 1165.0),
+            (1, 1, -1, 0, 299.0, 0.0),
+            (2, 0, 3, 0, 394.0, 0.0),
+            (2, 0, -1, -2, 0.0, 8752.0),
+        ],
+        dtype=np.dtype({"names": names, "formats": formats}),
     )
     # return the table of coefficients
     return table_47A
@@ -2774,69 +3110,72 @@ def _meeus_table_47B():
     # column 4: moons argument of latitude
     # column 5: coefficient of the sine term for lunar latitude
     #     units: microdegrees (1e-6 degrees)
+    names = ("D", "M", "Mp", "F", "sigmaB")
+    formats = ("i4", "i4", "i4", "i4", "f8")
     table_47B = np.array(
         [
-            [0, 0, 0, 1, 5128122.0],
-            [0, 0, 1, 1, 280602.0],
-            [0, 0, 1, -1, 277693.0],
-            [2, 0, 0, -1, 173237.0],
-            [2, 0, -1, 1, 55413.0],
-            [2, 0, -1, -1, 46271.0],
-            [2, 0, 0, 1, 32573.0],
-            [0, 0, 2, 1, 17198.0],
-            [2, 0, 1, -1, 9266.0],
-            [0, 0, 2, -1, 8822.0],
-            [2, -1, 0, -1, 8216.0],
-            [2, 0, -2, -1, 4324.0],
-            [2, 0, 1, 1, 4200.0],
-            [2, 1, 0, -1, -3359.0],
-            [2, -1, -1, 1, 2463.0],
-            [2, -1, 0, 1, 2211.0],
-            [2, -1, -1, -1, 2065.0],
-            [0, 1, -1, -1, -1870.0],
-            [4, 0, -1, -1, 1828.0],
-            [0, 1, 0, 1, -1794.0],
-            [0, 0, 0, 3, -1749.0],
-            [0, 1, -1, 1, -1565.0],
-            [1, 0, 0, 1, -1491.0],
-            [0, 1, 1, 1, -1475.0],
-            [0, 1, 1, -1, -1410.0],
-            [0, 1, 0, -1, -1344.0],
-            [1, 0, 0, -1, -1335.0],
-            [0, 0, 3, 1, 1107.0],
-            [4, 0, 0, -1, 1021.0],
-            [4, 0, -1, 1, 833.0],
-            [0, 0, 1, -3, 777.0],
-            [4, 0, -2, 1, 671.0],
-            [2, 0, 0, -3, 607.0],
-            [2, 0, 2, -1, 596.0],
-            [2, -1, 1, -1, 491.0],
-            [2, 0, -2, 1, -451.0],
-            [0, 0, 3, -1, 439.0],
-            [2, 0, 2, 1, 422.0],
-            [2, 0, -3, -1, 421.0],
-            [2, 1, -1, -1, -366.0],
-            [2, 1, 0, 1, -351.0],
-            [4, 0, 0, 1, 331.0],
-            [2, -1, 1, 1, 315.0],
-            [2, -2, 0, -1, 302.0],
-            [0, 0, 1, 3, -283.0],
-            [2, 1, 1, -1, -229.0],
-            [1, 1, 0, -1, 223.0],
-            [1, 1, 0, 1, 223.0],
-            [0, 1, -2, -1, -220.0],
-            [2, 1, -1, 1, -220.0],
-            [1, 0, 1, 1, -185.0],
-            [2, -1, -2, -1, 181.0],
-            [0, 1, 2, 1, -177.0],
-            [4, 0, -2, -1, 176.0],
-            [4, -1, -1, -1, 166.0],
-            [1, 0, 1, -1, -164.0],
-            [4, 0, 1, -1, 132.0],
-            [1, 0, -1, -1, -119.0],
-            [4, -1, 0, -1, 115.0],
-            [2, -2, 0, 1, 107.0],
-        ]
+            (0, 0, 0, 1, 5128122.0),
+            (0, 0, 1, 1, 280602.0),
+            (0, 0, 1, -1, 277693.0),
+            (2, 0, 0, -1, 173237.0),
+            (2, 0, -1, 1, 55413.0),
+            (2, 0, -1, -1, 46271.0),
+            (2, 0, 0, 1, 32573.0),
+            (0, 0, 2, 1, 17198.0),
+            (2, 0, 1, -1, 9266.0),
+            (0, 0, 2, -1, 8822.0),
+            (2, -1, 0, -1, 8216.0),
+            (2, 0, -2, -1, 4324.0),
+            (2, 0, 1, 1, 4200.0),
+            (2, 1, 0, -1, -3359.0),
+            (2, -1, -1, 1, 2463.0),
+            (2, -1, 0, 1, 2211.0),
+            (2, -1, -1, -1, 2065.0),
+            (0, 1, -1, -1, -1870.0),
+            (4, 0, -1, -1, 1828.0),
+            (0, 1, 0, 1, -1794.0),
+            (0, 0, 0, 3, -1749.0),
+            (0, 1, -1, 1, -1565.0),
+            (1, 0, 0, 1, -1491.0),
+            (0, 1, 1, 1, -1475.0),
+            (0, 1, 1, -1, -1410.0),
+            (0, 1, 0, -1, -1344.0),
+            (1, 0, 0, -1, -1335.0),
+            (0, 0, 3, 1, 1107.0),
+            (4, 0, 0, -1, 1021.0),
+            (4, 0, -1, 1, 833.0),
+            (0, 0, 1, -3, 777.0),
+            (4, 0, -2, 1, 671.0),
+            (2, 0, 0, -3, 607.0),
+            (2, 0, 2, -1, 596.0),
+            (2, -1, 1, -1, 491.0),
+            (2, 0, -2, 1, -451.0),
+            (0, 0, 3, -1, 439.0),
+            (2, 0, 2, 1, 422.0),
+            (2, 0, -3, -1, 421.0),
+            (2, 1, -1, -1, -366.0),
+            (2, 1, 0, 1, -351.0),
+            (4, 0, 0, 1, 331.0),
+            (2, -1, 1, 1, 315.0),
+            (2, -2, 0, -1, 302.0),
+            (0, 0, 1, 3, -283.0),
+            (2, 1, 1, -1, -229.0),
+            (1, 1, 0, -1, 223.0),
+            (1, 1, 0, 1, 223.0),
+            (0, 1, -2, -1, -220.0),
+            (2, 1, -1, 1, -220.0),
+            (1, 0, 1, 1, -185.0),
+            (2, -1, -2, -1, 181.0),
+            (0, 1, 2, 1, -177.0),
+            (4, 0, -2, -1, 176.0),
+            (4, -1, -1, -1, 166.0),
+            (1, 0, 1, -1, -164.0),
+            (4, 0, 1, -1, 132.0),
+            (1, 0, -1, -1, -119.0),
+            (4, -1, 0, -1, 115.0),
+            (2, -2, 0, 1, 107.0),
+        ],
+        dtype=np.dtype({"names": names, "formats": formats}),
     )
     # return the table of coefficients
     return table_47B
@@ -2871,23 +3210,23 @@ def _parse_table_5_2e():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
@@ -2934,23 +3273,23 @@ def _parse_table_5_3a():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms
@@ -2997,23 +3336,23 @@ def _parse_table_5_3b():
         "p_A",
     )
     formats = (
-        "i",
-        "f",
-        "f",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
-        "i",
+        "i4",
+        "f8",
+        "f8",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
+        "i4",
     )
     dtype = np.dtype({"names": names, "formats": formats})
     # j = 0 terms

@@ -3,12 +3,18 @@ import pyTMD.astro
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 fig, ax1 = plt.subplots(
     num=1,
     ncols=2,
     figsize=(9.0, 4.5),
     subplot_kw={"projection": "3d"},
-    facecolor="#fcfcfc",
 )
 
 # quiver arrow radius
@@ -39,7 +45,7 @@ for ax in fig.axes:
         x, y, z = pyTMD.astro._cartesian(
             np.radians(p), np.radians(lons), inclination=-epsilon
         )
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
     # meridians at 30 degree intervals
     for m in np.arange(0, 360, 30):
@@ -48,7 +54,7 @@ for ax in fig.axes:
             np.radians(m),
             inclination=-epsilon,
         )
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
     # Ecliptic pole
     ax.quiver(
@@ -67,9 +73,9 @@ for ax in fig.axes:
         0.0,
         arrow_radius + 0.1,
         "Ecliptic Pole",
-        ha="center",
-        va="bottom",
-        fontsize=9,
+        horizontalalignment="center",
+        verticalalignment="bottom",
+        fontsize=10,
         color="mediumseagreen",
     )
     x, y, z = pyTMD.astro._cartesian(0, np.radians(lons))
@@ -78,8 +84,8 @@ for ax in fig.axes:
         y,
         z,
         color="mediumseagreen",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
         label="Ecliptic",
     )
 
@@ -100,9 +106,9 @@ for ax in fig.axes:
         arrow_radius * np.sin(epsilon) + 0.1,
         arrow_radius * np.cos(epsilon) + 0.1,
         "CNP",
-        va="center",
-        ha="center",
-        fontsize=9,
+        verticalalignment="center",
+        horizontalalignment="center",
+        fontsize=10,
         color="k",
     )
 
@@ -115,7 +121,7 @@ for ax in fig.axes:
         0,
         0,
         color="darkorchid",
-        lw=0.5,
+        linewidth=0.5,
         arrow_length_ratio=0.07,
         label="Vernal Equinox",
         zorder=4,
@@ -124,10 +130,10 @@ for ax in fig.axes:
         arrow_radius + 0.1,
         0.0,
         0.0,
-        "\u2648",
-        ha="center",
-        va="center",
-        fontsize=9,
+        r"$\Upsilon$",
+        horizontalalignment="center",
+        verticalalignment="center",
+        fontsize=10,
         color="darkorchid",
     )
 
@@ -147,7 +153,7 @@ ax1[0].plot(
     y,
     z,
     color="red",
-    lw=0.8,
+    linewidth=0.8,
     linestyle="--",
     label="Lunar Orbit",
 )
@@ -160,9 +166,9 @@ ax1[0].text(
     arrow_radius * SY[0],
     arrow_radius * SZ[0],
     "Moon",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="red",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -193,9 +199,9 @@ ax1[1].text(
     arrow_radius * HY[0],
     arrow_radius * HZ[0],
     "Sun",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="red",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -216,10 +222,8 @@ ax1[1].fill_between(
 )
 
 for ax in fig.axes:
-    # set the axes facecolor
-    ax.set_facecolor("#fcfcfc")
     # add legend
-    ax.legend(loc="lower left", fontsize=9, frameon=False)
+    ax.legend(loc="lower left", fontsize=10, frameon=False)
     # set the aspect ratio and view angle
     ax.set_xlim(-0.8, 0.8)
     ax.set_ylim(-0.8, 0.8)

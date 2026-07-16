@@ -4,11 +4,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 fig, ax = plt.subplots(
     num=1,
     figsize=(4.5, 4.5),
     subplot_kw={"projection": "3d"},
-    facecolor="#fcfcfc",
 )
 
 # quiver arrow radius
@@ -51,33 +57,49 @@ for p in np.arange(-60, 90, 30):
             y,
             z,
             color="darkorange",
-            lw=0.8,
-            ls="--",
+            linewidth=0.8,
+            linestyle="--",
             label="Celestial Equator",
         )
     else:
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
 # meridians at 30 degree intervals
 for m in np.arange(0, 360, 30):
     x, y, z = pyTMD.astro._cartesian(np.radians(lats), np.radians(m))
-    ax.plot(x, y, z, color="0.4", lw=0.5)
+    ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
 # celestial pole
 ax.quiver(
-    0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    0,
+    0,
+    arrow_radius,
+    color="k",
+    linewidth=0.5,
+    arrow_length_ratio=0.07,
 )
 ax.quiver(
-    0, 0, 0, 0, 0, -arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    0,
+    0,
+    -arrow_radius,
+    color="k",
+    linewidth=0.5,
+    arrow_length_ratio=0.07,
 )
 ax.text(
     0.0,
     0.0,
     arrow_radius + 0.1,
     "NCP",
-    ha="center",
-    va="bottom",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="bottom",
+    fontsize=10,
     color="k",
 )
 ax.text(
@@ -85,9 +107,9 @@ ax.text(
     0.0,
     -arrow_radius - 0.1,
     "SCP",
-    ha="center",
-    va="top",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="top",
+    fontsize=10,
     color="k",
 )
 
@@ -107,7 +129,7 @@ ax.plot(
     y[above],
     z[above],
     color="red",
-    lw=0.8,
+    linewidth=0.8,
     linestyle="--",
     label="Lunar Orbit (Major)",
 )
@@ -116,7 +138,7 @@ ax.plot(
     y[~above],
     z[~above],
     color="red",
-    lw=0.8,
+    linewidth=0.8,
     linestyle=":",
 )
 ax.plot_surface(LX + x[90], LY + y[90], LZ + z[90], color="red", alpha=0.3)
@@ -131,7 +153,7 @@ ax.plot(
     y[above],
     z[above],
     color="darkorchid",
-    lw=0.8,
+    linewidth=0.8,
     linestyle="--",
     label="Lunar Orbit (Minor)",
 )
@@ -140,17 +162,19 @@ ax.plot(
     y[~above],
     z[~above],
     color="darkorchid",
-    lw=0.8,
+    linewidth=0.8,
     linestyle=":",
 )
 ax.plot_surface(
-    LX + x[90], LY + y[90], LZ + z[90], color="darkorchid", alpha=0.3
+    LX + x[90],
+    LY + y[90],
+    LZ + z[90],
+    color="darkorchid",
+    alpha=0.3,
 )
 
 # add legend
-ax.legend(loc="lower left", fontsize=9, frameon=False)
-# set the axes facecolor
-ax.set_facecolor("#fcfcfc")
+ax.legend(loc="lower left", fontsize=10, frameon=False)
 # set the aspect ratio and view angle
 ax.set_xlim(-0.8, 0.8)
 ax.set_ylim(-0.8, 0.8)

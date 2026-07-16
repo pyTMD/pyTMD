@@ -3,6 +3,12 @@ import pyTMD.constituents
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # number of periods
 N = 5000
 # calculate over diurnal range
@@ -32,7 +38,6 @@ fig, ax = plt.subplots(
     nrows=2,
     sharex=True,
     figsize=(6, 3.5),
-    facecolor="#fcfcfc",
 )
 
 # tidal factors from combinations of Love numbers

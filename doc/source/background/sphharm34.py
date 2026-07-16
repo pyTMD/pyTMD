@@ -4,6 +4,13 @@ import xarray as xr
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # latitude and longitude
 dlon, dlat = 0.625, 0.5
 lat = np.arange(-90 + dlat / 2.0, 90 + dlat / 2.0, dlat)
@@ -22,7 +29,7 @@ ncols = lmax + 1
 projection = ccrs.Orthographic(central_longitude=0.0, central_latitude=0.0)
 
 # plot spherical harmonics
-fig = plt.figure(num=1, figsize=(10, 4.75), facecolor="#fcfcfc")
+fig = plt.figure(num=1, figsize=(10, 4.75))
 for n, l in enumerate(range(lmin, lmax + 1)):
     for tau in range(0, l + 1):
         # setup subplot
@@ -45,8 +52,6 @@ for n, l in enumerate(range(lmin, lmax + 1)):
         ax.coastlines("50m")
         # set global view
         ax.set_global()
-        # set the axes facecolor
-        ax.set_facecolor("#fcfcfc")
         # turn off the axis
         ax.set_axis_off()
 

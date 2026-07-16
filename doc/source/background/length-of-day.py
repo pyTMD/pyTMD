@@ -4,6 +4,12 @@ import timescale
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 # MJD dates from Ray and Erofeeva (2014) at daily resolution
 MJD1 = np.arange(37680, 55021)
 # MJD dates from Ray (1994) at minute resolution
@@ -15,7 +21,6 @@ fig, ax = plt.subplots(
     nrows=2,
     sharex=False,
     figsize=(8, 4),
-    facecolor="#fcfcfc",
 )
 
 # predict rotation rate variations for the time period of Ray (1994)

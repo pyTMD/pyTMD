@@ -3,11 +3,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# adjust style
+facecolor = "#fcfcfc"
+plt.rcParams["figure.facecolor"] = facecolor
+plt.rcParams["axes.facecolor"] = facecolor
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Lato"]
+
 fig, ax = plt.subplots(
     num=1,
     figsize=(4.5, 4.5),
     subplot_kw={"projection": "3d"},
-    facecolor="#fcfcfc",
 )
 
 # quiver arrow radius
@@ -32,7 +38,7 @@ ax.quiver(
     y,
     z,
     color="mediumseagreen",
-    lw=0.8,
+    linewidth=0.8,
     arrow_length_ratio=0.07,
 )
 ax.text(
@@ -40,9 +46,9 @@ ax.text(
     y + 0.15,
     z + 0.15,
     "(\u03c6, \u03bb)",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="mediumseagreen",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -52,14 +58,14 @@ ml = pyTMD.interpolate.slerp(x, y, z, np.cos(lon), np.sin(lon), 0.0)
 ax.plot(
     *mu,
     color="mediumseagreen",
-    lw=0.8,
-    ls="--",
+    linewidth=0.8,
+    linestyle="--",
 )
 ax.plot(
     *ml,
     color="mediumseagreen",
-    lw=0.8,
-    ls="--",
+    linewidth=0.8,
+    linestyle="--",
 )
 
 # cartesian coordinates
@@ -71,33 +77,33 @@ for i in range(4):
         [j * y, j * y],
         [k * z, k * z],
         color="darkorchid",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     ax.plot(
         [j * x, j * x],
         [0, y],
         [k * z, k * z],
         color="darkorange",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
     ax.plot(
         [j * x, j * x],
         [k * y, k * y],
         [0, z],
         color="red",
-        lw=0.8,
-        ls="--",
+        linewidth=0.8,
+        linestyle="--",
     )
 ax.text(
     0.5 * x,
     y,
     0,
     "X",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="darkorchid",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -106,9 +112,9 @@ ax.text(
     0.5 * y,
     0,
     "Y",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="darkorange",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -117,9 +123,9 @@ ax.text(
     y,
     0.5 * z,
     "Z",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="red",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -128,9 +134,9 @@ ax.text(
     0.5 * y,
     0.5 * z + 0.05,
     "r",
-    ha="center",
-    va="center",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="center",
+    fontsize=10,
     color="mediumseagreen",
     bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
@@ -167,9 +173,9 @@ for p in np.arange(-60, 90, 30):
     x, y, z = pyTMD.astro._cartesian(np.radians(p), np.radians(lons))
     # plot the equator in black and the other parallels in gray
     if p == 0:
-        ax.plot(x, y, z, color="k", lw=0.8)
+        ax.plot(x, y, z, color="k", linewidth=0.8)
     else:
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
 # meridians at 30 degree intervals
 for m in np.arange(0, 360, 30):
@@ -177,19 +183,43 @@ for m in np.arange(0, 360, 30):
     # plot the prime meridian and 180 degree meridian in black
     # and the other meridians in gray
     if m == 0 or m == 180:
-        ax.plot(x, y, z, color="k", lw=0.8)
+        ax.plot(x, y, z, color="k", linewidth=0.8)
     else:
-        ax.plot(x, y, z, color="0.4", lw=0.5)
+        ax.plot(x, y, z, color="0.4", linewidth=0.5)
 
 # cartesian axes
 ax.quiver(
-    0, 0, 0, arrow_radius, 0, 0, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    arrow_radius,
+    0,
+    0,
+    color="k",
+    linewidth=0.5,
+    arrow_length_ratio=0.07,
 )
 ax.quiver(
-    0, 0, 0, 0, arrow_radius, 0, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    0,
+    arrow_radius,
+    0,
+    color="k",
+    linewidth=0.5,
+    arrow_length_ratio=0.07,
 )
 ax.quiver(
-    0, 0, 0, 0, 0, arrow_radius, color="k", lw=0.5, arrow_length_ratio=0.07
+    0,
+    0,
+    0,
+    0,
+    0,
+    arrow_radius,
+    color="k",
+    linewidth=0.5,
+    arrow_length_ratio=0.07,
 )
 
 ax.text(
@@ -197,9 +227,9 @@ ax.text(
     0.0,
     0.0,
     "x",
-    ha="center",
-    va="bottom",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="bottom",
+    fontsize=10,
     color="k",
 )
 ax.text(
@@ -207,9 +237,9 @@ ax.text(
     arrow_radius + 0.1,
     0.0,
     "y",
-    ha="center",
-    va="bottom",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="bottom",
+    fontsize=10,
     color="k",
 )
 ax.text(
@@ -217,14 +247,12 @@ ax.text(
     0.0,
     arrow_radius + 0.1,
     "z",
-    ha="center",
-    va="bottom",
-    fontsize=9,
+    horizontalalignment="center",
+    verticalalignment="bottom",
+    fontsize=10,
     color="k",
 )
 
-# set the axes facecolor
-ax.set_facecolor("#fcfcfc")
 # set the aspect ratio and view angle
 ax.set_xlim(-0.8, 0.8)
 ax.set_ylim(-0.8, 0.8)

@@ -54,6 +54,8 @@
 
 .. autofunction:: pyTMD.astro.gast
 
+.. autofunction:: pyTMD.astro.eqeq
+
 .. autofunction:: pyTMD.astro.itrs
 
 .. autofunction:: pyTMD.astro._cartesian
@@ -73,6 +75,8 @@
 .. autofunction:: pyTMD.astro._precession_matrix
 
 .. autofunction:: pyTMD.astro._correct_aberration
+
+.. autofunction:: pyTMD.astro._meeus_table_22A
 
 .. autofunction:: pyTMD.astro._meeus_table_47A
 

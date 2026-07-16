@@ -37,6 +37,8 @@ def download_nodes(N=324, cleanup=False):
     try:
         URL = pyTMD.utilities.URL.from_parts(HOST)
         URL.get(local=filepath.joinpath(matfile), verbose=True)
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     # run tests
