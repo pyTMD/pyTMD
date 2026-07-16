@@ -39,15 +39,17 @@ def cartesian(
 
 
 # create figure and subplots
-fig, ax1 = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(10, 5))
+fig, ax1 = plt.subplots(ncols=2, figsize=(10, 5))
 
 # central point
 for ax in ax1:
     ax.scatter(0, 0, color="k", s=5)
+    ax.axvline(0.0, color="0.4", linewidth=0.5, linestyle="--", dashes=(5, 5))
+    ax.axhline(0.0, color="0.4", linewidth=0.5, linestyle="--", dashes=(5, 5))
 
 # Earth
-radius = 0.1
-x, y = cartesian(np.linspace(0, 180, 180), radius=radius)
+rad_e = 0.1
+x, y = cartesian(np.linspace(0, 180, 180), radius=rad_e)
 ax1[0].fill_between(x, y, y2=-y, color="dodgerblue", alpha=0.3)
 ax1[0].text(
     0,
@@ -57,21 +59,23 @@ ax1[0].text(
     horizontalalignment="center",
     verticalalignment="top",
     fontsize=10,
+    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
 
 # lunar ellipsoidal parameters
 a_axis = 1.0  # semi-major axis
-ecc = 0.5  # eccentricity of ellipse
+ecc = 0.25  # eccentricity of ellipse
 b_axis = a_axis * np.sqrt(1.0 - ecc**2)  # semi-minor axis
-xy = (-0.1, 0.0)  # center point
+focus = np.sqrt(a_axis**2 - b_axis**2)
+xy = (-focus, 0.0)  # center point
 
 # actual lunar orbit
-x, y = pyTMD.ellipse._xy(a_axis, b_axis, 0, xy=xy)
+x, y = pyTMD.ellipse._xy(a_axis, b_axis, 0, xy=xy, N=180)
 ax1[0].plot(x, y, color="red", linewidth=0.8, linestyle="--")
 ax1[0].annotate(
     "True Lunar\nOrbit",
-    xy=(xy[0], b_axis),
-    xytext=(-0.3, 0.5),
+    xy=(x[20], y[20]),
+    xytext=(0.25, 0.4),
     color="red",
     horizontalalignment="center",
     verticalalignment="top",
@@ -85,8 +89,8 @@ x, y = cartesian(np.linspace(0, 360, 180), radius=distance)
 ax1[0].plot(x, y, color="0.4", linewidth=0.7, linestyle="--")
 ax1[0].annotate(
     "Average Lunar\nDistance",
-    xy=(np.sqrt(0.5) * distance, -np.sqrt(0.5) * distance),
-    xytext=(0.9, -0.9),
+    xy=(x[110], y[110]),
+    xytext=(-0.4, -0.4),
     color="0.4",
     horizontalalignment="center",
     verticalalignment="top",
@@ -105,7 +109,7 @@ ax1[0].fill_between(apogee_x + x, y, y2=-y, color="mediumseagreen", alpha=0.3)
 ax1[0].annotate(
     "",
     xy=(apogee_x, 0),
-    xytext=(-0.1, 0),
+    xytext=(-rad_e, 0),
     color="mediumseagreen",
     horizontalalignment="right",
     verticalalignment="center",
@@ -114,7 +118,7 @@ ax1[0].annotate(
     ),
 )
 ax1[0].text(
-    (apogee_x - 0.1) / 2.0,
+    (apogee_x - rad_e) / 2.0,
     0.01,
     "Apogee",
     color="mediumseagreen",
@@ -129,14 +133,14 @@ ax1[0].fill_between(perigee_x + x, y, y2=-y, color="darkorchid", alpha=0.3)
 ax1[0].annotate(
     "",
     xy=(perigee_x, 0),
-    xytext=(0.1, 0),
+    xytext=(rad_e, 0),
     color="darkorchid",
     horizontalalignment="right",
     verticalalignment="center",
     arrowprops=dict(arrowstyle="<->", color="darkorchid", mutation_scale=15),
 )
 ax1[0].text(
-    (perigee_x + 0.1) / 2.0,
+    (perigee_x + rad_e) / 2.0,
     0.01,
     "Perigee",
     color="darkorchid",
@@ -146,8 +150,8 @@ ax1[0].text(
 )
 
 # Sun
-radius = 0.1
-x, y = cartesian(np.linspace(0, 180, 180), radius=radius)
+rad_s = 0.1
+x, y = cartesian(np.linspace(0, 180, 180), radius=rad_s)
 ax1[1].fill_between(x, y, y2=-y, color="darkorange", alpha=0.3)
 ax1[1].text(
     0,
@@ -157,6 +161,7 @@ ax1[1].text(
     horizontalalignment="center",
     verticalalignment="top",
     fontsize=10,
+    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
 )
 
 
@@ -164,21 +169,27 @@ ax1[1].text(
 a_axis = 1.0  # semi-major axis
 ecc = 0.25  # eccentricity of ellipse
 b_axis = a_axis * np.sqrt(1.0 - ecc**2)  # semi-minor axis
-xy = (0.1, 0.0)  # center point
+focus = np.sqrt(a_axis**2 - b_axis**2)
+xy = (focus, 0.0)  # center point
 
 # actual orbit
-x, y = pyTMD.ellipse._xy(a_axis, b_axis, 0, xy=xy)
+x, y = pyTMD.ellipse._xy(a_axis, b_axis, 0, xy=xy, N=180)
 ax1[1].plot(x, y, color="dodgerblue", linewidth=0.8, linestyle="--")
 ax1[1].annotate(
-    "Earth\nOrbit",
-    xy=(xy[0], b_axis),
-    xytext=(0.4, 0.6),
+    "True Earth\nOrbit",
+    xy=(x[20], y[20]),
+    xytext=(0.6, 0.4),
     color="dodgerblue",
     horizontalalignment="center",
     verticalalignment="top",
     fontsize=10,
     arrowprops=dict(arrowstyle="->", color="dodgerblue", mutation_scale=15),
 )
+
+# Earth mean distance
+distance = np.sqrt(0.5 * (a_axis**2 + b_axis**2))
+x, y = cartesian(np.linspace(0, 360, 180), radius=distance)
+ax1[1].plot(x, y, visible=False)
 
 # exaggerated size of the earth
 rad_e = 0.02
@@ -191,7 +202,7 @@ ax1[1].fill_between(aphelion_x + x, y, y2=-y, color="mediumseagreen", alpha=0.3)
 ax1[1].annotate(
     "",
     xy=(aphelion_x, 0),
-    xytext=(0.1, 0),
+    xytext=(rad_s, 0),
     color="mediumseagreen",
     horizontalalignment="right",
     verticalalignment="center",
@@ -200,7 +211,7 @@ ax1[1].annotate(
     ),
 )
 ax1[1].text(
-    (aphelion_x + 0.1) / 2.0,
+    (aphelion_x + rad_s) / 2.0,
     0.01,
     "Aphelion",
     color="mediumseagreen",
@@ -215,14 +226,14 @@ ax1[1].fill_between(perihelion_x + x, y, y2=-y, color="darkorchid", alpha=0.3)
 ax1[1].annotate(
     "",
     xy=(perihelion_x, 0),
-    xytext=(-0.1, 0),
+    xytext=(-rad_s, 0),
     color="darkorchid",
     horizontalalignment="right",
     verticalalignment="center",
     arrowprops=dict(arrowstyle="<->", color="darkorchid", mutation_scale=15),
 )
 ax1[1].text(
-    (perihelion_x - 0.1) / 2.0,
+    (perihelion_x - rad_s) / 2.0,
     0.01,
     "Perihelion",
     color="darkorchid",
@@ -231,8 +242,12 @@ ax1[1].text(
     fontsize=10,
 )
 
+# set x and y limits
 # turn off axes
+ax1[0].set_xlim(-1.35, 1.0)
+ax1[1].set_xlim(-1.0, 1.35)
 for ax in ax1:
+    ax.set_ylim(-1.2, 1.2)
     ax.set_aspect("equal")
     ax.axis("off")
 
