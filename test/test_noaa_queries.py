@@ -30,10 +30,12 @@ def test_noaa_stations():
     try:
         stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
             namespaces=namespaces, stylesheet=stylesheet)
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     except ValueError as exc:
-        pytest.xfail(exc.reason)
+        pytest.xfail(exc)
     # check that latitude and longitude columns are in list
     expected_columns = ['ID', 'lat', 'long', 'name']
     assert sorted(stations.columns.tolist()) == expected_columns
@@ -42,6 +44,8 @@ def test_noaa_stations():
     # try from wrapper function
     try:
         df = pyTMD.io.NOAA.prediction_stations(active_only=False)
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     # check that latitude and longitude columns are in list
@@ -61,10 +65,12 @@ def test_noaa_active_stations():
     try:
         stations = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
             namespaces=namespaces, stylesheet=stylesheet)
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     except ValueError as exc:
-        pytest.xfail(exc.reason)
+        pytest.xfail(exc)
     # check that latitude and longitude columns are in list
     expected_columns = ['ID', 'date_established', 'lat', 'long',
         'name', 'parameter', 'state']
@@ -74,7 +80,7 @@ def test_noaa_active_stations():
         df = pyTMD.io.NOAA.active_stations()
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
-    except ValueError as exc:
+    except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     # check that latitude and longitude columns are in list
     # note that the name is the index and not an available column
@@ -97,10 +103,12 @@ def test_noaa_harmonic_constituents():
     try:
         hcons = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
             namespaces=namespaces).set_index('constNum')
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     except ValueError as exc:
-        pytest.xfail(exc.reason)
+        pytest.xfail(exc)
     # check if the values match expected
     expected_columns = ['amplitude', 'name', 'phase', 'speed']
     assert sorted(hcons.columns.tolist()) == expected_columns
@@ -142,10 +150,12 @@ def test_noaa_water_level():
     try:
         wlevel = pyTMD.io.NOAA.from_xml(url, xpath=xpath,
             namespaces=namespaces, parse_dates=['timeStamp'])
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     except ValueError as exc:
-        pytest.xfail(exc.reason)
+        pytest.xfail(exc)
     expected_columns = sorted(['timeStamp', 'WL', 'sigma', 'I', 'L'])
     expected_WL = np.array([-0.2, -0.438, -0.571, -0.65, -0.589,
         -0.447, -0.278, -0.026, 0.159, 0.28, 0.341, 0.299, 0.246,
@@ -159,10 +169,12 @@ def test_noaa_water_level():
     try:
         df = pyTMD.io.NOAA.water_level(api, stationId=station_id,
             beginDate=startdate, endDate=enddate)
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
     except ValueError as exc:
-        pytest.xfail(exc.reason)
+        pytest.xfail(exc)
     # check if the values match expected
     assert sorted(df.columns.tolist()) == expected_columns
     assert df['timeStamp'][0] == np.datetime64('2020-01-01')

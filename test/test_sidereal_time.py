@@ -45,6 +45,8 @@ def test_usno_sidereal_time(method):
     # get data from API
     try:
         results = url.load()
+    except pyTMD.utilities.urllib2.URLError as exc:
+        pytest.xfail(exc.reason)
     except pyTMD.utilities.urllib2.HTTPError as exc:
         pytest.xfail(exc.reason)
 
