@@ -48,8 +48,8 @@ for leap in leaps:
     )
     ax[0].axvline(ts.year[ii], color=l.get_color(), linewidth=0.5)
 # set axis labels
-ax[0].set_ylabel("UT1-UTC [s]", labelpad=2)
-ax[1].set_ylabel("TT-UT1 [s]")
+ax[0].set_ylabel("UT1\u2013UTC [s]", labelpad=2)
+ax[1].set_ylabel("TT\u2013UT1 [s]")
 ax[1].set_xlabel("Time [yr]")
 labels = ["a)", "b)"]
 for i, label in enumerate(labels):

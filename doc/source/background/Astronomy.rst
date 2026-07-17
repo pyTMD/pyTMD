@@ -80,6 +80,38 @@ The difference between Greenwich Apparent Sidereal Time (GAST) and Greenwich Mea
     :caption: Ecliptical Plane and Vernal Equinox in the Celestial Sphere
     :align: center
 
+Precession
+==========
+
+.. _nodal-precession:
+
+Nodal Precession
+----------------
+
+The :term:`precession <Precession>` of the Moon's orbital plane causes the maximum declination of the Moon to vary between approximately 18 and 28 degrees, with the average equal to the Earth's equatorial inclination (approximately 23 degrees) :cite:p:`Schureman:1958ty`.
+One revolution of this precession is completed approximately every 18.6 years :cite:p:`Dronkers:1975hm`.
+When the Moon is at its maximum declination, the difference in tide potential causes the (lunar) diurnal tides to be at their largest.
+Conversely, when the Moon is at its minimum declination, the difference causes the (lunar) semi-diurnal tides to be at their largest.
+
+.. plot:: ./background/lunar-nodal-cycle.py
+    :caption: Lunar Orbits over the 18.6-year Nodal Cycle
+    :align: center
+
+.. _apsidal-precession:
+
+Apsidal Precession
+------------------
+
+The orbits of the Moon around the Earth and the Earth around the Sun are both elliptical.
+For the moon around the Earth, the closest point is called the :term:`perigee <Perigee>` and the furthest point is called the :term:`apogee <Apogee>`.
+Whereas for the Earth around the Sun, :term:`perihelion <Perihelion>` is the closest point and :term:`aphelion <Aphelion>` the furthest point.
+The line connecting the :term:`perigee <Perigee>` and :term:`apogee <Apogee>` (or :term:`perihelion <Perihelion>` and :term:`aphelion <Aphelion>`) is called the :term:`apsides <Apsides>` line and it :term:`precesses <Precession>` with respect to the vernal equinox.
+One revolution of the apsidal precession is completed approximately every 8.8 years for the Moon around the Earth and after 21,000 years for Earth around the Sun :cite:p:`Schureman:1958ty,Dronkers:1975hm`.
+These :term:`precessions <Precession>` independently affects tidal signals [see :ref:`astronomical-arguments`], and :ref:`modulate <nodal-modulations>` the amplitude and phase of other tidal constituents :cite:p:`Dronkers:1975hm`.
+
+.. plot:: ./background/perigee-perihelion.py
+    :caption: Lunar Perigee and Solar Perihelion
+    :align: center
 
 .. _astronomical-arguments:
 
@@ -109,13 +141,13 @@ The rates of change of these arguments are the fundamental frequencies of the as
       - mean longitude of the Sun
       - 365.2549 days
     * - :math:`P`
-      - lunar perigee
+      - mean longitude of lunar perigee
       - 8.847 years
     * - :math:`N`
-      - ascending lunar node
+      - mean longitude of ascending lunar node
       - 18.61 years
     * - :math:`Ps`
-      - solar perigee
+      - mean longitude of solar perigee
       - 21,000 years
 
 .. plot:: ./background/mean-longitudes.py
@@ -155,7 +187,7 @@ When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay argu
       - mean elongation of the Moon from the Sun
       - 29.5306 days
     * - :math:`\Omega`
-      - ascending lunar node
+      - mean longitude of ascending lunar node
       - 18.61 years
 
 From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:

@@ -107,7 +107,7 @@ Nodal Corrections
 =================
 
 The nodal corrections :math:`f_k(t)` and :math:`u_k(t)` are evaluated at each observation time and included directly into the design matrix :ref:`Equation 5.2 <eq:5.2>`.
-The amplitude :math:`\hat{A}_k`  and phase :math:`\hat{\theta}_k` estimated from the least-squares solution represent those at a "standard" epoch, and, in a perfect solution, free of the 18.6-year nodal modulation [see :ref:`nodal-corrections` in :ref:`ocean-load-tides`].
+The amplitude :math:`\hat{A}_k`  and phase :math:`\hat{\theta}_k` estimated from the least-squares solution represent those at a "standard" epoch, and, in a perfect solution, free of the 18.6-year nodal modulation [see :ref:`nodal-modulations` in :ref:`ocean-load-tides`].
 The fitted harmonic constants should be able to be directly compared with outputs from tide models or tide tables.
 
 Minor Constituent Inference

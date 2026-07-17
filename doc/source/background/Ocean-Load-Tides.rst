@@ -42,21 +42,14 @@ Ocean tide models are typically one of following categories:
 
     ``pyTMD`` is not an ocean or load tide model, but rather a tool for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
 
-.. _nodal-corrections:
+.. _nodal-modulations:
 
 Nodal Modulations
 =================
 
-The Moon's orbital plane precesses (rotates) in space and completes one revolution approximately every 18.6 years :cite:p:`Dronkers:1975hm`.
-This precession causes the maximum declination of the Moon to vary between approximately 18 and 28 degrees, with the average equal to the Earth's equatorial inclination (approximately 23 degrees) :cite:p:`Schureman:1958ty`.
-When the Moon is at its maximum declination, the difference in tide potential causes the (lunar) diurnal tides to be at their largest.
-Conversely, when the Moon is at its minimum declination, the difference causes the (lunar) semi-diurnal tides to be at their largest.
-The Moon's perigee also varies with a period of approximately 8.8 years, which causes (smaller) modulations in tidal amplitudes :cite:p:`Dronkers:1975hm`.
-Both of these modulations need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations [see :term:`nodal corrections <Nodal Corrections>`].
-
-.. plot:: ./background/lunar-nodal-cycle.py
-    :caption: Lunar Orbits over the 18.6-year Nodal Cycle
-    :align: center
+The Moon's orbital plane :term:`precesses <Precession>` (rotates) in space and completes one revolution approximately every 18.6 years [see :ref:`nodal-precession`].
+The Moon's :term:`perigee <Perigee>` also varies and completes a revolution approximately every 8.8 years [see :ref:`apsidal-precession`].
+Both of these induce :term:`modulations <Nodal Corrections>` in tidal amplitudes that need to be taken into account to properly predict the tidal amplitudes at a given time, or to solve for tidal constituents from long-term observations :cite:p:`Dronkers:1975hm`.
 
 .. _equilibrium-theory:
 
@@ -106,6 +99,10 @@ The high and low waters correspond to maxima and minima of the tidal time series
 :py:func:`pyTMD.predict.find_peaks` detects the location of these peaks (and troughs) by numerically differentiating the time series :math:`\partial h / \partial t` and then identifying zero crossings of first derivative.
 Zero crossings with a negative gradient correspond to high water (maxima) and those with a positive gradient correspond to low water (minima).
 Note that the accuracies of these detected extrema are directly dependent on the temporal resolution of the prediction data.
+
+.. plot:: ./background/high-low-water.py
+    :caption: Detecting high and low tides
+    :align: center
 
 .. important::
 

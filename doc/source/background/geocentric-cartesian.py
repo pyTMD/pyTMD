@@ -18,6 +18,8 @@ fig, ax = plt.subplots(
 
 # quiver arrow radius
 arrow_radius = 1.25
+# bounding box style
+bbox = dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor, alpha=0.8)
 
 # circles for the sphere
 lons = np.linspace(0, 360, 360)
@@ -50,7 +52,7 @@ ax.text(
     verticalalignment="center",
     fontsize=10,
     color="mediumseagreen",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 # meridian from pole to position
 mu = pyTMD.interpolate.slerp(0, 0, 1, x, y, z)
@@ -105,7 +107,7 @@ ax.text(
     verticalalignment="center",
     fontsize=10,
     color="darkorchid",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 ax.text(
     x,
@@ -116,7 +118,7 @@ ax.text(
     verticalalignment="center",
     fontsize=10,
     color="darkorange",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 ax.text(
     x,
@@ -127,7 +129,7 @@ ax.text(
     verticalalignment="center",
     fontsize=10,
     color="red",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 ax.text(
     0.5 * x,
@@ -138,7 +140,7 @@ ax.text(
     verticalalignment="center",
     fontsize=10,
     color="mediumseagreen",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 
 # fill in the quadrants
