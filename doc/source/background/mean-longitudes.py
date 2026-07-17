@@ -19,6 +19,9 @@ fig, ax1 = plt.subplots(
 
 # quiver arrow radius
 arrow_radius = 1.25
+# bounding box style
+bbox = dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor, alpha=0.8)
+
 # circles for the sphere
 lons = np.linspace(0, 360, 360)
 lats = np.linspace(-90, 90, 180)
@@ -170,7 +173,7 @@ ax1[0].text(
     verticalalignment="center",
     fontsize=10,
     color="red",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 # mean longitudes of the Moon (S)
 sx, sy, sz = pyTMD.interpolate.slerp(1, 0, 0, SX[0], SY[0], 0, n=120)
@@ -203,7 +206,7 @@ ax1[1].text(
     verticalalignment="center",
     fontsize=10,
     color="red",
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bbox,
 )
 # mean longitudes of the Sun (H)
 hx, hy, hz = pyTMD.interpolate.slerp(1, 0, 0, HX[0], HY[0], 0, n=120)

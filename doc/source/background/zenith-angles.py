@@ -20,6 +20,8 @@ fig, ax1 = plt.subplots(
 
 # quiver arrow radius
 arrow_radius = 1.25
+# bounding box style
+bbox = dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor, alpha=0.8)
 
 # observer position in radians
 lat = np.radians(38.992222)  # observer latitude
@@ -79,7 +81,7 @@ for ax in fig.axes:
         verticalalignment="center",
         fontsize=10,
         color="darkorchid",
-        bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+        bbox=bbox,
     )
 
     # body positions
@@ -107,7 +109,7 @@ for ax in fig.axes:
         verticalalignment="center",
         fontsize=10,
         color="mediumseagreen",
-        bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+        bbox=bbox,
     )
     # body positions
     SX, SY, SZ = pyTMD.astro._cartesian(
@@ -134,7 +136,7 @@ for ax in fig.axes:
         verticalalignment="center",
         fontsize=10,
         color="dodgerblue",
-        bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+        bbox=bbox,
     )
 
     # meridian from celestial pole to observer position

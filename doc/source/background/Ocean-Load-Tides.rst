@@ -100,6 +100,10 @@ The high and low waters correspond to maxima and minima of the tidal time series
 Zero crossings with a negative gradient correspond to high water (maxima) and those with a positive gradient correspond to low water (minima).
 Note that the accuracies of these detected extrema are directly dependent on the temporal resolution of the prediction data.
 
+.. plot:: ./background/high-low-water.py
+    :caption: Detecting high and low tides
+    :align: center
+
 .. important::
 
     ``pyTMD`` uses times in UTC for all calculations [see :ref:`Time Standards <time-standards>` and :ref:`time-zones`].

@@ -40,6 +40,8 @@ def cartesian(
 
 # create figure and subplots
 fig, ax1 = plt.subplots(ncols=2, figsize=(10, 5))
+# bounding box style
+bboxpad = dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor)
 
 # central point
 for ax in ax1:
@@ -59,7 +61,7 @@ ax1[0].text(
     horizontalalignment="center",
     verticalalignment="top",
     fontsize=10,
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bboxpad,
 )
 
 # lunar ellipsoidal parameters
@@ -161,7 +163,7 @@ ax1[1].text(
     horizontalalignment="center",
     verticalalignment="top",
     fontsize=10,
-    bbox=dict(boxstyle="square,pad=0", ec="w", fc="w", alpha=0.8),
+    bbox=bboxpad,
 )
 
 
@@ -177,8 +179,8 @@ x, y = pyTMD.ellipse._xy(a_axis, b_axis, 0, xy=xy, N=180)
 ax1[1].plot(x, y, color="dodgerblue", linewidth=0.8, linestyle="--")
 ax1[1].annotate(
     "True Earth\nOrbit",
-    xy=(x[20], y[20]),
-    xytext=(0.6, 0.4),
+    xy=(x[70], y[70]),
+    xytext=(-0.25, 0.4),
     color="dodgerblue",
     horizontalalignment="center",
     verticalalignment="top",

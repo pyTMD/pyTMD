@@ -51,6 +51,9 @@ def linterp(a, b, radius=1.0, n=100):
 fig, ax1 = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(10, 5))
 # quiver arrow radius
 arrow_radius = 5.0
+# bounding box styles
+bbox = dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor)
+bboxpad = dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor)
 
 # equation of the equinoxes
 eqeq = 10.0
@@ -229,7 +232,7 @@ ax1[0].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 
 # LMST: observer to mean vernal equinox
@@ -245,7 +248,7 @@ ax1[0].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 # reference circle for LMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -264,7 +267,7 @@ ax1[0].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 # reference circle for GMST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -283,7 +286,7 @@ ax1[0].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 # reference circle for GAST
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -303,7 +306,7 @@ ax1[0].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
+    bbox=bbox,
 )
 
 # mean solar right ascension: mean vernal equinox to mean sun
@@ -319,7 +322,7 @@ ax1[1].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 # reference circle for RA mean
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -338,7 +341,7 @@ ax1[1].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0.1", ec=facecolor, fc=facecolor),
+    bbox=bboxpad,
 )
 # reference circle for RA apparent
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -357,7 +360,7 @@ ax1[1].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
+    bbox=bbox,
 )
 # reference circle for GHA mean
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -376,7 +379,7 @@ ax1[1].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
+    bbox=bbox,
 )
 # reference circle for GHA apparent
 x, y = cartesian(np.linspace(0, 360, 180), radius=radius)
@@ -396,7 +399,7 @@ ax1[1].text(
     color=color,
     horizontalalignment="center",
     verticalalignment="center",
-    bbox=dict(boxstyle="square,pad=0", ec=facecolor, fc=facecolor),
+    bbox=bbox,
 )
 
 for ax in fig.axes:
