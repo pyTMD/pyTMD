@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_aviso_fes.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (08/2026)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -43,6 +43,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 08/2026: use logging.getLogger in individual functions
     Updated 03/2026: added option to download FES2022_native
     Updated 12/2025: simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
@@ -150,7 +151,6 @@ def fetch_aviso_fes(
         _fes_tar(
             model,
             f,
-            logger,
             directory=directory,
             load=load,
             currents=currents,
@@ -162,7 +162,6 @@ def fetch_aviso_fes(
         _fes_list(
             model,
             f,
-            logger,
             directory=directory,
             load=load,
             currents=currents,
@@ -182,7 +181,6 @@ def fetch_aviso_fes(
 def _fes_tar(
     model: str,
     f: ftplib.FTP,
-    logger: logging.Logger,
     directory: str | pathlib.Path | None = _default_directory,
     load: bool = False,
     currents: bool = False,
@@ -199,8 +197,6 @@ def _fes_tar(
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
-    logger: logging.logger object
-        Logger for outputting file transfer information
     directory: str or pathlib.Path
         Working data directory
     load: bool, default False
@@ -308,7 +304,6 @@ def _fes_tar(
     ):
         # download file from ftp and decompress tar files
         _ftp_download(
-            logger,
             f,
             remotepath,
             localpath,
@@ -324,7 +319,6 @@ def _fes_tar(
 def _fes_list(
     model: str,
     f: ftplib.FTP,
-    logger: logging.Logger,
     directory: str | pathlib.Path | None = _default_directory,
     load: bool = False,
     currents: bool = False,
@@ -341,8 +335,6 @@ def _fes_list(
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
-    logger: logging.logger object
-        Logger for outputting file transfer information
     directory: str or pathlib.Path
         Working data directory
     load: bool, default False
@@ -359,6 +351,7 @@ def _fes_list(
 
     # validate local directory
     directory = pyTMD.utilities.Path(directory).resolve()
+    logger = logging.getLogger(__name__)
 
     # path to remote directory for FES
     FES = {}
@@ -386,7 +379,6 @@ def _fes_list(
             decompress = "lzma" if fi.endswith(".xz") else None
             # download file
             _ftp_download(
-                logger,
                 f,
                 remote_path,
                 local_dir,
@@ -436,7 +428,6 @@ def _ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
 
 # PURPOSE: pull file from a remote ftp server and potentially decompress
 def _ftp_download(
-    logger,
     f,
     remote_path,
     local_dir,
@@ -451,8 +442,6 @@ def _ftp_download(
 
     Parameters
     ----------
-    logger: logging.logger object
-        Logger for outputting file transfer information
     f: ftplib.FTP object
         Active ftp connection to AVISO server
     remote_path: list
@@ -470,6 +459,8 @@ def _ftp_download(
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
+    # get logger
+    logger = logging.getLogger(__name__)
     # remote and local directory for data product
     remote_file = posixpath.join("auxiliary", "tide_model", *remote_path)
     # if compressing the output file
