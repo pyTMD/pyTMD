@@ -24,6 +24,8 @@ General Attributes and Methods
 
 .. autofunction:: pyTMD.io.dataset.equivalent_attrs
 
+.. autofunction:: pyTMD.io.dataset.isel_bounds
+
 .. autofunction:: pyTMD.io.dataset.register_datatree_subaccessor
 
 .. autofunction:: pyTMD.io.dataset.register_dataset_subaccessor
