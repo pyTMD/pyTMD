@@ -92,6 +92,52 @@ def test_crop_keeps_dask_chunks():
     assert out["m2"].sizes["y"] == 3
 
 
+def _unstructured_ds() -> xr.Dataset:
+    """Tiny FE mesh: 3 triangles; middle one overlaps [0,1]×[0,1]."""
+    # vertices per element (element, vertex)
+    x = np.array(
+        [
+            [-2.0, -1.0, -1.5],  # outside west
+            [0.0, 1.0, 0.5],  # inside
+            [3.0, 4.0, 3.5],  # outside east
+        ],
+        dtype=np.float64,
+    )
+    y = np.array(
+        [
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float64,
+    )
+    m2 = np.array([1 + 0j, 2 + 0j, 3 + 0j], dtype=np.complex64)
+    ds = xr.Dataset(
+        {
+            "x": (("element", "vertex"), x),
+            "y": (("element", "vertex"), y),
+            "m2": (("element",), m2),
+        },
+        coords={"element": np.arange(3), "vertex": np.arange(3)},
+    )
+    ds.attrs["grid_type"] = "unstructured"
+    return ds
+
+
+def test_crop_unstructured_uses_element_isel():
+    ds = _unstructured_ds()
+    out = ds.tmd.crop([0.0, 1.0, 0.0, 1.0], buffer=0)
+    assert out.sizes["element"] == 1
+    np.testing.assert_allclose(out["m2"].values, [2 + 0j])
+    # chunked path: only mask is computed; data can stay lazy
+    dask = pytest.importorskip("dask")
+    del dask
+    lazy = ds.chunk({"element": 2})
+    out_lazy = lazy.tmd.crop([0.0, 1.0, 0.0, 1.0], buffer=0)
+    assert out_lazy.chunks is not None
+    np.testing.assert_allclose(out_lazy["m2"].values, [2 + 0j])
+
+
 def test_datatree_crop_windows_each_group():
     z = _gridded_ds()
     u = _gridded_ds().rename({"m2": "m2"})

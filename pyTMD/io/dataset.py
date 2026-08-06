@@ -617,9 +617,11 @@ class Dataset:
         Crop ``Dataset`` to input bounding box
 
         For regular grids, uses :func:`isel_bounds` so chunked / netCDF-backed
-        arrays can hyperslab without materializing the full domain. Prefer a
-        chunked ``open_*`` then ``tmd.crop`` (or ``DataTree.tmd.crop``) over
-        driver-specific open-time windows.
+        arrays can hyperslab without materializing the full domain. For
+        unstructured FE meshes, builds an element AABB mask from vertex
+        coordinates and ``isel`` along ``element`` (no full-domain
+        ``where``). Prefer a chunked ``open_*`` then ``tmd.crop`` (or
+        ``DataTree.tmd.crop``) over driver-specific open-time windows.
 
         Global geographic grids handle Pacific / dateline longitude wrap by
         one or two index hyperslabs (and a continuous ``x`` rebuild), not by
@@ -640,19 +642,22 @@ class Dataset:
         ymax = bounds[3] + buffer
         # crop dataset to bounding box
         if self.grid_type == "unstructured":
-            # crop unstructured datasets
-            # include elements that cross the bounding box
-            ds = self._ds.copy()
-            if hasattr(ds, "chunks") and ds.chunks is not None:
-                ds = ds.chunk(-1).compute()
-            ds = ds.where(
-                (ds.x.max(dim="vertex") >= xmin)
-                & (ds.x.min(dim="vertex") <= xmax)
-                & (ds.y.max(dim="vertex") >= ymin)
-                & (ds.y.min(dim="vertex") <= ymax),
-                drop=True,
+            # Element AABB test on vertex coords, then ragged isel along
+            # ``element``. Avoids ``where`` over every data variable and the
+            # eager ``chunk(-1).compute()`` that forced a full FE materialise.
+            # (KDTree / point-location search is separate; see pyTMD#553.)
+            x = self._ds["x"]
+            y = self._ds["y"]
+            mask = (
+                (x.max(dim="vertex") >= xmin)
+                & (x.min(dim="vertex") <= xmax)
+                & (y.max(dim="vertex") >= ymin)
+                & (y.min(dim="vertex") <= ymax)
             )
-            return ds
+            if hasattr(mask.data, "compute"):
+                mask = mask.compute()
+            idx = np.flatnonzero(np.asarray(mask.values))
+            return self._ds.isel(element=idx)
         # global geographic: dateline-aware lon windows
         if self.crs.is_geographic and self.is_global:
             lon_wrap = self.crs.to_dict().get("lon_wrap", 0)
