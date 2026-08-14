@@ -850,10 +850,10 @@ class model:
         group = kwargs["group"].lower()
         if group not in ("z", "u", "v"):
             raise ValueError(f"Invalid model group {group}")
-        # extract model file
-        model_file = self[group].get("model_file")
         # reduce constituents if specified
         self.reduce_constituents(kwargs["constituents"])
+        # extract model file
+        model_file = self[group].get("model_file")
         if self.format in ("OTIS", "ATLAS-compact", "TMD3"):
             # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
             ds = OTIS.open_dataset(
