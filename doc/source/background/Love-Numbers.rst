@@ -15,17 +15,17 @@ The magnitude of each individual component can be characterised by a dimensionle
 These factors are collectively known as :term:`Love/Shida Numbers <Love and Shida Numbers>`, and are defined for each :ref:`spherical harmonic degree <spherical-harmonics>`.
 
 .. list-table::
-   :header-rows: 1
-   :align: center
+    :header-rows: 1
+    :align: center
 
-   * - Symbol
-     - Name
-   * - :math:`h_l`
-     - Love number (vertical)
-   * - :math:`k_l`
-     - Love number (potential)
-   * - :math:`l_l`
-     - Shida number (horizontal)
+    * - Symbol
+      - Name
+    * - :math:`h_l`
+      - Love number (vertical)
+    * - :math:`k_l`
+      - Love number (potential)
+    * - :math:`l_l`
+      - Shida number (horizontal)
 
 .. _tidal-love-numbers:
 
@@ -50,15 +50,15 @@ Complex Love numbers contain a *real part* describing the in-phase (elastic) res
 Combinations of Love/Shida numbers can derive additional quantities :cite:p:`Baker:1984tq,Farrell:1970tn,Cartwright:1999tj,Merriam:1973wi,Munk:1960uk`:
 
 .. list-table:: :term:`Love/Shida numbers <Love and Shida Numbers>` combinations
-   :header-rows: 1
-   :align: center
+    :header-rows: 1
+    :align: center
 
-   * - Name
-     - Expression
-   * - :term:`Gravimetric Factor`
-     - :math:`\delta_l = 1 + \dfrac{2h_l}{l} - \dfrac{(l + 1)k_l}{l}`
-   * - :term:`Tilt Factor`
-     - :math:`\gamma_l = 1 + k_l - h_l`
+    * - Name
+      - Expression
+    * - :term:`Gravimetric Factor`
+      - :math:`\delta_l = 1 + \dfrac{2h_l}{l} - \dfrac{(l + 1)k_l}{l}`
+    * - :term:`Tilt Factor`
+      - :math:`\gamma_l = 1 + k_l - h_l`
 
 ``pyTMD`` uses these factors in a few different computations, including the calculation of :ref:`long-period equilibrium tides <equilibrium-theory>`, :ref:`ocean pole Tides <pole-tides>` and :ref:`gravity tides <gravity-tides>`. 
 Similar to the original Love/Shida numbers, the tidal factors will have a dependence on tidal frequency :cite:p:`Wahr:1979vx` and contain imaginary components for the dissipative response :cite:p:`Wahr:1981ea`.
@@ -73,6 +73,10 @@ Load Love Numbers
 -----------------
 
 Load Love numbers describe the deformation of the solid Earth in response to a change in *surface mass load*.
-The loading change, such as from a redistribution ocean mass from tides, acts upon the *surface of the Earth* :cite:p:`Wahr:1998hy`.
+The loading change, such as the redistribution of ocean mass from tides or circulation, acts upon the *surface of the Earth* :cite:p:`Wahr:1998hy`.
 These ":term:`load tides <Load Tide>`" are computed through a convolution of the tidal constituents and load Love numbers typically by either a Green's function or :ref:`spherical harmonic <spherical-harmonics>` approach :cite:p:`Agnew:2013vx,Farrell:1972cm`.
 In either of those cases, the calculation uses a set of load Love numbers to high :ref:`spherical harmonic degree <spherical-harmonics>`.
+
+.. tip::
+
+    Tidal Love numbers are for *external* potential perturbations and Load Love numbers are for *surface* mass changes :cite:p:`Michel:2021bn`

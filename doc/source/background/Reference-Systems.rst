@@ -94,4 +94,56 @@ The distance between the geoid and the reference ellipsoid is called the geoid h
 
     Relationship between ellipsoid height, geoid height, and topographic height :cite:p:`NRC:1997ea`
 
+.. _barycentric-coordinates:
+
+Barycentric Coordinates
+=======================
+
+Some tide models are computed using the finite-element method and defined on unstructured meshes.
+These finite element meshes can use first-order (linear) or higher-order elements.
+Linear triangular elements have their three nodes at the vertices (:math:`N_1`, :math:`N_2`, :math:`N_3`).
+Quadratic triangular elements have three additional nodes at the edge midpoints.
+The position of any point :math:`P` within a triangle can be expressed in terms areal weights known as **barycentric coordinates** :math:`(\xi, \eta, \lambda)`:
+
+.. math::
+    :label: 6.6
+    :name: eq:6.6
+
+    P = \xi \, P_1 + \eta \, P_2 + \lambda \, P_3
+
+Geometrically, these weights are derived from the ratios of sub-triangle areas (:math:`A_1`, :math:`A_2`, :math:`A_3`) with respect to the total triangle area (:math:`A`):
+
+.. math::
+    :label: 6.7
+    :name: eq:6.7
+
+    \xi = \frac{A_1}{A}, \qquad
+    \eta = \frac{A_2}{A}, \qquad
+    \lambda = \frac{A_3}{A} = 1 - \xi - \eta
+
+Here, :math:`A_1` is the area of the sub-triangle opposite :math:`N_1`, :math:`A_2` is the area of the sub-triangle opposite :math:`N_2`, and :math:`A_3` is the area of the sub-triangle opposite :math:`N_3`.
+
+.. plot:: ./background/finite-elements.py
+    :caption: Linear and quadratic triangular finite elements
+    :width: 80%
+    :align: center
+
+The shape functions of finite elements have two important properties:
+
+- **Kronecker delta property**: the shape functions are equal to one at their respective nodes and equal to zero at all other nodes
+- **Partition of unity property**: the sum of the shape functions is equal to 1 for all points within the element
+
+Because of these properties, barycentric coordinates can be used to help determine if a point is inside any given triangle:
+
+- If all three barycentric coordinates are within :math:`[0, 1]`, then the point is inside the element.
+- If any coordinate is negative or beyond that range, then the point lies outside that element.
+
+.. important::
+    Knowing the order of the nodes for a mesh with quadratic elements is *crucial* for calculating the interpolation shape functions.
+    Some standard node orderings for quadratic elements are:
+
+    * counter-clockwise ordering (:math:`V_1\rightarrow` :math:`E_{12}\rightarrow` :math:`V_2\rightarrow` :math:`E_{23}\rightarrow` :math:`V_3\rightarrow` :math:`E_{31}`)
+    * vertices-to-midpoints ordering (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{12}\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}`)
+    * vertices-to-opposite-midpoints ordering (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}\rightarrow` :math:`E_{12}`)
+
 .. |degree|    unicode:: U+00B0 .. DEGREE SIGN
