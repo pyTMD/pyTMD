@@ -13,11 +13,11 @@ fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
 
 # Linear Elements
 # nodes at triangle vertices
-N1 = np.array([0.5, np.sqrt(3.0 / 4.0)])
-N2 = np.array([0.0, 0.0])
-N3 = np.array([1.0, 0.0])
+N1 = np.array([0.0, 0.0])
+N2 = np.array([1.0, 0.0])
+N3 = np.array([0.5, np.sqrt(3.0 / 4.0)])
 # interior point from some barycentric coordinates
-xi, eta = 0.2, 0.3
+xi, eta = 0.3, 0.5
 lmda = 1.0 - eta - xi
 P = xi * N1 + eta * N2 + lmda * N3
 
@@ -28,8 +28,14 @@ ax[0].plot(xv, yv, color="k", lw=2)
 
 # plot nodes and connections to interior point
 r12 = np.sqrt(1.0 / 12.0)
-dx = np.array([0.0, -0.05, 0.05])
-dy = np.array([0.2 * r12, -0.1 * r12, -0.1 * r12])
+dx = np.array(
+    [
+        -0.05,
+        0.05,
+        0.0,
+    ]
+)
+dy = np.array([-0.1 * r12, -0.1 * r12, 0.2 * r12])
 nodelabel = [r"$\mathbf{N_1}$", r"$\mathbf{N_2}$", r"$\mathbf{N_3}$"]
 for i, node in enumerate([N1, N2, N3]):
     ax[0].plot(
@@ -78,7 +84,7 @@ ax[0].text(
 # plot barycentric areas as sub-triangles
 connections = [(P, N1, N2), (P, N2, N3), (P, N3, N1)]
 arealabel = [r"$\mathbf{A_3}$", r"$\mathbf{A_1}$", r"$\mathbf{A_2}$"]
-color = ["darkorchid", "mediumseagreen", "darkorange"]
+color = ["mediumseagreen", "darkorange", "darkorchid"]
 for i, node in enumerate([N1, N2, N3]):
     # sub-area vertices
     xs, ys = np.transpose(connections[i])
@@ -99,9 +105,9 @@ for i, node in enumerate([N1, N2, N3]):
 # Quadratic Elements
 # use a clockwise ordering scheme
 # nodes at triangle vertices
-N1 = np.array([0.5, np.sqrt(3.0 / 4.0)])
-N3 = np.array([0.0, 0.0])
-N5 = np.array([1.0, 0.0])
+N1 = np.array([0.0, 0.0])
+N3 = np.array([1.0, 0.0])
+N5 = np.array([0.5, np.sqrt(3.0 / 4.0)])
 # nodes at triangle edges
 N2 = (N1 + N3) / 2.0
 N4 = (N3 + N5) / 2.0
@@ -131,8 +137,8 @@ for i, node in enumerate([N1, N3, N5]):
         va="center",
     )
 # plot nodes at edges
-dx = np.array([0.05, 0.0, -0.05])
-dy = np.array([-0.1 * r12, 0.2 * r12, -0.1 * r12])
+dx = np.array([0.0, -0.05, 0.05])
+dy = np.array([0.2 * r12, -0.1 * r12, -0.1 * r12])
 nodelabel = [r"$\mathbf{N_2}$", r"$\mathbf{N_4}$", r"$\mathbf{N_6}$"]
 for i, node in enumerate([N2, N4, N6]):
     ax[1].plot(

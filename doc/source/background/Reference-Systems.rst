@@ -139,11 +139,19 @@ Because of these properties, barycentric coordinates can be used to help determi
 - If any coordinate is negative or beyond that range, then the point lies outside that element.
 
 .. important::
-    Knowing the order of the nodes for a mesh with quadratic elements is *crucial* for calculating the interpolation shape functions.
-    Some standard node orderings for quadratic elements are:
+    Knowing the order of the nodes for each element is *crucial* for calculating the triangle areas and interpolation shape functions.
 
-    * counter-clockwise ordering (:math:`V_1\rightarrow` :math:`E_{12}\rightarrow` :math:`V_2\rightarrow` :math:`E_{23}\rightarrow` :math:`V_3\rightarrow` :math:`E_{31}`)
-    * vertices-to-midpoints ordering (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{12}\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}`)
-    * vertices-to-opposite-midpoints ordering (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}\rightarrow` :math:`E_{12}`)
+The standard order for nodes in linear triangular elements is counterclockwise.
+For a global finite element mesh, an element with a clockwise order might straddle the model boundary.
+``pyTMD`` checks the *winding number* of each element to determine the polygon orientation (clockwise or counterclockwise).
+Quadratic elements can be more complicated and have different node orderings between the vertices and midside edges.
+Some standard node orderings for quadratic elements are:
+
+- counterclockwise (:math:`V_1\rightarrow` :math:`E_{12}\rightarrow` :math:`V_2\rightarrow` :math:`E_{23}\rightarrow` :math:`V_3\rightarrow` :math:`E_{31}`)
+- vertices-to-midpoints (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{12}\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}`)
+- vertices-to-opposite-midpoints (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}\rightarrow` :math:`E_{12}`)
+
+.. note::
+    For quadratic elements, ``pyTMD`` presently only supports the counterclockwise node order following the unstructured ("native") FES models :cite:p:`Lyard:2025tr`.
 
 .. |degree|    unicode:: U+00B0 .. DEGREE SIGN
