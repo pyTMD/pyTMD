@@ -152,6 +152,6 @@ Some standard node orderings for quadratic elements are:
 - vertices-to-opposite-midpoints (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}\rightarrow` :math:`E_{12}`)
 
 .. note::
-    For quadratic elements, ``pyTMD`` presently only supports the counterclockwise node order following the unstructured ("native") FES models :cite:p:`Lyard:2025tr`.
+    For quadratic elements, ``pyTMD`` presently only supports the counterclockwise node order for the unstructured ("native") FES models :cite:p:`Lyard:2025tr`.
 
 .. |degree|    unicode:: U+00B0 .. DEGREE SIGN
