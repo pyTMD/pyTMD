@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 reduce_otis.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (08/2026)
 Read OTIS-format tidal files and reduce to a regional subset
 
 COMMAND LINE OPTIONS:
@@ -29,6 +29,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 08/2026: use build_logger to handle logging to stream
     Updated 03/2026: use lower case for input function arguments
     Updated 12/2025: simplify function call signatures
     Updated 11/2025: use new xarray file access protocols for OTIS files
@@ -273,7 +274,9 @@ def main():
 
     # create logger
     loglevels = [logging.CRITICAL, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=loglevels[args.verbose])
+    logger = pyTMD.utilities.build_logger(
+        __name__, level=loglevels[args.verbose]
+    )
 
     # try to run regional program
     try:
@@ -288,8 +291,8 @@ def main():
         # if there has been an error exception
         # print the type, value, and stack trace of the
         # current exception being handled
-        logging.critical(f"process id {os.getpid():d} failed")
-        logging.error(traceback.format_exc())
+        logger.critical(f"process id {os.getpid():d} failed")
+        logger.error(traceback.format_exc())
 
 
 # run main program

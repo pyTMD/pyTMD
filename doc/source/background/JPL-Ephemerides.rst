@@ -25,30 +25,30 @@ DE "medium" kernels are larger, but have a similar precision as the short kernel
 DE "long" kernels are much larger files and designed for lower-precision applications over very long time spans (centuries to millennia).
 
 .. list-table:: `DE-series SPK files <https://ssd.jpl.nasa.gov/planets/eph_export.html>`_
-   :header-rows: 1
-   :align: center
-   :widths: 12 28 28 28
+    :header-rows: 1
+    :align: center
+    :widths: 12 28 28 28
 
-   * - Issued
-     - Short
-     - Medium
-     - Long
-   * - 1997
-     - 
-     - ``de405.bsp``
-     - ``de406.bsp``
-   * - 2008
-     - ``de421.bsp``
-     - 
-     - ``de422.bsp``
-   * - 2013
-     - ``de430_1850-2150.bsp``
-     - ``de430t.bsp``
-     - ``de431t.bsp``
-   * - 2020
-     - ``de440s.bsp``
-     - ``de440.bsp``
-     - ``de441.bsp``
+    * - Issued
+      - Short
+      - Medium
+      - Long
+    * - 1997
+      - 
+      - ``de405.bsp``
+      - ``de406.bsp``
+    * - 2008
+      - ``de421.bsp``
+      - 
+      - ``de422.bsp``
+    * - 2013
+      - ``de430_1850-2150.bsp``
+      - ``de430t.bsp``
+      - ``de431t.bsp``
+    * - 2020
+      - ``de440s.bsp``
+      - ``de440.bsp``
+      - ``de441.bsp``
 
 
 ``DE440s.bsp`` is the default kernel used by ``pyTMD`` as it is a small file covering the modern era.
@@ -69,25 +69,25 @@ The segment data can be queried using specific integer codes called NAIF IDs.
 The following NAIF IDs can be used to compute the geocentric positions of the Sun and Moon:
 
 .. list-table::
-   :header-rows: 1
-   :align: center
+    :header-rows: 1
+    :align: center
 
-   * - Body/System
-     - NAIF ID
-     - Notes
-   * - Solar System Barycenter (SSB)
-     - 0
-     - Center of mass of the solar system
-   * - Earth-Moon Barycenter (EMB)
-     - 3
-     - Center of mass of the Earth-Moon system
-   * - Sun
-     - 10
-     - Relative to SSB
-   * - Moon
-     - 301
-     - Relative to EMB
-   * - Earth
-     - 399
-     - Relative to EMB
+    * - Body/System
+      - NAIF ID
+      - Notes
+    * - Solar System Barycenter (SSB)
+      - 0
+      - Center of mass of the solar system
+    * - Earth-Moon Barycenter (EMB)
+      - 3
+      - Center of mass of the Earth-Moon system
+    * - Sun
+      - 10
+      - Relative to SSB
+    * - Moon
+      - 301
+      - Relative to EMB
+    * - Earth
+      - 399
+      - Relative to EMB
 

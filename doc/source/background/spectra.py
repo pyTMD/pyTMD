@@ -125,8 +125,17 @@ ax2[1].set_xlabel("Frequency [cpd]", fontsize=11)
 # set titles
 ax1.set_title("Tidal Spectra", fontsize=12)
 # adjust subplots
-subfig[0].subplots_adjust(left=0.048, right=0.9975, bottom=0.0, top=0.85)
+subfig[0].subplots_adjust(
+    left=0.048,
+    right=0.9975,
+    bottom=0.0,
+    top=0.85,
+)
 subfig[1].subplots_adjust(
-    left=0.048, right=0.9975, bottom=0.12, top=0.975, wspace=0.05
+    left=0.048,
+    right=0.9975,
+    bottom=0.12,
+    top=0.975,
+    wspace=0.05,
 )
 plt.show()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (08/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 08/2026: use logging.getLogger in individual functions
     Updated 04/2026: check if needing to include algorithm in the hash
     Updated 03/2026: try multiple providers for fetching data
     Updated 12/2025: use URL class to build and operate on URLs
@@ -78,9 +79,9 @@ def fetch_test_data(
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
     if provider == "figshare":
-        _figshare(directory=directory, logger=logger, **kwargs)
+        _figshare(directory=directory, **kwargs)
     elif provider == "zenodo":
-        _zenodo(directory=directory, logger=logger, **kwargs)
+        _zenodo(directory=directory, **kwargs)
     else:
         raise ValueError(f"Unknown data provider: {provider}")
 
@@ -92,7 +93,6 @@ def _figshare(
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
-    logger: logging.Logger | None = None,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -111,11 +111,11 @@ def _figshare(
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
-    logger: logging.logger object
-        Logger for outputting file transfer information
     mode: oct, default 0o775
         Permissions mode of output local file
     """
+    # get logger
+    logger = logging.getLogger(__name__)
     # figshare API host
     HOST = pyTMD.utilities.URL(_figshare_api_url)
     articles_api = HOST.joinpath("articles", article)
@@ -170,7 +170,6 @@ def _zenodo(
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
-    logger: logging.Logger | None = None,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -189,11 +188,11 @@ def _zenodo(
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
-    logger: logging.logger object
-        Logger for outputting file transfer information
     mode: oct, default 0o775
         Permissions mode of output local file
     """
+    # get logger
+    logger = logging.getLogger(__name__)
     # zenodo API host
     HOST = pyTMD.utilities.URL(_zenodo_api_url)
     records_api = HOST.joinpath("records", record)
@@ -300,6 +299,9 @@ def main():
     parser = arguments()
     args, _ = parser.parse_known_args()
 
+    # create logger for verbosity level
+    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
+
     # fetch test data
     for provider in args.provider:
         # try to fetch data from provider
@@ -312,7 +314,7 @@ def main():
             )
         except Exception as exc:
             # output error message and continue to next provider
-            logging.error(f"Error fetching data from {provider}: {exc}")
+            logger.debug(f"Error fetching data from {provider}: {exc}")
             continue
         else:
             # break loop if successful

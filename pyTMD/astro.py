@@ -73,7 +73,6 @@ UPDATE HISTORY:
 
 from __future__ import annotations
 
-import logging
 import pathlib
 import warnings
 import numpy as np

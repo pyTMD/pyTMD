@@ -259,7 +259,8 @@ For other projected models, a formatted coordinate reference system (CRS) descri
 Interpolation
 =============
 
-For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
+For structured grids, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray`` to compute the tidal constituents at the specified locations.
+For unstructured (finite-element) grids, ``pyTMD`` uses either a linear or quadratic barycentric interpolation scheme to compute the local tidal constituents [see :ref:`barycentric-coordinates`].
 
 .. important::
     If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.

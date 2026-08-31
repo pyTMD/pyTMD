@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 dataset.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (08/2026)
 An xarray.Dataset extension for tidal model data
 
 PYTHON DEPENDENCIES:
@@ -22,6 +22,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 08/2026: add isel_bounds; gridded crop uses index hyperslabs
         Pacific/dateline crop via dual lon hyperslabs (no half-globe pad)
+        use np.hypot to calculate harmonic amplitudes
     Updated 06/2026: moved peak finding algorithm to prediction module
         drift type renamed to trajectory. drift still accepted as an alias
         added function to infer minor constituents and add to dataset
@@ -1246,7 +1247,7 @@ class DataArray:
             Tide model constituent amplitude
         """
         # calculate constituent amplitude
-        amp = np.sqrt(self._da.real**2 + self._da.imag**2)
+        amp = np.hypot(self._da.real, self._da.imag)
         amp.attrs["units"] = self._da.attrs.get("units", "")
         return amp
 

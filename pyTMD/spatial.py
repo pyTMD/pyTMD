@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 spatial.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (08/2026)
 
 Spatial transformation routines
 
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 08/2026: use np.hypot to calculate euclidean distances
     Updated 06/2026: use item() to extract scalars from 0-dimensional arrays
         standardize use of lambda (lmda) to denote longitudes
         drift type renamed to trajectory to better fit CF conventions
@@ -634,7 +635,7 @@ def _moritz_iterative(
     h = np.zeros_like(lon)
     h0 = np.inf * np.ones_like(lon)
     # calculate radius of parallel
-    p = np.sqrt(x**2 + y**2)
+    p = np.hypot(x, y)
     # initial estimated value for phi using h=0
     phi = np.arctan(z / (p * (1.0 - ecc1**2)))
     # iterate to tolerance or to maximum number of iterations
@@ -696,7 +697,7 @@ def _bowring_iterative(
     # calculate longitude
     lon = np.degrees(np.arctan2(y, x))
     # calculate radius of parallel
-    p = np.sqrt(x**2 + y**2)
+    p = np.hypot(x, y)
     # initial estimated value for reduced parametric latitude
     u = np.arctan(a_axis * z / (b_axis * p))
     # initial estimated value for latitude
@@ -762,7 +763,7 @@ def _zhu_closed_form(
     # calculate longitude
     lon = np.degrees(np.arctan2(y, x))
     # calculate radius of parallel
-    w = np.sqrt(x**2 + y**2)
+    w = np.hypot(x, y)
     # allocate for output latitude and height
     lat = np.zeros_like(lon)
     h = np.zeros_like(lon)
