@@ -149,6 +149,14 @@ def test_datatree_crop_windows_each_group():
         np.testing.assert_allclose(ds["y"].values, [-1.0, 0.0, 1.0])
 
 
+def test_open_fes_netcdf_keeps_nonzero_amp_at_zero_phase(tmp_path):
+    """Phase of 0° with nonzero amplitude is valid, not a fill."""
+    path = tmp_path / "m2_fes2022.nc"
+    _write_synthetic_fes_nc(path)
+    ds = FES.open_fes_netcdf(path, group="z", chunks={})
+    np.testing.assert_allclose(ds["m2"].values, 1 + 0j)
+
+
 def test_open_fes_netcdf_then_crop_windows(tmp_path):
     path = tmp_path / "m2_fes2022.nc"
     _write_synthetic_fes_nc(path)
