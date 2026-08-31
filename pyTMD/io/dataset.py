@@ -1509,10 +1509,27 @@ def _crop_global_longitude(
         return isel_bounds(ds, "x", "y", bounds=[lo, hi, ymin, ymax])
     pieces: list[xr.Dataset] = []
     x_cursor: float | None = None
+    # FES-style grids store both period endpoints (0 and 360, or −180 and 180).
+    # A wrap split then selects model_hi on the west piece and model_lo on the
+    # east piece — the same meridian twice. Drop the closing sample so the
+    # east piece stays one cell east of x_cursor (no extra +360 shift).
+    drop_closing_meridian = (
+        len(segments) > 1
+        and np.isclose(float(np.min(xvals)), model_lo)
+        and np.isclose(float(np.max(xvals)), model_hi)
+    )
     for lo, hi in segments:
         part = isel_bounds(ds, "x", "y", bounds=[lo, hi, ymin, ymax])
         if part.sizes.get("x", 0) == 0:
             continue
+        if (
+            drop_closing_meridian
+            and x_cursor is None
+            and np.isclose(float(part.x.values[-1]), model_hi)
+        ):
+            part = part.isel(x=slice(0, -1))
+            if part.sizes.get("x", 0) == 0:
+                continue
         x = np.asarray(part.x.values, dtype=float).copy()
         if x_cursor is None:
             # place the first segment near the requested start longitude

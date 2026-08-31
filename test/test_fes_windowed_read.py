@@ -280,3 +280,35 @@ def test_crop_dateline_on_duplicated_meridian_grid():
     assert out.sizes["x"] == 21
     np.testing.assert_allclose(out["x"].values[0], 170.0)
     np.testing.assert_allclose(out["x"].values[-1], 190.0)
+
+
+def test_crop_prime_meridian_on_duplicated_meridian_grid():
+    """0 and 360 both present: [-10, 10] must not duplicate the seam."""
+    ds = _global_grid(np.arange(0.0, 361.0, 1.0))
+    ds.attrs["crs"] = _crs(180)
+    out = ds.tmd.crop([-10.0, 10.0, -1.0, 1.0], buffer=0)
+    np.testing.assert_allclose(out["x"].values, np.arange(-10.0, 11.0, 1.0))
+    # keep canonical 0°, not the 360° copy (encoded as original x)
+    np.testing.assert_allclose(out.sel(x=-5.0)["v"].values, 355.0)
+    np.testing.assert_allclose(out.sel(x=0.0)["v"].values, 0.0)
+    np.testing.assert_allclose(out.sel(x=5.0)["v"].values, 5.0)
+
+
+def test_crop_past_360_on_duplicated_meridian_grid():
+    """0 and 360 both present: [350, 370] must not emit x=360 twice."""
+    ds = _global_grid(np.arange(0.0, 361.0, 1.0))
+    ds.attrs["crs"] = _crs(180)
+    out = ds.tmd.crop([350.0, 370.0, -1.0, 1.0], buffer=0)
+    np.testing.assert_allclose(out["x"].values, np.arange(350.0, 371.0, 1.0))
+    np.testing.assert_allclose(out.sel(x=360.0)["v"].values, 0.0)
+    np.testing.assert_allclose(out.sel(x=370.0)["v"].values, 10.0)
+
+
+def test_crop_dateline_on_duplicated_pm_grid():
+    """−180 and 180 both present: dateline wrap must not duplicate the seam."""
+    ds = _global_grid(np.arange(-180.0, 181.0, 1.0))
+    ds.attrs["crs"] = _crs(0)
+    out = ds.tmd.crop([170.0, -170.0, -1.0, 1.0], buffer=0)
+    np.testing.assert_allclose(out["x"].values, np.arange(170.0, 191.0, 1.0))
+    np.testing.assert_allclose(out.sel(x=180.0)["v"].values, -180.0)
+    np.testing.assert_allclose(out.sel(x=185.0)["v"].values, -175.0)
