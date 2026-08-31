@@ -345,7 +345,7 @@ def open_fes_netcdf(
     # amplitude and phase variable names
     amp_key = mapping_amp[kwargs["group"]]
     phase_key = mapping_ph[kwargs["group"]]
-    # mask where amplitude and phase are zero
+    # valid where amplitude or phase is nonzero
     valid_values = (tmp[amp_key] != 0) | (tmp[phase_key] != 0)
     amplitude = tmp[amp_key].where(valid_values, drop=False)
     phase = tmp[phase_key].where(valid_values, drop=False)
