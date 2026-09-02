@@ -31,7 +31,7 @@ on_github = os.environ.get("GITHUB_ACTIONS") == "true"
 metadata = importlib.metadata.metadata("pyTMD")
 project = metadata["Name"]
 year = datetime.date.today().year
-copyright = f"2017\u2013{year}, Tyler C. Sutterley"
+copyright = f"2017\u2013{year}, {project} Developers"
 author = "Tyler C. Sutterley"
 
 # software version
@@ -54,8 +54,9 @@ class numfig_filter(logging.Filter):
         return not suppress_warning
 
 
-# add filter to logger
+# add filter to loggers
 logging.getLogger("sphinx").addFilter(numfig_filter())
+logging.getLogger("sphinx-autobuild").addFilter(numfig_filter())
 
 # suppress warnings in examples and documentation
 if on_rtd:
