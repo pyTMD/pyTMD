@@ -30,7 +30,7 @@ jobs:
     - name: Compile Sphinx Documentation
       run: |
         # run a build of the documentation
-        pixi run --environment=dev docs
+        pixi run docs
     - name: Archive Sphinx Warnings
       if: github.event.pull_request.head.repo.full_name == github.repository
       uses: actions/upload-artifact@v6

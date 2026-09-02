@@ -14,15 +14,15 @@ keywords = [
     "Tidal Prediction",
 ]
 authors = [
-    {name = "Tyler Sutterley"},
-    {email = "tsutterl@uw.edu"}
+    { name = "Tyler Sutterley" },
+    { email = "tsutterl@uw.edu" },
 ]
 maintainers = [
-    {name = "pyTMD contributors"}
+    { name = "pyTMD contributors" },
 ]
 license = "MIT"
 license-files = ["LICENSE"]
-readme = {file = "README.md", content-type = "text/markdown"}
+readme = { file = "README.md", content-type = "text/markdown" }
 
 requires-python = "~=3.9"
 dependencies = [
@@ -34,10 +34,10 @@ dependencies = [
     "pyproj>=2.5.0",
     "scipy>=1.10.1",
     "timescale>=0.1.1",
-    "xarray"
+    "xarray",
 ]
 
-classifiers=[
+classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -59,21 +59,49 @@ Repository = "https://github.com/pyTMD/pyTMD"
 Issues = "https://github.com/pyTMD/pyTMD/issues"
 
 [project.optional-dependencies]
-doc = ["docutils>=0.17", "graphviz", "ipympl", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
-all = ["cartopy", "ipyleaflet", "ipywidgets", "jplephem", "jupyterlab", "matplotlib", "notebook", "pandas"]
+doc = [
+    "docutils>=0.17",
+    "graphviz",
+    "ipympl",
+    "myst-nb",
+    "numpydoc",
+    "sphinx-autobuild",
+    "sphinx-argparse>=0.4",
+    "sphinxcontrib-bibtex",
+    "sphinx-design",
+    "sphinx_rtd_theme",
+]
+all = [
+    "cartopy",
+    "ipyleaflet",
+    "ipywidgets",
+    "jplephem",
+    "jupyterlab",
+    "matplotlib",
+    "notebook",
+    "pandas",
+]
 aws = ["dask", "obstore", "pandas", "pyarrow", "s3fs", "zarr>=3"]
-dev = ["dask", "flake8", "gh", "oct2py", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
+dev = [
+    "dask",
+    "flake8",
+    "gh",
+    "oct2py",
+    "pytest>=4.6",
+    "pytest-cov",
+    "pytest-xdist",
+]
 
 [project.scripts]
-"fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main" 
-"fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main" 
+"fetch_arcticdata.py" = "pyTMD.datasets.fetch_arcticdata:main"
+"fetch_aviso_fes.py" = "pyTMD.datasets.fetch_aviso_fes:main"
 "fetch_box_tpxo.py" = "pyTMD.datasets.fetch_box_tpxo:main"
 "fetch_database.py" = "pyTMD.datasets.fetch_database:main"
-"fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main" 
+"fetch_gsfc_got.py" = "pyTMD.datasets.fetch_gsfc_got:main"
 "fetch_iers_opole.py" = "pyTMD.datasets.fetch_iers_opole:main"
 "fetch_jpl_ssd.py" = "pyTMD.datasets.fetch_jpl_ssd:main"
-"fetch_test_data.py" = "pyTMD.datasets.fetch_test_data:main" 
-"reduce_otis.py" = "pyTMD.datasets.reduce_otis:main" 
+"fetch_test_data.py" = "pyTMD.datasets.fetch_test_data:main"
+"reduce_otis.py" = "pyTMD.datasets.reduce_otis:main"
 
 [tool.setuptools.packages.find]
 exclude = ["providers*", "run*", "test*"]
@@ -83,10 +111,10 @@ minversion = "6.0"
 norecursedirs = ".git"
 addopts = "-n auto --verbose --capture=no -W ignore::UserWarning"
 python_files = [
-    "test*.py"
+    "test*.py",
 ]
 testpaths = [
-    "test"
+    "test",
 ]
 
 [tool.coverage.run]
@@ -153,8 +181,8 @@ pyTMD = { path = ".", editable = true }
 default = { solve-group = "default" }
 all = { features = ["all"], solve-group = "default" }
 aws = { features = ["all", "aws"], solve-group = "default" }
-dev = { features = ["all", "dev", "doc"], solve-group = "default" }
-doc = { features = ["all", "doc"], solve-group = "default" }
+dev = { features = ["all", "dev"], solve-group = "default" }
+doc = { features = ["all", "dev", "doc"], solve-group = "default" }
 
 [tool.pixi.tasks.start]
 cmd = "jupyter lab"
@@ -162,39 +190,63 @@ cwd = "doc/source/notebooks"
 description = "Start JupyterLab in the notebooks directory"
 
 [tool.pixi.tasks.export-env]
-args = [ { "arg" = "flags", "default" = "" } ]
+args = [{ "arg" = "flags", "default" = "" }]
 cmd = "pixi workspace export conda-environment {{ flags }} > environment.yml"
-description = "Export workspace to a conda environment file" 
+description = "Export workspace to a conda environment file"
 
 [tool.pixi.feature.doc.tasks.docs]
-args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
-cmd = "make {{ builder }} {{ flags }}"
+args = [
+    { "arg" = "builder", "default" = "html" },
+    { "arg" = "flags", "default" = "--jobs=auto" },
+    { "arg" = "auto", "default" = "" },
+]
+cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build"
 cwd = "doc"
 description = "Create documentation with sphinx"
 
+[tool.pixi.feature.doc.tasks.auto-docs]
+depends-on = [
+    { task = "docs", args = [
+        "html",
+        "--jobs=auto --open-browser --ignore='*.csv'",
+        "auto",
+    ] },
+]
+description = "Create documentation with sphinx and live-reload over a browser"
+
 [tool.pixi.feature.doc.tasks.clean-docs]
-args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
-cmd = "make clean && make {{ builder }} {{ flags }}"
-cwd = "doc"
+depends-on = [
+    { task = "docs", args = ["html", "--jobs=auto --fresh-env", ""] },
+]
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.fetch]
 cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout=360)'"
+default-environment = "dev"
 description = "Fetch data needed to run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.test]
-args = [ { "arg" = "flags", "default" = "" }, { "arg" = "test", "default" = "." } ]
+args = [
+    { "arg" = "flags", "default" = "" },
+    { "arg" = "test", "default" = "." },
+]
 cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
+default-environment = "dev"
 description = "Run the pytest suite"
 
 [tool.pixi.feature.dev.tasks.coverage]
 cmd = "pytest -n=0 --cov=pyTMD --junitxml=pytest.xml --cov-report=xml test"
+default-environment = "dev"
 description = "Run the pytest suite and create coverage reports"
 
 [tool.pixi.feature.dev.tasks.lint]
-args = [ { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" }, { "arg" = "test", "default" = "." } ]
+args = [
+    { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" },
+    { "arg" = "test", "default" = "." },
+]
 cmd = "flake8 {{ test }} --count {{ flags }} --statistics --extend-exclude 'build/,run/,*.ipynb_checkpoints/,.pixi/'"
+default-environment = "dev"
 description = "Run flake8 to check for compilation errors"
 
 [tool.pixi.dependencies]
@@ -241,7 +293,7 @@ graphviz = "*"
 ipympl = "*"
 myst-nb = "*"
 numpydoc = "*"
-sphinx = "*"
+sphinx-autobuild = "*"
 sphinx-argparse = "*"
 sphinxcontrib-bibtex = "*"
 sphinx-design = "*"
