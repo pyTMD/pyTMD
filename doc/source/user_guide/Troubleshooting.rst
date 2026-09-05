@@ -64,12 +64,19 @@ Check that the reference frame and datum of the output variables matches those e
 Model Not Found
 ===============
 
+If attempting to open a model raises a ``FileNotFoundError`` (or similar), the most common cause is that the model files are not in the directory ``pyTMD`` is trying to search.
+By default, ``pyTMD`` looks in the :ref:`cache directory <directories>` (:func:`pyTMD.utilities.get_cache_path`) and not the current working directory.
+The data directory can be directly specified if the model files are located elsewhere (e.g. a shared directory).
+Alternatively, the default directory that ``pyTMD`` searches can be overridden by setting the ``PYTMD_CACHE_DIR`` environment variable.
+
 If the model files are not found, try the following checks:
 
-- **Check 1:** Is the model in the :ref:`database <model-database>`?
+- **Check 1:** Is the model in the :ref:`database <model-database>`? If not, can use a model definition file or include an additional database. 
 - **Check 2:** Are the model files :ref:`downloaded locally <data-access>` or accessible from the :ref:`cloud <cloud-access>`?
 - **Check 3:** Is the :ref:`directory <directories>` set correctly (if using a custom model directory)?
 - **Check 4:** Does the directory path exist and contain the expected files? [see :ref:`Elevation Directory Table <directories>` and :ref:`Current Directory Table <tab-currents>`]
+
+If all else fails, reach out via the ``pyTMD`` `discussions board <https://github.com/orgs/pyTMD/discussions>`_ or post an `issue <https://github.com/pyTMD/pyTMD/issues/new>`_. 
 
 Predictions Are Slow
 ====================

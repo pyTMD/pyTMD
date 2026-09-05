@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
 earth.py
-Written by Tyler Sutterley (05/2026)
-Calculates Earth parameters and Body Tide Love numbers
+Written by Tyler Sutterley (09/2026)
+Calculates Earth reference and deformation parameters
 
 PYTHON DEPENDENCIES:
     numpy: Scientific Computing Tools For Python
@@ -10,11 +10,15 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
+    Updated 09/2026: add reader function for load Love number tables
     Written 05/2026
 """
 
+import re
+import pathlib
 import numpy as np
 from pyTMD.constituents import frequency
+from pyTMD.utilities import get_data_path
 
 __all__ = [
     "_ellipsoids",
@@ -23,7 +27,9 @@ __all__ = [
     "love_numbers",
     "complex_love_numbers",
     "degree_love_numbers",
+    "load_love_numbers",
     "_melchior_table_52",
+    "_infconv",
 ]
 
 _ellipsoids = [
@@ -791,6 +797,98 @@ def degree_love_numbers(
     return (hl, kl, ll)
 
 
+# tables of load Love/Shida numbers
+# PREM outputs from Han and Wahr (1995)
+# https://doi.org/10.1111/j.1365-246X.1995.tb01819.x
+_han_wahr_lln_table = get_data_path(["data", "han-wahr-lln.txt"])
+# PREM outputs from Gegout (2005)
+# http://gemini.gsfc.nasa.gov/aplo/
+_gegout_lln_table = get_data_path(["data", "gegout-lln.txt"])
+# PREM outputs from Wang et al. (2012)
+# https://doi.org/10.1016/j.cageo.2012.06.022
+_wang_prem_lln_table = get_data_path(["data", "wang-prem-lln.txt"])
+# default maximum degree and order in case of infinite
+_default_max_degree = 100000
+
+
+# PURPOSE: read load Love/Shida numbers
+def load_love_numbers(
+    filename: str | pathlib.Path = _han_wahr_lln_table,
+    reference: str = "CE",
+    **kwargs,
+):
+    """
+    Read tables of Load Love/Shida numbers and applies isomorphic
+    parameters :cite:p:`Blewitt:2003bz,Farrell:1972cm,Wahr:1998hy`
+
+    Parameters
+    ----------
+    filename: str | pathlib.Path
+        Elastic load Love/Shida numbers file
+    reference: str, default 'CE'
+        Reference frame of degree 1 Love/Shida numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    hl: np.ndarray
+        Load Love number of vertical displacement
+    kl: np.ndarray
+        Load Love number of gravitational potential
+    ll: np.ndarray
+        Load Love (Shida) number of horizontal displacement
+    """
+    # read load Love/Shida number data file
+    columns = ("l", "hl", "kl", "ll")
+    formats = ("i4", "f8", "f8", "f8")
+    love = np.loadtxt(
+        filename,
+        dtype={"names": columns, "formats": formats},
+        converters={0: _infconv},
+    )
+
+    # calculate isomorphic parameters for different reference frames
+    # following Blewitt (2003) and Farrell (1972)
+    if reference.upper() == "CF":
+        # Center of Surface Figure
+        alpha = (love["hl"][1] + 2.0 * love["ll"][1]) / 3.0
+    elif reference.upper() == "CL":
+        # Center of Surface Lateral Figure
+        alpha = love["ll"][1].copy()
+    elif reference.upper() == "CH":
+        # Center of Surface Height Figure
+        alpha = love["hl"][1].copy()
+    elif reference.upper() == "CM":
+        # Center of Mass of Earth System
+        alpha = 1.0
+    elif reference.upper() == "CE":
+        # Center of Mass of Solid Earth
+        alpha = 0.0
+    else:
+        raise Exception(f"Invalid Reference Frame {reference}")
+
+    # maximum degree of the load Love/Shida numbers
+    lmax = np.max(love["l"])
+    # array of spherical harmonic degrees up to lmax
+    l = np.arange(lmax + 1)
+    # dictionary of output Love/Shida numbers
+    # interpolated over all degrees up to lmax
+    tmp = {}
+    for col in ("hl", "kl", "ll"):
+        # apply isomorphic parameters
+        love[col][1] -= alpha
+        # linearly interpolate missing values
+        tmp[col] = np.interp(l, love["l"], love[col])
+
+    # return the load love numbers
+    return (tmp["hl"], tmp["kl"], tmp["ll"])
+
+
 def _melchior_table_52(model: str):
     """
     Body tide Love numbers for an Earth model provided in
@@ -886,3 +984,20 @@ def _melchior_table_52(model: str):
         raise ValueError(f"Unknown Earth model: {model}")
     # return the table of love numbers
     return table_52
+
+
+def _infconv(fld, lmax: int = _default_max_degree) -> int:
+    """
+    Convert degree to integer and check if degree is infinite
+
+    Parameters
+    ----------
+    fld: str
+        Degree field from load Love/Shida numbers file
+    lmax: int, default 100000
+        Truncation in case of infinite degree
+    """
+    if re.search(f"inf", fld, re.IGNORECASE):
+        return lmax
+    else:
+        return int(fld)

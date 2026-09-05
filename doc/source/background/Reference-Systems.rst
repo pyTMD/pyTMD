@@ -14,6 +14,7 @@ The :math:`xy` plane is also called the equatorial plane.
     :caption: Geocentric Cartesian Coordinate System
     :align: center
 
+As the shape of the Earth can be well approximated by an ellipsoid, positions on the Earth's surface are often described in terms of *geodetic coordinates*.
 Geodetic coordinates (longitude :math:`\lambda`, latitude :math:`\varphi`, and height :math:`h`) are used to describe the position of a point on the Earth with respect to a defined ellipsoid.
 Changing the terrestrial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
 One method of transformation involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 6.1 <eq:6.1>`].
@@ -56,13 +57,36 @@ Coordinate system definitions, such as the International Terrestrial Reference F
 Geocentric Coordinates
 ======================
 
-Similar to ECEF cartesian coordinates, geocentric coordinates are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
+Similar to ECEF cartesian coordinates, *geocentric coordinates* are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
+This is in contrast to geodetic coordinates, which are defined to have latitudes *normal* to the surface of the Earth.
+
+.. plot:: ./background/geodetic-coordinates.py
+    :caption: Geodetic and Geocentric Coordinates
+    :align: center
+
 Geocentric coordinates are used to estimate :ref:`spherical-harmonics` coefficients, and for performing coordinate system rotations.
 Geocentric longitudes are identical to geodetic longitudes, but geocentric latitudes can differ from geodetic latitudes by approximately 0.2 degrees.
+For applications using a spherical Earth model, the geocentric and geodetic latitudes are identical.
 
 .. plot:: ./background/geocentric-latitude.py
     :caption: Difference between Geodetic and Geocentric Latitude
     :align: center
+
+Geoid Height
+============
+
+Compared to the reference ellipsoid, a better representation of the figure of the Earth can be defined based on the Earth's gravitational field :cite:p:`Torge:2023bu`.
+The :term:`geoid <Geoid>` is an *equipotential surface* set to coincide with an idealized global mean sea level (i.e. if the oceans were at rest) :cite:p:`HofmannWellenhof:2006hy`.
+It serves as the reference surface to describe any topographic heights above (or below) mean sea level.
+As with :ref:`solid-earth-tides`, the geoid has a :ref:`permanent tide <permanent-tide>` component due to the Earth being in the presence of the Sun and Moon :cite:p:`Makinen:2009dm,Torge:2023bu`.
+
+The distances between the geoid and the reference ellipsoid are called *geoid height* or geoidal undulations (:math:`N`), and the distances between the geoid and points on the Earth's surface are called *orthometric heights* (:math:`H`) :cite:p:`HofmannWellenhof:2006hy`.
+
+.. figure:: ../_assets/geoid_height.svg
+    :width: 400
+    :align: center
+
+    Relationship between the reference ellipsoid, geoid, and surface topography :cite:p:`NRC:1997ea,Torge:2023bu`
 
 .. _celestial-reference:
 
@@ -79,20 +103,6 @@ Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math
     \mathbf{x}_{CRS} = \mathbf{B}\ \mathbf{P}\ \mathbf{N}\ \mathbf{T}\ \mathbf{W}\ \mathbf{x}_{TRS}
 
 In ``pyTMD``, these transformations are used to convert planetary :term:`ephemerides <Ephemerides>` from a celestial reference frame to a terrestrial reference frame.
-
-Geoid Height
-============
-
-The height above mean sea level of a point on the Earth is defined with respect to an irregular surface known as the :term:`geoid <Geoid>`.
-The :term:`geoid <Geoid>` is the instantaneous shape of the Earth's gravitational field, which would coincide with global mean sea level if the oceans were at rest.
-It is an equipotential surface, or a surface of constant potential energy :cite:p:`HofmannWellenhof:2006hy`.
-The distance between the geoid and the reference ellipsoid is called the geoid height (:math:`N`) :cite:p:`HofmannWellenhof:2006hy`.
-
-.. figure:: ../_assets/geoid_height.svg
-    :width: 400
-    :align: center
-
-    Relationship between ellipsoid height, geoid height, and topographic height :cite:p:`NRC:1997ea`
 
 .. _barycentric-coordinates:
 

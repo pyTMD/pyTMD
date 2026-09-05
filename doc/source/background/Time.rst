@@ -4,11 +4,14 @@
 Time
 ====
 
-``pyTMD`` uses the ``timescale`` library to manage conversions between time scales.
+Knowledge of time is essential for understanding the motion of bodies in the solar system.
+``pyTMD`` uses the ``timescale`` library to manage conversions between different *time scales*.
 A uniform time scale expresses dates as the count of time elapsed since a :term:`reference epoch <Epoch>`.
-The Julian Day (JD) is one such scale, and is the continuous count of days from noon on January 1, 4713 B.C (-4712-01-01T12:00:00).
-The JD time system simplifies the calculation of the number of days between two epochs, and thus is convenient for astronomical purposes.
-The Modified Julian Day (MJD) differs from the JD by 1) beginning at midnight and 2) reducing the total number of digits for modern periods.
+These :term:`reference epochs <Epoch>` are uniquely defined points in time that can be expressed by a calendar date and time.
+
+One common time scale is the Julian Day (JD), which is the continuous count of days from *noon* on January 1, 4713 B.C (-4712-01-01T12:00:00).
+The JD time system simplifies the calculation of the number of days between two epochs, and is convenient for astronomical purposes.
+This time scale can be extended to the Modified Julian Day (MJD), which differs from the JD by 1) beginning at midnight and 2) reducing the total number of digits for modern periods.
 The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be calculated from the JD by
 
 .. math::
@@ -17,7 +20,8 @@ The start of the MJD calendar is 1858-11-17T00:00:00, and a given MJD can be cal
 
     MJD = JD - 2400000.5
 
-Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern-day celestial calculations, and are set relative to the J2000 epoch (2000-01-01T12:00:00).
+Another common time scale uses the J2000.0 epoch, which is defined as 2000-01-01T12:00:00 (JD 2451545.0). 
+Julian centuries (36525 days consisting of 86400 SI seconds) are used for modern-day celestial calculations, and are set relative to the J2000 epoch.
 
 .. math::
     :label: 7.2
@@ -50,10 +54,12 @@ Dynamical Time
 
 Dynamical time is the independent variable in the equations of motion for bodies in the solar system.
 Terrestrial Time (TT) is a uniform, monotonically increasing time standard based on atomic clocks that is used for the accurate calculation of celestial mechanics, orbits and ephemerides.
-It is the standard time reference for geocentric ephemerides, and is currently ahead of TAI time by 32.184 seconds :cite:p:`Urban:2013vl`.
-Barycentric Dynamical Time (TDB) is also used to describe the motion of the planets, Sun and Moon, but is with respect to the solar system barycenter (SSB) :cite:p:`Kaplan:2005kj`.
-TDB and TT are both *dynamical timescales*, with differences between them owing to relativistic effects.
+It is the standard time reference for geocentric ephemerides, and is by definition ahead of TAI time by 32.184 seconds :cite:p:`Urban:2013vl`.
 Delta times (TT - UT1) can be added to estimates of Universal Time (UT1) to convert to Terrestrial Time (TT) :cite:p:`Meeus:1991vh`.
+
+Barycentric Dynamical Time (TDB) is set with respect to the solar system barycenter (SSB), and has also historically been used to describe the motion of the Sun, Moon and planets :cite:p:`Kaplan:2005kj`.
+TDB and TT are both *dynamical timescales*, with differences between them owing to relativistic effects that can be approximated using periodic functions.
+The largest term in this approximation is the 1.7 millisecond annual variation due to the Earth's elliptical orbit around the Sun :cite:p:`Tapley:2004ic`.
 
 
 .. plot:: ./background/deltatime.py
@@ -102,8 +108,10 @@ Local Mean Sidereal Time (LMST) is similar to GMST, but takes into account longi
 Variations in Length of Day
 ===========================
 
-The Earth's rotation can vary on timescales from hours to centuries, and is influenced by a number of factors including ocean tides :cite:p:`Petit:2010tp`.
-Many of the early estimates of the sub-daily variations in the length of day (LOD) were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.
+Variations in the Earth's moment of inertia affect its rotation, which causes variations in the length of day (LOD) :cite:p:`Tapley:2004ic`.
+These variations occur on timescales ranging from hours to centuries, and are influenced by a number of factors including atmospheric drag and ocean tides :cite:p:`Petit:2010tp`.
+LOD and UT1 variations are difficult to predict, and so are observed frequently and made available by the International Earth Rotation Service (IERS).
+Many of the early estimates of the sub-daily variations in LOD were based on astronomical observations from very long baseline interferometry (VLBI) :cite:p:`Herring:1994ku,Ray:1994dk`.
 
 .. plot:: ./background/length-of-day.py
     :caption: Rotation Rate Variations due to a) Diurnal and Semi-Diurnal :cite:p:`Ray:1994dk` and b) Long-Period Tides :cite:p:`Ray:2014fu`. Red lines in b) denote values for the time period used for calculating the short-period tides in a). Variations in b) are dominated by the 18.6 year node tide cycle :cite:p:`Ray:2014fu`.
