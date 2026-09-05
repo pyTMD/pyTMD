@@ -2,7 +2,7 @@
 ``pyTMD.earth``
 ===============
 
-- Calculates Earth parameters and Body Tide Love numbers
+- Calculates Earth reference and deformation parameters
 - Provides gravitational and ellipsoidal parameters from :cite:t:`HofmannWellenhof:2006hy,Petit:2010tp`
 
 `Source code`__
@@ -21,4 +21,8 @@ General Methods
 
 .. autofunction:: pyTMD.earth.degree_love_numbers
 
+.. autofunction:: pyTMD.earth.load_love_numbers
+
 .. autofunction:: pyTMD.earth._melchior_table_52
+
+.. autofunction:: pyTMD.earth._infconv
