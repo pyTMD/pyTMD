@@ -23,9 +23,9 @@ hl, kl, ll = pyTMD.earth.load_love_numbers(table, reference="CF")
 # array of spherical harmonic degrees
 n = np.arange(len(hl))
 # only plot for degrees 3+
-hl[n < 3] = np.nan
-kl[n < 3] = np.nan
-ll[n < 3] = np.nan
+hl[(n < 3) | (n > 10000)] = np.nan
+kl[(n < 3) | (n > 10000)] = np.nan
+ll[(n < 3) | (n > 10000)] = np.nan
 
 # plot load Love numbers
 ax[0].semilogx(n, hl, color="0.4")
