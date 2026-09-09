@@ -821,7 +821,7 @@ def ocean_harmonics(
     GM: float, default 3.986004418e14
         Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
     rho_w: float, default 1025.0
-        Density of sea water  (kg m\ :sup:`-3`)
+        Density of sea water (kg m\ :sup:`-3`)
     lln: str, default 'han-wahr'
         name of the Load Love number dataset to use
 
@@ -840,7 +840,7 @@ def ocean_harmonics(
     Returns
     -------
     Ylms: xr.Dataset
-        Spherical harmonic coefficients
+        Fully-normalized spherical harmonic coefficients
     """
     # verify units of input data are in meters
     ds = ds.tmd.to_units("meters")
@@ -896,7 +896,7 @@ def ocean_harmonics(
     dfactor = (
         (3.0 * rho_w)
         * (1.0 + kl)
-        / (1.0 + 2.0 * kl.l)
+        / (1.0 + 2.0 * Plm.l)
         / (4.0 * np.pi * rad_e * rho_e)
     )
 
@@ -917,6 +917,7 @@ def ocean_harmonics(
     # copy attributes from original dataset
     Ylms.attrs.update(ds.attrs)
     Ylms.attrs["product_type"] = "gravity_field"
+    Ylms.attrs["normalization"] = "fully-normalized"
     # add attributes for degree of truncation
     Ylms.attrs["max_degree"] = lmax
     Ylms.attrs["max_order"] = lmax
@@ -931,3 +932,82 @@ def ocean_harmonics(
     Ylms.attrs["seawater_density"] = f"{rho_w:0.3f} kg/m^3"
     # return the spherical harmonic dataset
     return Ylms
+
+
+def time_series(
+    t: np.ndarray,
+    Ylms: xr.Dataset,
+    **kwargs,
+):
+    """
+    Predict tides from a spherical harmonic ``Dataset`` at times
+    :cite:p:`Petit:2010tp`
+
+    Parameters
+    ----------
+    t: float or np.ndarray
+        Days relative to 1992-01-01T00:00:00
+    Ylms: xarray.Dataset
+        Dataset with spherical harmonic coefficients
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.constituents.arguments`
+
+    Returns
+    -------
+    tpred: xarray.Dataset
+        Predicted tidal time series
+    """
+    # set default keyword arguments
+    kwargs.setdefault("corrections", "GOT")
+
+    # list of constituents
+    constituents = np.array(Ylms.constituent.values)
+    # convert time to Modified Julian Days (MJD)
+    MJD = t + _mjd_tide
+
+    # load the nodal corrections
+    pu, pf, G = pyTMD.constituents.arguments(MJD, constituents, **kwargs)
+
+    # calculate constituent phase angles
+    if kwargs["corrections"] in ("OTIS", "ATLAS", "TMD3"):
+        # verify time is (at least) 1D
+        t = np.atleast_1d(t)
+        # load parameters for constituents
+        _, p, o, _, _ = pyTMD.constituents._constituent_parameters(constituents)
+        # broadcast parameters to time and constituent dimensions
+        omega, phase0, t0 = np.broadcast_arrays(
+            o[None, :], p[None, :], t[:, None], subok=True
+        )
+        # calculate phase angle from frequency and phase-0
+        # convert angular frequency to radians per day
+        theta = 86400.0 * omega * t0 + phase0 + pu
+    else:
+        # phase angle from arguments
+        theta = np.radians(G) + pu
+    # dataset of arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(["time", "constituent"], pu),
+            f=(["time", "constituent"], pf),
+            G=(["time", "constituent"], G),
+            theta=(["time", "constituent"], np.exp(1j * theta)),
+        ),
+        coords=dict(time=np.atleast_1d(MJD), constituent=constituents),
+    )
+
+    # sum over tidal constituents
+    tpred = xr.Dataset()
+    tpred["clm"] = (
+        Ylms.clm.real * arguments.f * arguments.theta.real
+        - Ylms.slm.real * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    tpred["slm"] = (
+        Ylms.clm.imag * arguments.f * arguments.theta.real
+        - Ylms.slm.imag * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    # copy attributes from original dataset
+    tpred.attrs.update(Ylms.attrs)
+    tpred.attrs["constituents"] = constituents
+
+    # return the spherical harmonic tide predictions
+    return tpred
