@@ -24,3 +24,5 @@
 .. autofunction:: pyTMD.predict.potential._frequency_dependence_diurnal
 
 .. autofunction:: pyTMD.predict.potential._frequency_dependence_long_period
+
+.. autofunction:: pyTMD.predict.potential.ocean_harmonics

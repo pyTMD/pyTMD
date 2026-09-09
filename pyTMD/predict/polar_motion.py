@@ -211,7 +211,7 @@ def ocean_pole_tide(
     omega: float, default 7.2921151467e-5
         Earth's rotation rate (radians/second)
     rho_w: float, default 1025.0
-        Density of sea water  (kg m\ :sup:`-3`)
+        Density of sea water (kg m\ :sup:`-3`)
     g2: complex, default 0.6870 + 0.0036j
         Degree-2 Love number tilt factor (1 + k2 - h2)
     convention: str, default '2018'

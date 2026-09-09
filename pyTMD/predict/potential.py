@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 potential.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (09/2026)
 Prediction routines for gravity tides and tide-generating forces
 
 PYTHON DEPENDENCIES:
@@ -21,6 +21,8 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 09/2026: added function to convert ocean constituents to
+        spherical harmonic coefficients
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
         added citations to W. E. Farrell's PhD thesis on gravity tides
     Updated 05/2026: use numpy hypot function to calculate magnitudes
@@ -47,6 +49,7 @@ __all__ = [
     "_frequency_dependence",
     "_frequency_dependence_diurnal",
     "_frequency_dependence_long_period",
+    "ocean_harmonics",
 ]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
@@ -777,3 +780,154 @@ def _frequency_dependence_long_period(
     G["Z"] = -1e-6 * l * GZ / radius
     # return the corrections
     return G
+
+
+# tables of load Love/Shida numbers
+_lln_table = {}
+_lln_table["han-wahr"] = pyTMD.earth._han_wahr_lln_table
+_lln_table["gegout"] = pyTMD.earth._gegout_lln_table
+_lln_table["wang-prem"] = pyTMD.earth._wang_prem_lln_table
+# earth and physical parameters for WGS84 ellipsoid
+# using meters-kilogram-seconds standard
+_wgs84 = pyTMD.earth.datum(ellipsoid="WGS84", units="MKS")
+
+
+# PURPOSE: convert tidal constituents into spherical harmonics
+def ocean_harmonics(
+    ds: xr.Dataset,
+    lmax: int = 180,
+    a_axis: float = _wgs84.a_axis,
+    flat: float = _wgs84.flat,
+    GM: float = _wgs84.GM,
+    rho_w: float = 1025.0,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    **kwargs,
+):
+    r"""
+    Converts ocean tide model constituents into spherical
+    harmonic coefficients :cite:p:`Petit:2010tp,Wahr:1998hy`
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Dataset containing tidal harmonic constants
+    lmax: int, default 180
+        Upper bound of spherical harmonic degrees
+    a_axis: float, default 6378136.3
+        Semi-major axis of the Earth (meters)
+    flat: float, default 1.0/298.257223563
+        Ellipsoidal flattening
+    GM: float, default 3.986004418e14
+        Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
+    rho_w: float, default 1025.0
+        Density of sea water  (kg m\ :sup:`-3`)
+    lln: str, default 'han-wahr'
+        name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    Ylms: xr.Dataset
+        Spherical harmonic coefficients
+    """
+    # verify units of input data are in meters
+    ds = ds.tmd.to_units("meters")
+    # verify coordinate reference system (global and geographic)
+    if not ds.tmd.is_global:
+        raise ValueError("Unsupported coordinate reference system")
+    # verify load Love number table name
+    if lln not in _lln_table.keys():
+        raise ValueError(f"Unknown load Love number dataset {lln}")
+    # convert from geodetic latitude to geocentric latitude
+    geolat = pyTMD.spatial.geocentric_latitude(ds.y, flat=flat)
+    # calculate colatitude and longitude (radians)
+    theta = np.radians(90.0 - geolat)
+    lmda = np.radians(ds.x)
+    # convert longitudes to range 0:360 (if previously -180:180)
+    lmda = lmda.where(lmda >= 0, lmda + 2.0 * np.pi, drop=False)
+
+    # multiply sin(th) with differentials of theta and lambda
+    # to calculate the integration factor at each latitude
+    dlam = np.abs(lmda[1] - lmda[0])
+    dth = np.abs(theta[1] - theta[0])
+    int_fact = np.sin(theta) * dlam * dth
+
+    # spherical harmonic degree and order
+    l = np.arange(lmax + 1)
+    m = np.arange(lmax + 1)
+    # calculate polynomials using Martin Mohlenkamp's relation
+    Plm, dPlm = pyTMD.math.legendreP(lmax, np.cos(theta))
+    # read load Love numbers from table
+    hl, kl, ll = pyTMD.earth.load_love_numbers(
+        _lln_table[lln], reference=reference, lmax=lmax
+    )
+    # convert to xarray data arrays
+    Plm = xr.DataArray(
+        Plm,
+        dims=("l", "m", "y"),
+        coords={"l": l, "m": m, "y": ds.y},
+    )
+    kl = xr.DataArray(
+        kl,
+        dims=("l",),
+        coords={"l": l},
+    )
+
+    # universal gravitational constant [N*m^2/kg^2]
+    G = 6.67430e-11
+    # average radius of the Earth with same volume as ellipsoid [m]
+    rad_e = a_axis * np.power(1.0 - flat, 1.0 / 3.0)
+    # average density of the Earth [kg / m^3]
+    rho_e = 0.75 * GM / (G * np.pi * rad_e**3)
+    # degree dependent factors for converting from sea water equivalent
+    # modified from Wahr et al., (2018)
+    dfactor = (
+        (3.0 * rho_w)
+        * (1.0 + kl)
+        / (1.0 + 2.0 * kl.l)
+        / (4.0 * np.pi * rad_e * rho_e)
+    )
+
+    # calcualte cos/sin of lambda arrays using Euler's formula
+    m_lmda = np.exp(1j * Plm.m.dot(lmda))
+    # convert to data array and replace nans with 0
+    data = ds.tmd.to_dataarray().fillna(0.0)
+    # multiply gridded data with sin/cos of m#lambda
+    # sum through all lambdas in the dot product
+    d_real = m_lmda.dot(data.real)
+    d_imag = m_lmda.dot(data.imag)
+    # integration coefficients for converting to normalized harmonics
+    int_coeff = dfactor * (int_fact * Plm)
+    # integrate data over all latitudes and convert to fully-normalized
+    Ylms = xr.Dataset()
+    Ylms["clm"] = int_coeff.dot(d_real, dim="y")
+    Ylms["slm"] = int_coeff.dot(d_imag, dim="y")
+    # copy attributes from original dataset
+    Ylms.attrs.update(ds.attrs)
+    Ylms.attrs["product_type"] = "gravity_field"
+    # add attributes for degree of truncation
+    Ylms.attrs["max_degree"] = lmax
+    Ylms.attrs["max_order"] = lmax
+    # add attributes for earth model and love numbers
+    Ylms.attrs["earth_love_numbers"] = lln
+    Ylms.attrs["reference_frame"] = reference
+    # add attributes for earth and model parameters
+    Ylms.attrs["earth_radius"] = f"{rad_e:0.3f} m"
+    Ylms.attrs["earth_density"] = f"{rho_e:0.3f} kg/m^3"
+    Ylms.attrs["earth_inverse_flattening"] = f"{1.0 / flat:0.3f}"
+    Ylms.attrs["earth_gravity_constant"] = f"{GM:0.3f} m^3/s^2"
+    Ylms.attrs["seawater_density"] = f"{rho_w:0.3f} kg/m^3"
+    # return the spherical harmonic dataset
+    return Ylms

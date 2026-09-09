@@ -833,6 +833,8 @@ def load_love_numbers(
             - ``'CH'``: Center of Surface Height Figure
             - ``'CM'``: Center of Mass of Earth System
             - ``'CE'``: Center of Mass of Solid Earth
+    lmax: int, default from file
+        Upper bound of spherical harmonic degrees
 
     Returns
     -------
@@ -870,10 +872,10 @@ def load_love_numbers(
         # Center of Mass of Solid Earth
         alpha = 0.0
     else:
-        raise Exception(f"Invalid Reference Frame {reference}")
+        raise ValueError(f"Invalid Reference Frame {reference}")
 
     # maximum degree of the load Love/Shida numbers
-    lmax = np.max(love["l"])
+    lmax = kwargs.get("lmax", np.max(love["l"]))
     # array of spherical harmonic degrees up to lmax
     l = np.arange(lmax + 1)
     # dictionary of output Love/Shida numbers
