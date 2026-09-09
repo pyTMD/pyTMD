@@ -1047,9 +1047,9 @@ def infer_minor(
     # extract harmonics and convert to datasets
     clm = Ylms.clm.to_dataset(dim="constituent")
     slm = Ylms.slm.to_dataset(dim="constituent")
-    # get admittances
-    cadm = minor_admittance(clm, **kwargs)
-    sadm = minor_admittance(slm, **kwargs)
+    # get admittances and convert to data arrays
+    cadm = minor_admittance(clm, **kwargs).tmd.to_dataarray()
+    sadm = minor_admittance(slm, **kwargs).tmd.to_dataarray()
 
     # list of constituents to infer
     constituents = np.array(cadm.coords["constituent"].values)
