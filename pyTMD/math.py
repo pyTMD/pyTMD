@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 math.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (09/2026)
 Special functions of mathematical physics
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
         https://docs.scipy.org/doc/
 
 UPDATE HISTORY:
+    Updated 09/2026: added recurrence function for Legendre polynomials
+        added option to calculate fully-normalized Legendre polynomials
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: added kronecker delta function and updated docstrings
     Updated 03/2026: add radius and scalar product functions
@@ -50,6 +52,7 @@ __all__ = [
     "_condon_shortley",
     "_kronecker_delta",
     "_legendre_norm",
+    "legendreP",
     "sph_harm",
 ]
 
@@ -285,7 +288,7 @@ def legendre(
     Plm: np.ndarray
         Legendre polynomials of degree :math:`l` and order :math:`m`
     dPlm: np.ndarray
-        First derivative of spherical harmonics with respect to
+        First derivative of Legendre polynomials with respect to
         :math:`\theta`
     """
     # verify values are integers
@@ -297,7 +300,7 @@ def legendre(
     # verify x is array
     if isinstance(x, list):
         x = np.atleast_1d(x)
-    # function 1.67 from Hofmann-Wellenhof (2006)
+    # equation 1.67 from Hofmann-Wellenhof (2006)
     Plm = _assoc_legendre(l, m, x)
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
@@ -353,9 +356,9 @@ def _assoc_legendre(
     # if x is the cos of colatitude, u is the sine
     u = np.sqrt(1.0 - x**2)
     # calculate un-normalized polynomials
-    # function 1.67 from Hofmann-Wellenhof (2006)
+    # equation 1.67 from Hofmann-Wellenhof (2006)
     P = 0.0
-    r = int((l - m) // 2)
+    r = np.floor_divide(l - m, 2)
     for k in range(r + 1):
         P += (
             np.power(-1.0, k)
@@ -409,13 +412,19 @@ def _kronecker_delta(
     return 1.0 * (i == j)
 
 
-def _legendre_norm(l: int, m: int):
+def _legendre_norm(l: int, m: int, normalization: str = "schmidt"):
     r"""
-    Calculates the Legendre Polynomial normalization from
+    Calculates Legendre polynomials normalizations following
     :cite:t:`Munk:1966go`
 
-    .. math::
-        N_l^m = \sqrt{\frac{(l - m)!}{(l + m)!}}
+    - Schmidt semi-normalized :cite:p:`Schmidt:1917vh`
+
+        .. math::
+            N_l^m = \sqrt{\frac{(l - m)!}{(l + m)!}}
+    - Fully-normalized :cite:p:`HofmannWellenhof:2006hy`
+
+        .. math::
+            N_l^m = \sqrt{(2 - \delta_{m0}) (2 l + 1) \frac{(l - m)!}{(l + m)!}}
 
     Parameters
     ----------
@@ -423,9 +432,136 @@ def _legendre_norm(l: int, m: int):
         Degree of the Legendre polynomials
     m: int
         Order of the Legendre polynomials (:math:`0` to :math:`l`)
+    normalization: str, default schmidt
+        Normalization scheme
+
+        - ``'schmidt'`` from :cite:t:`Schmidt:1917vh`
+        - ``'full'`` from :cite:t:`HofmannWellenhof:2006hy`
+
+    Returns
+    -------
+    norm: float
+        Normalization for degree :math:`l` and order :math:`m`
     """
     # normalization from Munk and Cartwright (1966) equation A5
-    return np.sqrt(factorial(l - m) / factorial(l + m))
+    if normalization.lower() == "schmidt":
+        norm = np.sqrt(factorial(l - m) / factorial(l + m))
+    elif normalization.lower() == "full":
+        # fully-normalized spherical harmonics (geodesy formulation)
+        # from equation 1.97 of Hofmann-Wellenhof (2006)
+        # also equation 6.2b of IERS conventions (2010)
+        kron = _kronecker_delta(m, 0)
+        norm = (
+            np.sqrt(2.0 - kron)
+            * np.sqrt(2.0 * l + 1.0)
+            * np.sqrt(factorial(l - m) / factorial(l + m))
+        )
+    else:
+        raise ValueError(f"Unknown normalization {normalization}")
+    # return the normalization
+    return norm
+
+
+def legendreP(lmax, x):
+    r"""
+    Computes fully-normalized associated Legendre Polynomials
+    using the recursion relation from :cite:t:`Mohlenkamp:2016vv`
+
+    Derived from the :cite:t:`Szego:1939tn` recurrence formula for
+    Jacobi Polynomials
+
+    Parameters
+    ----------
+    lmax: int
+        Maximum degree of Legendre polynomials
+    x: np.ndarray
+        Elements ranging from -1 to 1
+
+        Typically :math:`\cos(\theta)`, where :math:`\theta`
+        is the colatitude
+
+    Returns
+    -------
+    Plm: np.ndarray
+        Fully-normalized Legendre polynomials
+    dPlm: np.ndarray
+        First derivative of Legendre polynomials with respect to
+        :math:`\theta`
+    """
+    # verify values are integers
+    lmax = np.int64(lmax)
+    # check dimensions of input elements
+    singular_values = np.ndim(x) == 0
+    # verify length of the x array
+    x = np.atleast_1d(x)
+    n = len(x)
+    # if x is the cos of colatitude, u is the sine
+    u = np.sqrt(1.0 - x**2)
+    # Jacobi polynomials for degree and order lmax
+    Jlm = np.zeros((lmax + 1, lmax + 1, n))
+    # allocate for output Legendre Polynomials
+    # fully-normalized to geodesy convention
+    Plm = np.zeros((lmax + 1, lmax + 1, n))
+    dPlm = np.zeros((lmax + 1, lmax + 1, n))
+    # iterate over spherical harmonic orders
+    for m in range(0, lmax + 1):
+        # Jacobi terms for degree 0
+        Jlm[0, m, :] = 1.0 / np.sqrt(2.0)
+        # apply factors for orders greater than 0
+        for j in range(1, m + 1):
+            Jlm[0, m, :] *= np.sqrt((2.0 * j + 1.0) / (2.0 * j))
+        # Jk,m,m Terms
+        for k in range(1, lmax + 1):
+            # degree dependent factors
+            f1 = np.sqrt((k + m - 0.5) / k)
+            f2 = np.sqrt((k + m + 0.5) / (k + 2.0 * m))
+            # calculate Jacobi general terms
+            if k == 1:
+                # for degree 1 terms
+                Jlm[k, m, :] = 2.0 * x * f1 * f2 * Jlm[k - 1, m, :]
+            else:
+                # for all other spherical harmonic degrees
+                f3 = np.sqrt(
+                    (2.0 * k + 2.0 * m + 1.0) / (2.0 * k + 2.0 * m - 3.0)
+                )
+                f4 = np.sqrt((k + 2.0 * m - 1.0) / (k + 2.0 * m))
+                Jm1 = 2.0 * x * f1 * f2 * Jlm[k - 1, m, :]
+                Jm2 = np.sqrt((k - 1.0) / k) * f3 * f4 * Jlm[k - 2, m, :]
+                Jlm[k, m, :] = Jm1 - Jm2
+        # calculate and normalize Legendre polynomials
+        for l in range(m, lmax + 1):
+            # handle cases for normalization
+            if (l == 0) & (m == 0):
+                # degree and order 0
+                Plm[l, m, :] = np.sqrt(2.0) * Jlm[l, m, :]
+                dPlm[l, m, :] = 0.0 * x
+                continue
+            elif m == 0:
+                # positive degree and order 0
+                Plm[l, m, :] = np.sqrt(2.0) * Jlm[l, m, :]
+                # calculate normalization for order 0
+                # ignore divide by zero and invalid value warnings
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    norm = np.sqrt(2.0) / u
+                # handle singularity at the poles
+                norm = np.where(np.isclose(u, 0.0), 0.0, norm)
+            else:
+                # all other degrees and orders
+                Plm[l, m, :] = 2.0 * np.power(u, m) * Jlm[l - m, m, :]
+                # calculate normalization for order m
+                norm = 2.0 * np.power(u, m - 1)
+            # calculate first derivatives w.r.t. colatitude
+            f5 = np.sqrt(l**2.0 - m**2.0)
+            f6 = np.sqrt((2.0 * l + 1.0) / (2.0 * l - 1.0))
+            dPlm[l, m, :] = norm * (
+                l * x * Jlm[l - m, m, :] - f5 * f6 * Jlm[l - m - 1, m, :]
+            )
+    # return the associated Legendre polynomials
+    # flatten to singular values if necessary
+    if singular_values:
+        return Plm[:, :, 0], dPlm[:, :, 0]
+    else:
+        return Plm, dPlm
 
 
 def sph_harm(

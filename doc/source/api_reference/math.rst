@@ -38,4 +38,6 @@
 
 .. autofunction:: pyTMD.math._legendre_norm
 
+.. autofunction:: pyTMD.math.legendreP
+
 .. autofunction:: pyTMD.math.sph_harm

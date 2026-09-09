@@ -200,7 +200,7 @@ args = [
     { "arg" = "flags", "default" = "--jobs=auto" },
     { "arg" = "auto", "default" = "" },
 ]
-cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build"
+cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build/{{ builder }}"
 cwd = "doc"
 description = "Create documentation with sphinx"
 

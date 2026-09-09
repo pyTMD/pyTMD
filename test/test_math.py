@@ -200,7 +200,7 @@ def test_legendre(l):
 
 
 def test_legendre_hw95():
-    """test the calculation of Legendre polynomials 
+    """test the calculation of fully-normalized Legendre polynomials 
     and their derivative versus values from HW95
     """
     # colatitude for test values
@@ -244,18 +244,13 @@ def test_legendre_hw95():
         # verify that degree and order are integers
         l = int(l)
         m = int(m)
-        # HW95 normalization of degree l and order m
-        # Condon-Shortley phase
+        # HW95 normalization of degree l and order m:
+        # fully-normalized without Condon-Shortley phase
         cs = pyTMD.math._condon_shortley(m)
-        # Kronecker delta
-        kron = pyTMD.math._kronecker_delta(m, 0)
-        # normalization factors
-        norm = pyTMD.math._legendre_norm(l, m)
-        dfactor = np.sqrt(2.0 * l + 1.0)
-        # unapply Condon-Shortley phase
-        hw = cs * dfactor * norm * np.sqrt(2.0 - kron)
+        # normalization factors (unapply Condon-Shortley phase)
+        norm = cs * pyTMD.math._legendre_norm(l, m, normalization="full")
         # Legendre polynomials and their first derivative
-        Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m, norm=hw)
+        Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m, norm=norm)
         assert np.allclose(Plm, PLM, atol=1e-05)
         assert np.allclose(dPlm, DPLM, atol=1e-05)
 
