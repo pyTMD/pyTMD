@@ -221,11 +221,8 @@ depends-on = [
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.fetch]
-args = [
-    { "arg" = "timeout", "default" = "360" },
-    { "arg" = "flags", "default" = "" },
-]
-cmd = "fetch_test_data.py --timeout {{ timeout }} {{ flags }}"
+args = [{ "arg" = "timeout", "default" = "360" }]
+cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout={{ timeout }})'"
 default-environment = "dev"
 description = "Fetch data needed to run the pytest suite"
 

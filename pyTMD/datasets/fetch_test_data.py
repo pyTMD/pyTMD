@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (08/2026)
+Written by Tyler Sutterley (09/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 09/2026: put try/except in fetch_test_data function
     Updated 08/2026: use logging.getLogger in individual functions
     Updated 04/2026: check if needing to include algorithm in the hash
     Updated 03/2026: try multiple providers for fetching data
@@ -45,6 +46,8 @@ import pyTMD.utilities
 _default_directory = pyTMD.utilities.get_cache_path()
 # default ssl context
 _default_ssl_context = pyTMD.utilities._default_ssl_context
+# available providers
+_default_providers = ["zenodo", "figshare"]
 # repository API urls
 _figshare_api_url = "https://api.figshare.com/v2"
 _zenodo_api_url = "https://zenodo.org/api"
@@ -52,7 +55,7 @@ _zenodo_api_url = "https://zenodo.org/api"
 
 def fetch_test_data(
     directory: str | pathlib.Path = _default_directory,
-    provider: str = "zenodo",
+    provider: list[str] = _default_providers,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -63,7 +66,7 @@ def fetch_test_data(
     ----------
     directory: str or pathlib.Path
         Download directory
-    provider: str, default 'zenodo'
+    provider: list[str], default ['zenodo', 'figshare']
         Data provider
 
         - ``'figshare'``
@@ -78,12 +81,26 @@ def fetch_test_data(
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
-    if provider == "figshare":
-        _figshare(directory=directory, **kwargs)
-    elif provider == "zenodo":
-        _zenodo(directory=directory, **kwargs)
-    else:
-        raise ValueError(f"Unknown data provider: {provider}")
+    # verify providers is list
+    if isinstance(provider, str):
+        provider = [provider]
+    # fetch test data
+    for p in provider:
+        if p not in _default_providers:
+            raise ValueError(f"Unknown data provider: {p}")
+        # try to fetch data from provider
+        try:
+            if p.lower() == "figshare":
+                _figshare(directory=directory, **kwargs)
+            elif p.lower() == "zenodo":
+                _zenodo(directory=directory, **kwargs)
+        except Exception as exc:
+            # output error message and continue to next provider
+            logger.debug(f"Error fetching data from {p}: {exc}")
+            continue
+        else:
+            # break loop if successful
+            break
 
 
 # PURPOSE: download data files from figshare
@@ -299,26 +316,13 @@ def main():
     parser = arguments()
     args, _ = parser.parse_known_args()
 
-    # create logger for verbosity level
-    logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
-
     # fetch test data
-    for provider in args.provider:
-        # try to fetch data from provider
-        try:
-            fetch_test_data(
-                directory=args.directory,
-                provider=provider,
-                timeout=args.timeout,
-                mode=args.mode,
-            )
-        except Exception as exc:
-            # output error message and continue to next provider
-            logger.debug(f"Error fetching data from {provider}: {exc}")
-            continue
-        else:
-            # break loop if successful
-            break
+    fetch_test_data(
+        directory=args.directory,
+        provider=args.provider,
+        timeout=args.timeout,
+        mode=args.mode,
+    )
 
 
 # run main program
