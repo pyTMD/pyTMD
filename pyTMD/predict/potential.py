@@ -889,9 +889,9 @@ def ocean_harmonics(
     )
     # allocate for frequency-dependent load Love numbers adjustments
     dk = xr.DataArray(
-        np.zeros((lmax + 1)),
-        dims=("m",),
-        coords={"m": m},
+        np.zeros((lmax + 1, lmax + 1)),
+        dims=("l", "m",),
+        coords={"l": l, "m": m},
     )
 
     # universal gravitational constant [N*m^2/kg^2]
@@ -918,7 +918,7 @@ def ocean_harmonics(
         d_real = m_lmda.dot(data.real)
         d_imag = m_lmda.dot(data.imag)
         # adjust load Love numbers for frequency dependence
-        dh, dk[1], dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
+        dh, dk[2, 1], dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
         # degree dependent factors for converting from sea water equivalent
         # taking into account frequency dependence of load Love numbers
         # modified from Wahr et al., (2018)
