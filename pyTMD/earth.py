@@ -28,6 +28,7 @@ __all__ = [
     "complex_love_numbers",
     "degree_love_numbers",
     "load_love_numbers",
+    "adjust_load_love_numbers",
     "_melchior_table_52",
     "_infconv",
 ]
@@ -811,7 +812,7 @@ _wang_prem_lln_table = get_data_path(["data", "wang-prem-lln.txt"])
 _default_max_degree = 100000
 
 
-# PURPOSE: read load Love/Shida numbers
+# PURPOSE: read tables of load Love/Shida numbers
 def load_love_numbers(
     filename: str | pathlib.Path = _han_wahr_lln_table,
     reference: str = "CE",
@@ -889,6 +890,78 @@ def load_love_numbers(
 
     # return the load love numbers
     return (tmp["hl"], tmp["kl"], tmp["ll"])
+
+
+def adjust_load_love_numbers(omega: np.ndarray, **kwargs):
+    """
+    Compute the adjustments for load Love/Shida numbers
+    to account for free core nutation and other resonances
+    :cite:p:`Mathews:1997js,Mathews:2002cr,Petit:2010tp`
+
+    Parameters
+    ----------
+    omega: np.ndarray
+        Angular frequency (radians per second)
+
+    Returns
+    -------
+    dh21: float
+        Load Love number adjustments for vertical displacement
+    dk21: float
+        Load Love number adjustments for gravitational potential
+    dl21: float
+        Load Love/Shida number adjustments for horizontal displacement
+    """
+    # number of sidereal days per solar day
+    sidereal_ratio = 1.002737909
+    # number of seconds in a sidereal day (approximately 86164.1)
+    sidereal_day = 86400.0 / sidereal_ratio
+    # frequency in cycles per sidereal day
+    f = omega * sidereal_day / (2.0 * np.pi)
+    # load Love numbers adjustments for different frequency bands
+    if (omega > 1e-4) or (omega < 2e-5):
+        # semi-diurnal and long-period bands
+        dh21 = 0.0
+        dk21 = 0.0
+        dl21 = 0.0
+    else:
+        # in-phase adjustments for the diurnal band
+        # following IERS conventions and Mathews et al. (2002)
+        # values from equation 6.10 of IERS conventions 2010
+        # and from Mathews et al. (2002)
+        sigma = np.zeros((3))
+        # Chandler wobble
+        sigma[0] = -0.0026010
+        # retrograde free core nutation
+        sigma[1] = 1.0023181
+        # prograde free core nutation
+        sigma[2] = 0.999026
+        # frequency dependence of load Love number h2,1 (vertical)
+        # table 7.1 (IERS conventions 2010)
+        H21 = np.zeros((3))
+        H21[0] = 1.6583e-3
+        H21[1] = 2.8018e-4
+        H21[2] = 5.5852e-7
+        # frequency dependence of load Love number k2,1 (potential)
+        # table 6.4 (IERS conventions 2010)
+        K21 = np.zeros((3))
+        K21[0] = 8.1874e-4
+        K21[1] = 1.4116e-4
+        K21[2] = 3.4618e-7
+        # frequency dependence of load Love number l2,1 (horizontal)
+        # table 7.1 (IERS conventions 2010)
+        L21 = np.zeros((3))
+        L21[0] = 2.3232e-4
+        L21[1] = -8.4659e-6
+        L21[2] = 1.0724e-8
+        # estimate the load Love numbers for diurnal tides
+        # equation 6.9 (IERS conventions 2010)
+        dh21 = np.sum(H21 / (f - sigma))
+        dk21 = np.sum(K21 / (f - sigma))
+        dl21 = np.sum(L21 / (f - sigma))
+
+    # return the load Love numbers adjustments
+    return (dh21, dk21, dl21)
 
 
 def _melchior_table_52(model: str):

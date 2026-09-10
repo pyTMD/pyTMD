@@ -490,8 +490,6 @@ def legendreP(lmax, x):
     """
     # verify values are integers
     lmax = np.int64(lmax)
-    # check dimensions of input elements
-    singular_values = np.ndim(x) == 0
     # verify length of the x array
     x = np.atleast_1d(x)
     n = len(x)
@@ -557,11 +555,7 @@ def legendreP(lmax, x):
                 l * x * Jlm[l - m, m, :] - f5 * f6 * Jlm[l - m - 1, m, :]
             )
     # return the associated Legendre polynomials
-    # flatten to singular values if necessary
-    if singular_values:
-        return Plm[:, :, 0], dPlm[:, :, 0]
-    else:
-        return Plm, dPlm
+    return Plm, dPlm
 
 
 def sph_harm(
