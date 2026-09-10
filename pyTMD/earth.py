@@ -28,6 +28,7 @@ __all__ = [
     "complex_love_numbers",
     "degree_love_numbers",
     "load_love_numbers",
+    "adjust_load_love_numbers",
     "_melchior_table_52",
     "_infconv",
 ]
@@ -960,7 +961,7 @@ def adjust_load_love_numbers(omega: np.ndarray, **kwargs):
         dl21 = np.sum(L21 / (f - sigma))
 
     # return the load Love numbers adjustments
-    return np.array([dh21, dk21, dl21])
+    return (dh21, dk21, dl21)
 
 
 def _melchior_table_52(model: str):

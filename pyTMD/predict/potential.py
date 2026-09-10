@@ -850,9 +850,24 @@ def ocean_harmonics(
     # verify load Love number table name
     if lln not in _lln_table.keys():
         raise ValueError(f"Unknown load Love number dataset {lln}")
+    # verify maximum degree and order
+    lmax = int(lmax)
+    if lmax < 2:
+        raise ValueError("Degree of truncation should be at least 2")
     # list of tidal constituents
     constituents = ds.tmd.constituents
     nc = len(constituents)
+    # angular frequencies for constituents
+    omega = pyTMD.constituents.frequency(constituents, **kwargs)
+
+    # Earth parameters and physical constants
+    # universal gravitational constant [N*m^2/kg^2]
+    G = 6.67430e-11
+    # average radius of the Earth with same volume as ellipsoid [m]
+    rad_e = a_axis * np.power(1.0 - flat, 1.0 / 3.0)
+    # average density of the Earth [kg / m^3]
+    rho_e = 0.75 * GM / (G * np.pi * rad_e**3)
+
     # convert from geodetic latitude to geocentric latitude
     geolat = pyTMD.spatial.geocentric_latitude(ds.y, flat=flat)
     # calculate colatitude and longitude (radians)
@@ -860,7 +875,6 @@ def ocean_harmonics(
     lmda = np.radians(ds.x)
     # convert longitudes to range 0:360 (if previously -180:180)
     lmda = lmda.where(lmda >= 0, lmda + 2.0 * np.pi, drop=False)
-
     # multiply sin(th) with differentials of theta and lambda
     # to calculate the integration factor at each latitude
     dlam = np.abs(lmda[1] - lmda[0])
@@ -894,17 +908,10 @@ def ocean_harmonics(
         coords={"l": l, "m": m},
     )
 
-    # universal gravitational constant [N*m^2/kg^2]
-    G = 6.67430e-11
-    # average radius of the Earth with same volume as ellipsoid [m]
-    rad_e = a_axis * np.power(1.0 - flat, 1.0 / 3.0)
-    # average density of the Earth [kg / m^3]
-    rho_e = 0.75 * GM / (G * np.pi * rad_e**3)
-
     # calculate cos/sin of lambda arrays using Euler's formula
     m_lmda = np.exp(1j * Plm.m.dot(lmda))
-    # angular frequencies for constituents
-    omega = pyTMD.constituents.frequency(constituents, **kwargs)
+    # integration coefficients for converting to spherical harmonics
+    int_coeff = int_fact * Plm
 
     # allocate for output spherical harmonics
     clm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
@@ -928,12 +935,10 @@ def ocean_harmonics(
             / (1.0 + 2.0 * Plm.l)
             / (4.0 * np.pi * rad_e * rho_e)
         )
-        # integration coefficients for converting to normalized harmonics
-        int_coeff = dfactor * int_fact * Plm
         # integrate over all latitudes
-        # convert harmonics to fully-normalized
-        clm[:, :, i] = int_coeff.dot(d_real, dim="y")
-        slm[:, :, i] = int_coeff.dot(d_imag, dim="y")
+        # fully-normalize output spherical harmonics
+        clm[:, :, i] = dfactor * int_coeff.dot(d_real, dim="y")
+        slm[:, :, i] = dfactor * int_coeff.dot(d_imag, dim="y")
     # convert to xarray dataset
     Ylms = xr.Dataset(
         data_vars=dict(
