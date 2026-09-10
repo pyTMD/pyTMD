@@ -890,7 +890,7 @@ def ocean_harmonics(
     # allocate for frequency-dependent load Love numbers adjustments
     dk = xr.DataArray(
         np.zeros((lmax + 1, lmax + 1)),
-        dims=("l", "m",),
+        dims=("l", "m"),
         coords={"l": l, "m": m},
     )
 
