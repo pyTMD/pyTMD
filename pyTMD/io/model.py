@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 model.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (09/2026)
 Retrieves tide model parameters for named tide models and
     from model definition files
 
@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 09/2026: expose default xarray engines as possible readers
     Updated 06/2026: add validate argument to from_dict method
         split old parse json function into a series of validation functions
     Updated 04/2026: add __variables__ attribute containing model variables
@@ -102,6 +103,8 @@ __all__ = ["DataBase", "load_database", "model"]
 
 # default working data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
+# available xarray engines
+_available_engines = xr.backends.list_engines()
 
 
 # allow model database to be subscriptable
@@ -224,8 +227,8 @@ class model:
             self.directory = pyTMD.utilities.Path(directory)
         # set any extra databases
         self.extra_databases = copy.copy(kwargs["extra_databases"])
-        self.format = None
-        self.name = None
+        self.format = kwargs.get("format", None)
+        self.name = kwargs.get("name", None)
         self.verify = copy.copy(kwargs["verify"])
         self.__parameters__ = {}
 
@@ -411,6 +414,9 @@ class model:
         format_list = []
         for model, val in parameters.items():
             format_list.append(val["format"])
+        # append available xarray engines
+        for key, val in _available_engines.items():
+            format_list.append(key)
         # return unique list of formats
         return sorted(set(format_list))
 
@@ -881,6 +887,14 @@ class model:
             ds = FES.open_mfdataset(
                 model_file, format=self.file_format, **kwargs
             )
+        elif self.multifile and self.format in _available_engines.keys():
+            # try to read a multi-file using default xarray engines
+            ds = xr.open_mfdataset(model_file, engine=self.format, **kwargs)
+        elif self.format in _available_engines.keys():
+            # try to read using default xarray engines
+            ds = xr.open_dataset(model_file, engine=self.format, **kwargs)
+        else:
+            raise ValueError(f"Unknown reader for format {self.format}")
         # append node equilibrium tide if not in constituents list
         if kwargs["append_node"] and ("node" not in ds.tmd.constituents):
             # calculate and append node equilibrium tide

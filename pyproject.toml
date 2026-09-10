@@ -200,7 +200,7 @@ args = [
     { "arg" = "flags", "default" = "--jobs=auto" },
     { "arg" = "auto", "default" = "" },
 ]
-cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build"
+cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build/{{ builder }}"
 cwd = "doc"
 description = "Create documentation with sphinx"
 
@@ -221,7 +221,8 @@ depends-on = [
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.fetch]
-cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout=360)'"
+args = [{ "arg" = "timeout", "default" = "360" }]
+cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout={{ timeout }})'"
 default-environment = "dev"
 description = "Fetch data needed to run the pytest suite"
 

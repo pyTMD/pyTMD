@@ -200,7 +200,7 @@ def test_legendre(l):
 
 
 def test_legendre_hw95():
-    """test the calculation of Legendre polynomials 
+    """test the calculation of fully-normalized Legendre polynomials 
     and their derivative versus values from HW95
     """
     # colatitude for test values
@@ -239,25 +239,25 @@ def test_legendre_hw95():
     # test for two points provided with HW95 catalog
     PLM = np.zeros((2))
     DPLM = np.zeros((2))
+    # calculate legendre polynomials with Mohlenkamp recursion relation
+    P1, D1 = pyTMD.math.legendreP(6, np.cos(theta))
     # check each row of values
     for (l, m, PLM[0], DPLM[0], PLM[1], DPLM[1]) in validation:
         # verify that degree and order are integers
         l = int(l)
         m = int(m)
-        # HW95 normalization of degree l and order m
-        # Condon-Shortley phase
+        # compare HW95 against recursion relation
+        assert np.allclose(P1[l, m], PLM, atol=1e-12)
+        assert np.allclose(D1[l, m], DPLM, atol=1e-12)
+        # HW95 normalization of degree l and order m:
+        # fully-normalized without Condon-Shortley phase
         cs = pyTMD.math._condon_shortley(m)
-        # Kronecker delta
-        kron = pyTMD.math._kronecker_delta(m, 0)
-        # normalization factors
-        norm = pyTMD.math._legendre_norm(l, m)
-        dfactor = np.sqrt(2.0 * l + 1.0)
-        # unapply Condon-Shortley phase
-        hw = cs * dfactor * norm * np.sqrt(2.0 - kron)
+        # normalization factors (unapply Condon-Shortley phase)
+        norm = cs * pyTMD.math._legendre_norm(l, m, normalization="full")
         # Legendre polynomials and their first derivative
-        Plm, dPlm = pyTMD.math.legendre(l, np.cos(theta), m=m, norm=hw)
-        assert np.allclose(Plm, PLM, atol=1e-05)
-        assert np.allclose(dPlm, DPLM, atol=1e-05)
+        P2, D2 = pyTMD.math.legendre(l, np.cos(theta), m=m, norm=norm)
+        assert np.allclose(P2, PLM, atol=1e-12)
+        assert np.allclose(D2, DPLM, atol=1e-12)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():

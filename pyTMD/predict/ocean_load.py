@@ -244,7 +244,7 @@ def infer_minor(
     Returns
     -------
     tinfer: xr.DataArray
-        Tidal time series for minor constituents
+        Inferred tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -313,7 +313,7 @@ def _infer_short_period(
     Returns
     -------
     tinfer: xr.DataArray
-        Tidal time series for minor constituents
+        Inferred tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -477,7 +477,7 @@ def _infer_semi_diurnal(
     Returns
     -------
     tinfer: xr.DataArray
-        Tidal time series for minor constituents
+        Inferred tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -549,7 +549,7 @@ def _infer_diurnal(
     Returns
     -------
     tinfer: xr.DataArray
-        Tidal time series for minor constituents
+        Inferred tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
@@ -621,7 +621,7 @@ def _infer_long_period(
     Returns
     -------
     tinfer: xr.DataArray
-        Tidal time series for minor constituents
+        Inferred tidal time series
     """
     # set default keyword arguments
     kwargs.setdefault("deltat", 0.0)
