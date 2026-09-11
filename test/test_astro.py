@@ -1,5 +1,5 @@
 """
-test_astro.py (06/2026)
+test_astro.py (09/2026)
 Tests astronomical routines
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2026: added nutation angle validation checks from the NAOJ
     Updated 06/2026: added unit tests for lunisolar coordinates
         added unit test for ASTRO5 mean longitudes
     Updated 03/2026: test all approximate ECEF methods for lunisolar XYZ
@@ -161,49 +162,38 @@ def test_precession_matrix():
 # parametrize method for calculating nutation angles
 @pytest.mark.parametrize("method", ["Meeus", "IERS", "USNO", "approximate"])
 def test_nutation_angles(method):
-    """Test that the nutation angles match expected outputs
+    """Test that the nutation angles match expected outputs calculated
+    by the National Astronomical Observatory of Japan (NAOJ)
     """
     names = ("date", "dpsi", "deps")
     formats = ('datetime64[s]', 'f8', 'f8')
     validation = np.array(
         [
+            ("2009-01-01T00:00:00", 13.391, 5.587),
             ("2010-01-01T00:00:00", 16.449, 2.824),
-            ("2010-01-02T00:00:00", 16.616, 2.870),
-            ("2010-01-03T00:00:00", 16.716, 2.928),
-            ("2010-01-04T00:00:00", 16.741, 2.983),
-            ("2010-01-05T00:00:00", 16.708, 3.019),
-            ("2010-01-06T00:00:00", 16.645, 3.030),
-            ("2010-01-07T00:00:00", 16.585, 3.015),
-            ("2010-01-08T00:00:00", 16.552, 2.982),
-            ("2010-01-09T00:00:00", 16.561, 2.939),
-            ("2010-01-10T00:00:00", 16.615, 2.898),
-            ("2010-01-11T00:00:00", 16.708, 2.865),
-            ("2010-01-12T00:00:00", 16.827, 2.849),
-            ("2010-01-13T00:00:00", 16.957, 2.851),
-            ("2010-01-14T00:00:00", 17.079, 2.872),
-            ("2010-01-15T00:00:00", 17.179, 2.909),
-            ("2010-01-16T00:00:00", 17.246, 2.956),
-            ("2010-01-17T00:00:00", 17.272, 3.007),
-            ("2010-01-18T00:00:00", 17.258, 3.055),
-            ("2010-01-19T00:00:00", 17.210, 3.095),
-            ("2010-01-20T00:00:00", 17.139, 3.120),
-            ("2010-01-21T00:00:00", 17.058, 3.128),
-            ("2010-01-22T00:00:00", 16.986, 3.118),
-            ("2010-01-23T00:00:00", 16.940, 3.093),
-            ("2010-01-24T00:00:00", 16.936, 3.058),
-            ("2010-01-25T00:00:00", 16.986, 3.020),
-            ("2010-01-26T00:00:00", 17.092, 2.991),
-            ("2010-01-27T00:00:00", 17.244, 2.981),
-            ("2010-01-28T00:00:00", 17.416, 2.999),
-            ("2010-01-29T00:00:00", 17.570, 3.045),
-            ("2010-01-30T00:00:00", 17.672, 3.112),
-            ("2010-01-31T00:00:00", 17.699, 3.183),
+            ("2011-01-01T00:00:00", 17.493, -0.155),
+            ("2012-01-01T00:00:00", 16.969, -3.089),
+            ("2013-01-01T00:00:00", 14.656, -5.942),
+            ("2014-01-01T00:00:00", 10.393, -8.278),
+            ("2015-01-01T00:00:00", 4.872, -9.540),
+            ("2016-01-01T00:00:00", -0.849, -9.741),
+            ("2017-01-01T00:00:00", -6.459, -9.046),
+            ("2018-01-01T00:00:00", -11.564, -7.362),
+            ("2019-01-01T00:00:00", -15.089, -4.713),
+            ("2020-01-01T00:00:00", -16.494, -1.702),
+            ("2021-01-01T00:00:00", -16.160, 1.265),
+            ("2022-01-01T00:00:00", -14.344, 4.082),
+            ("2023-01-01T00:00:00", -10.569, 6.550),
+            ("2024-01-01T00:00:00", -5.359, 8.067),
+            ("2025-01-01T00:00:00", 0.198, 8.504),
+            ("2026-01-01T00:00:00", 5.421, 8.066),
+            ("2027-01-01T00:00:00", 10.554, 6.840),
         ],
         dtype=dict(names=names, formats=formats)
     )
     # convert dates to timescale object
     ts = timescale.from_datetime(validation['date'])
-    T = (ts.MJD - 51544.5)/36525.0
+    T = (ts.MJD - pyTMD.astro._mjd_j2000) / pyTMD.astro._century
     # estimate the nutation in longitude and obliquity
     dpsi, deps = pyTMD.astro._nutation_angles(T, method=method)
     # tolerances for each method
