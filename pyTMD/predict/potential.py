@@ -50,6 +50,8 @@ __all__ = [
     "_frequency_dependence_diurnal",
     "_frequency_dependence_long_period",
     "ocean_harmonics",
+    "time_series",
+    "infer_minor",
 ]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
