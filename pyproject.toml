@@ -216,7 +216,7 @@ description = "Create documentation with sphinx and live-reload over a browser"
 
 [tool.pixi.feature.doc.tasks.clean-docs]
 depends-on = [
-    { task = "docs", args = ["html", "--jobs=auto --fresh-env", ""] },
+    { task = "docs", args = ["html", "--jobs=auto --fresh-env --write-all", ""] },
 ]
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
