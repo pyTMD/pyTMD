@@ -139,6 +139,11 @@ plot_html_show_formats = False
 plot_html_show_source_link = False
 numfig = True
 numfig_secnum_depth = 1
+linkcheck_ignore = [
+    r"http://dx.doi\.org/.+",
+    r"https://doi\.org/.+",
+    r"https://ui.adsabs.harvard.edu/.+",
+]
 
 # -- Options for HTML output -------------------------------------------------
 
