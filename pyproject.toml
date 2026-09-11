@@ -220,6 +220,12 @@ depends-on = [
 ]
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
+[tool.pixi.feature.doc.tasks.linkcheck-docs]
+depends-on = [
+    { task = "docs", args = ["linkcheck", "", ""] },
+]
+description = "Check documentation for broken links using sphinx"
+
 [tool.pixi.feature.dev.tasks.fetch]
 args = [{ "arg" = "timeout", "default" = "360" }]
 cmd = "python -c 'import pyTMD; pyTMD.datasets.fetch.test_data(timeout={{ timeout }})'"
