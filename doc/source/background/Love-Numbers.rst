@@ -74,7 +74,7 @@ Load Love Numbers
 
 Load Love numbers describe the deformation of the solid Earth in response to a change in *surface mass load* :cite:p:`Munk:1960uk`.
 The loading change, such as the redistribution of ocean mass from tides or circulation, acts upon the *surface of the Earth* :cite:p:`Wahr:1998hy`.
-These ":term:`load tides <Load Tide>`" are computed through a convolution of the tidal constituents and load Love numbers typically by either a Green's function or :ref:`spherical harmonic <spherical-harmonics>` approach :cite:p:`Agnew:2013vx,Farrell:1972cm`.
+These ":term:`load tides <Load Tide>`" are computed through a convolution of the tidal constituents and load Love numbers typically by either a Green's function or :ref:`spherical harmonic <spherical-harmonics>` approach :cite:p:`Agnew:2013vx,Farrell:1972cm,Ray:1989wf`.
 In either of those cases, the calculation uses a set of load Love numbers to high :ref:`spherical harmonic degree <spherical-harmonics>`.
 
 .. role:: raw-html(raw)
