@@ -801,7 +801,7 @@ def ocean_harmonics(
     a_axis: float = _wgs84.a_axis,
     flat: float = _wgs84.flat,
     GM: float = _wgs84.GM,
-    rho_w: float = 1025.0,
+    rho_w: float | xr.DataArray = 1025.0,
     lln: str = "han-wahr",
     reference: str = "CE",
     **kwargs,
@@ -822,8 +822,10 @@ def ocean_harmonics(
         Ellipsoidal flattening
     GM: float, default 3.986004418e14
         Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
-    rho_w: float, default 1025.0
+    rho_w: float or xarray.DataArray, default 1025.0
         Density of sea water (kg m\ :sup:`-3`)
+
+        Can be spatially uniform or a grid matching the tidal dataset
     lln: str, default 'han-wahr'
         name of the Load Love number dataset to use
 
@@ -843,6 +845,9 @@ def ocean_harmonics(
     -------
     Ylms: xr.Dataset
         Fully-normalized spherical harmonic coefficients
+
+            - ``alm``: tidal constituent in-phase components
+            - ``blm``: tidal constituent out-of-phase components
     """
     # verify units of input data are in meters
     ds = ds.tmd.to_units("meters")
@@ -916,36 +921,37 @@ def ocean_harmonics(
     int_coeff = int_fact * Plm
 
     # allocate for output spherical harmonics
-    clm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
-    slm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
+    alm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
+    blm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
     # for each constituent
     for i, c in enumerate(constituents):
         # get constituent and replace nans with 0
         data = ds[c].fillna(0.0)
         # multiply gridded data with sin/cos of m#lambda
         # sum through all lambdas in the dot product
-        d_real = m_lmda.dot(data.real)
-        d_imag = m_lmda.dot(data.imag)
+        # multiply heights by sea water density
+        d_real = m_lmda.dot(rho_w * data.real)
+        d_imag = m_lmda.dot(rho_w * data.imag)
         # adjust load Love numbers for frequency dependence
         dh, dk[2, 1], dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
-        # degree dependent factors for converting from sea water equivalent
+        # degree dependent factors for converting from water equivalent
         # taking into account frequency dependence of load Love numbers
         # modified from Wahr et al., (2018)
         dfactor = (
-            (3.0 * rho_w)
+            3.0
             * (1.0 + kl + dk)
             / (1.0 + 2.0 * Plm.l)
             / (4.0 * np.pi * rad_e * rho_e)
         )
         # integrate over all latitudes
         # fully-normalize output spherical harmonics
-        clm[:, :, i] = dfactor * int_coeff.dot(d_real, dim="y")
-        slm[:, :, i] = dfactor * int_coeff.dot(d_imag, dim="y")
+        alm[:, :, i] = dfactor * int_coeff.dot(d_real, dim="y")
+        blm[:, :, i] = dfactor * int_coeff.dot(d_imag, dim="y")
     # convert to xarray dataset
     Ylms = xr.Dataset(
         data_vars=dict(
-            clm=(["l", "m", "constituent"], clm),
-            slm=(["l", "m", "constituent"], slm),
+            alm=(["l", "m", "constituent"], alm),
+            blm=(["l", "m", "constituent"], blm),
         ),
         coords={"l": l, "m": m, "constituent": constituents},
     )
@@ -957,15 +963,15 @@ def ocean_harmonics(
     Ylms.l.attrs["units"] = "wavenumber"
     Ylms.m.attrs["units"] = "wavenumber"
     # add attributes for spherical harmonics
-    Ylms.clm.attrs["long_name"] = "cosine spherical harmonics"
-    Ylms.slm.attrs["long_name"] = "sine spherical harmonics"
-    Ylms.clm.attrs["description"] = (
+    Ylms.alm.attrs["long_name"] = "cosine spherical harmonics"
+    Ylms.blm.attrs["long_name"] = "sine spherical harmonics"
+    Ylms.alm.attrs["description"] = (
         "spherical harmonic coefficients containing the "
-        "real part of the tidal constituents"
+        "real (in-phase) part of the tidal constituents"
     )
-    Ylms.slm.attrs["description"] = (
+    Ylms.blm.attrs["description"] = (
         "spherical harmonic coefficients containing the "
-        "imaginary part of the tidal constituents"
+        "imaginary (out-of-phase) part of the tidal constituents"
     )
     # copy attributes from original dataset
     Ylms.attrs.update(ds.attrs)
@@ -982,7 +988,11 @@ def ocean_harmonics(
     Ylms.attrs["earth_density"] = f"{rho_e:0.3f} kg/m^3"
     Ylms.attrs["earth_inverse_flattening"] = f"{1.0 / flat:0.3f}"
     Ylms.attrs["earth_gravity_constant"] = f"{GM:0.3f} m^3/s^2"
-    Ylms.attrs["seawater_density"] = f"{rho_w:0.3f} kg/m^3"
+    # add attribute for seawater density (uniform or gridded)
+    if isinstance(rho_w, float):
+        Ylms.attrs["seawater_density"] = f"{rho_w:0.3f} kg/m^3"
+    else:
+        Ylms.attrs["seawater_density"] = "gridded"
     # check if chunks were present in original dataset
     if hasattr(ds, "chunks") and ds.chunks is not None:
         Ylms = Ylms.chunk("auto")
@@ -1005,6 +1015,9 @@ def time_series(
         Days relative to 1992-01-01T00:00:00
     Ylms: xarray.Dataset
         Dataset with spherical harmonic coefficients
+
+            - ``alm``: tidal constituent in-phase components
+            - ``blm``: tidal constituent out-of-phase components
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     kwargs: dict
@@ -1056,13 +1069,14 @@ def time_series(
 
     # sum over tidal constituents
     tpred = xr.Dataset()
+    # add together the in-phase and out-of-phase components
     tpred["clm"] = (
-        Ylms.clm.real * arguments.f * arguments.theta.real
-        - Ylms.slm.real * arguments.f * arguments.theta.imag
+        Ylms.alm.real * arguments.f * arguments.theta.real
+        - Ylms.blm.real * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     tpred["slm"] = (
-        Ylms.clm.imag * arguments.f * arguments.theta.real
-        - Ylms.slm.imag * arguments.f * arguments.theta.imag
+        Ylms.alm.imag * arguments.f * arguments.theta.real
+        - Ylms.blm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     # add attributes for spherical harmonics
     tpred.clm.attrs["long_name"] = "cosine spherical harmonics"
@@ -1092,6 +1106,9 @@ def infer_minor(
         Days relative to 1992-01-01T00:00:00
     Ylms: xarray.Dataset
         Dataset with spherical harmonic coefficients
+
+            - ``alm``: tidal constituent in-phase components
+            - ``blm``: tidal constituent out-of-phase components
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     kwargs: dict
@@ -1108,14 +1125,14 @@ def infer_minor(
     kwargs.setdefault("deltat", 0.0)
     kwargs.setdefault("corrections", "GOT")
     # extract harmonics and convert to datasets
-    clm = Ylms.clm.to_dataset(dim="constituent")
-    slm = Ylms.slm.to_dataset(dim="constituent")
+    alm = Ylms.alm.to_dataset(dim="constituent")
+    blm = Ylms.blm.to_dataset(dim="constituent")
     # get admittances and convert to data arrays
-    cadm = minor_admittance(clm, **kwargs).tmd.to_dataarray()
-    sadm = minor_admittance(slm, **kwargs).tmd.to_dataarray()
+    Aadm = minor_admittance(alm, **kwargs).tmd.to_dataarray()
+    Badm = minor_admittance(blm, **kwargs).tmd.to_dataarray()
 
     # list of constituents to infer
-    constituents = np.array(cadm.coords["constituent"].values)
+    constituents = np.array(Aadm.coords["constituent"].values)
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # load the nodal corrections for minor constituents
@@ -1139,12 +1156,12 @@ def infer_minor(
     # sum over tidal constituents
     tinfer = xr.Dataset()
     tinfer["clm"] = (
-        cadm.real * arguments.f * arguments.theta.real
-        - sadm.real * arguments.f * arguments.theta.imag
+        Aadm.real * arguments.f * arguments.theta.real
+        - Badm.real * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     tinfer["slm"] = (
-        cadm.imag * arguments.f * arguments.theta.real
-        - sadm.imag * arguments.f * arguments.theta.imag
+        Aadm.imag * arguments.f * arguments.theta.real
+        - Badm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     # add attributes for spherical harmonics
     tinfer.clm.attrs["long_name"] = "cosine spherical harmonics"
