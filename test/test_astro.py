@@ -1,5 +1,5 @@
 """
-test_astro.py (06/2026)
+test_astro.py (09/2026)
 Tests astronomical routines
 
 PYTHON DEPENDENCIES:
@@ -10,6 +10,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 09/2026: added nutation angle validation checks from the NAOJ
     Updated 06/2026: added unit tests for lunisolar coordinates
         added unit test for ASTRO5 mean longitudes
     Updated 03/2026: test all approximate ECEF methods for lunisolar XYZ
@@ -158,6 +159,53 @@ def test_precession_matrix():
     P = pyTMD.astro._precession_matrix(T)
     assert np.allclose(expected, P[:,:,0])
 
+# parametrize method for calculating nutation angles
+@pytest.mark.parametrize("method", ["Meeus", "IERS", "USNO", "approximate"])
+def test_nutation_angles(method):
+    """Test that the nutation angles match expected outputs calculated
+    by the National Astronomical Observatory of Japan (NAOJ)
+    """
+    names = ("date", "dpsi", "deps")
+    formats = ('datetime64[s]', 'f8', 'f8')
+    validation = np.array(
+        [
+            ("2009-01-01T00:00:00", 13.391, 5.587),
+            ("2010-01-01T00:00:00", 16.449, 2.824),
+            ("2011-01-01T00:00:00", 17.493, -0.155),
+            ("2012-01-01T00:00:00", 16.969, -3.089),
+            ("2013-01-01T00:00:00", 14.656, -5.942),
+            ("2014-01-01T00:00:00", 10.393, -8.278),
+            ("2015-01-01T00:00:00", 4.872, -9.540),
+            ("2016-01-01T00:00:00", -0.849, -9.741),
+            ("2017-01-01T00:00:00", -6.459, -9.046),
+            ("2018-01-01T00:00:00", -11.564, -7.362),
+            ("2019-01-01T00:00:00", -15.089, -4.713),
+            ("2020-01-01T00:00:00", -16.494, -1.702),
+            ("2021-01-01T00:00:00", -16.160, 1.265),
+            ("2022-01-01T00:00:00", -14.344, 4.082),
+            ("2023-01-01T00:00:00", -10.569, 6.550),
+            ("2024-01-01T00:00:00", -5.359, 8.067),
+            ("2025-01-01T00:00:00", 0.198, 8.504),
+            ("2026-01-01T00:00:00", 5.421, 8.066),
+            ("2027-01-01T00:00:00", 10.554, 6.840),
+        ],
+        dtype=dict(names=names, formats=formats)
+    )
+    # convert dates to timescale object
+    ts = timescale.from_datetime(validation['date'])
+    T = (ts.MJD - pyTMD.astro._mjd_j2000) / pyTMD.astro._century
+    # estimate the nutation in longitude and obliquity
+    dpsi, deps = pyTMD.astro._nutation_angles(T, method=method)
+    # tolerances for each method
+    atol = dict(Meeus=0.08, IERS=0.002, USNO=0.4, approximate=0.3)
+    # check nutation angles against validation time series
+    assert np.allclose(
+        pyTMD.math.rad2asec(dpsi), validation['dpsi'], atol=atol[method]
+    )
+    assert np.allclose(
+        pyTMD.math.rad2asec(deps), validation['deps'], atol=atol[method]
+    )
+    
 def test_nutation_matrix():
     """Test that the nutation matrix matches expected outputs
     """
