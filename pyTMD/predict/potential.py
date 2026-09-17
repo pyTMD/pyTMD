@@ -808,7 +808,7 @@ def ocean_harmonics(
 ):
     r"""
     Converts ocean tide model constituents into spherical
-    harmonic coefficients :cite:p:`Petit:2010tp,Wahr:1998hy`
+    harmonic coefficients :cite:p:`Petit:2010tp,Ray:1989wf,Wahr:1998hy`
 
     Parameters
     ----------
@@ -846,8 +846,8 @@ def ocean_harmonics(
     Ylms: xr.Dataset
         Fully-normalized spherical harmonic coefficients
 
-            - ``alm``: tidal constituent in-phase components
-            - ``blm``: tidal constituent out-of-phase components
+            - ``alm``: tidal constituent (in-phase) components
+            - ``blm``: tidal constituent (out-of-phase) components
     """
     # verify units of input data are in meters
     ds = ds.tmd.to_units("meters")
@@ -921,6 +921,8 @@ def ocean_harmonics(
     int_coeff = int_fact * Plm
 
     # allocate for output spherical harmonics
+    # alm: in-phase (real) parts of the tidal constituents
+    # blm: out-of-phase (imaginary) parts of the tidal constituents
     alm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
     blm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
     # for each constituent
@@ -930,6 +932,8 @@ def ocean_harmonics(
         # multiply gridded data with sin/cos of m#lambda
         # sum through all lambdas in the dot product
         # multiply heights by sea water density
+        # sea water density can be a scalar value for uniform
+        # or a map of the column averages
         d_real = m_lmda.dot(rho_w * data.real)
         d_imag = m_lmda.dot(rho_w * data.imag)
         # adjust load Love numbers for frequency dependence
@@ -963,8 +967,8 @@ def ocean_harmonics(
     Ylms.l.attrs["units"] = "wavenumber"
     Ylms.m.attrs["units"] = "wavenumber"
     # add attributes for spherical harmonics
-    Ylms.alm.attrs["long_name"] = "complex spherical harmonics (real)"
-    Ylms.blm.attrs["long_name"] = "complex spherical harmonics (imag)"
+    Ylms.alm.attrs["long_name"] = "complex spherical harmonics (in-phase)"
+    Ylms.blm.attrs["long_name"] = "complex spherical harmonics (out-of-phase)"
     Ylms.alm.attrs["description"] = (
         "spherical harmonic coefficients containing the "
         "real (in-phase) part of the tidal constituents"

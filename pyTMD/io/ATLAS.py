@@ -122,6 +122,8 @@ def open_dataset(
             ds2[c].attrs["units"] = units
     # merge datasets
     ds = xr.merge([ds1, ds2], combine_attrs=combine_attrs, compat="override")
+    # mask where there are invalid bathymetries
+    ds = ds.where(ds.bathymetry.notnull(), None, drop=False)
     # return xarray dataset
     return ds
 
@@ -298,8 +300,6 @@ def open_atlas_dataset(
         ds.coords["x"] = tmp["lon_v"]
         ds.coords["y"] = tmp["lat_v"]
         ds[con].attrs["units"] = tmp["vRe"].attrs.get("units")
-    # set complex zero values to nan
-    ds = ds.where(ds[con] != 0, None, drop=False)
     # swap dimension names
     ds = ds.swap_dims(dict(nx="x", ny="y"))
     # add attributes
