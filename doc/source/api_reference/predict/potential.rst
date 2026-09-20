@@ -25,8 +25,6 @@
 
 .. autofunction:: pyTMD.predict.potential._frequency_dependence_long_period
 
-.. autofunction:: pyTMD.predict.potential.ocean_harmonics
-
 .. autofunction:: pyTMD.predict.potential.time_series
 
 .. autofunction:: pyTMD.predict.potential.infer_minor
