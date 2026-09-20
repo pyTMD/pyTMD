@@ -16,4 +16,6 @@ They can be computed as the sum of several effects :cite:p:`Hartmann:1995va,Tamu
 6. **Centripetal effects**: centripetal acceleration from the Earth's variable rotation (modulated by :ref:`polar motion <pole-tides>` and ocean loading)
 
 The first three effects are often combined to calculate a major component of the gravity tide based on the tide-generating force and the Earth's elastic response :cite:p:`Hartmann:1995va,Hartmann:1995jp`.
+However, locations close in proximity to the ocean may be more sensitive to gravitational perturbations induced by ocean tides :cite:p:`Merriam:1980cm`.
+
 As with :ref:`solid Earth tides <solid-earth-tides>`, the :ref:`love-and-shida-numbers` are frequency-dependent (particularly in the diurnal band due to :term:`Free Core Nutation` resonance) :cite:p:`Wahr:1979vx,Wahr:1981if`.
