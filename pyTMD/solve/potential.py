@@ -20,6 +20,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 09/2026: added function to estimate sea water densities
     Written 09/2026
 """
 
@@ -35,6 +36,7 @@ import pyTMD.spatial
 __all__ = [
     "ocean_harmonics",
     "crustal_loading",
+    "_seawater_density",
 ]
 
 # tables of load Love/Shida numbers
@@ -393,3 +395,46 @@ def crustal_loading(
         tmp = tmp.chunk("auto")
     # return the spatial dataset of tidal constituents
     return tmp
+
+
+def _seawater_density(
+    temperature: np.ndarray,
+    salinity: np.ndarray,
+):
+    r"""
+    Calculates the density of sea water using the EOS-80 model
+    :cite:p:`UNESCO:1981um,Fofonoff:1983wi`
+
+    Parameters
+    ----------
+    temperature: np.ndarray
+        Sea water temperature (\ |degree| C)
+    salinity: np.ndarray
+        Sea water salinity (unitness)
+
+    Returns
+    -------
+    rho_w: np.ndarray
+        Sea water density (kg/m\ :sup:`3`)
+
+    .. |degree|    unicode:: U+00B0 .. DEGREE SIGN
+    """
+    # fresh water density at atmospheric pressure as function of temperature
+    # coefficients from equation 14 of Fofonoff (1983) derived from Bigg (1967)
+    a = np.array(
+        [999.842594, 6.793952e-2, -9.095290e-3, -1.120083e-6, 6.536332e-9]
+    )
+    # polynomial coefficients involving salinity
+    b = np.array([0.824493, -4.0899e-3, 7.6438e-5, -8.2467e-7, 5.3875e-9])
+    c = np.array([-5.72466e-3, 1.0227e-4, -1.6546e-6])
+    d = np.array([4.8314e-4])
+    # seawater density at atmospheric pressure
+    # equation 13 of Fofonoff (1983)
+    rho_w = (
+        pyTMD.math.polynomial_sum(a, temperature)
+        + np.power(salinity, 1.0) * pyTMD.math.polynomial_sum(b, temperature)
+        + np.power(salinity, 1.5) * pyTMD.math.polynomial_sum(c, temperature)
+        + np.power(salinity, 2.0) * pyTMD.math.polynomial_sum(d, temperature)
+    )
+    # return the sea water density
+    return rho_w
