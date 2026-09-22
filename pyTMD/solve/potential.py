@@ -20,6 +20,7 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 09/2026: added function to estimate sea water densities
     Written 09/2026
 """
 
@@ -35,6 +36,7 @@ import pyTMD.spatial
 __all__ = [
     "ocean_harmonics",
     "crustal_loading",
+    "_seawater_density",
 ]
 
 # tables of load Love/Shida numbers
@@ -99,8 +101,8 @@ def ocean_harmonics(
     Ylms: xr.Dataset
         Fully-normalized spherical harmonic coefficients
 
-            - ``alm``: tidal constituent (in-phase) components
-            - ``blm``: tidal constituent (out-of-phase) components
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
     """
     # verify units of input data are in meters
     ds = ds.tmd.to_units("meters")
@@ -168,16 +170,15 @@ def ocean_harmonics(
         coords={"l": l, "m": m},
     )
 
-    # calculate cos/sin of lambda arrays using Euler's formula
-    m_lmda = np.exp(1j * Plm.m.dot(lmda))
+    # calculate cos/sin of lambda arrays
+    m_cos = np.cos(Plm.m.dot(lmda))
+    m_sin = np.sin(Plm.m.dot(lmda))
     # integration coefficients for converting to spherical harmonics
     int_coeff = int_fact * Plm
 
     # allocate for output spherical harmonics
-    # alm: in-phase (real) parts of the tidal constituents
-    # blm: out-of-phase (imaginary) parts of the tidal constituents
-    alm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
-    blm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
+    clm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
+    slm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
     # for each constituent
     for i, c in enumerate(constituents):
         # get constituent and replace nans with 0
@@ -187,8 +188,8 @@ def ocean_harmonics(
         # multiply heights by sea water density
         # sea water density can be a scalar value for uniform
         # or a map of the column averages
-        d_real = m_lmda.dot(rho_w * data.real)
-        d_imag = m_lmda.dot(rho_w * data.imag)
+        d_cos = m_cos.dot(rho_w * data)
+        d_sin = m_sin.dot(rho_w * data)
         # adjust load Love numbers for frequency dependence
         dh, dk[2, 1], dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
         # degree dependent factors for converting from water equivalent
@@ -202,13 +203,13 @@ def ocean_harmonics(
         )
         # integrate over all latitudes
         # fully-normalize output spherical harmonics
-        alm[:, :, i] = dfactor * int_coeff.dot(d_real, dim="y")
-        blm[:, :, i] = dfactor * int_coeff.dot(d_imag, dim="y")
+        clm[:, :, i] = dfactor * int_coeff.dot(d_cos, dim="y")
+        slm[:, :, i] = dfactor * int_coeff.dot(d_sin, dim="y")
     # convert to xarray dataset
     Ylms = xr.Dataset(
         data_vars=dict(
-            alm=(["l", "m", "constituent"], alm),
-            blm=(["l", "m", "constituent"], blm),
+            clm=(["l", "m", "constituent"], clm),
+            slm=(["l", "m", "constituent"], slm),
         ),
         coords={"l": l, "m": m, "constituent": constituents},
     )
@@ -220,15 +221,15 @@ def ocean_harmonics(
     Ylms.l.attrs["units"] = "wavenumber"
     Ylms.m.attrs["units"] = "wavenumber"
     # add attributes for spherical harmonics
-    Ylms.alm.attrs["long_name"] = "complex spherical harmonics (in-phase)"
-    Ylms.blm.attrs["long_name"] = "complex spherical harmonics (out-of-phase)"
-    Ylms.alm.attrs["description"] = (
-        "spherical harmonic coefficients containing the "
-        "real (in-phase) part of the tidal constituents"
+    Ylms.clm.attrs["long_name"] = "cosine spherical harmonics (complex)"
+    Ylms.slm.attrs["long_name"] = "sine spherical harmonics (complex)"
+    Ylms.clm.attrs["description"] = (
+        "cosine spherical harmonic coefficients containing the in-phase (real) "
+        "and out-of-phase (imag) parts of the tidal constituents"
     )
-    Ylms.blm.attrs["description"] = (
-        "spherical harmonic coefficients containing the "
-        "imaginary (out-of-phase) part of the tidal constituents"
+    Ylms.slm.attrs["description"] = (
+        "sine spherical harmonic coefficients containing the in-phase (real) "
+        "and out-of-phase (imag) parts of the tidal constituents"
     )
     # copy attributes from original dataset
     Ylms.attrs.update(ds.attrs)
@@ -279,8 +280,8 @@ def crustal_loading(
     Ylms: xarray.Dataset
         Dataset with spherical harmonic coefficients
 
-            - ``alm``: tidal constituent in-phase components
-            - ``blm``: tidal constituent out-of-phase components
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
     lmax: int or None, default None
         Upper bound of spherical harmonic degrees
     a_axis: float, default 6378136.3
@@ -319,10 +320,10 @@ def crustal_loading(
     if lmax < Ylms.l.max():
         Ylms = Ylms.where((Ylms.l <= lmax) & (Ylms.m <= lmax), drop=True)
     # extract harmonics and convert to datasets
-    alm = Ylms.alm.conj().to_dataset(dim="constituent")
-    blm = Ylms.blm.conj().to_dataset(dim="constituent")
+    clm = Ylms.clm.to_dataset(dim="constituent")
+    slm = Ylms.slm.to_dataset(dim="constituent")
     # list of tidal constituents
-    constituents = alm.tmd.constituents
+    constituents = clm.tmd.constituents
     # angular frequencies for constituents
     omega = pyTMD.constituents.frequency(constituents, **kwargs)
 
@@ -364,8 +365,9 @@ def crustal_loading(
         coords={"l": l, "m": m},
     )
 
-    # calculate cos/sin of lambda arrays using Euler's formula
-    m_lmda = np.exp(1j * Plm.m.dot(lmda))
+    # calculate cos/sin of lambda arrays
+    m_cos = np.cos(Plm.m.dot(lmda))
+    m_sin = np.sin(Plm.m.dot(lmda))
 
     # create output dataset
     tmp = xr.Dataset(coords=ds.coords)
@@ -377,14 +379,10 @@ def crustal_loading(
         # taking into account frequency dependence of load Love numbers
         dfactor = rad_e * (hl + dh)
         # summation over all spherical harmonic degrees
-        p_real = Plm.dot(dfactor * alm[c], dim="l")
-        p_imag = Plm.dot(dfactor * blm[c], dim="l")
+        p_cos = Plm.dot(dfactor * clm[c], dim="l")
+        p_sin = Plm.dot(dfactor * slm[c], dim="l")
         # summation of cosine and sine harmonics
-        # (dropping the imaginary component)
-        d_real = p_real.dot(m_lmda, dim="m").real
-        d_imag = p_imag.dot(m_lmda, dim="m").real
-        # summation of in-phase and out-of-phase components
-        tmp[c] = d_real + 1j * d_imag
+        tmp[c] = p_cos.dot(m_cos, dim="m") + p_sin.dot(m_sin, dim="m")
 
     # copy attributes from spherical harmonic dataset
     tmp.attrs.update(Ylms.attrs)
@@ -393,3 +391,46 @@ def crustal_loading(
         tmp = tmp.chunk("auto")
     # return the spatial dataset of tidal constituents
     return tmp
+
+
+def _seawater_density(
+    temperature: np.ndarray,
+    salinity: np.ndarray,
+):
+    r"""
+    Calculates the density of sea water using the EOS-80 model
+    :cite:p:`UNESCO:1981um,Fofonoff:1983wi`
+
+    Parameters
+    ----------
+    temperature: np.ndarray
+        Sea water temperature (\ |degree| C)
+    salinity: np.ndarray
+        Sea water salinity (unitness)
+
+    Returns
+    -------
+    rho_w: np.ndarray
+        Sea water density (kg/m\ :sup:`3`)
+
+    .. |degree|    unicode:: U+00B0 .. DEGREE SIGN
+    """
+    # fresh water density at atmospheric pressure as function of temperature
+    # coefficients from equation 14 of Fofonoff (1983) derived from Bigg (1967)
+    a = np.array(
+        [999.842594, 6.793952e-2, -9.095290e-3, -1.120083e-6, 6.536332e-9]
+    )
+    # polynomial coefficients involving salinity
+    b = np.array([0.824493, -4.0899e-3, 7.6438e-5, -8.2467e-7, 5.3875e-9])
+    c = np.array([-5.72466e-3, 1.0227e-4, -1.6546e-6])
+    d = np.array([4.8314e-4])
+    # seawater density at atmospheric pressure
+    # equation 13 of Fofonoff (1983)
+    rho_w = (
+        pyTMD.math.polynomial_sum(a, temperature)
+        + np.power(salinity, 1.0) * pyTMD.math.polynomial_sum(b, temperature)
+        + np.power(salinity, 1.5) * pyTMD.math.polynomial_sum(c, temperature)
+        + np.power(salinity, 2.0) * pyTMD.math.polynomial_sum(d, temperature)
+    )
+    # return the sea water density
+    return rho_w
