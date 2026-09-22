@@ -797,8 +797,8 @@ def time_series(
     Ylms: xarray.Dataset
         Dataset with spherical harmonic coefficients
 
-            - ``alm``: tidal constituent in-phase components
-            - ``blm``: tidal constituent out-of-phase components
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     kwargs: dict
@@ -852,12 +852,12 @@ def time_series(
     tpred = xr.Dataset()
     # add together the in-phase and out-of-phase components
     tpred["clm"] = (
-        Ylms.alm.real * arguments.f * arguments.theta.real
-        - Ylms.blm.real * arguments.f * arguments.theta.imag
+        Ylms.clm.real * arguments.f * arguments.theta.real
+        - Ylms.clm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     tpred["slm"] = (
-        Ylms.alm.imag * arguments.f * arguments.theta.real
-        - Ylms.blm.imag * arguments.f * arguments.theta.imag
+        Ylms.slm.real * arguments.f * arguments.theta.real
+        - Ylms.slm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     # add attributes for spherical harmonics
     tpred.clm.attrs["long_name"] = "cosine spherical harmonics"
@@ -888,8 +888,8 @@ def infer_minor(
     Ylms: xarray.Dataset
         Dataset with spherical harmonic coefficients
 
-            - ``alm``: tidal constituent in-phase components
-            - ``blm``: tidal constituent out-of-phase components
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
     kwargs: dict
@@ -906,14 +906,14 @@ def infer_minor(
     kwargs.setdefault("deltat", 0.0)
     kwargs.setdefault("corrections", "GOT")
     # extract harmonics and convert to datasets
-    alm = Ylms.alm.to_dataset(dim="constituent")
-    blm = Ylms.blm.to_dataset(dim="constituent")
+    clm = Ylms.clm.to_dataset(dim="constituent")
+    slm = Ylms.slm.to_dataset(dim="constituent")
     # get admittances and convert to data arrays
-    Aadm = minor_admittance(alm, **kwargs).tmd.to_dataarray()
-    Badm = minor_admittance(blm, **kwargs).tmd.to_dataarray()
+    Cadm = minor_admittance(clm, **kwargs).tmd.to_dataarray()
+    Sadm = minor_admittance(slm, **kwargs).tmd.to_dataarray()
 
     # list of constituents to infer
-    constituents = np.array(Aadm.coords["constituent"].values)
+    constituents = np.array(Cadm.coords["constituent"].values)
     # convert time to Modified Julian Days (MJD)
     MJD = t + _mjd_tide
     # load the nodal corrections for minor constituents
@@ -937,12 +937,12 @@ def infer_minor(
     # sum over tidal constituents
     tinfer = xr.Dataset()
     tinfer["clm"] = (
-        Aadm.real * arguments.f * arguments.theta.real
-        - Badm.real * arguments.f * arguments.theta.imag
+        Cadm.real * arguments.f * arguments.theta.real
+        - Cadm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     tinfer["slm"] = (
-        Aadm.imag * arguments.f * arguments.theta.real
-        - Badm.imag * arguments.f * arguments.theta.imag
+        Sadm.real * arguments.f * arguments.theta.real
+        - Sadm.imag * arguments.f * arguments.theta.imag
     ).sum(dim="constituent", skipna=False)
     # add attributes for spherical harmonics
     tinfer.clm.attrs["long_name"] = "cosine spherical harmonics"
