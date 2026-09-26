@@ -728,11 +728,9 @@ class Dataset:
             # reduce to data at the vertices
             nodes = [0, 1, 2] if (order == 1) else [0, 2, 4]
             ds = ds.isel(node=nodes)
-            # extract mesh x and y values
-            gridx, gridy = (ds.x.values, ds.y.values)
-        else:
-            # calculate meshgrid of cropped model coordinates
-            gridx, gridy = np.meshgrid(ds.x.values, ds.y.values)
+        # calculate meshgrid of cropped model coordinates
+        # or extract unstructured mesh x and y values
+        gridy, gridx = xr.broadcast(ds.y, ds.x)
         # initialize valid mask for building tree
         valid_mask = np.zeros_like(gridx, dtype=bool)
         tree = None
@@ -752,8 +750,8 @@ class Dataset:
                 valid_indices = np.nonzero(mask)
                 # reduce to valid original values
                 p_in = _to_cartesian(
-                    gridx[valid_indices],
-                    gridy[valid_indices],
+                    gridx.values[valid_indices],
+                    gridy.values[valid_indices],
                     is_geographic=self.crs.is_geographic,
                 )
                 # build kd-tree for valid points
@@ -983,6 +981,8 @@ class Dataset:
         """
         # copy dataset
         ds = self._ds.copy()
+        # get name of first listed constituent
+        c = self._ds.tmd.constituents[0]
         # Cartwright and Edden potential amplitude
         amajor = 0.027929  # node
         # Love numbers for long-period tides (Wahr, 1981)
@@ -991,11 +991,7 @@ class Dataset:
         # tilt factor: response with respect to the solid earth
         gamma_2 = 1.0 + k2 - h2
         # check dimensions
-        if (ds.x.ndim == 1) and (ds.y.ndim == 1):
-            # 2D grid of coordinates
-            x, y = np.meshgrid(self._x, self._y)
-        else:
-            x, y = ds.x.values, ds.y.values
+        y, x = xr.broadcast(ds.y, ds.x)
         # transform model coordinates to lat/lon coordinates
         lon, lat = _transform(
             x, y, source_crs=self.crs, target_crs=4326, direction="FORWARD"
@@ -1006,9 +1002,12 @@ class Dataset:
         P20 = 0.5 * (3.0 * np.cos(th) ** 2 - 1.0)
         # normalization for spherical harmonics
         dfactor = np.sqrt((4.0 + 1.0) / (4.0 * np.pi))
+        # allocate for output node equilibrium tide
+        ds["node"] = xr.zeros_like(ds[c])
         # calculate equilibrium node constants
-        hc = dfactor * P20 * gamma_2 * amajor * np.exp(-1j * np.pi)
-        ds["node"] = xr.DataArray(hc, dims=ds.dims, coords=ds.coords)
+        ds["node"].values = (
+            dfactor * P20 * gamma_2 * amajor * np.exp(-1j * np.pi)
+        )
         ds["node"].attrs["units"] = "m"
         # return xarray dataset
         return ds

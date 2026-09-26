@@ -9,7 +9,7 @@ from .fetch_database import fetch_database
 from .fetch_gsfc_got import fetch_gsfc_got
 from .fetch_iers_opole import fetch_iers_opole
 from .fetch_jpl_ssd import fetch_jpl_ssd
-from .fetch_test_data import fetch_test_data
+from .fetch_test_data import fetch_test_data, _figshare, _zenodo
 from .reduce_otis import reduce_otis
 
 # create fetch class to group fetching functions
