@@ -23,6 +23,8 @@ PROGRAM DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 09/2026: put try/except in fetch_test_data function
+        verify existence of output directory in the download functions
+        added option to not extract contents from zip files
     Updated 08/2026: use logging.getLogger in individual functions
     Updated 04/2026: check if needing to include algorithm in the hash
     Updated 03/2026: try multiple providers for fetching data
@@ -107,6 +109,7 @@ def fetch_test_data(
 def _figshare(
     directory: str | pathlib.Path = _default_directory,
     article: str = "30260326",
+    extract: bool = True,
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
@@ -122,6 +125,8 @@ def _figshare(
         Download directory
     article: str, default '30260326'
         figshare article number
+    extract: bool, default True
+        Extract contents from compressed files
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
@@ -133,6 +138,9 @@ def _figshare(
     """
     # get logger
     logger = logging.getLogger(__name__)
+    # create download directory if it doesn't exist
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # figshare API host
     HOST = pyTMD.utilities.URL(_figshare_api_url)
     articles_api = HOST.joinpath("articles", article)
@@ -164,7 +172,7 @@ def _figshare(
         if computed_md5 != f["supplied_md5"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
         # download file or extract files from zip
-        if pathlib.Path(f["name"]).suffix == ".zip":
+        if extract and pathlib.Path(f["filename"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
@@ -184,6 +192,7 @@ def _figshare(
 def _zenodo(
     directory: str | pathlib.Path = _default_directory,
     record: str = "18091740",
+    extract: bool = True,
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
@@ -199,6 +208,8 @@ def _zenodo(
         Download directory
     record: str, default '18091740'
         Zenodo record number
+    extract: bool, default True
+        Extract contents from compressed files
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
@@ -210,6 +221,9 @@ def _zenodo(
     """
     # get logger
     logger = logging.getLogger(__name__)
+    # create download directory if it doesn't exist
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # zenodo API host
     HOST = pyTMD.utilities.URL(_zenodo_api_url)
     records_api = HOST.joinpath("records", record)
@@ -246,7 +260,7 @@ def _zenodo(
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
         # download file or extract files from zip
-        if pathlib.Path(f["filename"]).suffix == ".zip":
+        if extract and pathlib.Path(f["filename"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
