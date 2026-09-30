@@ -101,6 +101,7 @@ dev = [
 "fetch_iers_opole.py" = "pyTMD.datasets.fetch_iers_opole:main"
 "fetch_jpl_ssd.py" = "pyTMD.datasets.fetch_jpl_ssd:main"
 "fetch_test_data.py" = "pyTMD.datasets.fetch_test_data:main"
+"fetch_usap_cats.py" = "pyTMD.datasets.fetch_usap_cats:main"
 "reduce_otis.py" = "pyTMD.datasets.reduce_otis:main"
 
 [tool.setuptools.packages.find]

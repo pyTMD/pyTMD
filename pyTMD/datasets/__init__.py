@@ -10,6 +10,7 @@ from .fetch_gsfc_got import fetch_gsfc_got
 from .fetch_iers_opole import fetch_iers_opole
 from .fetch_jpl_ssd import fetch_jpl_ssd
 from .fetch_test_data import fetch_test_data, _figshare, _zenodo
+from .fetch_usap_cats import fetch_usap_cats
 from .reduce_otis import reduce_otis
 
 # create fetch class to group fetching functions
@@ -22,3 +23,4 @@ fetch.gsfc_got = fetch_gsfc_got
 fetch.iers_opole = fetch_iers_opole
 fetch.jpl_ssd = fetch_jpl_ssd
 fetch.test_data = fetch_test_data
+fetch.usap_cats = fetch_usap_cats

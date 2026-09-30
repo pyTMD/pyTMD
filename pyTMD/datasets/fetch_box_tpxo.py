@@ -18,10 +18,11 @@ CALLING SEQUENCE:
 COMMAND LINE OPTIONS:
     --help: list the command line options
     --directory X: working data directory
-    -t X, --token X: user access token for box API
+    --token X: user access token for box API
     -F X, --folder X: box folder id for model
-    --tide X: TPXO ATLAS model to download
+    -T X, --tide X: TPXO ATLAS model to download
     --currents: download tide model current outputs
+    -t X, --timeout X: timeout in seconds for blocking operations
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -232,7 +233,11 @@ def arguments():
     )
     # box folder id
     parser.add_argument(
-        "--folder", "-F", type=str, default="", help="box folder id for model"
+        "--folder",
+        "-F",
+        type=str,
+        default="",
+        help="box folder id for model",
     )
     # TPXO ATLAS tide models
     parser.add_argument(

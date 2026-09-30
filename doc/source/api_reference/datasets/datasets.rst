@@ -15,4 +15,5 @@ Utilities for fetching and managing tidal datasets
     fetch_iers_opole.rst
     fetch_jpl_ssd.rst
     fetch_test_data.rst
+    fetch_usap_cats.rst
     reduce_otis.rst
