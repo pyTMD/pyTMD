@@ -77,7 +77,9 @@ Users registered with AVISO [see :ref:`aviso-registration`] can download FES mod
 
 Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
+After registering, the TPXO models can be downloaded from their box account using the :py:func:`pyTMD.datasets.fetch_box_tpxo` function.
 OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
+Users can *now* get an API access token for USAP-DC [see :ref:`usap-dc-registration`] to download CATS models using the :py:func:`pyTMD.datasets.fetch_usap_cats` function.
 See the model links in :ref:`directories` for the references to specific tide models.
 
 

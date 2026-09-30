@@ -93,12 +93,12 @@ import lxml.etree
 import platformdirs
 
 if sys.version_info[0] == 2:
-    from urllib import quote_plus
+    from urllib import urlencode, quote_plus
     from cookielib import CookieJar
     from urlparse import urlparse
     import urllib2
 else:
-    from urllib.parse import quote_plus, urlparse
+    from urllib.parse import urlencode, quote_plus, urlparse
     from http.cookiejar import CookieJar
     import urllib.request as urllib2
 
