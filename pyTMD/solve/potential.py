@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 potential.py
-Written by Tyler Sutterley (09/2026)
+Written by Tyler Sutterley (10/2026)
 Spherical harmonic expansions and summations
 
 PYTHON DEPENDENCIES:
@@ -20,6 +20,8 @@ PROGRAM DEPENDENCIES:
     spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 10/2026: added function to estimate crustal deformation for
+        non-geographic coordinates using a Green's function approach
     Updated 09/2026: added function to estimate sea water densities
     Written 09/2026
 """
@@ -36,10 +38,12 @@ import pyTMD.spatial
 __all__ = [
     "ocean_harmonics",
     "crustal_loading",
+    "_harmonic_summation",
+    "_greens_function",
     "_seawater_density",
 ]
 
-# tables of load Love/Shida numbers
+# dictionary for tables of load Love/Shida numbers
 _lln_table = {}
 _lln_table["han-wahr"] = pyTMD.earth._han_wahr_lln_table
 _lln_table["gegout"] = pyTMD.earth._gegout_lln_table
@@ -95,6 +99,8 @@ def ocean_harmonics(
             - ``'CH'``: Center of Surface Height Figure
             - ``'CM'``: Center of Mass of Earth System
             - ``'CE'``: Center of Mass of Solid Earth
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.constituents.frequency`
 
     Returns
     -------
@@ -261,6 +267,43 @@ def ocean_harmonics(
 # PURPOSE: convert spherical harmonics into load tide maps
 def crustal_loading(
     ds: xr.Dataset,
+    other: xr.Dataset,
+    method: str = "harmonics",
+    **kwargs,
+):
+    r"""
+    Calculates the crustal deformation induced by ocean tide loading
+    :cite:p:`Desai:2014ee,Farrell:1972cm,Ray:2025uo`
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Dataset with spatial coordinates
+    other: xarray.Dataset
+        Auxiliary dataset for the crustal loading calculation
+    method: str, default "SHA"
+        Method to use for the crustal loading calculation
+
+        - `'SHA'`: spherical harmonic analysis
+        - `'GF'`: Green's function approach
+    kwargs: dict
+        Keyword arguments for the crustal loading function
+
+    Returns
+    -------
+    ds: xr.Dataset
+        Dataset containing tidal harmonic constants
+    """
+    if method.upper() == "SHA":
+        return _harmonic_summation(ds, other, **kwargs)
+    elif method.upper() == "GF":
+        raise _greens_function(ds, other, **kwargs)
+    else:
+        raise ValueError(f"Unknown method {method}")
+
+
+def _harmonic_summation(
+    ds: xr.Dataset,
     Ylms: xr.Dataset,
     lmax: int | None = None,
     a_axis: float = _wgs84.a_axis,
@@ -302,6 +345,8 @@ def crustal_loading(
             - ``'CH'``: Center of Surface Height Figure
             - ``'CM'``: Center of Mass of Earth System
             - ``'CE'``: Center of Mass of Solid Earth
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.constituents.frequency`
 
     Returns
     -------
@@ -388,6 +433,155 @@ def crustal_loading(
     tmp.attrs.update(Ylms.attrs)
     # check if chunks were present in spherical harmonic dataset
     if hasattr(Ylms, "chunks") and Ylms.chunks is not None:
+        tmp = tmp.chunk("auto")
+    # return the spatial dataset of tidal constituents
+    return tmp
+
+
+def _greens_function(
+    ds1: xr.Dataset,
+    ds2: xr.Dataset,
+    lmax: int | None = None,
+    a_axis: float = _wgs84.a_axis,
+    flat: float = _wgs84.flat,
+    GM: float = _wgs84.GM,
+    rho_w: float | xr.DataArray = 1025.0,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    **kwargs,
+):
+    r"""
+    Calculates the crustal deformation induced by ocean tide loading
+    via Green's functions following :cite:t:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    ds1: xarray.Dataset
+        Dataset with spatial coordinates
+    ds2: xarray.Dataset
+        Dataset containing tidal harmonic constants
+    lmax: int or None, default None
+        Upper bound of spherical harmonic degrees
+    a_axis: float, default 6378136.3
+        Semi-major axis of the Earth (meters)
+    flat: float, default 1.0/298.257223563
+        Ellipsoidal flattening
+    GM: float, default 3.986004418e14
+        Geocentric gravitational constant (m\ :sup:`3` s\ :sup:`-2`)
+    rho_w: float or xarray.DataArray, default 1025.0
+        Density of sea water (kg m\ :sup:`-3`)
+
+        Can be spatially uniform or a grid matching the tidal dataset
+    lln: str, default 'han-wahr'
+        name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.constituents.frequency`
+
+    Returns
+    -------
+    ds: xr.Dataset
+        Dataset containing tidal harmonic constants
+    """
+    # verify load Love number table name
+    if lln not in _lln_table.keys():
+        raise ValueError(f"Unknown load Love number dataset {lln}")
+    # list of tidal constituents
+    constituents = ds2.tmd.constituents
+    # angular frequencies for constituents
+    omega = pyTMD.constituents.frequency(constituents, **kwargs)
+
+    # Earth parameters and physical constants
+    # universal gravitational constant [N*m^2/kg^2]
+    G = 6.67430e-11
+    # average radius of the Earth with same volume as ellipsoid [m]
+    rad_e = a_axis * np.power(1.0 - flat, 1.0 / 3.0)
+    # average mass of the Earth
+    m_e = GM / G
+    # average density of the Earth [kg / m^3]
+    rho_e = 0.75 * m_e / (np.pi * rad_e**3)
+
+    # convert from geodetic latitude to geocentric latitude
+    geolat1 = pyTMD.spatial.geocentric_latitude(ds1.y, flat=flat)
+    geolat2 = pyTMD.spatial.geocentric_latitude(ds2.y, flat=flat)
+    # calculate colatitude and longitude (radians)
+    th1 = np.radians(90.0 - geolat1)
+    th2 = np.radians(90.0 - geolat2)
+    la1 = np.radians(ds1.x)
+    la2 = np.radians(ds2.x)
+    # difference in longitude between the two points
+    dla = la1 - la2
+    # calculate spherical harmonics for degree 2, order 1
+    # to adjust Green's functions for frequency dependence
+    l, m = 2, 1
+    Ylms1, _ = pyTMD.math.sph_harm(l, th1, la1, m=m)
+    Ylms2, _ = pyTMD.math.sph_harm(l, th2, la2, m=m)
+    P21 = (4.0 * np.pi) * (Ylms1 * Ylms2) / (2.0 * l + 1.0)
+    # angle between points (simple great-circle distance)
+    alpha = np.cos(th1) * np.cos(th2) + np.sin(th1) * np.sin(th2) * np.cos(dla)
+
+    # read load Love numbers from table
+    hl, kl, ll = pyTMD.earth.load_love_numbers(
+        _lln_table[lln],
+        reference=reference,
+    )
+    # maximum degree for spherical harmonics
+    if lmax is None:
+        lmax = len(hl) - 1
+
+    # allocate for vertical displacement Green's functions
+    u = xr.zeros_like(alpha)
+    # for each spherical harmonic degree
+    for l in range(lmax + 1):
+        # calculate Legendre polynomial for degree l
+        P = pyTMD.math._assoc_legendre(l, 0, alpha)
+        # add to output Green's function
+        u += hl[l] * P
+
+    # create output dataset
+    tmp = xr.Dataset(coords=ds1.coords)
+    # for each constituent
+    for i, c in enumerate(constituents):
+        # adjust load Love numbers for frequency dependence
+        dh, dk, dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
+        # Green's function for converting to crustal deformation
+        # taking into account frequency dependence of load Love numbers
+        G = u + dh * P21
+        # summation over all tide points
+        M = rho_w * ds2[c] * ds2.area * rad_e / m_e
+        tmp[c] = G.dot(M, dim=ds1.dims)
+
+    # copy attributes from input tidal dataset
+    tmp.attrs.update(ds2.attrs)
+    # add attributes for degree of truncation of Green's function
+    tmp.attrs["max_degree"] = lmax
+    tmp.attrs["max_order"] = lmax
+    # add attributes for earth model and love numbers
+    tmp.attrs["earth_love_numbers"] = lln
+    tmp.attrs["reference_frame"] = reference
+    # add attributes for earth and model parameters
+    tmp.attrs["earth_radius"] = f"{rad_e:0.3f} m"
+    tmp.attrs["earth_density"] = f"{rho_e:0.3f} kg/m^3"
+    tmp.attrs["earth_inverse_flattening"] = f"{1.0 / flat:0.3f}"
+    tmp.attrs["earth_gravity_constant"] = f"{GM:0.3f} m^3/s^2"
+    # add attribute for seawater density (uniform or gridded)
+    if isinstance(rho_w, float):
+        tmp.attrs["seawater_density"] = f"{rho_w:0.3f} kg/m^3"
+    else:
+        tmp.attrs["seawater_density"] = "gridded"
+    # check if chunks were present in input tidal dataset
+    if hasattr(ds2, "chunks") and ds2.chunks is not None:
         tmp = tmp.chunk("auto")
     # return the spatial dataset of tidal constituents
     return tmp
