@@ -439,8 +439,8 @@ def _harmonic_summation(
 
 
 def _greens_function(
-    ds1: xr.Dataset,
-    ds2: xr.Dataset,
+    XYZ1: xr.Dataset,
+    XYZ2: xr.Dataset,
     lmax: int | None = None,
     a_axis: float = _wgs84.a_axis,
     flat: float = _wgs84.flat,
@@ -456,9 +456,9 @@ def _greens_function(
 
     Parameters
     ----------
-    ds1: xarray.Dataset
-        Dataset with spatial coordinates
-    ds2: xarray.Dataset
+    XYZ1: xr.Dataset
+        Dataset with cartesian coordinates
+    XYZ2: xr.Dataset
         Dataset containing tidal harmonic constants
     lmax: int or None, default None
         Upper bound of spherical harmonic degrees
@@ -498,7 +498,7 @@ def _greens_function(
     if lln not in _lln_table.keys():
         raise ValueError(f"Unknown load Love number dataset {lln}")
     # list of tidal constituents
-    constituents = ds2.tmd.constituents
+    constituents = XYZ2.tmd.constituents
     # angular frequencies for constituents
     omega = pyTMD.constituents.frequency(constituents, **kwargs)
 
@@ -512,45 +512,45 @@ def _greens_function(
     # average density of the Earth [kg / m^3]
     rho_e = 0.75 * m_e / (np.pi * rad_e**3)
 
-    # convert from geodetic latitude to geocentric latitude
-    geolat1 = pyTMD.spatial.geocentric_latitude(ds1.y, flat=flat)
-    geolat2 = pyTMD.spatial.geocentric_latitude(ds2.y, flat=flat)
+    # Earth's radius at the given latitude (meters)
+    radius1 = pyTMD.math.radius(XYZ1.X, XYZ1.Y, XYZ1.Z)
+    radius2 = pyTMD.math.radius(XYZ2.X, XYZ2.Y, XYZ2.Z)
+    # cosine of angles between vectors
+    scalar = pyTMD.math.scalar_product(
+        XYZ1.X, XYZ1.Y, XYZ1.Z, XYZ2.X, XYZ2.Y, XYZ2.Z
+    ) / (radius1 * radius2)
     # calculate colatitude and longitude (radians)
-    th1 = np.radians(90.0 - geolat1)
-    th2 = np.radians(90.0 - geolat2)
-    la1 = np.radians(ds1.x)
-    la2 = np.radians(ds2.x)
-    # difference in longitude between the two points
-    dla = la1 - la2
+    th1 = np.pi / 2.0 - np.arctan(XYZ1.Z / np.hypot(XYZ1.X, XYZ1.Y))
+    th2 = np.pi / 2.0 - np.arctan(XYZ2.Z / np.hypot(XYZ2.X, XYZ2.Y))
+    la1 = np.arctan2(XYZ1.Y, XYZ1.X)
+    la2 = np.arctan2(XYZ2.Y, XYZ2.X)
+
     # calculate spherical harmonics for degree 2, order 1
     # to adjust Green's functions for frequency dependence
     l, m = 2, 1
     Ylms1, _ = pyTMD.math.sph_harm(l, th1, la1, m=m)
     Ylms2, _ = pyTMD.math.sph_harm(l, th2, la2, m=m)
     P21 = (4.0 * np.pi) * (Ylms1 * Ylms2) / (2.0 * l + 1.0)
-    # angle between points (simple great-circle distance)
-    alpha = np.cos(th1) * np.cos(th2) + np.sin(th1) * np.sin(th2) * np.cos(dla)
 
     # read load Love numbers from table
     hl, kl, ll = pyTMD.earth.load_love_numbers(
-        _lln_table[lln],
-        reference=reference,
+        _lln_table[lln], reference=reference
     )
     # maximum degree for spherical harmonics
     if lmax is None:
         lmax = len(hl) - 1
 
     # allocate for vertical displacement Green's functions
-    u = xr.zeros_like(alpha)
+    u = xr.zeros_like(scalar)
     # for each spherical harmonic degree
     for l in range(lmax + 1):
         # calculate Legendre polynomial for degree l
-        P = pyTMD.math._assoc_legendre(l, 0, alpha)
+        P = pyTMD.math._assoc_legendre(l, 0, scalar)
         # add to output Green's function
         u += hl[l] * P
 
     # create output dataset
-    tmp = xr.Dataset(coords=ds1.coords)
+    tmp = xr.Dataset(coords=XYZ1.coords)
     # for each constituent
     for i, c in enumerate(constituents):
         # adjust load Love numbers for frequency dependence
@@ -559,11 +559,11 @@ def _greens_function(
         # taking into account frequency dependence of load Love numbers
         G = u + dh * P21
         # summation over all tide points
-        M = rho_w * ds2[c] * ds2.area * rad_e / m_e
-        tmp[c] = G.dot(M, dim=ds1.dims)
+        M = rho_w * XYZ2[c] * XYZ2.area * rad_e / m_e
+        tmp[c] = G.dot(M, dim=XYZ1.dims)
 
     # copy attributes from input tidal dataset
-    tmp.attrs.update(ds2.attrs)
+    tmp.attrs.update(XYZ2.attrs)
     # add attributes for degree of truncation of Green's function
     tmp.attrs["max_degree"] = lmax
     tmp.attrs["max_order"] = lmax
@@ -581,7 +581,7 @@ def _greens_function(
     else:
         tmp.attrs["seawater_density"] = "gridded"
     # check if chunks were present in input tidal dataset
-    if hasattr(ds2, "chunks") and ds2.chunks is not None:
+    if hasattr(XYZ2, "chunks") and XYZ2.chunks is not None:
         tmp = tmp.chunk("auto")
     # return the spatial dataset of tidal constituents
     return tmp
