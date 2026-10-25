@@ -9,7 +9,7 @@ plt.rcParams["figure.facecolor"] = facecolor
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Lato"]
 
-# angular distnaces from Farrell (1972)
+# angular distances from Farrell (1972)
 theta = np.array(
     [
         0.0001,
@@ -81,14 +81,16 @@ scale = rad_e / m_e
 # Load Love number dataset
 lln = "wang-prem"
 # calculate scaled Green's functions
-GF = scale * pyTMD.earth.greens_function(np.radians(theta), lln=lln)
+Gu, Gv = pyTMD.earth.greens_function(
+    np.radians(theta), lln=lln, lmax=46300, reference="CE"
+)
 # normalization in Table A3 of Farrell
 norm = 1e12 * rad_e * np.radians(theta)
 
 # create figure
 fig, ax = plt.subplots(figsize=(8, 4))
 # plot normalized Green's Functions
-ax.plot(theta, norm * GF, color="0.4")
+ax.plot(theta, scale * norm * Gu, color="0.4")
 ax.set_xlabel("Angular Distance [\u00b0]")
 ax.set_ylabel("Green's Function (normalized)")
 ax.set_xlim(-1, 181)

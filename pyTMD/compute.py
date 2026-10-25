@@ -896,7 +896,7 @@ def LPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # tidal love/shida numbers appropriate for the load tide
     hb2 = 0.6207
     lb2 = 0.0836
@@ -1058,7 +1058,7 @@ def OPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # mean equatorial gravitational acceleration (m s^-2)
     ge = 9.7803278
     # density of sea water (kg m^-3)
@@ -1247,7 +1247,7 @@ def _ephemerides_SET(
     if ephemerides.lower() not in _methods:
         raise ValueError("Invalid ephemerides method")
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1546,7 +1546,7 @@ def TG_forces(
         raise ValueError("Invalid ephemerides method")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1717,7 +1717,7 @@ def GT_accelerations(
         raise ValueError("Invalid ephemerides method")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(

@@ -545,7 +545,7 @@ def _greens_function(
 
     # calculate Green's function for vertical displacement (unscaled)
     u = xr.zeros_like(alpha)
-    u.values = pyTMD.earth.greens_function(
+    u.values, _ = pyTMD.earth.greens_function(
         alpha,
         lmax=lmax,
         lln=lln,

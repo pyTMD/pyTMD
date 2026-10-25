@@ -12,7 +12,7 @@
 General Methods
 ===============
 
-.. autoclass:: pyTMD.earth.datum
+.. autoclass:: pyTMD.earth.EarthDatum
    :members:
 
 .. autofunction:: pyTMD.earth.love_numbers
@@ -26,6 +26,14 @@ General Methods
 .. autofunction:: pyTMD.earth.adjust_load_love_numbers
 
 .. autofunction:: pyTMD.earth.greens_function
+
+.. autofunction:: pyTMD.earth.asymptotic_love_numbers
+
+.. autoclass:: pyTMD.earth.EarthLayer
+   :members:
+
+.. autoclass:: pyTMD.earth.EarthModel
+   :members:
 
 .. autofunction:: pyTMD.earth._melchior_table_52
 
