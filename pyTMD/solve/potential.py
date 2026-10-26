@@ -495,6 +495,8 @@ def _greens_function(
     ds: xr.Dataset
         Dataset containing tidal harmonic constants
     """
+    # verify units of input data are in meters
+    XYZ2 = XYZ2.tmd.to_units("meters")
     # verify load Love number table name
     if lln not in _lln_table.keys():
         raise ValueError(f"Unknown load Love number dataset {lln}")

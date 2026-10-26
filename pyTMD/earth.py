@@ -1231,7 +1231,7 @@ def read_greens_function(
             lln=lln, reference=reference, merge_fluid=merge_fluid
         )
     # read Green's functions for Farrell angular distances
-    angle, Gu, Gv = np.loadtxt(filename, unpack=True)
+    angle, Gu, Gv = np.loadtxt(filename, unpack=True, encoding="utf-8")
     alpha = np.radians(angle)
     return (alpha, Gu, Gv)
 
@@ -1273,12 +1273,12 @@ def interpolate_greens_function(
         Green's function for horizontal displacement
     """
     # read Green's functions for Farrell angular distances
-    theta, gu, gv = read_greens_function(
+    th, gu, gv = read_greens_function(
         lln=lln, reference=reference, merge_fluid=merge_fluid
     )
     # interpolate Green's functions to output angles
-    Gu = np.interp(alpha, theta, gu)
-    Gv = np.interp(alpha, theta, gv)
+    Gu = np.interp(alpha, th, gu)
+    Gv = np.interp(alpha, th, gv)
     # return the Green's functions
     return (Gu, Gv)
 

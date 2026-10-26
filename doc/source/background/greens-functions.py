@@ -28,12 +28,12 @@ lln = "wang-prem"
 # uses reference angular distances from Farrell (1972)
 theta, Gu, Gv = pyTMD.earth.read_greens_function(lln=lln, reference="CE")
 # normalization in Table A3 of Farrell
-norm = 1e12 * rad_e * np.radians(theta)
+norm = 1e12 * rad_e * theta
 
 # create figure
 fig, ax = plt.subplots(figsize=(8, 4))
 # plot normalized Green's Functions
-ax.plot(theta, scale * norm * Gu, color="0.4")
+ax.plot(np.degrees(theta), scale * norm * Gu, color="0.4")
 ax.set_xlabel("Angular Distance [\u00b0]")
 ax.set_ylabel("Green's Function (normalized)")
 ax.set_xlim(-1, 181)
