@@ -2242,7 +2242,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     ----------
     coef: list or np.ndarray
         Doodson coefficients (Cartwright numbers) for constituents
-    method: str, default 'Cartwright'
+    method: str, default 'IERS'
         Method for computing the mean longitudes
 
             - ``'Cartwright'``
@@ -2258,7 +2258,7 @@ def _frequency(coef: np.ndarray, **kwargs):
         Angular frequency (radians per second)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Cartwright")
+    kwargs.setdefault("method", "IERS")
     kwargs.setdefault("include_planets", False)
     # Modified Julian Dates at J2000
     MJD = np.array([51544.5, 51544.55])
@@ -2305,6 +2305,18 @@ _hw1995_table = get_data_path(["data", "hw1995_tab.txt"])
 _t1987_table = get_data_path(["data", "t1987_tab.txt"])
 # Woodworth (1990) tables with updated and 3rd-degree values
 _w1990_table = get_data_path(["data", "w1990_tab.txt"])
+
+# dictionary of tide potential tables
+_tide_potential_table = {}
+# Cartwright and Tayler (1971) table with 3rd-degree values
+# Cartwright and Edden (1973) table with updated values
+_tide_potential_table["CTE1973"] = _cte1973_table
+# Hartmann and Wenzel (1995) tidal potential catalog
+_tide_potential_table["HW1995"] = _hw1995_table
+# Tamura (1987) tidal potential catalog
+_tide_potential_table["T1987"] = _t1987_table
+# Woodworth (1990) tables with updated and 3rd-degree values
+_tide_potential_table["W1990"] = _w1990_table
 
 
 def _parse_tide_potential_table(

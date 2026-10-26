@@ -38,6 +38,9 @@ import pyTMD.astro
 import pyTMD.constituents
 import pyTMD.math
 
+# get ellipsoidal parameters
+from pyTMD.earth import _iers
+
 __all__ = [
     "generating_force",
     "gravity_tide",
@@ -53,9 +56,6 @@ __all__ = [
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-
-# get ellipsoidal parameters
-_iers = pyTMD.earth.datum(ellipsoid="IERS", units="MKS")
 
 
 def generating_force(

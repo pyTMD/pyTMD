@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 earth.py
-Written by Tyler Sutterley (09/2026)
+Written by Tyler Sutterley (10/2026)
 Calculates Earth reference and deformation parameters
 
 PYTHON DEPENDENCIES:
@@ -10,27 +10,40 @@ PYTHON DEPENDENCIES:
         https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
 UPDATE HISTORY:
-    Updated 09/2026: add reader function for load Love number tables
+    Updated 10/2026: added classes for estimating parameters from
+        1-dimensional Earth models (e.g. PREM)
+        changed the datum class to EarthDatum to parallel new classes
+    Updated 09/2026: added reader function for load Love number tables
     Written 05/2026
 """
 
 import re
+import copy
+import json
 import pathlib
 import numpy as np
+from dataclasses import dataclass
 from pyTMD.constituents import frequency
-from pyTMD.utilities import get_data_path
+from pyTMD.utilities import get_cache_path, get_data_path
+from pyTMD.math import polynomial_sum
 
 __all__ = [
     "_ellipsoids",
     "_units",
-    "datum",
+    "EarthDatum",
     "love_numbers",
     "complex_love_numbers",
     "degree_love_numbers",
     "load_love_numbers",
     "adjust_load_love_numbers",
+    "greens_function",
+    "write_greens_function",
+    "read_greens_function",
+    "interpolate_greens_function",
+    "asymptotic_love_numbers",
+    "EarthLayer",
+    "EarthModel",
     "_melchior_table_52",
-    "_infconv",
 ]
 
 _ellipsoids = [
@@ -65,7 +78,7 @@ _ellipsoids = [
 _units = ["MKS", "CGS"]
 
 
-class datum:
+class EarthDatum:
     """
     Class for gravitational and ellipsoidal parameters
     :cite:p:`HofmannWellenhof:2006hy,Urban:2013vl`
@@ -532,7 +545,7 @@ class datum:
 
     def __str__(self):
         """String representation of the ``datum`` object"""
-        properties = ["pyTMD.datum"]
+        properties = ["pyTMD.EarthDatum"]
         properties.append(f"    name: {self.name}")
         properties.append(f"    units: {self.units}")
         return "\n".join(properties)
@@ -542,6 +555,15 @@ class datum:
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+
+# set datum class for backwards compatibility
+datum = EarthDatum
+
+# helper variables with common ellipsoid parameters
+# using meters-kilogram-seconds standard
+_wgs84 = EarthDatum(ellipsoid="WGS84", units="MKS")
+_iers = EarthDatum(ellipsoid="IERS", units="MKS")
 
 
 def love_numbers(
@@ -808,8 +830,11 @@ _gegout_lln_table = get_data_path(["data", "gegout-lln.txt"])
 # PREM outputs from Wang et al. (2012)
 # https://doi.org/10.1016/j.cageo.2012.06.022
 _wang_prem_lln_table = get_data_path(["data", "wang-prem-lln.txt"])
-# default maximum degree and order in case of infinite
-_default_max_degree = 100000
+# dictionary for tables of load Love/Shida numbers
+_lln_table = {}
+_lln_table["han-wahr"] = _han_wahr_lln_table
+_lln_table["gegout"] = _gegout_lln_table
+_lln_table["wang-prem"] = _wang_prem_lln_table
 
 
 # PURPOSE: read tables of load Love/Shida numbers
@@ -852,7 +877,6 @@ def load_love_numbers(
     love = np.loadtxt(
         filename,
         dtype={"names": columns, "formats": formats},
-        converters={0: _infconv},
     )
 
     # calculate isomorphic parameters for different reference frames
@@ -964,6 +988,651 @@ def adjust_load_love_numbers(omega: np.ndarray, **kwargs):
     return (dh21, dk21, dl21)
 
 
+def greens_function(
+    alpha: float | np.ndarray,
+    lmax: int | None = None,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Computes Green's functions for vertical and horizontal displacements
+    following :cite:t:`Farrell:1972cm` using the Legendre recurrence relation
+    from :cite:t:`HofmannWellenhof:2006hy`
+
+    Parameters
+    ----------
+    alpha: float or np.ndarray,
+        Angular distance (radians)
+    lmax: int or None, default None
+        Upper bound of spherical harmonic degrees
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+    merge_fluid: default False
+        Merge the outermost solid and fluid layers for estimating
+        the asymptotic load Love numbers
+
+    Returns
+    -------
+    Gu: numpy.ndarray
+        Green's function for vertical displacement
+    Gv: numpy.ndarray
+        Green's function for horizontal displacement
+    """
+    # read load Love numbers from table
+    hl, kl, ll = load_love_numbers(_lln_table[lln], reference=reference)
+    # maximum degree for spherical harmonics
+    if lmax is None or lmax >= len(hl):
+        lmax = len(hl) - 1
+    # Love number asymtoptic values
+    hinf, _, linf = asymptotic_love_numbers(lln, merge_fluid=merge_fluid)
+    # check if input is scalar or array
+    singular_values = np.ndim(alpha) == 0
+    # calculate the cosine and sine of the angular distance
+    x = np.cos(np.atleast_1d(alpha))
+    u = np.sqrt(1.0 - x**2)
+    # half angle for calculating asymptotic values
+    half_angle = np.atleast_1d(alpha) / 2.0
+    # allocate for Legendre polynomial series
+    # P0 and P1
+    Pm2 = np.ones_like(x)
+    Pm1 = np.copy(x)
+    # calculate Legendre asymptotic values
+    Pinf = np.divide(1.0, 2.0 * np.sin(half_angle))
+    dPinf = -np.divide(
+        np.cos(half_angle) * (1.0 + 2.0 * np.sin(half_angle)),
+        2.0 * np.sin(half_angle) * (1.0 + np.sin(half_angle)),
+    )
+    # calculate Green's functions at the asymptote
+    Gu = hinf * Pinf
+    Gv = linf * dPinf
+    # add first two degrees to the output Green's functions
+    Gu += (hl[0] - hinf) * Pm2
+    Gu += (hl[1] - hinf) * Pm1
+    Gv += -(ll[1] - linf) * u
+    # for each spherical harmonic degree
+    for n in range(2, lmax + 1):
+        # convert degree to float
+        l = np.float64(n)
+        # calculate unnormalized Legendre polynomial for degree l
+        P = np.divide(2.0 * l - 1.0, l) * x * Pm1 - np.divide(l - 1.0, l) * Pm2
+        # calculate first derivative for degree l
+        # ignore divide by zero and invalid value warnings
+        with np.errstate(divide="ignore", invalid="ignore"):
+            dP = (l * x * P - l * Pm1) / u
+        # handle singularity at coincident points
+        dP = np.where(np.isclose(u, 0.0), 0.0, dP)
+        # add to output Green's functions
+        Gu += (hl[n] - hinf) * P
+        Gv += (l * ll[n] - linf) * dP / l
+        # update Legendre polynomial recursion series
+        Pm2[:] = np.copy(Pm1)
+        Pm1[:] = np.copy(P)
+    # return the Green's functions
+    if singular_values:
+        return (Gu.item(), Gv.item())
+    else:
+        return (Gu, Gv)
+
+
+def write_greens_function(
+    lmax: int | None = None,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Creates a table of Green's functions for vertical and horizontal
+    displacements using reference angles from :cite:t:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    lmax: int or None, default None
+        Upper bound of spherical harmonic degrees
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+    merge_fluid: default False
+        Merge the outermost solid and fluid layers for estimating
+        the asymptotic load Love numbers
+    """
+    # angular distances from Farrell (1972)
+    alpha = np.array(
+        [
+            0.0001,
+            0.001,
+            0.01,
+            0.02,
+            0.03,
+            0.04,
+            0.06,
+            0.08,
+            0.1,
+            0.16,
+            0.2,
+            0.25,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.6,
+            2.0,
+            2.5,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            12.0,
+            16.0,
+            20.0,
+            25.0,
+            30.0,
+            40.0,
+            50.0,
+            60.0,
+            70.0,
+            80.0,
+            90.0,
+            100.0,
+            110.0,
+            120.0,
+            130.0,
+            140.0,
+            150.0,
+            160.0,
+            170.0,
+            180.0,
+        ]
+    )
+    # calculate unscaled Green's functions
+    Gu, Gv = greens_function(np.radians(alpha), lln=lln, reference=reference)
+    # write the Green's functions to output
+    filename = get_cache_path(f"{lln}-gf-{reference.lower()}.txt")
+    with filename.open(mode="w") as fid:
+        # write header
+        print(f"# {'θ':^4} {'Gu':^16} {'Gv':^16}", file=fid)
+        # write Green's functions
+        for i, angle in enumerate(alpha):
+            if angle < 1:
+                print(f"{angle:6.4f} {Gu[i]:16.8e} {Gv[i]:16.8e}", file=fid)
+            else:
+                print(f"{angle:6.1f} {Gu[i]:16.8e} {Gv[i]:16.8e}", file=fid)
+
+
+def read_greens_function(
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Read lookup table of computed Green's functions
+
+    Parameters
+    ----------
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    alpha: np.ndarray
+        Reference anglar distances (radians)
+    Gu: numpy.ndarray
+        Reference Green's function for vertical displacement
+    Gv: numpy.ndarray
+        Reference Green's function for horizontal displacement
+    """
+    # lookup table of Green's functions
+    filename = get_cache_path(f"{lln}-gf-{reference.lower()}.txt")
+    # verify that lookup table exists
+    if not filename.exists():
+        write_greens_function(
+            lln=lln, reference=reference, merge_fluid=merge_fluid
+        )
+    # read Green's functions for Farrell angular distances
+    angle, Gu, Gv = np.loadtxt(filename, unpack=True, encoding="utf-8")
+    alpha = np.radians(angle)
+    return (alpha, Gu, Gv)
+
+
+def interpolate_greens_function(
+    alpha: float | np.ndarray,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Interpolates Green's functions for vertical and horizontal displacements
+    provided by a reference lookup table :cite:p:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    alpha: float or np.ndarray,
+        Angular distance (radians)
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    Gu: numpy.ndarray
+        Green's function for vertical displacement
+    Gv: numpy.ndarray
+        Green's function for horizontal displacement
+    """
+    # read Green's functions for Farrell angular distances
+    th, gu, gv = read_greens_function(
+        lln=lln, reference=reference, merge_fluid=merge_fluid
+    )
+    # interpolate Green's functions to output angles
+    Gu = np.interp(alpha, th, gu)
+    Gv = np.interp(alpha, th, gv)
+    # return the Green's functions
+    return (Gu, Gv)
+
+
+# JSON file of 1-dimensional polynomial Earth models
+_earth_model_table = get_data_path(["data", "earthmodel.json"])
+
+
+def asymptotic_love_numbers(lln: str, merge_fluid: bool = False):
+    """
+    Estimate asymptotic load Love numbers following :cite:t:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to augment
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    merge_fluid: default False
+        Merge the outermost solid and fluid layers
+
+    Returns
+    -------
+    hinf: float
+        Asymptotic value of the Love number for vertical displacement
+    kinf: float
+        Asymptotic value of the Love number for gravitational potential
+    linf: float
+        Asymptotic value of the Love number for horizontal displacement
+    """
+    # read or calculate asymptotic values
+    if lln.startswith("wang"):
+        # asymptotic values from Wang et al., (2012)
+        hinf, kinf, linf = {}, {}, {}
+        # PREM (additionally with hard and soft crustal rheologies)
+        hinf["wang-prem"] = -0.62119559e1
+        kinf["wang-prem"] = -0.26850575e1
+        linf["wang-prem"] = 0.18891543e1
+        hinf["wang-prem-hard"] = -0.14731969e2
+        kinf["wang-prem-hard"] = -0.68738675e1
+        linf["wang-prem-hard"] = 0.42570489e1
+        hinf["wang-prem-soft"] = -0.57757907e2
+        kinf["wang-prem-soft"] = -0.25278345e2
+        linf["wang-prem-soft"] = 0.13448110e2
+        # AK135 (additionally with a hard crustal rheology)
+        hinf["wang-ak135"] = -0.54630734e1
+        kinf["wang-ak135"] = -0.26082070e1
+        linf["wang-ak135"] = 0.19441656e1
+        hinf["wang-ak135-hard"] = -0.14761865e2
+        kinf["wang-ak135-hard"] = -0.68986043e1
+        linf["wang-ak135-hard"] = 0.42564739e1
+        # return the asymptotic love numbers for the model
+        return hinf[lln], kinf[lln], linf[lln]
+    elif lln in ("gegout", "han-wahr"):
+        # read JSON file for 1-dimensional Earth models
+        with _earth_model_table.open(mode="r") as f:
+            m = json.load(f)
+        # estimate asymptotic load Love numbers
+        model = EarthModel(m["PREM"])
+        hinf, kinf, linf = model.asymptotic_love_numbers(
+            merge_fluid=merge_fluid
+        )
+        # return the asymptotic love numbers
+        return hinf, kinf, linf
+
+
+@dataclass
+class EarthLayer:
+    """
+    Class for estimating parameters for a layer within a 1-dimensional
+    Earth model :cite:p:`Dziewonski:1981bz`
+
+    Parameters
+    ----------
+    name: str
+        Name of the layer
+    radius: list[float]
+        Inner and outer radii of layer
+    rho: np.ndarray
+        Polynomial coefficients for density
+    vp: np.ndarray
+        Polynomial coefficients for P-wave velocities
+    vs: np.ndarray
+        Polynomial coefficients for S-wave velocities
+    """
+
+    name: str
+    radius: list[float]
+    rho: np.ndarray
+    vp: np.ndarray
+    vs: np.ndarray
+
+    def mass(self, a: float = 6.371e6):
+        """
+        Mass of the layer
+
+        Parameters
+        ----------
+        a: float, default 6371000.0
+            Average radius of the Earth (m)
+
+        Returns
+        -------
+        M: float
+            Mass (kg)
+        """
+        # density coefficients (kg/m^3)
+        rho = 1e3 * np.array(self.rho, dtype="f8")
+        # orders of each polynomial coefficient (cubed)
+        o3 = np.arange(len(rho)) + 3
+        # normalized layer bottom and top radii
+        x0 = self.r0 / a
+        x1 = self.r1 / a
+        # integrate to calculate exact mass of layer
+        ii = np.sum(rho * (np.power(x1, o3) - np.power(x0, o3)) / o3)
+        M = 4.0 * np.pi * ii * np.power(a, 3)
+        return M
+
+    def volume(self):
+        r"""
+        Volume of the layer (assuming spherical)
+
+        Returns
+        -------
+        V: float
+            Volume (kg m\ :sup:`-3`)
+        """
+        V0 = 4.0 * np.pi * np.power(self.r0, 3) / 3.0
+        V1 = 4.0 * np.pi * np.power(self.r1, 3) / 3.0
+        V = V1 - V0
+        return V
+
+    def density(self, a: float = 6.371e6):
+        r"""
+        Density at top of layer
+
+        Parameters
+        ----------
+        a: float, default 6371000.0
+            Average radius of the Earth (m)
+
+        Returns
+        -------
+        rho: float
+            Density (kg m\ :sup:`-3`)
+        """
+        rho = self.mass(a) / self.volume()
+        return rho
+
+    def pwave(self, a: float = 6.371e6):
+        r"""
+        Isotropic p-wave velocities at top of layer
+
+        Parameters
+        ----------
+        a: float, default 6371000.0
+            Average radius of the Earth (m)
+
+        Returns
+        -------
+        vp: float
+            p-wave velocity (m s\ :sup:`-1`)
+        """
+        (vp,) = 1e3 * polynomial_sum(self.vp, self.r1 / a)
+        return vp
+
+    def swave(self, a: float = 6.371e6):
+        r"""
+        Isotropic s-wave velocity at top of layer
+
+        Parameters
+        ----------
+        a: float, default 6371000.0
+            Average radius of the Earth (m)
+
+        Returns
+        -------
+        vs: float
+            s-wave velocity (m s\ :sup:`-1`)
+        """
+        (vs,) = 1e3 * polynomial_sum(self.vs, self.r1 / a)
+        return vs
+
+    @property
+    def is_fluid(self):
+        """Layer cannot transmit s-waves"""
+        return np.allclose(self.vs, 0.0)
+
+    @property
+    def is_solid(self):
+        """Layer can transmit s-waves"""
+        return np.logical_not(self.is_fluid)
+
+    @property
+    def r0(self):
+        """Inner radius (m)"""
+        return 1e3 * np.float64(self.radius[0])
+
+    @property
+    def r1(self):
+        """Outer radius (m)"""
+        return 1e3 * np.float64(self.radius[1])
+
+    def __str__(self):
+        """String representation of the ``earth.EarthLayer`` object"""
+        properties = ["pyTMD.earth.EarthLayer"]
+        properties.append(f"    name: {self.name}")
+        properties.append(f"    inner_radius: {self.radius[0]:0.1f}")
+        properties.append(f"    outer_radius: {self.radius[1]:0.1f}")
+        return "\n".join(properties)
+
+    def __repr__(self):
+        """Representation of the ``earth.EarthLayer`` object"""
+        return self.__str__()
+
+
+class EarthModel:
+    """
+    Class for estimating parameters for a 1-dimensional Earth model
+    consisting of spherical shell layers with polynomial coefficients
+    :cite:p:`Dziewonski:1981bz`
+    """
+
+    def __init__(self, d):
+        self.__dict__ = copy.deepcopy(d)
+        # model name
+        self.name = d.get("name", "")
+        # build layers and sort by radius ascending from core
+        self.layers = sorted(
+            [EarthLayer(**l) for l in d["layers"]], key=lambda l: l.r0
+        )
+        # Earth's average radius (m) (default top of the model)
+        self.a = d.get("a", self.layers[-1].r1)
+        # universal gravitational constant [N*m^2/kg^2]
+        self.G = 6.67430e-11
+
+    @property
+    def mass(self):
+        """
+        Total mass of the Earth
+
+        Returns
+        -------
+        M: float
+            Mass (kg)
+        """
+        M = np.sum([l.mass(self.a) for l in self.layers])
+        return M
+
+    @property
+    def volume(self):
+        r"""
+        Total encompassing volume of the Earth (assuming spherical)
+
+        Returns
+        -------
+        V: float
+            Volume (m\ :sup:`-3`)
+        """
+        V = 4.0 * np.pi * np.power(self.a, 3) / 3.0
+        return V
+
+    @property
+    def density(self):
+        r"""
+        Average density of the Earth
+
+        Returns
+        -------
+        rho: float
+            Density (kg m\ :sup:`-3`)
+        """
+        rho = self.mass / self.volume
+        return rho
+
+    @property
+    def g(self):
+        r"""
+        Self-consistent surface gravity
+
+        Returns
+        -------
+        gamma: float
+            Gravitational acceleration (m s\ :sup:`-2`)
+        """
+        gamma = self.G * self.mass / np.power(self.a, 2)
+        return gamma
+
+    def asymptotic_love_numbers(self, merge_fluid: bool = False):
+        """
+        Estimate asymptotic Love numbers following :cite:t:`Farrell:1972cm`
+        and :cite:t:`Guo:2004ir`
+
+        Parameters
+        ----------
+        merge_fluid, default False
+            Merge the outermost solid and fluid layers
+
+        Returns
+        -------
+        hinf: float
+            Asymptotic value of the Love number for vertical displacement
+        kinf: float
+            Asymptotic value of the Love number for gravitational potential
+        linf: float
+            Asymptotic value of the Love number for horizontal displacement
+        """
+        # Farrell noted that for high-enough degree, a layered Earth model
+        # responds almost equivalently to a homogenous sphere with the
+        # properties of the top-most layer
+        solid = [i for i, l in enumerate(self.layers) if l.is_solid]
+        solid_layer = self.layers[solid[-1]]
+        # density and isotropic velocities for outer-most solid layer
+        rho = solid_layer.density(a=self.a)
+        vp = solid_layer.pwave(a=self.a)
+        vs = solid_layer.swave(a=self.a)
+        # scale isotropic velocities using average density
+        if merge_fluid and self.layers[-1].is_fluid:
+            # outer-most layer is a fluid (e.g. ocean)
+            fluid_layer = self.layers[-1]
+            # combined mass and volume of solid earth and ocean
+            mass = solid_layer.mass(a=self.a) + fluid_layer.mass(a=self.a)
+            volume = solid_layer.volume() + fluid_layer.volume()
+            # average density and adjusted isotropic velocities
+            rho_ave = mass / volume
+            vp *= np.sqrt(rho / rho_ave)
+            vs *= np.sqrt(rho / rho_ave)
+        # calculate Lamé parameters and Bulk modulus for outer layer(s)
+        mu = rho * np.power(vs, 2.0)
+        kappa = rho * np.power(vp, 2.0) - 4.0 * mu / 3.0
+        lmda = kappa - 2.0 * mu / 3.0
+        eta = lmda + mu
+        sigma = lmda + 2.0 * mu
+        # calculate asymptotic Love numbers for outer layers(s)
+        # using equation 36 of Farrell (1972) as modified by Guo (2004)
+        linf = np.power(self.g, 2) / (4.0 * np.pi * self.G * eta)
+        hinf = -linf * sigma / mu
+        kinf = -self.a * rho * self.g / (2.0 * mu)
+        return hinf, kinf, linf
+
+    def __str__(self):
+        """String representation of the ``earth.EarthModel`` object"""
+        properties = ["pyTMD.earth.EarthModel"]
+        properties.append(f"    name: {self.name}")
+        properties.append(f"    layers: {len(self.layers):d}")
+        return "\n".join(properties)
+
+    def __repr__(self):
+        """Representation of the ``earth.EarthModel`` object"""
+        return self.__str__()
+
+
 def _melchior_table_52(model: str):
     """
     Body tide Love numbers for an Earth model provided in
@@ -1059,20 +1728,3 @@ def _melchior_table_52(model: str):
         raise ValueError(f"Unknown Earth model: {model}")
     # return the table of love numbers
     return table_52
-
-
-def _infconv(fld, lmax: int = _default_max_degree) -> int:
-    """
-    Convert degree to integer and check if degree is infinite
-
-    Parameters
-    ----------
-    fld: str
-        Degree field from load Love/Shida numbers file
-    lmax: int, default 100000
-        Truncation in case of infinite degree
-    """
-    if re.search(f"inf", fld, re.IGNORECASE):
-        return lmax
-    else:
-        return int(fld)
