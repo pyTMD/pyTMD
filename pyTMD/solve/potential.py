@@ -444,7 +444,7 @@ def _greens_function(
     rho_w: float | xr.DataArray = 1025.0,
     lln: str = "han-wahr",
     reference: str = "CE",
-    hinf: float | None = None,
+    use_cache: bool = True,
     **kwargs,
 ):
     r"""
@@ -485,8 +485,8 @@ def _greens_function(
             - ``'CH'``: Center of Surface Height Figure
             - ``'CM'``: Center of Mass of Earth System
             - ``'CE'``: Center of Mass of Solid Earth
-    hinf: float | None, default None
-        Asymptotic value for the Love Number of Vertical Displacement
+    use_cache: default True
+        Use cached Green's functions and interpolate values
     kwargs: dict
         Keyword arguments for :py:func:`pyTMD.constituents.frequency`
 
@@ -545,13 +545,19 @@ def _greens_function(
 
     # calculate Green's function for vertical displacement (unscaled)
     u = xr.zeros_like(alpha)
-    u.values, _ = pyTMD.earth.greens_function(
-        alpha,
-        lmax=lmax,
-        lln=lln,
-        reference=reference,
-        hinf=hinf,
-    )
+    if use_cache:
+        u.values, _ = pyTMD.earth.interpolate_greens_function(
+            alpha,
+            lln=lln,
+            reference=reference,
+        )
+    else:
+        u.values, _ = pyTMD.earth.greens_function(
+            alpha,
+            lmax=lmax,
+            lln=lln,
+            reference=reference,
+        )
 
     # create output dataset
     tmp = xr.Dataset(coords=XYZ1.coords)

@@ -24,7 +24,7 @@ import pathlib
 import numpy as np
 from dataclasses import dataclass
 from pyTMD.constituents import frequency
-from pyTMD.utilities import get_data_path
+from pyTMD.utilities import get_cache_path, get_data_path
 from pyTMD.math import polynomial_sum
 
 __all__ = [
@@ -37,11 +37,13 @@ __all__ = [
     "load_love_numbers",
     "adjust_load_love_numbers",
     "greens_function",
+    "write_greens_function",
+    "read_greens_function",
+    "interpolate_greens_function",
     "asymptotic_love_numbers",
     "EarthLayer",
     "EarthModel",
     "_melchior_table_52",
-    "_infconv",
 ]
 
 _ellipsoids = [
@@ -828,8 +830,6 @@ _gegout_lln_table = get_data_path(["data", "gegout-lln.txt"])
 # PREM outputs from Wang et al. (2012)
 # https://doi.org/10.1016/j.cageo.2012.06.022
 _wang_prem_lln_table = get_data_path(["data", "wang-prem-lln.txt"])
-# default maximum degree and order in case of infinite
-_default_max_degree = 100000
 # dictionary for tables of load Love/Shida numbers
 _lln_table = {}
 _lln_table["han-wahr"] = _han_wahr_lln_table
@@ -877,7 +877,6 @@ def load_love_numbers(
     love = np.loadtxt(
         filename,
         dtype={"names": columns, "formats": formats},
-        converters={0: _infconv},
     )
 
     # calculate isomorphic parameters for different reference frames
@@ -1088,6 +1087,202 @@ def greens_function(
         return (Gu, Gv)
 
 
+def write_greens_function(
+    lmax: int | None = None,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Creates a table of Green's functions for vertical and horizontal
+    displacements using reference angles from :cite:t:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    lmax: int or None, default None
+        Upper bound of spherical harmonic degrees
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+    merge_fluid: default False
+        Merge the outermost solid and fluid layers for estimating
+        the asymptotic load Love numbers
+    """
+    # angular distances from Farrell (1972)
+    alpha = np.array(
+        [
+            0.0001,
+            0.001,
+            0.01,
+            0.02,
+            0.03,
+            0.04,
+            0.06,
+            0.08,
+            0.1,
+            0.16,
+            0.2,
+            0.25,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.8,
+            1.0,
+            1.2,
+            1.6,
+            2.0,
+            2.5,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            12.0,
+            16.0,
+            20.0,
+            25.0,
+            30.0,
+            40.0,
+            50.0,
+            60.0,
+            70.0,
+            80.0,
+            90.0,
+            100.0,
+            110.0,
+            120.0,
+            130.0,
+            140.0,
+            150.0,
+            160.0,
+            170.0,
+            180.0,
+        ]
+    )
+    # calculate unscaled Green's functions
+    Gu, Gv = greens_function(np.radians(alpha), lln=lln, reference=reference)
+    # write the Green's functions to output
+    filename = get_cache_path(f"{lln}-gf-{reference.lower()}.txt")
+    with filename.open(mode="w") as fid:
+        # write header
+        print(f"# {'θ':^4} {'Gu':^16} {'Gv':^16}", file=fid)
+        # write Green's functions
+        for i, angle in enumerate(alpha):
+            if angle < 1:
+                print(f"{angle:6.4f} {Gu[i]:16.8e} {Gv[i]:16.8e}", file=fid)
+            else:
+                print(f"{angle:6.1f} {Gu[i]:16.8e} {Gv[i]:16.8e}", file=fid)
+
+
+def read_greens_function(
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Read lookup table of computed Green's functions
+
+    Parameters
+    ----------
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    alpha: np.ndarray
+        Reference anglar distances (radians)
+    Gu: numpy.ndarray
+        Reference Green's function for vertical displacement
+    Gv: numpy.ndarray
+        Reference Green's function for horizontal displacement
+    """
+    # lookup table of Green's functions
+    filename = get_cache_path(f"{lln}-gf-{reference.lower()}.txt")
+    # verify that lookup table exists
+    if not filename.exists():
+        write_greens_function(
+            lln=lln, reference=reference, merge_fluid=merge_fluid
+        )
+    # read Green's functions for Farrell angular distances
+    angle, Gu, Gv = np.loadtxt(filename, unpack=True)
+    alpha = np.radians(angle)
+    return (alpha, Gu, Gv)
+
+
+def interpolate_greens_function(
+    alpha: float | np.ndarray,
+    lln: str = "han-wahr",
+    reference: str = "CE",
+    merge_fluid: bool = False,
+):
+    """
+    Interpolates Green's functions for vertical and horizontal displacements
+    provided by a reference lookup table :cite:p:`Farrell:1972cm`
+
+    Parameters
+    ----------
+    alpha: float or np.ndarray,
+        Angular distance (radians)
+    lln: str, default 'han-wahr'
+        Name of the Load Love number dataset to use
+
+            - ``'han-wahr'``: :cite:t:`Han:1995go`
+            - ``'gegout'``: :cite:t:`Gegout:2010gc`
+            - ``'wang-prem'``: :cite:t:`Wang:2012gc`
+    reference: str, default 'CE'
+        Reference frame of degree 1 load Love numbers
+
+            - ``'CF'``: Center of Surface Figure
+            - ``'CL'``: Center of Surface Lateral Figure
+            - ``'CH'``: Center of Surface Height Figure
+            - ``'CM'``: Center of Mass of Earth System
+            - ``'CE'``: Center of Mass of Solid Earth
+
+    Returns
+    -------
+    Gu: numpy.ndarray
+        Green's function for vertical displacement
+    Gv: numpy.ndarray
+        Green's function for horizontal displacement
+    """
+    # read Green's functions for Farrell angular distances
+    theta, gu, gv = read_greens_function(
+        lln=lln, reference=reference, merge_fluid=merge_fluid
+    )
+    # interpolate Green's functions to output angles
+    Gu = np.interp(alpha, theta, gu)
+    Gv = np.interp(alpha, theta, gv)
+    # return the Green's functions
+    return (Gu, Gv)
+
+
 # JSON file of 1-dimensional polynomial Earth models
 _earth_model_table = get_data_path(["data", "earthmodel.json"])
 
@@ -1116,11 +1311,29 @@ def asymptotic_love_numbers(lln: str, merge_fluid: bool = False):
     linf: float
         Asymptotic value of the Love number for horizontal displacement
     """
-    if lln == "wang-prem":
+    # read or calculate asymptotic values
+    if lln.startswith("wang"):
         # asymptotic values from Wang et al., (2012)
-        hinf = -0.62119559e1
-        kinf = -0.26850575e1
-        linf = 0.18891543e1
+        hinf, kinf, linf = {}, {}, {}
+        # PREM (additionally with hard and soft crustal rheologies)
+        hinf["wang-prem"] = -0.62119559e1
+        kinf["wang-prem"] = -0.26850575e1
+        linf["wang-prem"] = 0.18891543e1
+        hinf["wang-prem-hard"] = -0.14731969e2
+        kinf["wang-prem-hard"] = -0.68738675e1
+        linf["wang-prem-hard"] = 0.42570489e1
+        hinf["wang-prem-soft"] = -0.57757907e2
+        kinf["wang-prem-soft"] = -0.25278345e2
+        linf["wang-prem-soft"] = 0.13448110e2
+        # AK135 (additionally with a hard crustal rheology)
+        hinf["wang-ak135"] = -0.54630734e1
+        kinf["wang-ak135"] = -0.26082070e1
+        linf["wang-ak135"] = 0.19441656e1
+        hinf["wang-ak135-hard"] = -0.14761865e2
+        kinf["wang-ak135-hard"] = -0.68986043e1
+        linf["wang-ak135-hard"] = 0.42564739e1
+        # return the asymptotic love numbers for the model
+        return hinf[lln], kinf[lln], linf[lln]
     elif lln in ("gegout", "han-wahr"):
         # read JSON file for 1-dimensional Earth models
         with _earth_model_table.open(mode="r") as f:
@@ -1130,8 +1343,8 @@ def asymptotic_love_numbers(lln: str, merge_fluid: bool = False):
         hinf, kinf, linf = model.asymptotic_love_numbers(
             merge_fluid=merge_fluid
         )
-    # return the asymptotic love numbers
-    return hinf, kinf, linf
+        # return the asymptotic love numbers
+        return hinf, kinf, linf
 
 
 @dataclass
@@ -1515,20 +1728,3 @@ def _melchior_table_52(model: str):
         raise ValueError(f"Unknown Earth model: {model}")
     # return the table of love numbers
     return table_52
-
-
-def _infconv(fld, lmax: int = _default_max_degree) -> int:
-    """
-    Convert degree to integer and check if degree is infinite
-
-    Parameters
-    ----------
-    fld: str
-        Degree field from load Love/Shida numbers file
-    lmax: int, default 100000
-        Truncation in case of infinite degree
-    """
-    if re.search(f"inf", fld, re.IGNORECASE):
-        return lmax
-    else:
-        return int(fld)

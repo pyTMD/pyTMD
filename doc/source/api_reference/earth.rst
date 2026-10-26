@@ -27,6 +27,12 @@ General Methods
 
 .. autofunction:: pyTMD.earth.greens_function
 
+.. autofunction:: pyTMD.earth.write_greens_function
+
+.. autofunction:: pyTMD.earth.read_greens_function
+
+.. autofunction:: pyTMD.earth.interpolate_greens_function
+
 .. autofunction:: pyTMD.earth.asymptotic_love_numbers
 
 .. autoclass:: pyTMD.earth.EarthLayer
@@ -36,5 +42,3 @@ General Methods
    :members:
 
 .. autofunction:: pyTMD.earth._melchior_table_52
-
-.. autofunction:: pyTMD.earth._infconv

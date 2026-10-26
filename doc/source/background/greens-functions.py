@@ -9,62 +9,6 @@ plt.rcParams["figure.facecolor"] = facecolor
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Lato"]
 
-# angular distances from Farrell (1972)
-theta = np.array(
-    [
-        0.0001,
-        0.001,
-        0.01,
-        0.02,
-        0.03,
-        0.04,
-        0.06,
-        0.08,
-        0.1,
-        0.16,
-        0.2,
-        0.25,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.8,
-        1.0,
-        1.2,
-        1.6,
-        2.0,
-        2.5,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-        10.0,
-        12.0,
-        16.0,
-        20.0,
-        25.0,
-        30.0,
-        40.0,
-        50.0,
-        60.0,
-        70.0,
-        80.0,
-        90.0,
-        100.0,
-        110.0,
-        120.0,
-        130.0,
-        140.0,
-        150.0,
-        160.0,
-        170.0,
-        180.0,
-    ]
-)
-
 # Earth parameters and physical constants
 a_axis = pyTMD.earth._wgs84.a_axis
 flat = pyTMD.earth._wgs84.flat
@@ -80,10 +24,9 @@ scale = rad_e / m_e
 
 # Load Love number dataset
 lln = "wang-prem"
-# calculate scaled Green's functions
-Gu, Gv = pyTMD.earth.greens_function(
-    np.radians(theta), lln=lln, lmax=46300, reference="CE"
-)
+# read lookup table of unscaled Green's functions
+# uses reference angular distances from Farrell (1972)
+theta, Gu, Gv = pyTMD.earth.read_greens_function(lln=lln, reference="CE")
 # normalization in Table A3 of Farrell
 norm = 1e12 * rad_e * np.radians(theta)
 
