@@ -167,7 +167,7 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
     ----------
     MJD: np.ndarray
         Modified Julian Day (MJD) of input date
-    method: str, default 'Cartwright'
+    method: str, default 'IERS'
         Method for calculating mean longitudes
 
             - ``'Cartwright'``: coefficients from David Cartwright
@@ -189,7 +189,7 @@ def mean_longitudes(MJD: np.ndarray, **kwargs):
         Longitude of solar perigee (degrees)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Cartwright")
+    kwargs.setdefault("method", "IERS")
     # check for deprecated method
     if kwargs.get("MEEUS"):
         warnings.warn("Deprecated argument", DeprecationWarning)

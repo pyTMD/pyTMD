@@ -2242,7 +2242,7 @@ def _frequency(coef: np.ndarray, **kwargs):
     ----------
     coef: list or np.ndarray
         Doodson coefficients (Cartwright numbers) for constituents
-    method: str, default 'Cartwright'
+    method: str, default 'IERS'
         Method for computing the mean longitudes
 
             - ``'Cartwright'``
@@ -2258,7 +2258,7 @@ def _frequency(coef: np.ndarray, **kwargs):
         Angular frequency (radians per second)
     """
     # set default keyword arguments
-    kwargs.setdefault("method", "Cartwright")
+    kwargs.setdefault("method", "IERS")
     kwargs.setdefault("include_planets", False)
     # Modified Julian Dates at J2000
     MJD = np.array([51544.5, 51544.55])

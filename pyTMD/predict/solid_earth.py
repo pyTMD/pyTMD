@@ -69,7 +69,7 @@ def body_tide(
     t: np.ndarray,
     ds: xr.Dataset,
     deltat: float | np.ndarray = 0.0,
-    method: str = "ASTRO5",
+    method: str = "IERS",
     tide_system: str = "tide_free",
     catalog: str = "CTE1973",
     **kwargs,
@@ -88,7 +88,7 @@ def body_tide(
         Dataset with spatial coordinates
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
-    method: str, default 'ASTRO5'
+    method: str, default 'IERS'
         Method for computing the mean longitudes
 
             - ``'Cartwright'``
