@@ -1225,7 +1225,9 @@ def write_greens_function(
         ]
     )
     # calculate unscaled Green's functions
-    Gu, Gv = greens_function(np.radians(alpha), lln=lln, reference=reference)
+    Gu, Gv = greens_function(
+        np.radians(alpha), lmax=lmax, lln=lln, reference=reference
+    )
     # write the Green's functions to output
     filename = get_cache_path(f"{lln}-gf-{reference.lower()}.txt")
     with filename.open(mode="w") as fid:

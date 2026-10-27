@@ -531,7 +531,8 @@ def _greens_function(
     # replace colocated points with spherical caps
     # with areas equal to those of the grid cells
     rad_cap = np.sqrt(area / np.pi) / rad_e
-    alpha = alpha.clip(min=rad_cap)
+    # truncate distances at one half spherical cap radius
+    alpha = alpha.clip(min=0.5 * rad_cap)
 
     # unit vector zx = cos(th) * sin(th) * cos(lmda)
     ZX1 = XYZ1.Z * XYZ1.X / np.power(radius1, 2)
