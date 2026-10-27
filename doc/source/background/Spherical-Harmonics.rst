@@ -60,7 +60,8 @@ The infinite sums of the Legendre polynomials as given in :cite:t:`Hobson:1955ur
 
     \sum_{l=0}^\infty P_l(\cos{\theta}) &= \frac{1}{\sin{(\theta/2)}}\\
     \sum_{l=0}^\infty l\,P_l(\cos{\theta}) &= -\frac{1}{4\sin{(\theta/2)}}\\
-    \sum_{l=0}^\infty \frac{\partial P_l(\cos{\theta})}{\partial\theta} &= -\frac{\cos{(\theta/2)}}{4\sin^2{(\theta/2)}}
+    \sum_{l=1}^\infty \frac{\partial P_l(\cos{\theta})}{\partial\theta} &= -\frac{\cos{(\theta/2)}}{4\sin^2{(\theta/2)}}\\
+    \sum_{l=1}^\infty \frac{1}{l}\frac{\partial P_l(\cos{\theta})}{\partial\theta} &= -\frac{\cos{(\theta/2)}\left[1 + 2\sin{(\theta/2)}\right]}{2\sin{(\theta/2)}\left[1 + \sin{(\theta/2)}\right]}
 
 These infinite sums can be used to calculate the :ref:`greens-functions` of deformation using a truncated set of Legendre polynomials.
 
