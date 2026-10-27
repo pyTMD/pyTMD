@@ -309,6 +309,43 @@ def test_legendre_hw95():
         assert np.allclose(P2, PLM, atol=1e-12)
         assert np.allclose(D2, DPLM, atol=1e-12)
 
+def test_unit_vectors():
+    """Test P21 unit vector calculation for Green's functions
+    """
+    # number of points
+    npts = 30
+    # latitude and longitude for random test values
+    lat1 = -90.0 + 180.0 * np.random.rand(npts)
+    lon1 = -180.0 + 360.0 * np.random.rand(npts)
+    lat2 = -90.0 + 180.0 * np.random.rand(npts)
+    lon2 = -180.0 + 360.0 * np.random.rand(npts)
+    # colatitude and longitude in radians
+    geolat1 = pyTMD.spatial.geocentric_latitude(lat1)
+    geolat2 = pyTMD.spatial.geocentric_latitude(lat2)
+    theta1 = np.radians(90.0 - geolat1)
+    theta2 = np.radians(90.0 - geolat2)
+    lmda1 = np.radians(lon1)
+    lmda2 = np.radians(lon2)
+    # convert to cartesian
+    X1, Y1, Z1 = pyTMD.spatial.to_cartesian(lon1, lat1)
+    X2, Y2, Z2 = pyTMD.spatial.to_cartesian(lon2, lat2)
+    radius1 = pyTMD.math.radius(X1, Y1, Z1)
+    radius2 = pyTMD.math.radius(X2, Y2, Z2)
+    # calculate spherical harmonics for degree 2 and order 1
+    l, m = 2, 1
+    Ylms1, _ = pyTMD.math.sph_harm(l, theta1, lmda1, m=m)
+    Ylms2, _ = pyTMD.math.sph_harm(l, theta2, lmda2, m=m)
+    P21 = (8.0 * np.pi) * np.real(Ylms1 * np.conj(Ylms2)) / (2.0 * l + 1.0)
+    # unit vector zx = cos(th) * sin(th) * cos(lmda)
+    ZX1 = Z1 * X1 / np.power(radius1, 2)
+    ZX2 = Z2 * X2 / np.power(radius2, 2)
+    # unit vector xy = cos(th) * sin(th) * sin(lmda)
+    ZY1 = Z1 * Y1 / np.power(radius1, 2)
+    ZY2 = Z2 * Y2 / np.power(radius2, 2)
+    # spherical harmonics for degree 2, order 1 from unit vectors
+    # 3 * cos(th1) * sin(th1) * cos(th2) * sin(th2) * cos(lmda1 - lmda2)
+    V21 = 3.0 * (np.multiply(ZX1, ZX2) + np.multiply(ZY1, ZY2))
+    assert np.allclose(P21, V21)
 
 # PURPOSE: test the calculation of ellipse coordinates
 def test_ellipse_xy():

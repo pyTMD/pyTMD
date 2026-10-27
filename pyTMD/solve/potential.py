@@ -531,19 +531,18 @@ def _greens_function(
     # replace colocated points with spherical caps
     # with areas equal to those of the grid cells
     rad_cap = np.sqrt(area / np.pi) / rad_e
-    alpha = alpha.clip(min=rad_cap)
-    # calculate colatitude and longitude (radians)
-    th1 = np.pi / 2.0 - np.arctan(XYZ1.Z / np.hypot(XYZ1.X, XYZ1.Y))
-    th2 = np.pi / 2.0 - np.arctan(XYZ2.Z / np.hypot(XYZ2.X, XYZ2.Y))
-    la1 = np.arctan2(XYZ1.Y, XYZ1.X)
-    la2 = np.arctan2(XYZ2.Y, XYZ2.X)
+    # truncate distances at one half spherical cap radius
+    alpha = alpha.clip(min=0.5 * rad_cap)
 
+    # unit vector zx = cos(th) * sin(th) * cos(lmda)
+    ZX1 = XYZ1.Z * XYZ1.X / np.power(radius1, 2)
+    ZX2 = XYZ2.Z * XYZ2.X / np.power(radius2, 2)
+    # unit vector xy = cos(th) * sin(th) * sin(lmda)
+    ZY1 = XYZ1.Z * XYZ1.Y / np.power(radius1, 2)
+    ZY2 = XYZ2.Z * XYZ2.Y / np.power(radius2, 2)
     # calculate spherical harmonics for degree 2, order 1
     # to adjust Green's functions for frequency dependence
-    l, m = 2, 1
-    Ylms1, _ = pyTMD.math.sph_harm(l, th1, la1, m=m)
-    Ylms2, _ = pyTMD.math.sph_harm(l, th2, la2, m=m)
-    P21 = (8.0 * np.pi) * np.real(Ylms1 * np.conj(Ylms2)) / (2.0 * l + 1.0)
+    P21 = 3.0 * (xr.dot(ZX1, ZX2) + xr.dot(ZY1, ZY2))
 
     # calculate Green's function for vertical displacement (unscaled)
     u = xr.zeros_like(alpha)
