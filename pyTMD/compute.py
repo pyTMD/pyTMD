@@ -896,7 +896,7 @@ def LPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # tidal love/shida numbers appropriate for the load tide
     hb2 = 0.6207
     lb2 = 0.0836
@@ -1058,7 +1058,7 @@ def OPT_displacements(
         )
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # mean equatorial gravitational acceleration (m s^-2)
     ge = 9.7803278
     # density of sea water (kg m^-3)
@@ -1228,7 +1228,7 @@ def _ephemerides_SET(
             - ``'N'``: north displacement
             - ``'E'``: east displacement
             - ``'R'``: radial displacement
-    kwargs: dict, optional
+    kwargs: dict
         Additional keyword arguments to pass to the prediction function
 
     Returns
@@ -1247,7 +1247,7 @@ def _ephemerides_SET(
     if ephemerides.lower() not in _methods:
         raise ValueError("Invalid ephemerides method")
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1409,7 +1409,7 @@ def _catalog_SET(
             - ``'N'``: north displacement
             - ``'E'``: east displacement
             - ``'R'``: radial displacement
-    kwargs: dict, optional
+    kwargs: dict
         Additional keyword arguments to pass to the prediction function
 
     Returns
@@ -1528,7 +1528,7 @@ def TG_forces(
             - ``'N'``: generating force in the north direction
             - ``'E'``: generating force in the east direction
             - ``'R'``: generating force in the radial direction
-    kwargs: dict, optional
+    kwargs: dict
         Additional keyword arguments to pass to the prediction function
 
     Returns
@@ -1546,7 +1546,7 @@ def TG_forces(
         raise ValueError("Invalid ephemerides method")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(
@@ -1699,7 +1699,7 @@ def GT_accelerations(
             - ``'Meeus'``: :cite:t:`Meeus:1991vh`
             - ``'Montenbruck'``: :cite:t:`Montenbruck:1989uk`
             - ``'JPL'``: computed ephemerides from JPL kernels
-    kwargs: dict, optional
+    kwargs: dict
         Additional keyword arguments to pass to the prediction function
 
     Returns
@@ -1717,7 +1717,7 @@ def GT_accelerations(
         raise ValueError("Invalid ephemerides method")
 
     # earth and physical parameters for ellipsoid
-    units = pyTMD.earth.datum(ellipsoid=ellipsoid, units="MKS")
+    units = pyTMD.earth.EarthDatum(ellipsoid=ellipsoid, units="MKS")
     # convert coordinates to xarray DataArrays
     # in WGS84 Latitude and Longitude
     longitude, latitude = pyTMD.io.dataset._coords(

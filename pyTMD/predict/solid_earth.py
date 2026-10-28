@@ -39,6 +39,10 @@ import pyTMD.constituents
 import pyTMD.math
 import pyTMD.spatial
 
+# get tide potential tables and ellipsoid parameters
+from pyTMD.constituents import _tide_potential_table
+from pyTMD.earth import _iers
+
 __all__ = [
     "body_tide",
     "solid_earth_tide",
@@ -58,21 +62,6 @@ __all__ = [
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
 
-# get ellipsoidal parameters
-_iers = pyTMD.earth.datum(ellipsoid="IERS", units="MKS")
-
-# tide potential tables
-_tide_potential_table = {}
-# Cartwright and Tayler (1971) table with 3rd-degree values
-# Cartwright and Edden (1973) table with updated values
-_tide_potential_table["CTE1973"] = pyTMD.constituents._cte1973_table
-# Hartmann and Wenzel (1995) tidal potential catalog
-_tide_potential_table["HW1995"] = pyTMD.constituents._hw1995_table
-# Tamura (1987) tidal potential catalog
-_tide_potential_table["T1987"] = pyTMD.constituents._t1987_table
-# Woodworth (1990) tables with updated and 3rd-degree values
-_tide_potential_table["W1990"] = pyTMD.constituents._w1990_table
-
 
 # PURPOSE: estimate solid Earth tides due to gravitational attraction
 # using a simplified approach based on Cartwright and Tayler (1971)
@@ -80,7 +69,7 @@ def body_tide(
     t: np.ndarray,
     ds: xr.Dataset,
     deltat: float | np.ndarray = 0.0,
-    method: str = "ASTRO5",
+    method: str = "IERS",
     tide_system: str = "tide_free",
     catalog: str = "CTE1973",
     **kwargs,
@@ -99,7 +88,7 @@ def body_tide(
         Dataset with spatial coordinates
     deltat: float or np.ndarray, default 0.0
         Time correction for converting to Ephemeris Time (days)
-    method: str, default 'ASTRO5'
+    method: str, default 'IERS'
         Method for computing the mean longitudes
 
             - ``'Cartwright'``
