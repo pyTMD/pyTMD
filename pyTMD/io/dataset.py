@@ -60,6 +60,7 @@ import numpy as np
 import xarray as xr
 from typing import Any
 from xarray.core.utils import equivalent
+from pyTMD.math import greater_close, less_close
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -1520,83 +1521,142 @@ class DataArray:
 
 
 def _longitude_model_range(
-    xvals: np.ndarray, lon_wrap: int | float = 0
+    xvals: np.ndarray,
+    lon_wrap: int | float = 0,
 ) -> tuple[float, float]:
     """
-    Infer the primary longitude range of a global grid.
+    Infer the primary longitude range of a global grid
 
-    Prefers the coordinate extent; falls back to ``lon_wrap``
-    (``180`` → 0–360, else −180–180).
+    1. based on coordinate extent
+    2. fall back to a global grid using ``lon_wrap``
+        ``0``: -180 to 180
+        ``180``: 0 to 360
+
+    Parameters
+    ----------
+    xvals: np.ndarray
+        Longitude (x-coordinate) array
+    lon_wrap: int | float, default 0
+        Mid-point value for wrapping longitudes and handling meridians
+
+    Returns
+    -------
+    model_xmin: float
+        Minimum longitudinal extent
+    model_xmax: float
+        Maximum longitudinal extent
     """
     xvals = np.asarray(xvals, dtype=float)
+    # x-coordinate grid spacing
     dx = float(xvals[1] - xvals[0]) if xvals.size > 1 else 1.0
+    # minimum and maximum values
     xmin = float(np.min(xvals))
     xmax = float(np.max(xvals))
-    # 0–360 style (FES / GOT / ATLAS)
+    # determine range of longitudes
     if (xmin >= -dx) and (xmax > (180.0 + dx)):
-        return 0.0, 360.0
-    # −180–180 style
-    if xmin < -dx:
-        return -180.0, 180.0
-    if lon_wrap == 180:
-        return 0.0, 360.0
-    return -180.0, 180.0
+        # 0 to 360 style (FES / GOT / ATLAS)
+        model_xmin, model_xmax = (0.0, 360.0)
+    elif xmin < -dx:
+        # -180 to 180 style
+        model_xmin, model_xmax = (-180.0, 180.0)
+    else:
+        # calculate range based on lon wrap
+        model_xmin, model_xmax = (lon_wrap - 180.0, lon_wrap + 180.0)
+    # return the x-coordinate extents
+    return model_xmin, model_xmax
 
 
 def _shift_longitude_into(
-    lon: float, model_lo: float, model_hi: float
+    x: float,
+    model_xmin: float,
+    model_xmax: float,
 ) -> float:
-    """Shift ``lon`` by multiples of 360 into ``[model_lo, model_hi)``."""
-    period = model_hi - model_lo
-    while lon < model_lo:
-        lon += period
-    while lon >= model_hi:
-        lon -= period
-    return lon
+    """
+    Shift longitudes by multiples of 360 into range
+    ``[model_xmin, model_xmax)``
+
+    Parameters
+    ----------
+    x: float
+        Longitude (x-coordinate)
+    model_xmin: float
+        Minimum longitudinal extent
+    model_xmax: float
+        Maximum longitudinal extent
+    """
+    period = model_xmax - model_xmin
+    while x < model_xmin:
+        x += period
+    while x >= model_xmax:
+        x -= period
+    return x
 
 
 def _longitude_model_segments(
     xmin: float,
     xmax: float,
-    model_lo: float,
-    model_hi: float,
+    model_xmin: float,
+    model_xmax: float,
     grid_xmin: float | None = None,
     grid_xmax: float | None = None,
 ) -> list[tuple[float, float]]:
     """
     Map a longitude window to one or two segments in model coordinates.
 
-    Travel is eastward from ``xmin`` to ``xmax``. If ``xmin > xmax``, the
-    window wraps (Pacific dateline short arc).
+    Travel is eastward from ``xmin`` to ``xmax``
 
-    For non-wrapping windows whose span is ≥ one period (e.g. a huge
-    ``buffer``), intersect with the native grid extent instead of forcing a
-    modular full-globe read — matching historical ``where`` crop behavior.
+    If ``xmin > xmax``: window wraps (Pacific dateline short arc)
+
+    For non-wrapping windows where the span is greater than or equal
+        to one period: intersect with the native grid extent
+
+    Parameters
+    ----------
+    xmin: float
+        Minimum x-coordinate for crop
+    xmax: float
+        Maximum x-coordinate for crop
+    model_xmin: float
+        Model minimum longitudinal extent
+    model_xmax: float
+        Model maximum longitudinal extent
+    grid_xmin: float or None, default None
+        Model minimum x-coordinate
+    grid_xmax: float or None, default None
+        Model maximum x-coordinate
     """
-    period = model_hi - model_lo
+    # model width of periodic domain
+    period = model_xmax - model_xmin
     if xmin <= xmax:
+        # span of crop x values
         span = xmax - xmin
-        # oversized linear box: clip to native grid (not modular full globe)
-        if span >= period - 1e-12:
-            x0 = model_lo if grid_xmin is None else grid_xmin
-            x1 = model_hi if grid_xmax is None else grid_xmax
+        # oversized linear box: clip to native grid
+        if greater_close(span, period, rtol=0, atol=1e-12):
+            x0 = model_xmin if grid_xmin is None else grid_xmin
+            x1 = model_xmax if grid_xmax is None else grid_xmax
+            # determine model x-coordinate range
             lo = max(xmin, x0)
             hi = min(xmax, x1)
             if lo > hi:
                 return []
+            # return the minimum and maximum of the native grid
             return [(lo, hi)]
+        # minimum x-coordinate for crop
         start = xmin
     else:
-        # eastward wrap: e.g. 170 → -170 is a 20° arc, not the long way
+        # eastward wrap across a meridian
         span = (xmax + period) - xmin
+        # minimum x-coordinate for crop
         start = xmin
-        if span >= period - 1e-12:
-            return [(model_lo, model_hi)]
-    start_m = _shift_longitude_into(start, model_lo, model_hi)
+        if greater_close(span, period, rtol=0, atol=1e-12):
+            return [(model_xmin, model_xmax)]
+    # shift longitudes
+    start_m = _shift_longitude_into(start, model_xmin, model_xmax)
     end_m = start_m + span
-    if end_m <= model_hi + 1e-12:
+    # crop
+    if less_close(end_m, model_xmax, rtol=0, atol=1e-12):
         return [(start_m, end_m)]
-    return [(start_m, model_hi), (model_lo, end_m - period)]
+    return [(start_m, model_xmax), (model_xmin, end_m - period)]
 
 
 def _crop_global_longitude(
@@ -1611,34 +1671,57 @@ def _crop_global_longitude(
     Crop a global geographic grid with dateline-safe longitude windows.
 
     Uses at most two :func:`isel_bounds` hyperslabs and rebuilds a
-    continuous ``x`` coordinate for the eastward path (no half-globe pad).
+    continuous ``x`` coordinate for the eastward path
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Model dataset to crop
+    xmin: float
+        Minimum x-coordinate for crop
+    xmax: float
+        Maximum x-coordinate for crop
+    ymin: float
+        Minimum y-coordinate for crop
+    ymax: float
+        Maximum y-coordinate for crop
+    lon_wrap: int | float, default 0
+        Mid-point value for wrapping longitudes and handling meridians
     """
     xvals = np.asarray(ds.x.values)
-    model_lo, model_hi = _longitude_model_range(xvals, lon_wrap=lon_wrap)
-    period = model_hi - model_lo
+    model_xmin, model_xmax = _longitude_model_range(xvals, lon_wrap=lon_wrap)
+    # model width of periodic domain
+    period = model_xmax - model_xmin
     segments = _longitude_model_segments(
         xmin,
         xmax,
-        model_lo,
-        model_hi,
+        model_xmin,
+        model_xmax,
         grid_xmin=float(np.min(xvals)),
         grid_xmax=float(np.max(xvals)),
     )
     # Oversized non-wrapping buffer: native-grid intersect only (no ±360 rebuild)
-    if xmin <= xmax and (xmax - xmin) >= period - 1e-12 and len(segments) == 1:
+    if (
+        xmin <= xmax
+        and greater_close(xmax - xmin, period, rtol=0, atol=1e-12)
+        and len(segments) == 1
+    ):
         lo, hi = segments[0]
         return isel_bounds(ds, "x", "y", bounds=[lo, hi, ymin, ymax])
+    # construct two pieces and merge
     pieces: list[xr.Dataset] = []
     x_cursor: float | None = None
-    # FES-style grids store both period endpoints (0 and 360, or −180 and 180).
-    # A wrap split then selects model_hi on the west piece and model_lo on the
-    # east piece — the same meridian twice. Drop the closing sample so the
-    # east piece stays one cell east of x_cursor (no extra +360 shift).
+    # FES-style grids store both period endpoints (0 and 360, or -180 and 180).
+    # A wrap split then selects model_xmax on the west piece and model_xmin on the
+    # east piece: the same meridian twice
+    #   Drop the closing sample so the east piece stays one cell east of x_cursor
+    #   (no extra +360 shift)
     drop_closing_meridian = (
         len(segments) > 1
-        and np.isclose(float(np.min(xvals)), model_lo)
-        and np.isclose(float(np.max(xvals)), model_hi)
+        and np.isclose(float(np.min(xvals)), model_xmin)
+        and np.isclose(float(np.max(xvals)), model_xmax)
     )
+    # for each segment
     for lo, hi in segments:
         part = isel_bounds(ds, "x", "y", bounds=[lo, hi, ymin, ymax])
         if part.sizes.get("x", 0) == 0:
@@ -1646,7 +1729,7 @@ def _crop_global_longitude(
         if (
             drop_closing_meridian
             and x_cursor is None
-            and np.isclose(float(part.x.values[-1]), model_hi)
+            and np.isclose(float(part.x.values[-1]), model_xmax)
         ):
             part = part.isel(x=slice(0, -1))
             if part.sizes.get("x", 0) == 0:
@@ -1660,10 +1743,12 @@ def _crop_global_longitude(
                 x += 360.0
         else:
             # keep subsequent segments east of the previous piece
-            while np.min(x) <= x_cursor + 1e-12:
+            while less_close(np.min(x), x_cursor, rtol=0, atol=1e-12):
                 x += 360.0
+        # add piece to list
         pieces.append(part.assign_coords(x=("x", x)))
         x_cursor = float(np.max(x))
+    # if no pieces were determined: use original crop bounds
     if not pieces:
         return isel_bounds(ds, "x", "y", bounds=[xmin, xmax, ymin, ymax])
     if len(pieces) == 1:
@@ -1680,10 +1765,14 @@ def isel_bounds(
     """
     Index-select a gridded ``Dataset`` to ``bounds``.
 
-    Uses 1-D coordinate values only (cheap), then ``isel`` so netCDF/dask
-    backends can hyperslab amplitude/phase or complex fields instead of
-    reading the globe. Callers that need a halo should expand ``bounds``
-    themselves (``Dataset.tmd.crop`` applies ``buffer`` before calling).
+    Determines windows using 1-D coordinate values,
+    then crops ``Dataset`` with ``isel``.
+
+    netCDF/dask backends can hyperslab any 2-D fields without
+    pre-emptively bringing them entirely into memory
+
+    Callers that need a halo should expand ``bounds`` themselves
+    (``Dataset.tmd.crop`` applies a ``buffer`` before calling).
 
     Parameters
     ----------
@@ -1698,8 +1787,7 @@ def isel_bounds(
     -------
     ds: xarray.Dataset
         Windowed dataset. If no cells fall in bounds, returns empty
-        slices along ``x_name`` / ``y_name`` (same spirit as
-        ``where(..., drop=True)``).
+        slices along ``x_name`` / ``y_name``
     """
     xmin, xmax, ymin, ymax = map(float, bounds)
     # load coordinate vectors only
