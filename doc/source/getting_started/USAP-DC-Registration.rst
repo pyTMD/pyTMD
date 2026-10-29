@@ -7,7 +7,7 @@ Registering with USAP-DC
 ========================
 
 The Circum-Antarctic Tidal Simulations (CATS) are available through the USAP Data Center (USAP-DC).
-The models can be programmatically accessed through their `API <http://usap-dc.org/api>` after registering for a token.
+The models can be programmatically accessed through their `API <http://usap-dc.org/api>`_ after registering for a token.
 
 .. note::
     The models can also be manually downloaded from the USAP-DC website after passing a reCAPTCHA test
