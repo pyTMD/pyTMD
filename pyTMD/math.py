@@ -83,7 +83,7 @@ def greater_close(
     atol: float, default 1e-8
         Absolute tolerance parameter
     equal_nan: bool, default False
-        Considers coincident `NaN` values to be equivalent
+        Considers coincident ``NaN`` values to be equivalent
     """
     return np.logical_or(
         np.greater_equal(x1, x2),
@@ -112,7 +112,7 @@ def less_close(
     atol: float, default 1e-8
         Absolute tolerance parameter
     equal_nan: bool, default False
-        Considers coincident `NaN` values to be equivalent
+        Considers coincident ``NaN`` values to be equivalent
     """
     return np.logical_or(
         np.less_equal(x1, x2),

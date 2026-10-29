@@ -60,6 +60,7 @@ import numpy as np
 import xarray as xr
 from typing import Any
 from xarray.core.utils import equivalent
+from pyTMD.math import greater_close, less_close
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -1598,7 +1599,6 @@ def _longitude_model_segments(
     model_xmax: float,
     grid_xmin: float | None = None,
     grid_xmax: float | None = None,
-    eps: float = 1e-12,
 ) -> list[tuple[float, float]]:
     """
     Map a longitude window to one or two segments in model coordinates.
@@ -1607,8 +1607,8 @@ def _longitude_model_segments(
 
     If ``xmin > xmax``: window wraps (Pacific dateline short arc)
 
-    For non-wrapping windows whose span is greater than one period:
-        intersect with the native grid extent
+    For non-wrapping windows whose the span is greater than or equal
+        to one period: intersect with the native grid extent
 
     Parameters
     ----------
@@ -1625,15 +1625,13 @@ def _longitude_model_segments(
     grid_xmax: float or None, default None
         Model maximum x-coordinate
     """
-    from pyTMD.math import greater_close, less_close
-
     # model width of periodic domain
     period = model_xmax - model_xmin
     if xmin <= xmax:
         # span of crop x values
         span = xmax - xmin
         # oversized linear box: clip to native grid
-        if greater_close(span, period):
+        if greater_close(span, period, rtol=0, atol=1e-12):
             x0 = model_xmin if grid_xmin is None else grid_xmin
             x1 = model_xmax if grid_xmax is None else grid_xmax
             # determine model x-coordinate range
@@ -1650,13 +1648,13 @@ def _longitude_model_segments(
         span = (xmax + period) - xmin
         # minimum x-coordinate for crop
         start = xmin
-        if greater_close(span, period):
+        if greater_close(span, period, rtol=0, atol=1e-12):
             return [(model_xmin, model_xmax)]
     # shift longitudes
     start_m = _shift_longitude_into(start, model_xmin, model_xmax)
     end_m = start_m + span
     # crop
-    if less_close(end_m, model_xmax):
+    if less_close(end_m, model_xmax, rtol=0, atol=1e-12):
         return [(start_m, end_m)]
     return [(start_m, model_xmax), (model_xmin, end_m - period)]
 
@@ -1690,8 +1688,6 @@ def _crop_global_longitude(
     lon_wrap: int | float, default 0
         Mid-point value for wrapping longitudes and handling meridians
     """
-    from pyTMD.math import greater_close, less_close
-
     xvals = np.asarray(ds.x.values)
     model_xmin, model_xmax = _longitude_model_range(xvals, lon_wrap=lon_wrap)
     # model width of periodic domain
@@ -1707,7 +1703,7 @@ def _crop_global_longitude(
     # Oversized non-wrapping buffer: native-grid intersect only (no ±360 rebuild)
     if (
         xmin <= xmax
-        and greater_close(xmax - xmin, period)
+        and greater_close(xmax - xmin, period, rtol=0, atol=1e-12)
         and len(segments) == 1
     ):
         lo, hi = segments[0]
@@ -1747,7 +1743,7 @@ def _crop_global_longitude(
                 x += 360.0
         else:
             # keep subsequent segments east of the previous piece
-            while less_close(np.min(x), x_cursor):
+            while less_close(np.min(x), x_cursor, rtol=0, atol=1e-12):
                 x += 360.0
         # add piece to list
         pieces.append(part.assign_coords(x=("x", x)))
