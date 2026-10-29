@@ -1567,7 +1567,7 @@ def _longitude_model_range(
 
 
 def _shift_longitude_into(
-    xvals: float,
+    x: float,
     model_xmin: float,
     model_xmax: float,
 ) -> float:
@@ -1577,19 +1577,19 @@ def _shift_longitude_into(
 
     Parameters
     ----------
-    xvals: np.ndarray
-        Longitude (x-coordinate) array
+    x: float
+        Longitude (x-coordinate)
     model_xmin: float
         Minimum longitudinal extent
     model_xmax: float
         Maximum longitudinal extent
     """
     period = model_xmax - model_xmin
-    while xvals < model_xmin:
-        xvals += period
-    while xvals >= model_xmax:
-        xvals -= period
-    return xvals
+    while x < model_xmin:
+        x += period
+    while x >= model_xmax:
+        x -= period
+    return x
 
 
 def _longitude_model_segments(
@@ -1607,7 +1607,7 @@ def _longitude_model_segments(
 
     If ``xmin > xmax``: window wraps (Pacific dateline short arc)
 
-    For non-wrapping windows whose the span is greater than or equal
+    For non-wrapping windows where the span is greater than or equal
         to one period: intersect with the native grid extent
 
     Parameters
