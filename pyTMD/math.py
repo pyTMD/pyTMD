@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
 UPDATE HISTORY:
     Updated 10/2026: added option to calculate exact factorial values
         set to False for cases with large arguments that would cause overflow
+        added greater_close and less_close functions for array comparisons
     Updated 09/2026: added recurrence function for Legendre polynomials
         added option to calculate fully-normalized Legendre polynomials
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
@@ -39,6 +40,8 @@ import numpy as np
 from scipy.special import factorial, gammaln
 
 __all__ = [
+    "greater_close",
+    "less_close",
     "asec2rad",
     "masec2rad",
     "rad2asec",
@@ -57,6 +60,64 @@ __all__ = [
     "legendreP",
     "sph_harm",
 ]
+
+
+def greater_close(
+    x1: np.ndarray,
+    x2: np.ndarray,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+    equal_nan: bool = False,
+):
+    """
+    Returns the truth value of (x1 >= x2) element-wise including a tolerance
+
+    Parameters
+    ----------
+    x1: np.ndarray
+        Input array
+    x2: np.ndarray
+        Other array
+    rtol: float, default 1e-5
+        Relative tolerance parameter
+    atol: float, default 1e-8
+        Absolute tolerance parameter
+    equal_nan: bool, default False
+        Considers coincident `NaN` values to be equivalent
+    """
+    return np.logical_or(
+        np.greater_equal(x1, x2),
+        np.isclose(x1, x2, rtol=rtol, atol=atol, equal_nan=equal_nan),
+    )
+
+
+def less_close(
+    x1: np.ndarray,
+    x2: np.ndarray,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+    equal_nan: bool = False,
+):
+    """
+    Returns the truth value of (x1 <= x2) element-wise including a tolerance
+
+    Parameters
+    ----------
+    x1: np.ndarray
+        Input array
+    x2: np.ndarray
+        Other array
+    rtol: float, default 1e-5
+        Relative tolerance parameter
+    atol: float, default 1e-8
+        Absolute tolerance parameter
+    equal_nan: bool, default False
+        Considers coincident `NaN` values to be equivalent
+    """
+    return np.logical_or(
+        np.less_equal(x1, x2),
+        np.isclose(x1, x2, rtol=rtol, atol=atol, equal_nan=equal_nan),
+    )
 
 
 def asec2rad(x: float | np.ndarray):

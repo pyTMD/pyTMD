@@ -24,6 +24,14 @@ General Attributes and Methods
 
 .. autofunction:: pyTMD.io.dataset.equivalent_attrs
 
+.. autofunction:: pyTMD.io.dataset._longitude_model_range
+
+.. autofunction:: pyTMD.io.dataset._shift_longitude_into
+
+.. autofunction:: pyTMD.io.dataset._longitude_model_segments
+
+.. autofunction:: pyTMD.io.dataset._crop_global_longitude
+
 .. autofunction:: pyTMD.io.dataset.isel_bounds
 
 .. autofunction:: pyTMD.io.dataset.register_datatree_subaccessor

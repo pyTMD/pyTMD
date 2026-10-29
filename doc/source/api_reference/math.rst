@@ -8,6 +8,10 @@
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
 
+.. autofunction:: pyTMD.math.greater_close
+
+.. autofunction:: pyTMD.math.less_close
+
 .. autofunction:: pyTMD.math.asec2rad
 
 .. autofunction:: pyTMD.math.masec2rad
