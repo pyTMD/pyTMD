@@ -22,6 +22,7 @@ PROGRAM DEPENDENCIES:
 UPDATE HISTORY:
     Updated 10/2026: added function to estimate crustal deformation for
         non-geographic coordinates using a Green's function approach
+        add different variable options for converting harmonics
     Updated 09/2026: added function to estimate sea water densities
     Written 09/2026
 """
@@ -152,29 +153,18 @@ def ocean_harmonics(
     hl, kl, ll = pyTMD.earth.load_love_numbers(
         _lln_table[lln], reference=reference, lmax=lmax
     )
-    # convert to xarray data arrays
-    Plm = xr.DataArray(
-        Plm,
-        dims=("l", "m", "y"),
-        coords={"l": l, "m": m, "y": ds.y},
-    )
-    kl = xr.DataArray(
-        kl,
-        dims=("l",),
-        coords={"l": l},
-    )
+    # convert to xarray dataset
+    S = xr.Dataset(coords={"l": l, "m": m, "y": ds.y})
+    S["Plm"] = (("l", "m", "y"), Plm)
+    S["kl"] = ("l", kl)
     # allocate for frequency-dependent load Love numbers adjustments
-    dk = xr.DataArray(
-        np.zeros((lmax + 1, lmax + 1)),
-        dims=("l", "m"),
-        coords={"l": l, "m": m},
-    )
+    S["dk"] = (("l", "m"), np.zeros((lmax + 1, lmax + 1)))
 
     # calculate cos/sin of lambda arrays
-    m_cos = np.cos(Plm.m.dot(lmda))
-    m_sin = np.sin(Plm.m.dot(lmda))
+    m_cos = np.cos(S.m.dot(lmda))
+    m_sin = np.sin(S.m.dot(lmda))
     # integration coefficients for converting to spherical harmonics
-    int_coeff = int_fact * Plm
+    int_coeff = int_fact * S.Plm
 
     # allocate for output spherical harmonics
     clm = np.zeros((lmax + 1, lmax + 1, nc), dtype=np.complex128)
@@ -191,14 +181,15 @@ def ocean_harmonics(
         d_cos = m_cos.dot(rho_w * data)
         d_sin = m_sin.dot(rho_w * data)
         # adjust load Love numbers for frequency dependence
-        dh, dk[2, 1], dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
+        dh21, dk21, dl21 = pyTMD.earth.adjust_load_love_numbers(omega[i])
+        S.dk.values[2, 1] = dk21
         # degree dependent factors for converting from water equivalent
         # taking into account frequency dependence of load Love numbers
         # modified from Wahr et al., (2018)
         dfactor = (
             3.0
-            * (1.0 + kl + dk)
-            / (1.0 + 2.0 * Plm.l)
+            * (1.0 + S.kl + S.dk)
+            / (1.0 + 2.0 * S.l)
             / (4.0 * np.pi * rad_e * rho_e)
         )
         # integrate over all latitudes
@@ -305,11 +296,12 @@ def _harmonic_summation(
     flat: float = _wgs84.flat,
     lln: str = "han-wahr",
     reference: str = "CE",
+    variable: str = "R",
     **kwargs,
 ):
     r"""
-    Calculates the crustal deformation induced by ocean tide loading
-    via spherical harmonic summation :cite:p:`Desai:2014ee,Ray:2025uo`
+    Calculates the summation of spherical harmonics computed using
+    ocean tide model constituents :cite:p:`Desai:2014ee,Ray:2025uo`
 
     Parameters
     ----------
@@ -340,6 +332,13 @@ def _harmonic_summation(
             - ``'CH'``: Center of Surface Height Figure
             - ``'CM'``: Center of Mass of Earth System
             - ``'CE'``: Center of Mass of Solid Earth
+    variable: str, default 'R'
+        Output variable to compute from harmonics
+
+            - ``'N'``: north displacement
+            - ``'E'``: east displacement
+            - ``'R'``: radial displacement
+            - ``'SAL'``: self-attraction and loading effects
     kwargs: dict
         Keyword arguments for :py:func:`pyTMD.constituents.frequency`
 
@@ -351,6 +350,9 @@ def _harmonic_summation(
     # verify load Love number table name
     if lln not in _lln_table.keys():
         raise ValueError(f"Unknown load Love number dataset {lln}")
+    # verify variable name
+    if variable not in ("N", "E", "R", "SAL"):
+        raise ValueError(f"Unknown output variable {variable}")
     # verify maximum degree and order
     if lmax is None:
         lmax = int(Ylms.l.max().values)
@@ -387,42 +389,71 @@ def _harmonic_summation(
     hl, kl, ll = pyTMD.earth.load_love_numbers(
         _lln_table[lln], reference=reference, lmax=lmax
     )
-    # convert to xarray data arrays
-    Plm = xr.DataArray(
-        Plm,
-        dims=("l", "m", "y"),
-        coords={"l": l, "m": m, "y": ds.y},
-    )
-    hl = xr.DataArray(
-        hl,
-        dims=("l",),
-        coords={"l": l},
-    )
+    # convert to xarray dataset
+    S = xr.Dataset(coords={"l": l, "m": m, "y": ds.y})
+    S["Plm"] = (("l", "m", "y"), Plm)
+    S["dPlm"] = (("l", "m", "y"), dPlm)
+    S["hl"] = ("l", hl)
+    S["kl"] = ("l", kl)
+    S["ll"] = ("l", ll)
     # allocate for frequency-dependent load Love numbers adjustments
-    dh = xr.DataArray(
-        np.zeros((lmax + 1, lmax + 1)),
-        dims=("l", "m"),
-        coords={"l": l, "m": m},
-    )
+    S["dh"] = (("l", "m"), np.zeros((lmax + 1, lmax + 1)))
+    S["dk"] = (("l", "m"), np.zeros((lmax + 1, lmax + 1)))
+    S["dl"] = (("l", "m"), np.zeros((lmax + 1, lmax + 1)))
 
     # calculate cos/sin of lambda arrays
-    m_cos = np.cos(Plm.m.dot(lmda))
-    m_sin = np.sin(Plm.m.dot(lmda))
+    m_cos = np.cos(S.m.dot(lmda))
+    m_sin = np.sin(S.m.dot(lmda))
 
     # create output dataset
     tmp = xr.Dataset(coords=ds.coords)
     # for each constituent
     for i, c in enumerate(constituents):
         # adjust load Love numbers for frequency dependence
-        dh[2, 1], dk, dl = pyTMD.earth.adjust_load_love_numbers(omega[i])
-        # degree dependent factors for converting to crustal deformation
+        dh21, dk21, dl21 = pyTMD.earth.adjust_load_love_numbers(omega[i])
+        S["dh"].values[2, 1] = dh21
+        S["dk"].values[2, 1] = dk21
+        S["dl"].values[2, 1] = dl21
+        # fraction for converting from total potential
+        # ignore divide by zero and invalid value warnings
+        with np.errstate(divide="ignore", invalid="ignore"):
+            fraction = rad_e / (1.0 + S.kl + S.dk)
+        # fix zeroed out denominators if outputting in a CM reference frame
+        if reference == "CM":
+            fraction.values[1, :] = 0.0
+        # degree dependent factors for converting to output variable
         # taking into account frequency dependence of load Love numbers
-        dfactor = rad_e * (hl + dh)
+        if variable == "R":
+            # degree dependent factor for vertical deformation
+            dfactor = fraction * (S.hl + S.dh)
+        elif variable == "N":
+            # degree dependent factor for meridional deformation
+            dfactor = -fraction * (S.ll + S.dl)
+        elif variable == "E":
+            # degree and order dependent factor for zonal deformation
+            dfactor = S.m * fraction * (S.ll + S.dl)
+        elif variable == "SAL":
+            # degree dependent factor for self-attraction and loading
+            # tilt factor: response with respect to the solid earth
+            gamma_2 = 1.0 + (S.kl + S.dk) - (S.hl + S.dh)
+            dfactor = fraction * gamma_2
         # summation over all spherical harmonic degrees
-        p_cos = Plm.dot(dfactor * clm[c], dim="l")
-        p_sin = Plm.dot(dfactor * slm[c], dim="l")
-        # summation of cosine and sine harmonics
-        tmp[c] = p_cos.dot(m_cos, dim="m") + p_sin.dot(m_sin, dim="m")
+        if variable == "N":
+            p_cos = S.dPlm.dot(dfactor * clm[c], dim="l")
+            p_sin = S.dPlm.dot(dfactor * slm[c], dim="l")
+        else:
+            p_cos = S.Plm.dot(dfactor * clm[c], dim="l")
+            p_sin = S.Plm.dot(dfactor * slm[c], dim="l")
+        # calculate spherical harmonic summation
+        if variable == "E":
+            # summation of differentiated cosine and sine harmonics
+            tmp[c] = p_sin.dot(m_cos, dim="m") - p_cos.dot(m_sin, dim="m")
+            # ignore divide by zero and invalid value warnings
+            with np.errstate(divide="ignore", invalid="ignore"):
+                tmp[c] /= np.sin(theta)
+        else:
+            # summation of cosine and sine harmonics
+            tmp[c] = p_cos.dot(m_cos, dim="m") + p_sin.dot(m_sin, dim="m")
 
     # copy attributes from spherical harmonic dataset
     tmp.attrs.update(Ylms.attrs)
@@ -528,10 +559,10 @@ def _greens_function(
         XYZ1.X, XYZ1.Y, XYZ1.Z, XYZ2.X, XYZ2.Y, XYZ2.Z
     ) / (radius1 * radius2)
     alpha = np.arccos(scalar.clip(min=-1, max=1))
-    # replace colocated points with spherical caps
-    # with areas equal to those of the grid cells
+    # calculate spherical caps with areas equal to those of the grid cells
     rad_cap = np.sqrt(area / np.pi) / rad_e
-    # truncate distances at one half spherical cap radius
+    # replace colocated points to avoid singularities and overweighting
+    # truncate minimum distances at one half of the spherical cap radius
     alpha = alpha.clip(min=0.5 * rad_cap)
 
     # unit vector zx = cos(th) * sin(th) * cos(lmda)
