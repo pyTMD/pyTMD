@@ -41,8 +41,9 @@ _jd_tide = _jd_mjd + _mjd_tide
 
 # PURPOSE: compute radial load pole tide displacements
 # following IERS Convention (2010) guidelines
+@pytest.mark.parametrize("CONVENTION", ['2003','2010','2015','2018'])
 @pytest.mark.parametrize("TYPE", ['grid','trajectory','time series'])
-def test_load_pole_tide_displacements(TYPE):
+def test_load_pole_tide_displacements(TYPE, CONVENTION):
 
     # create a test dataset for data type
     if (TYPE == 'trajectory'):
@@ -68,7 +69,6 @@ def test_load_pole_tide_displacements(TYPE):
     EPOCH = (2018, 1, 1, 0, 0, 0)
     TIME = 'UTC'
     ELLIPSOID = 'WGS84'
-    CONVENTION = '2018'
     FILL_VALUE = np.nan
 
     # calculate load pole tide displacements
