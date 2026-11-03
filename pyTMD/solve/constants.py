@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 constants.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (11/2026)
 Harmonic tidal analysis with minor constituent inference
 
 REFERENCES:
@@ -26,6 +26,8 @@ PROGRAM DEPENDENCIES:
     predict.py: predict tide values using harmonic constants
 
 UPDATE HISTORY:
+    Updated 11/2026: added method to include minor constituents in the
+        design matrix using a sensitivity kernel approach
     Updated 06/2026: create xarray Dataset at the end of the fit loop
     Updated 12/2025: merge minor constituent inference into main iteration loop
     Updated 11/2025: output as xarray Dataset of complex harmonic constants
@@ -48,7 +50,10 @@ import scipy.optimize
 import pyTMD.constituents
 import pyTMD.predict
 
-__all__ = ["constants"]
+__all__ = [
+    "constants",
+    "_minor_design_matrix",
+]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
@@ -67,6 +72,7 @@ def constants(
     bounds: tuple = (-np.inf, np.inf),
     max_iter: int | None = None,
     infer_iter: int = 1,
+    infer_method: str = "iterative",
 ):
     """
     Estimate the harmonic constants for a time series
@@ -105,6 +111,13 @@ def constants(
     infer_iter: int, default 1
         Maximum number of iterations for inferring minor constituents
 
+        Only used if ``infer_method`` is ``'iterative'``
+    infer_method: str, default 'iterative'
+        Method for including inferred minor constituents in the fit
+
+        - ``'iterative'``: iteratively remove minor constituents post-fit
+        - ``'design'``: include minor constituents in the design matrix
+
     Returns
     -------
     ds: xr.Dataset
@@ -129,6 +142,9 @@ def constants(
     # check that the number of time values matches the number of height values
     if nt != len(ht):
         raise ValueError("Dimension mismatch between input variables")
+    # validate the method for inferring minor constituents
+    if infer_minor and infer_method.lower() not in ("iterative", "design"):
+        raise ValueError(f"Invalid inference method {infer_method}")
 
     # load the nodal corrections
     # convert time to Modified Julian Days (MJD)
@@ -157,6 +173,16 @@ def constants(
     # take the transpose of the design matrix
     M = np.transpose(M)
 
+    # add contributions of inferred minor constituents to design matrix
+    if infer_minor and (infer_method.lower() == "design"):
+        M[:, order + 1 :] += _minor_design_matrix(
+            t,
+            constituents,
+            deltat=deltat,
+            corrections=corrections,
+            minor=minor_constituents,
+        )
+
     # initial heights for fits
     hcorr = np.copy(ht)
     # xarray dataset for fit results
@@ -166,11 +192,12 @@ def constants(
     # total number of fit iterations
     # first iteration: solve for major constituents
     # all others: remove contribution of minor constituents
-    iterations = np.maximum(2, 1 + infer_iter) if infer_minor else 1
+    iterative = infer_minor and (infer_method.lower() == "iterative")
+    iterations = np.maximum(2, 1 + infer_iter) if iterative else 1
     # for each solution iteration
     for i in range(iterations):
         # remove inferred minor constituents from height time series
-        if (i > 0) and infer_minor:
+        if (i > 0) and iterative:
             # inferred minor constituent time series
             hminor = pyTMD.predict.infer_minor(
                 t,
@@ -212,3 +239,48 @@ def constants(
 
     # return the xarray dataset
     return ds
+
+
+# PURPOSE: build design matrix for including inferred minor constituents
+def _minor_design_matrix(
+    t: np.ndarray,
+    constituents: list | np.ndarray,
+    **kwargs,
+):
+    """
+    Calculate the design matrix for including minor constituents inferred
+    from the major constituent by a sensitivity kernel approach
+
+    Parameters
+    ----------
+    t: float or np.ndarray
+        Days relative to 1992-01-01T00:00:00
+    constituents: str, list or np.ndarray
+        Tidal constituent ID(s)
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.predict.infer_minor`
+
+    Returns
+    -------
+    A: np.ndarray
+        Augmentation design matrix for adding minor constituents
+    """
+    # number of time points and number of constituents
+    nt = len(t)
+    nc = len(constituents)
+    # allocate for augmentation design matrix
+    A = np.zeros((nt, 2 * nc))
+    # create template dataset
+    tmp = xr.Dataset({c: 0j for c in constituents})
+    # for each major constituent and each (real or imaginary) term
+    for k, c in enumerate(constituents):
+        # calculate the sensitivity kernel for each constituent
+        # iterating over the cosine (real) and sine (imag) components
+        for j, cs in enumerate([1.0 + 0.0j, 0.0 + 1.0j]):
+            # unit amplitude for a single major constituent
+            ds = xr.zeros_like(tmp)
+            ds[c] = cs
+            # append inferred minor constituents
+            A[:, 2 * k + j] = pyTMD.predict.infer_minor(t, ds, **kwargs)
+    # return the augmentation design matrix
+    return A

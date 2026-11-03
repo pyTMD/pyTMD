@@ -39,6 +39,9 @@ Glossary
     Ascending Node
         point of an orbit where a celestial body intersects the ecliptic, and the latitude coordinate is increasing
 
+    Barotropic Current
+        horizontal water movements that are uniform over the entire depth of the water column
+
     Barycenter
         center of mass of a system of bodies, such as the solar system or the Earth-Moon system
 

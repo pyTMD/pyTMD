@@ -108,3 +108,31 @@ Note that the accuracies of these detected extrema are directly dependent on the
 
     ``pyTMD`` uses times in UTC for all calculations [see :ref:`Time Standards <time-standards>` and :ref:`time-zones`].
     Creating a tide table in *local time* requires applying the appropriate time zone and daylight savings time conversions.
+
+.. _tidal-currents:
+
+Tidal Currents
+==============
+
+The rise and fall of the sea surface by tidal variations is accompanied by a horizontal flow of water :cite:p:`Pugh:2014di,Parker:2007wq`.
+These :term:`tidal currents <Tidal Current>` are important in the ocean for mixing and transporting heat, salt, sediment, and nutrients :cite:p:`Pugh:2014di`.
+Tidal currents are typically described as vectors with eastward (:math:`u`) and northward (:math:`v`) components.
+Each component can be decomposed into a sum of tidal constituents with their own amplitude and phase.
+Alternatively, each constituent can be described in terms of tidal ellipses as described in :cite:t:`Foreman:1989dt`.
+Tidal transports (:math:`U` and :math:`V`) are the tidal currents (:math:`u` and :math:`v`) multiplied by the water column thickness (:math:`H`), and conversely the currents are the transports divided by the water column thickness.
+Where tidal currents have units of m s\ :sup:`-1`, tidal transports are volumetric and have units of m\ :sup:`2` s\ :sup:`-1`.
+
+.. math::
+    :label: 1.3
+    :name: eq:1.3
+
+    u = \frac{U}{H}, \qquad v = \frac{V}{H}
+
+In the open ocean, :term:`barotropic tidal currents <Barotropic Current>`  are typically a few centimeters per second.
+Over continental shelves and in tidal embayments, tidal currents can reach several meters per second as the volume of water flows over a shallower area.
+These areas are complex as the tidal currents can be slower within the bottom boundary layer, and baroclinic effects can become important :cite:p:`Pugh:2014di`.
+
+.. warning::
+
+    Depth-averaged currents can be very large where the water column is shallow, such as near coastlines.
+    Small errors in model bathymetry lead to significant errors in the predicted currents!
