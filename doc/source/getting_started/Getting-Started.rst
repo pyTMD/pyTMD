@@ -242,7 +242,7 @@ The default time in ``pyTMD`` is days (UTC) since a given epoch.
 For ocean, load and equilibrium tide programs, the epoch is 1992-01-01T00:00:00.
 For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 ``pyTMD`` uses the ``timescale`` library to convert different time formats to the necessary time format of a given program.
-``timescale`` can also parse date strings describing the units and epoch of relative times, or the calendar date of measurement for geotiff formats.
+``timescale`` can also parse strings containing the calendar date, or the units and epoch of relative times.
 
 
 .. _spatial-coordinates:

@@ -149,7 +149,7 @@ linkcheck_ignore = [
 
 # html_title = metadata["Name"]
 html_short_title = metadata["Name"]
-html_show_sourcelink = False
+html_show_sourcelink = True
 html_show_sphinx = True
 html_show_copyright = True
 

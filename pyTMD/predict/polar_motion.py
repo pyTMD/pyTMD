@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 polar_motion.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (11/2026)
 Prediction routines for pole tides and Earth Orientation Parameters (EOPs)
 
 PYTHON DEPENDENCIES:
@@ -19,6 +19,7 @@ PROGRAM DEPENDENCIES:
     math.py: Special functions of mathematical physics
 
 UPDATE HISTORY:
+    Updated 11/2026: use the same wobble sign for all mean pole conventions
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
     Updated 05/2026: use numpy hypot function to calculate magnitudes
     Updated 04/2026: parallel outputs from earth_orientation and length_of_day
@@ -111,7 +112,6 @@ def load_pole_tide(
     mpx, mpy, fl = timescale.eop.iers_mean_pole(
         time_decimal, convention=convention
     )
-    sign_convention = -1.0 if convention in ("1996", "2003") else 1.0
     # read and interpolate IERS daily polar motion values
     px, py = timescale.eop.iers_polar_motion(MJD, k=3, s=0)
     # calculate differentials from mean/secular pole positions
@@ -140,17 +140,17 @@ def load_pole_tide(
     S["N"] = (
         dfactor["N"]
         * np.cos(2.0 * theta)
-        * (pm.X * np.cos(lmda) + sign_convention * pm.Y * np.sin(lmda))
+        * (pm.X * np.cos(lmda) + pm.Y * np.sin(lmda))
     )
     S["E"] = (
         dfactor["E"]
         * np.cos(theta)
-        * (pm.X * np.sin(lmda) - sign_convention * pm.Y * np.cos(lmda))
+        * (pm.X * np.sin(lmda) - pm.Y * np.cos(lmda))
     )
     S["R"] = (
         dfactor["R"]
         * np.sin(2.0 * theta)
-        * (pm.X * np.cos(lmda) + sign_convention * pm.Y * np.sin(lmda))
+        * (pm.X * np.cos(lmda) + pm.Y * np.sin(lmda))
     )
 
     # rotation matrix for converting to/from cartesian coordinates
