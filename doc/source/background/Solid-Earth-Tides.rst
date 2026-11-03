@@ -27,6 +27,13 @@ The elastic response of the Earth to the tidal potential is calculated using :re
     S_\varphi &= \frac{1}{g}\sum_{l=2}^{\infty} l_l \frac{\partial V_l}{\partial\varphi} \\
     S_\lambda &= \frac{1}{g}\sum_{l=2}^{\infty} l_l \frac{\partial V_l}{\sin\varphi\partial\lambda}
 
+While constant ("nominal") Love numbers are accurate to a few percent, the "true" solid Earth is not perfectly elastic and is capable of dissipating energy :cite:p:`Farrell:1970tn`.
+The :term:`Love/Shida numbers <Love and Shida Numbers>` can be adjusted to include both spatial and frequency-dependent modulations:
+
+- **Latitude dependence**: Love numbers vary slightly with latitude :cite:p:`Wahr:1981ea`.
+- **Anelasticity**: Love numbers have small imaginary (out-of-phase) components and the response lags the forcing [see :ref:`tidal-love-numbers`].
+- **Frequency dependence**: :term:`Free Core Nutation` resonance impacts the Love numbers of constituents in the diurnal band :cite:p:`Wahr:1979vx,Wahr:1981ea`.
+
 Methods
 =======
 
