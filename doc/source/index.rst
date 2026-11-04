@@ -2,8 +2,11 @@
 pyTMD Documentation
 ===================
 
-Welcome to the documentation for ``pyTMD``, a Python-based tidal prediction software.
-This documentation is intended to explain how to compute ocean, solid Earth, load and pole tide variations using the set of ``pyTMD`` programs.
+Welcome to the documentation for ``pyTMD``, a Python-based Tidal Modeling and Dynamics software.
+This documentation is intended to explain how to use ``pyTMD`` for
+*prediction* (estimating ocean, load, solid Earth and pole tides),
+*analysis* (extracting tidal signals from time series data), and
+*simulation* (constructing ocean and load tide fields).
 
 .. note::
 

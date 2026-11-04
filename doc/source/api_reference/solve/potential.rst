@@ -2,7 +2,8 @@
 ``pyTMD.solve.potential``
 =========================
 
-- Spherical harmonic expansions and summations
+- Spherical harmonic expansions, summations and operations
+- Green's functions calculations for deformation and change
 
 `Source code`__
 

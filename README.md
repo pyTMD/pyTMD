@@ -1,6 +1,6 @@
 # pyTMD
 
-Python-based tidal prediction software for estimating ocean, load, solid Earth and pole tides
+Python-based Tidal Modeling and Dynamics software
 
 ## About
 

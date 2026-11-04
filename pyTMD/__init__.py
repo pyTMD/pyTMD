@@ -2,8 +2,8 @@
 A tide prediction toolkit for Python
 ====================================
 
-pyTMD is a Python-based tidal prediction software for estimating ocean,
-load, solid Earth and pole tides.
+pyTMD is a Python-based Tidal Modeling and Dynamics software for
+estimating ocean, load, solid Earth and pole tides.
 
 The package works using scientific Python packages (numpy, scipy and pyproj)
 combined with data storage in netCDF4 and HDF5 and mapping using
