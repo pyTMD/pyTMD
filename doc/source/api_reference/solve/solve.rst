@@ -9,3 +9,4 @@ Solve functions for estimating ocean and load tides
 
     constants.rst
     potential.rst
+    response.rst

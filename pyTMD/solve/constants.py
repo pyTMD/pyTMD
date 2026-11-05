@@ -237,6 +237,9 @@ def constants(
         # if not iterating (or at end of iteration): will be returned
         ds = darr.to_dataset(dim="constituent")
 
+    # add attributes
+    ds.attrs["method"] = "harmonic"
+    ds.attrs["infer_method"] = infer_method
     # return the xarray dataset
     return ds
 
