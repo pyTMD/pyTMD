@@ -638,7 +638,9 @@ class SWEModel:
             input field to be converted
         """
         M = np.ravel(M)
-        return scipy.sparse.diags_array(M, offsets=0, shape=(M.size, M.size))
+        return scipy.sparse.diags_array(
+            M, offsets=0, shape=(M.size, M.size), dtype=None
+        )
 
     @reify
     def _shifts(self) -> dict:
