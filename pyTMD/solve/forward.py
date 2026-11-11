@@ -24,7 +24,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 PROGRAM DEPENDENCIES:
-    model.py: base class for hydrodynamic tide modeling
+    model.py: base classes for hydrodynamic tide modeling
 
 UPDATE HISTORY:
     Updated 11/2026: move linear operators to the base model class
@@ -42,12 +42,12 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 import xarray as xr
-from pyTMD.solve.model import CGrid, SWEModel
+from pyTMD.solve.model import CGrid, BaseModel
 
 __all__ = ["ForwardModel"]
 
 
-class ForwardModel(SWEModel):
+class ForwardModel(BaseModel):
     """
     Class for estimating non-linear parameters using a finite
     difference model with a Crank-Nicolson scheme
@@ -76,10 +76,10 @@ class ForwardModel(SWEModel):
     ramp: float, default 0.0
         time scale for linearly ramping the forcing [s]
     **kwargs: dict
-        keyword arguments for the base ``SWEModel`` class
+        keyword arguments for the ``BaseModel`` class
     """
 
-    # inherit SWEModel class
+    # inherit BaseModel class
     def __init__(self, grid: CGrid, constituents: list = [], **kwargs):
         # default keyword arguments
         self.nonlinear = kwargs.pop("nonlinear", True)

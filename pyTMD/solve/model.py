@@ -62,12 +62,12 @@ import scipy.sparse.linalg
 import xarray as xr
 import pyTMD.constituents
 from pyTMD.earth import EarthDatum
-from pyTMD.utilities import reify
 from pyTMD.spatial import scale_factors
+from pyTMD.utilities import reify
 
 __all__ = [
     "CGrid",
-    "SWEModel",
+    "BaseModel",
 ]
 
 
@@ -206,6 +206,44 @@ class CGrid:
         # return the grid cell step sizes
         return (dx, dy)
 
+    @classmethod
+    def initialize(cls, hz: xr.DataArray, **kwargs):
+        """
+        Construct a grid from a bathymetry data array
+
+        Parameters
+        ----------
+        hz: xr.DataArray
+            bathymetry at grid centers (m)
+        kwargs: dict
+            keyword arguments for the grid constructor
+
+        Returns
+        -------
+        cls: class
+            CGrid instance initialized with the bathymetry
+        """
+        # enforce dimension order and ascending coordinates
+        hz = hz.transpose("y", "x").sortby(["y", "x"])
+        # need at least two cells in each direction to get the spacing
+        if (hz.sizes["x"] < 2) or (hz.sizes["y"] < 2):
+            raise ValueError("Grid is too small to calculate spacing")
+        # get coordinate reference system
+        kwargs.setdefault("crs", hz.attrs.get("crs", 4326))
+        # calculate the grid spacing
+        dx = float(hz.x[1] - hz.x[0])
+        dy = float(hz.y[1] - hz.y[0])
+        kwargs["spacing"] = [dx, dy]
+        # calculate the grid extent
+        kwargs["extent"] = [
+            float(hz.x[0]) - dx / 2.0,
+            float(hz.x[-1]) + dx / 2.0,
+            float(hz.y[0]) - dy / 2.0,
+            float(hz.y[-1]) + dy / 2.0,
+        ]
+        # initialize the model with the bathymetry data
+        return cls(**kwargs).set_bathymetry(hz.values)
+
     def set_bathymetry(self, hz: np.ndarray, mask: np.ndarray | None = None):
         """
         Set the bathymetry (water column thickness) and the
@@ -222,14 +260,16 @@ class CGrid:
         """
         # check shape of input bathymetry
         hz = np.asarray(hz, dtype=np.float64)
-        assert hz.shape == self.shape, "Input data does not match grid shape"
+        if hz.shape != self.shape:
+            raise ValueError("Input data does not match grid shape")
         # replace invalid values
         self.hz = np.where(np.isfinite(hz), hz, 0.0)
         # construct the mask for zeta nodes
         if mask is None:
             self._mask_nodes(self.hz)
         else:
-            assert np.shape(mask) == self.shape
+            if np.shape(mask) != self.shape:
+                raise ValueError("Input mask does not match grid shape")
             self.mask_z = (np.asarray(mask) & (self.hz > 0)).astype(int)
         return self
 
@@ -244,11 +284,43 @@ class CGrid:
             bathymetry at grid centers (m)
         """
         # check shape of input bathymetry
-        assert hz.shape == self.shape, "Input data does not match grid shape"
+        if hz.shape != self.shape:
+            raise ValueError("Input data does not match grid shape")
         # find where bathymetry is greater than 0
         self.mask_z = (hz > 0).astype(int)
         # return the masks
         return self
+
+    @reify
+    def _shifts(self) -> dict:
+        """Sparse shift operators for neighboring zeta cells"""
+        Ix = scipy.sparse.eye_array(self.nx, format="csr")
+        Iy = scipy.sparse.eye_array(self.ny, format="csr")
+        # boundary conditions for the x directions
+        if self.is_global:
+            # periodic boundaries
+            iix = np.arange(self.nx)
+            iie = Ix[np.roll(iix, -1), :]
+            iiw = Ix[np.roll(iix, 1), :]
+        else:
+            # closed boundaries
+            iie = scipy.sparse.eye_array(self.nx, k=1)
+            iiw = scipy.sparse.eye_array(self.nx, k=-1)
+        # closed boundaries for the y directions
+        iin = scipy.sparse.eye_array(self.ny, k=1)
+        iis = scipy.sparse.eye_array(self.ny, k=-1)
+        # full shift operators
+        shifts = {}
+        shifts["E"] = scipy.sparse.kron(Iy, iie, format="csr")
+        shifts["W"] = scipy.sparse.kron(Iy, iiw, format="csr")
+        shifts["N"] = scipy.sparse.kron(iin, Ix, format="csr")
+        shifts["S"] = scipy.sparse.kron(iis, Ix, format="csr")
+        return shifts
+
+    @reify
+    def _identity(self):
+        """Sparse identity matrix for the C-Grid"""
+        return scipy.sparse.eye_array(self.size, format="csr")
 
     def _west(self, field: np.ndarray, fill: float = 0.0):
         """Shift a field on the zeta grid to get the western neighbor"""
@@ -285,24 +357,23 @@ class CGrid:
 
     # grid dimensions
     @property
-    def dimensions(self) -> list:
-        """Dimensions of the zeta grid"""
-        dims = [None, None]
+    def ny(self) -> int:
+        """Number of nodes in the y-direction of the zeta grid"""
         # calculate y dimensions with extents
-        ny = (self.extent[3] - self.extent[2]) / np.abs(self.spacing[1])
-        dims[0] = np.int64(np.rint(ny))
+        tmp = (self.extent[3] - self.extent[2]) / np.abs(self.spacing[1])
+        return int(np.rint(tmp))
+
+    @property
+    def nx(self) -> int:
+        """Number of nodes in the x-direction of the zeta grid"""
         # calculate x dimensions with extents
-        nx = (self.extent[1] - self.extent[0]) / np.abs(self.spacing[0])
-        dims[1] = np.int64(np.rint(nx))
-        return dims
+        tmp = (self.extent[1] - self.extent[0]) / np.abs(self.spacing[0])
+        return int(np.rint(tmp))
 
     @property
     def shape(self) -> tuple:
         """Shape of the zeta grid"""
-        return (
-            self.dimensions[0],
-            self.dimensions[1],
-        )
+        return (self.ny, self.nx)
 
     @property
     def ndim(self) -> int:
@@ -395,7 +466,7 @@ class CGrid:
         """x-coordinates for zeta nodes on an Arakawa C-grid"""
         return (
             self.extent[0]
-            + self.spacing[0] * np.arange(self.dimensions[1])
+            + self.spacing[0] * np.arange(self.shape[1])
             + self.spacing[0] / 2.0
         )
 
@@ -404,21 +475,21 @@ class CGrid:
         """y-coordinates for zeta nodes on an Arakawa C-grid"""
         return (
             self.extent[2]
-            + self.spacing[1] * np.arange(self.dimensions[0])
+            + self.spacing[1] * np.arange(self.shape[0])
             + self.spacing[1] / 2.0
         )
 
     @property
     def x_u(self):
         """x-coordinates for U nodes on an Arakawa C-grid"""
-        return self.extent[0] + self.spacing[0] * np.arange(self.dimensions[1])
+        return self.extent[0] + self.spacing[0] * np.arange(self.shape[1])
 
     @property
     def y_u(self):
         """y-coordinates for U nodes on an Arakawa C-grid"""
         return (
             self.extent[2]
-            + self.spacing[1] * np.arange(self.dimensions[0])
+            + self.spacing[1] * np.arange(self.shape[0])
             + self.spacing[1] / 2.0
         )
 
@@ -427,24 +498,48 @@ class CGrid:
         """x-coordinates for V nodes on an Arakawa C-grid"""
         return (
             self.extent[0]
-            + self.spacing[0] * np.arange(self.dimensions[1])
+            + self.spacing[0] * np.arange(self.shape[1])
             + self.spacing[0] / 2.0
         )
 
     @property
     def y_v(self):
         """y-coordinates for V nodes on an Arakawa C-grid"""
-        return self.extent[2] + self.spacing[1] * np.arange(self.dimensions[0])
+        return self.extent[2] + self.spacing[1] * np.arange(self.shape[0])
 
     @property
     def _nodes(self) -> dict:
         """
-        Arakawa C-grid nodes and bathymetry
+        Arakawa C-grid nodes in grid coordinates
         """
-        z = dict(x=self.x_z, y=self.y_z, mask=self.mask_z, bathymetry=self.hz)
-        u = dict(x=self.x_u, y=self.y_u, mask=self.mask_u, bathymetry=self.hu)
-        v = dict(x=self.x_v, y=self.y_v, mask=self.mask_v, bathymetry=self.hv)
+        z = dict(x=self.x_z, y=self.y_z)
+        u = dict(x=self.x_u, y=self.y_u)
+        v = dict(x=self.x_v, y=self.y_v)
         return dict(z=z, u=u, v=v)
+
+    @reify
+    def _metrics(self) -> dict:
+        r"""Arakawa C-grid step sizes (m) and areas (m\ :sup:`2`)"""
+        metrics = dict(z={}, u={}, v={})
+        for key, val in self._nodes.items():
+            # step sizes at zeta, u and v nodes
+            dx, dy = self.get_step_size(val["x"], val["y"])
+            metrics[key]["dx"] = dx.flatten()
+            metrics[key]["dy"] = dy.flatten()
+            # calculate areas
+            metrics[key]["area"] = (dx * dy).flatten()
+        return metrics
+
+    @reify
+    def _colatitudes(self) -> dict:
+        """Colatitudes of the zeta, u and v nodes (radians)"""
+        th = dict()
+        for key, val in self._nodes.items():
+            # calculate grid cell latitudes
+            _, latitude = self.get_latlon(val["x"], val["y"])
+            # convert to colatitudes in radians
+            th[key] = np.radians(90.0 - latitude).flatten()
+        return th
 
     def __validate__(self):
         """Check if class inputs are appropriate"""
@@ -481,7 +576,7 @@ class CGrid:
         setattr(self, key, value)
 
 
-class SWEModel:
+class BaseModel:
     r"""
     Base class for using hydrodynamic modeling with the shallow water
     equations :cite:p:`Egbert:2002ge,Primeau:2007ie,Robertson:1985kf`
@@ -522,8 +617,10 @@ class SWEModel:
     def __init__(self, grid: CGrid, constituents: list = [], **kwargs):
         # set initial attributes
         # set the finite difference Arakawa c-grid
-        assert isinstance(grid, CGrid)
-        assert hasattr(grid, "hz"), "Grid bathymetry has not been set"
+        if not isinstance(grid, CGrid):
+            raise TypeError("grid must be a pyTMD.solve.CGrid instance")
+        if not hasattr(grid, "hz"):
+            raise ValueError("Grid bathymetry has not been set")
         self.grid = grid
         # set the tidal constituents
         if isinstance(constituents, str):
@@ -651,60 +748,6 @@ class SWEModel:
             M, offsets=0, shape=(M.size, M.size), dtype=None
         )
 
-    @reify
-    def _shifts(self) -> dict:
-        """Sparse shift operators for neighboring zeta cells"""
-        Ix = scipy.sparse.eye_array(self.nx, format="csr")
-        Iy = scipy.sparse.eye_array(self.ny, format="csr")
-        # boundary conditions for the x directions
-        if self.grid.is_global:
-            # periodic boundaries
-            iix = np.arange(self.nx)
-            iie = Ix[np.roll(iix, -1), :]
-            iiw = Ix[np.roll(iix, 1), :]
-        else:
-            # closed boundaries
-            iie = scipy.sparse.eye_array(self.nx, k=1)
-            iiw = scipy.sparse.eye_array(self.nx, k=-1)
-        # closed boundaries for the y directions
-        iin = scipy.sparse.eye_array(self.ny, k=1)
-        iis = scipy.sparse.eye_array(self.ny, k=-1)
-        # full shift operators
-        shifts = {}
-        shifts["E"] = scipy.sparse.kron(Iy, iie, format="csr")
-        shifts["W"] = scipy.sparse.kron(Iy, iiw, format="csr")
-        shifts["N"] = scipy.sparse.kron(iin, Ix, format="csr")
-        shifts["S"] = scipy.sparse.kron(iis, Ix, format="csr")
-        shifts["I"] = scipy.sparse.eye_array(self.size, format="csr")
-        return shifts
-
-    @reify
-    def _metrics(self) -> dict:
-        """Grid metrics for the finite difference operators (m)"""
-        # step sizes at zeta, u and v nodes
-        dx_z, dy_z = self.grid.get_step_size(self.grid.x_z, self.grid.y_z)
-        dx_u, dy_u = self.grid.get_step_size(self.grid.x_u, self.grid.y_u)
-        dx_v, dy_v = self.grid.get_step_size(self.grid.x_v, self.grid.y_v)
-        metrics = {}
-        metrics["dx_u"] = dx_u.flatten()
-        metrics["dy_u"] = dy_u.flatten()
-        metrics["dx_v"] = dx_v.flatten()
-        metrics["dy_v"] = dy_v.flatten()
-        metrics["area"] = (dx_z * dy_z).flatten()
-        return metrics
-
-    @reify
-    def _colatitudes(self) -> dict:
-        """Colatitudes of the zeta, u and v nodes (radians)"""
-        _, lat_z = self.grid.get_latlon(self.grid.x_z, self.grid.y_z)
-        _, lat_u = self.grid.get_latlon(self.grid.x_u, self.grid.y_u)
-        _, lat_v = self.grid.get_latlon(self.grid.x_v, self.grid.y_v)
-        th = {}
-        th["z"] = np.radians(90.0 - lat_z).flatten()
-        th["u"] = np.radians(90.0 - lat_u).flatten()
-        th["v"] = np.radians(90.0 - lat_v).flatten()
-        return th
-
     @staticmethod
     def _inverse(x: np.ndarray):
         """Calculate the inverse of an array replacing invalid values"""
@@ -715,29 +758,37 @@ class SWEModel:
     @reify
     def _operators(self) -> dict:
         """Finite difference operators on the full grid"""
-        S = self._shifts
-        I = S["I"]
-        m = self._metrics
+        # get grid shift operators
+        S = self.grid._shifts
+        I = self.grid._identity
+        # get grid metrics (step size and area)
+        m = self.grid._metrics
+        # output finite difference operators
         ops = {}
         # gradient of zeta at u nodes (western faces)
-        ops["Gx"] = self.d0(self._inverse(m["dx_u"])) @ (I - S["W"])
+        ops["Gx"] = self.d0(self._inverse(m["u"]["dx"])) @ (I - S["W"])
         # gradient of zeta at v nodes (southern faces)
-        ops["Gy"] = self.d0(self._inverse(m["dy_v"])) @ (I - S["S"])
+        ops["Gy"] = self.d0(self._inverse(m["v"]["dy"])) @ (I - S["S"])
         # divergence of transports at zeta nodes (finite volume)
-        inv_area = self.d0(self._inverse(m["area"]))
-        ops["Dx"] = inv_area @ (S["E"] - I) @ self.d0(m["dy_u"])
-        ops["Dy"] = inv_area @ (S["N"] - I) @ self.d0(m["dx_v"])
+        inv_area = self.d0(self._inverse(m["z"]["area"]))
+        ops["Dx"] = inv_area @ (S["E"] - I) @ self.d0(m["u"]["dy"])
+        ops["Dy"] = inv_area @ (S["N"] - I) @ self.d0(m["v"]["dx"])
         # averaging operator for calculating V at u nodes
         ops["Avu"] = 0.25 * (I + S["W"] + S["N"] + S["N"] @ S["W"])
         # averaging operator for calculating U at v nodes
         ops["Auv"] = 0.25 * (I + S["E"] + S["S"] + S["S"] @ S["E"])
+        # stencil operator for second derivatives
+        S2x = S["E"] + S["W"] - 2.0 * I
+        S2y = S["N"] + S["S"] - 2.0 * I
         # laplacian operators for the u and v nodes
-        ops["Lu"] = self.d0(self._inverse(m["dx_u"] ** 2)) @ (
-            S["E"] + S["W"] - 2.0 * I
-        ) + self.d0(self._inverse(m["dy_u"] ** 2)) @ (S["N"] + S["S"] - 2.0 * I)
-        ops["Lv"] = self.d0(self._inverse(m["dx_v"] ** 2)) @ (
-            S["E"] + S["W"] - 2.0 * I
-        ) + self.d0(self._inverse(m["dy_v"] ** 2)) @ (S["N"] + S["S"] - 2.0 * I)
+        ops["Lu"] = (
+            self.d0(self._inverse(m["u"]["dx"] ** 2)) @ S2x
+            + self.d0(self._inverse(m["u"]["dy"] ** 2)) @ S2y
+        )
+        ops["Lv"] = (
+            self.d0(self._inverse(m["v"]["dx"] ** 2)) @ S2x
+            + self.d0(self._inverse(m["v"]["dy"] ** 2)) @ S2y
+        )
         return ops
 
     @property
@@ -757,7 +808,7 @@ class SWEModel:
 
     def _gravity(self, node: str = "z") -> np.ndarray:
         r"""Normal gravity at the nodes (m/s\ :sup:`2`)"""
-        return self.grid.gamma_0(self._colatitudes[node])
+        return self.grid.gamma_0(self.grid._colatitudes[node])
 
     def _wave_speed(self, node: str = "u") -> np.ndarray:
         r"""
@@ -770,7 +821,7 @@ class SWEModel:
             c2 = self._gravity(node) * H
         else:
             # reduced gravity model with a deformation radius
-            f = self.grid.f(self._colatitudes[node])
+            f = self.grid.f(self.grid._colatitudes[node])
             c2 = (f * self.Rd) ** 2 * (H > 0)
         # account for load tides and self-attraction
         return (1.0 - self.beta) * c2
@@ -818,8 +869,8 @@ class SWEModel:
         n = self.size
         # Coriolis parameters at each node
         if self.coriolis:
-            f_u = self.grid.f(self._colatitudes["u"])
-            f_v = self.grid.f(self._colatitudes["v"])
+            f_u = self.grid.f(self.grid._colatitudes["u"])
+            f_v = self.grid.f(self.grid._colatitudes["v"])
         else:
             f_u = np.zeros(n)
             f_v = np.zeros(n)
@@ -1045,7 +1096,7 @@ class SWEModel:
         # offsets of each variable in the complete state vector
         offsets = dict(u=0, v=1, z=2)
         ds = {}
-        for key, var in self._nodes.items():
+        for key, var in self._invariant.items():
             i = offsets[key]
             ds[key] = xr.Dataset(coords=dict(x=var["x"], y=var["y"]))
             for c, state in states.items():
@@ -1072,13 +1123,13 @@ class SWEModel:
 
     @property
     def nx(self) -> int:
-        """Number of nodes in the x-direction"""
-        return self.grid.shape[1]
+        """Number of nodes in the x-direction of the zeta grid"""
+        return self.grid.nx
 
     @property
     def ny(self) -> int:
-        """Number of nodes in the y-direction"""
-        return self.grid.shape[0]
+        """Number of nodes in the y-direction of the zeta grid"""
+        return self.grid.ny
 
     @reify
     def imask(self) -> np.ndarray:
@@ -1092,13 +1143,13 @@ class SWEModel:
         )
 
     @property
-    def _nodes(self) -> dict:
+    def _invariant(self) -> dict:
         """
-        Model grid nodes and bathymetry
+        Model invariant parameters
         """
-        z = dict(**self.grid._nodes["z"], H=self.H)
-        u = dict(**self.grid._nodes["u"], H=self.Hu)
-        v = dict(**self.grid._nodes["v"], H=self.Hv)
+        z = dict(**self.grid._nodes["z"], mask=self.grid.mask_z, H=self.H)
+        u = dict(**self.grid._nodes["u"], mask=self.grid.mask_u, H=self.Hu)
+        v = dict(**self.grid._nodes["v"], mask=self.grid.mask_v, H=self.Hv)
         return dict(z=z, u=u, v=v)
 
     @reify
@@ -1132,8 +1183,8 @@ class SWEModel:
         assert np.shape(self.ob) == self.shape
 
     def __str__(self):
-        """String representation of the ``solve.SWEModel`` object"""
-        properties = ["pyTMD.solve.SWEModel"]
+        """String representation of the ``solve.BaseModel`` object"""
+        properties = ["pyTMD.solve.BaseModel"]
         shape = ", ".join(map(str, self.shape))
         properties.append(f"    shape: {shape}")
         constituents = ", ".join(self.constituents)
@@ -1141,7 +1192,7 @@ class SWEModel:
         return "\n".join(properties)
 
     def __repr__(self):
-        """Representation of the ``solve.SWEModel`` object"""
+        """Representation of the ``solve.BaseModel`` object"""
         return self.__str__()
 
     def __getitem__(self, key):

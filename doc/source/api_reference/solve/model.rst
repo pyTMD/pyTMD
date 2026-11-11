@@ -15,6 +15,6 @@ General Attributes and Methods
    :members:
    :private-members:
 
-.. autoclass:: pyTMD.solve.SWEModel
+.. autoclass:: pyTMD.solve.BaseModel
    :members:
    :private-members:

@@ -40,7 +40,7 @@ Ocean tide models are typically one of following categories:
 
 .. note::
 
-    ``pyTMD`` is not an ocean or load tide model, but rather a tool for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
+    The ``pyTMD`` prediction routines are tools for using constituents from tide models to calculate the height deflections or currents at particular locations and times :cite:p:`Egbert:2002ge`.
 
 .. _nodal-modulations:
 
