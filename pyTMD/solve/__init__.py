@@ -4,7 +4,6 @@ Solve functions for estimating ocean tides
 
 from .constants import constants
 from .potential import *
-from .grid import grid
-from .model import model
-from .forward import forward
+from .model import CGrid, SWEModel
+from .forward import ForwardModel
 from .response import response

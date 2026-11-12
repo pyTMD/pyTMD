@@ -11,6 +11,6 @@ Class for estimating non-linear parameters using a forward model
 General Attributes and Methods
 ==============================
 
-.. autoclass:: pyTMD.solve.forward
+.. autoclass:: pyTMD.solve.ForwardModel
    :members:
    :private-members:

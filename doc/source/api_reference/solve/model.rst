@@ -2,7 +2,7 @@
 model
 =====
 
-Class for estimating tidal constituents using hydrodynamic modeling
+Class for estimating tidal constituents using hydrodynamic modeling on Arakawa-C grids
 
 `Source code`__
 
@@ -11,6 +11,12 @@ Class for estimating tidal constituents using hydrodynamic modeling
 General Attributes and Methods
 ==============================
 
-.. autoclass:: pyTMD.solve.model
+
+.. autoclass:: pyTMD.solve.CGrid
+   :members:
+   :private-members:
+
+
+.. autoclass:: pyTMD.solve.SWEModel
    :members:
    :private-members:

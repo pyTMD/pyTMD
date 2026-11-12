@@ -36,13 +36,12 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.sparse.linalg
-import pyTMD.solve.grid as fdgrid
-import pyTMD.solve.model as model
+from pyTMD.solve.model import CGrid, SWEModel
 from pyTMD.math import polynomial_sum
 from pyTMD.utilities import reify
 
 
-class forward(model):
+class ForwardModel(SWEModel):
     """
     Class for estimating non-linear parameters using a finite
     difference model with a Crank-Nicolson scheme
@@ -78,7 +77,7 @@ class forward(model):
     turndeg = 360.0
 
     # inherit model class
-    def __init__(self, grid: fdgrid, **kwargs):
+    def __init__(self, grid: CGrid, **kwargs):
         # set initial model
         super().__init__(grid, **kwargs)
         # create iterator and stop index
@@ -453,8 +452,8 @@ class forward(model):
         return np.any(self._ob)
 
     def __str__(self):
-        """String representation of the ``forward`` object"""
-        properties = ["pyTMD.solve.forward"]
+        """String representation of the ``ForwardModel`` object"""
+        properties = ["pyTMD.solve.ForwardModel"]
         shape = ", ".join(map(str, self.shape))
         properties.append(f"    shape: {shape}")
         return "\n".join(properties)

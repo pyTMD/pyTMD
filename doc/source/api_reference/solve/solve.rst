@@ -8,8 +8,7 @@ Solve functions for estimating ocean and load tides
     :maxdepth: 1
 
     constants.rst
-    potential.rst
     forward.rst
-    grid.rst
     model.rst
+    potential.rst
     response.rst
