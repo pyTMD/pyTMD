@@ -467,6 +467,8 @@ def tide_currents(
     method: str = "linear",
     extrapolate: bool = False,
     cutoff: int | float = 10.0,
+    transport: bool = False,
+    min_depth: int | float | None = None,
     **kwargs,
 ):
     r"""
@@ -526,6 +528,14 @@ def tide_currents(
         Extrapolation cutoff (kilometers)
 
         Set to ``np.inf`` to extrapolate for all points
+    transport: bool, default False
+        Interpolate transports and bathymetry to the output points
+        and then divide to obtain currents (as in OTPS and TMD2.5),
+        rather than dividing on the model grid before interpolating.
+        Only available for OTIS, ATLAS and TMD3 models
+    min_depth: float or None, default None
+        Minimum depth (meters) used when converting transports
+        to currents. Only used if ``transport`` is True
     corrections: str or None, default None
         Nodal correction type, default based on model
     constituents: list or None, default None
@@ -569,7 +579,9 @@ def tide_currents(
     else:
         m = pyTMD.io.model(directory).from_database(model)
     # open datatree with model currents
-    dtree = m.open_datatree(group=["u", "v"], chunks=kwargs["chunks"])
+    dtree = m.open_datatree(
+        group=["u", "v"], chunks=kwargs["chunks"], transport=transport
+    )
     # subset to constituents
     if kwargs["constituents"]:
         dtree = dtree.tmd.subset(kwargs["constituents"])
@@ -619,6 +631,9 @@ def tide_currents(
         local = ds.tmd.interp(
             X, Y, method=method, extrapolate=extrapolate, cutoff=cutoff
         )
+        # convert interpolated transports to currents
+        if transport:
+            local = local.tmd.to_currents(min_depth=min_depth).tmd.to_default_units()
         # calculate tide values for input data type
         tpred[key] = local.tmd.predict(
             ts.tide, deltat=deltat, corrections=nodal_corrections

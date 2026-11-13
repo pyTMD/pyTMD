@@ -829,6 +829,11 @@ class model:
 
         Parameters
         ----------
+        transport: bool, default False
+            Read depth-averaged transports (with bathymetry) for the
+            ``'u'`` and ``'v'`` groups instead of currents.
+            Only available for OTIS, ATLAS and TMD3 models.
+            Use ``Dataset.tmd.to_currents`` after interpolation.
         kwargs: dict
             Additional keyword arguments for opening model files
 
@@ -846,10 +851,19 @@ class model:
         kwargs.setdefault("append_node", False)
         kwargs.setdefault("compressed", self.compressed)
         kwargs.setdefault("constituents", None)
+        # read transports rather than converting to currents
+        transport = kwargs.pop("transport", False)
         # model group
         group = kwargs["group"].lower()
         if group not in ("z", "u", "v"):
             raise ValueError(f"Invalid model group {group}")
+        if transport and (group != "z"):
+            if self.format not in ("OTIS", "ATLAS-compact", "TMD3", "ATLAS-netcdf"):
+                raise ValueError(
+                    f"Transports and bathymetry unavailable for {self.format}"
+                )
+            # uppercase groups are transports (not converted to currents)
+            kwargs["group"] = group.upper()
         # extract model file
         model_file = self[group].get("model_file")
         # reduce constituents if specified

@@ -1161,6 +1161,38 @@ class Dataset:
         # return the dataset
         return ds
 
+    def to_currents(self, min_depth: float | None = None):
+        """
+        Convert depth-averaged transports to currents by dividing
+        by the bathymetry in the ``Dataset``
+
+        Intended to be applied *after* interpolating to the
+        output points, which is the order used in OTPS and TMD2.5.
+        Dividing the transports on the model grid before interpolating
+        can be dominated by shallow cells in the interpolation stencil.
+
+        Parameters
+        ----------
+        min_depth: float or None, default None
+            Minimum depth (in the units of the bathymetry) used
+            in the division. Shallower depths are set to this value.
+        """
+        if "bathymetry" not in self._ds:
+            raise ValueError("Dataset has no bathymetry variable")
+        # create copy of dataset
+        ds = self._ds.copy()
+        depth = ds["bathymetry"]
+        # limit the minimum depth used in the division
+        if min_depth is not None:
+            depth = depth.clip(min=min_depth)
+        # convert each constituent from transport to current
+        for c in self.constituents:
+            units = ds[c].tmd.units / ds["bathymetry"].tmd.units
+            ds[c] = ds[c] / depth
+            ds[c].attrs["units"] = str(units)
+        # return the dataset
+        return ds
+
     @property
     def constituents(self):
         """List of tidal constituent names in the ``Dataset``"""
