@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (09/2026)
+Written by Tyler Sutterley (11/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -12,6 +12,7 @@ COMMAND LINE OPTIONS:
     -D X, --directory X: working data directory
     -p X, --provider X: data provider ('figshare' or 'zenodo')
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -22,6 +23,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
     Updated 09/2026: put try/except in fetch_test_data function
         verify existence of output directory in the download functions
         added option to not extract contents from zip files
@@ -113,6 +115,7 @@ def _figshare(
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -133,6 +136,8 @@ def _figshare(
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Permissions mode of output local file
     """
@@ -163,7 +168,9 @@ def _figshare(
         # output file information
         logger.info(download.urlname)
         # get remote file as a byte-stream
-        remote_buffer = download.get(timeout=timeout, context=context)
+        remote_buffer = download.get(
+            timeout=timeout, context=context, progress=progress
+        )
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(
             remote_buffer, include_algorithm=include_algorithm
@@ -196,6 +203,7 @@ def _zenodo(
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -216,6 +224,8 @@ def _zenodo(
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Permissions mode of output local file
     """
@@ -251,7 +261,9 @@ def _zenodo(
         # output file information
         logger.info(download.urlname)
         # get remote file as a byte-stream
-        remote_buffer = download.get(timeout=timeout, context=context)
+        remote_buffer = download.get(
+            timeout=timeout, context=context, progress=progress
+        )
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(
             remote_buffer, include_algorithm=include_algorithm
@@ -312,6 +324,13 @@ def arguments():
         default=3600,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -335,6 +354,7 @@ def main():
         directory=args.directory,
         provider=args.provider,
         timeout=args.timeout,
+        progress=args.progress,
         mode=args.mode,
     )
 

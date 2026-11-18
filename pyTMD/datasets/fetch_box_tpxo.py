@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_box_tpxo.py
-Written by Tyler Sutterley (01/2026)
+Written by Tyler Sutterley (11/2026)
 Downloads TPXO ATLAS tide models from the box file sharing service
 
 Need to generate a user token that has sufficient permissions to
@@ -23,6 +23,7 @@ COMMAND LINE OPTIONS:
     -T X, --tide X: TPXO ATLAS model to download
     --currents: download tide model current outputs
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -33,6 +34,7 @@ REFERENCE:
     https://developer.box.com/guides/
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
     Updated 01/2026: fixed the box token to allow file downloads
     Updated 12/2025: use URL class to build and operate on URLs
     Updated 11/2025: use from_database to access model parameters
@@ -58,7 +60,6 @@ import re
 import ssl
 import gzip
 import json
-import shutil
 import logging
 import pathlib
 import argparse
@@ -117,6 +118,7 @@ def fetch_box_tpxo(
     compressed: bool = False,
     timeout: int | None = None,
     chunk: int = 16384,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -139,6 +141,8 @@ def fetch_box_tpxo(
         Timeout in seconds for blocking operations
     chunk: int, default 16384
         Chunk size for transfer encoding
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Permissions mode of output local file
     """
@@ -198,8 +202,13 @@ def fetch_box_tpxo(
         with (
             content_url.urlopen(timeout=timeout) as f_in,
             opener(local, "wb") as f_out,
+            pyTMD.utilities.progress_bar(
+                total=file_contents.get("size"),
+                description=entry.get("name"),
+                enabled=progress,
+            ) as pb,
         ):
-            shutil.copyfileobj(f_in, f_out, chunk)
+            pyTMD.utilities.copyfileobj(f_in, f_out, chunk, callback=pb.update)
         # keep remote modification time of file and local access time
         os.utime(local, (local.stat().st_atime, remote_mtime))
         # change the permissions mode of the local file
@@ -270,6 +279,13 @@ def arguments():
         default=3600,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -299,6 +315,7 @@ def main():
             currents=args.currents,
             compressed=args.gzip,
             timeout=args.timeout,
+            progress=args.progress,
             mode=args.mode,
         )
 

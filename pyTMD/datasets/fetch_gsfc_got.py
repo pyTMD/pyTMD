@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_gsfc_got.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (11/2026)
 Download Goddard Ocean Tide (GOT) models
 
 CALLING SEQUENCE:
@@ -22,6 +22,7 @@ COMMAND LINE OPTIONS:
         netCDF
     -G, --gzip: compress output ASCII and netCDF4 tide files
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -32,6 +33,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
     Updated 12/2025: use URL class to build and operate on URLs
         simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
@@ -68,6 +70,7 @@ def fetch_gsfc_got(
     format: str = "netcdf",
     compressed: bool = False,
     timeout: int | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -86,6 +89,8 @@ def fetch_gsfc_got(
         Compress output ASCII and netCDF4 tide files
     timeout: int, default None
         Timeout in seconds for blocking operations
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -128,7 +133,9 @@ def fetch_gsfc_got(
     logger.info(f"{URL} -->\n")
     # open the tar file
     tar = tarfile.open(
-        name=URL.parts[-1], fileobj=URL.get(timeout=timeout), mode=TAR[model]
+        name=URL.parts[-1],
+        fileobj=URL.get(timeout=timeout, progress=progress),
+        mode=TAR[model],
     )
     # read tar file and extract all files
     member_files = [m for m in tar.getmembers() if tarfile.TarInfo.isfile(m)]
@@ -237,6 +244,13 @@ def arguments():
         default=360,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -264,6 +278,7 @@ def main():
                 format=args.format,
                 compressed=args.gzip,
                 timeout=args.timeout,
+                progress=args.progress,
                 mode=args.mode,
             )
 

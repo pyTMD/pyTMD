@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_arcticdata.py
-Written by Tyler Sutterley (12/2025)
+Written by Tyler Sutterley (11/2026)
 Download Arctic Ocean Tide Models from the NSF ArcticData archive
 
 AODTM-5: https://arcticdata.io/catalog/view/doi:10.18739/A2901ZG3N
@@ -23,6 +23,7 @@ COMMAND LINE OPTIONS:
         Arc2kmTM
         Gr1kmTM
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -33,6 +34,7 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
     Updated 12/2025: use URL class to build and operate on URLs
     Updated 10/2025: change default directory for tide models to cache
     Updated 09/2025: renamed module and function to fetch_arcticdata
@@ -68,6 +70,7 @@ def fetch_arcticdata(
     model: str,
     directory: str | pathlib.Path | None = _default_directory,
     timeout: int | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -81,6 +84,8 @@ def fetch_arcticdata(
         Working data directory
     timeout: int, default None
         Timeout in seconds for blocking operations
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -123,7 +128,7 @@ def fetch_arcticdata(
     URL = pyTMD.utilities.URL.from_parts(HOST)
     # download zipfile from host
     logger.info(f"{URL} -->\n")
-    zfile = zipfile.ZipFile(URL.get(timeout=timeout))
+    zfile = zipfile.ZipFile(URL.get(timeout=timeout, progress=progress))
     # find model files within zip file
     rx = re.compile(r"(grid|h[0]?|UV[0]?|Model|xy)_(.*?)", re.VERBOSE)
     members = [m for m in zfile.filelist if rx.search(m.filename)]
@@ -178,6 +183,13 @@ def arguments():
         default=360,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -203,6 +215,7 @@ def main():
                 m,
                 directory=args.directory,
                 timeout=args.timeout,
+                progress=args.progress,
                 mode=args.mode,
             )
 

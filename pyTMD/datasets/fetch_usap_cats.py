@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_usap_cats.py
-Written by Tyler Sutterley (09/2026)
+Written by Tyler Sutterley (11/2026)
 Download Circum-Antarctic Tidal Simulations from the US Antarctic Program
 
 CATS2008: https://www.usap-dc.org/view/dataset/601235
@@ -17,6 +17,7 @@ COMMAND LINE OPTIONS:
         CATS2008
         CATS2008-v2023
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -30,6 +31,7 @@ REFERENCE:
     https://www.usap-dc.org/api
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
     Updated 09/2026: new USAP-DC API for querying and fetching datasets
     Updated 04/2023: using pathlib to define and expand paths
     Updated 11/2022: use f-strings for formatting verbose or ascii output
@@ -46,7 +48,6 @@ from __future__ import print_function, annotations
 import re
 import io
 import ssl
-import shutil
 import logging
 import pathlib
 import zipfile
@@ -106,6 +107,7 @@ def fetch_usap_cats(
     directory: str | pathlib.Path | None = _default_directory,
     timeout: int | None = None,
     chunk: int = 16384,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -123,6 +125,8 @@ def fetch_usap_cats(
         Timeout in seconds for blocking operations
     chunk: int, default 16384
         Chunk size for transfer encoding
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -171,11 +175,23 @@ def fetch_usap_cats(
             f,
         )
         logger.info(f"{URL} -->\n")
-        response = URL.urlopen()
+        response = URL.urlopen(timeout=timeout)
+        # create progress bar for file transfer
+        pb = pyTMD.utilities.progress_bar(
+            total=pyTMD.utilities.content_length(response),
+            description=f,
+            enabled=progress,
+        )
         if pathlib.Path(f).suffix == ".zip":
             # copy remote file contents to bytesIO object
             remote_buffer = io.BytesIO()
-            shutil.copyfileobj(response, remote_buffer, chunk)
+            with pb:
+                pyTMD.utilities.copyfileobj(
+                    response,
+                    remote_buffer,
+                    chunk,
+                    callback=pb.update,
+                )
             remote_buffer.seek(0)
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
@@ -191,8 +207,13 @@ def fetch_usap_cats(
             # write the file to the local directory
             local_file = local_dir.joinpath(f)
             logger.info(f"\t{str(local_file)}\n")
-            with local_file.open(mode="wb") as f:
-                shutil.copyfileobj(response, f, chunk)
+            with local_file.open(mode="wb") as f_out, pb:
+                pyTMD.utilities.copyfileobj(
+                    response,
+                    f_out,
+                    chunk,
+                    callback=pb.update,
+                )
             # change the permissions mode
             local_file.chmod(mode=mode)
 
@@ -241,6 +262,13 @@ def arguments():
         default=360,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -269,6 +297,7 @@ def main():
                 args.token,
                 directory=args.directory,
                 timeout=args.timeout,
+                progress=args.progress,
                 mode=args.mode,
             )
 
