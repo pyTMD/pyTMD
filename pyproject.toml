@@ -80,6 +80,7 @@ all = [
     "matplotlib",
     "notebook",
     "pandas",
+    "tqdm",
 ]
 aws = ["dask", "obstore", "pandas", "pyarrow", "s3fs", "zarr>=3"]
 dev = [
@@ -277,6 +278,7 @@ jupyterlab = "*"
 matplotlib-base = "*"
 notebook = "*"
 pandas = "*"
+tqdm = "*"
 
 [tool.pixi.feature.aws.dependencies]
 dask = "*"

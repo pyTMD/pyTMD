@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (11/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -9,8 +9,11 @@ PYTHON DEPENDENCIES:
         https://pypi.python.org/pypi/lxml
     platformdirs: Python module for determining platform-specific directories
         https://pypi.org/project/platformdirs/
+    tqdm: fast, extensible progress bar for Python and CLI (optional)
+        https://tqdm.github.io/
 
 UPDATE HISTORY:
+    Updated 11/2026: add optional tqdm progress bars for file transfers
     Updated 06/2026: can use an environment variable to set cache directory
         this overrides the default platform-specific cache directory
     Updated 05/2026: add exists to URL class to check if URL is valid
@@ -125,6 +128,11 @@ __all__ = [
     "even",
     "copy",
     "symlink",
+    "progress_bar",
+    "content_length",
+    "ftp_size",
+    "copyfileobj",
+    "retrbinary",
     "check_ftp_connection",
     "ftp_list",
     "from_ftp",
@@ -872,6 +880,182 @@ def symlink(
     destination.symlink_to(source)
 
 
+class NullProgress:
+    """No-op progress bar used when progress bars are disabled"""
+
+    def update(self, n: int = 1):
+        pass
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+
+def progress_bar(
+    total: int | None = None,
+    description: str | None = None,
+    enabled: bool = True,
+    **kwargs,
+):
+    """
+    Create a ``tqdm`` progress bar for tracking file transfers
+
+    Parameters
+    ----------
+    total: int or NoneType, default None
+        Total number of bytes to transfer
+    description: str or NoneType, default None
+        Prefix for the progress bar
+    enabled: bool, default True
+        Display the progress bar
+    **kwargs: dict
+        Additional keyword arguments for ``tqdm.tqdm``
+
+    Returns
+    -------
+    pb: obj
+        Progress bar with ``update`` and ``close`` methods
+    """
+    if not enabled or not dependency_available("tqdm"):
+        return NullProgress()
+    # attempt to import tqdm
+    tqdm = import_dependency("tqdm")
+    # set default keyword arguments for file transfers
+    kwargs.setdefault("unit", "B")
+    kwargs.setdefault("unit_scale", True)
+    kwargs.setdefault("unit_divisor", 1024)
+    kwargs.setdefault("leave", True)
+    pb = tqdm.tqdm(total=total, desc=description, **kwargs)
+    return pb
+
+
+def content_length(response) -> int | None:
+    """
+    Get the content length in bytes from a ``http`` response
+
+    Parameters
+    ----------
+    response: obj
+        ``http`` response object
+
+    Returns
+    -------
+    length: int or NoneType
+        Content length in bytes (if provided)
+    """
+    try:
+        length = int(response.headers.get("content-length"))
+    except (AttributeError, TypeError, ValueError):
+        return None
+    else:
+        return length if (length > 0) else None
+
+
+def ftp_size(ftp: ftplib.FTP, remote_path: str) -> int | None:
+    """
+    Get the size in bytes of a file on a ``ftp`` host
+
+    Parameters
+    ----------
+    ftp: obj
+        Active ``ftplib.FTP`` connection
+    remote_path: str
+        Path to file on ``ftp`` host
+
+    Returns
+    -------
+    size: int or NoneType
+        File size in bytes (if available)
+    """
+    try:
+        # SIZE requires binary transfer mode on some servers
+        ftp.voidcmd("TYPE I")
+        return ftp.size(remote_path)
+    except ftplib.all_errors:
+        return None
+
+
+def copyfileobj(
+    fsrc: object,
+    fdst: object,
+    length: int = 16384,
+    callback: object = None,
+):
+    """
+    Copy the contents of a file-like object in chunks
+
+    see ``shutil.copyfileobj`` for more information
+
+    Parameters
+    ----------
+    fsrc: obj
+        Source file-like object
+    fdst: obj
+        Destination file-like object
+    length: int, default 16384
+        Chunk size for transfer encoding
+    callback: obj or NoneType, default None
+        Function called with the number of bytes in each chunk
+    """
+    # default buffer size for copying file-like objects
+    if not length:
+        length = shutil.COPY_BUFSIZE
+    # localize variable access to minimize overhead.
+    fsrc_read = fsrc.read
+    fdst_write = fdst.write
+    # copy the contents of the source file-like object
+    # to the destination in chunks
+    while True:
+        buffer = fsrc_read(length)
+        if not buffer:
+            break
+        fdst_write(buffer)
+        # call the callback function
+        if callback is not None:
+            callback(len(buffer))
+
+
+# PURPOSE: retrieve a file from a ftp server with an optional progress bar
+def retrbinary(
+    f: ftplib.FTP,
+    ftp_remote_path: str,
+    fileobj: io.IOBase,
+    chunk: int = 8192,
+    progress: bool = False,
+):
+    """
+    Retrieve a file from a remote ftp server into a file-like object
+
+    Parameters
+    ----------
+    f: ftplib.FTP object
+        Active ftp connection
+    ftp_remote_path: str
+        Path to file on ftp server
+    fileobj: obj
+        Writable file-like object
+    chunk: int, default 8192
+        Block size for downloading files from ftp server
+    progress: bool, default False
+        Display a progress bar for the file transfer
+    """
+    # get size of the remote file for the progress bar
+    total = ftp_size(f, ftp_remote_path) if progress else None
+    desc = posixpath.basename(ftp_remote_path)
+    with progress_bar(total, desc, enabled=progress) as pb:
+        # write each block and update the progress bar with bytes written
+        f.retrbinary(
+            f"RETR {ftp_remote_path}",
+            lambda block: pb.update(fileobj.write(block)),
+            blocksize=chunk,
+        )
+
+
 # PURPOSE: check ftp connection
 def check_ftp_connection(
     HOST: str,
@@ -1021,6 +1205,7 @@ def from_ftp(
     verbose: bool = False,
     fid: object = sys.stdout,
     label: str | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -1051,6 +1236,8 @@ def from_ftp(
         Open file object for logging file transfers if verbose
     label: str, default None
         Label for logging file transfer information if verbose
+    progress: bool, default False
+        Display a progress bar for the file transfer
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -1087,9 +1274,10 @@ def from_ftp(
         ftp_remote_path = posixpath.join(*HOST[1:])
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
-        ftp.retrbinary(
-            f"RETR {ftp_remote_path}", remote_buffer.write, blocksize=chunk
+        retrbinary(
+            ftp, ftp_remote_path, remote_buffer, chunk=chunk, progress=progress
         )
+        # rewind to start of file object
         remote_buffer.seek(0)
         # save file basename with bytesIO object
         remote_buffer.filename = HOST[-1]
@@ -1274,6 +1462,7 @@ def from_http(
     verbose: bool = False,
     fid: object = sys.stdout,
     label: str | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -1302,6 +1491,8 @@ def from_http(
         Open file object for logging file transfers if verbose
     label: str or None, default None
         Label for logging file transfer information if verbose
+    progress: bool, default False
+        Display a progress bar for the file transfer
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -1334,7 +1525,9 @@ def from_http(
     else:
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
-        shutil.copyfileobj(response, remote_buffer, chunk)
+        total = content_length(response)
+        with progress_bar(total, HOST[-1], enabled=progress) as pb:
+            copyfileobj(response, remote_buffer, chunk, callback=pb.update)
         remote_buffer.seek(0)
         # save file basename with bytesIO object
         remote_buffer.filename = HOST[-1]
