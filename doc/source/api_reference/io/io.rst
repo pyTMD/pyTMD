@@ -7,6 +7,7 @@ Input/output functions for reading and writing tidal data
 .. toctree::
     :maxdepth: 1
 
+    AntTG.rst
     ATLAS.rst
     FES.rst
     GOT.rst

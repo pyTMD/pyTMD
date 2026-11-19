@@ -4,6 +4,7 @@ Input/output functions for reading and writing tidal data
 
 import os
 import pathlib
+from . import AntTG
 from . import ATLAS
 from . import FES
 from . import GOT
