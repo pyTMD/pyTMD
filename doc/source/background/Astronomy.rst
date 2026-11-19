@@ -31,8 +31,8 @@ Zenith Angles
 The :term:`zenith angles <Zenith Angle>` of the Sun and Moon are important for calculating the total tidal potentials, as they determine the position of the celestial body relative to a position on the Earth's surface.
 
 .. math::
-    :label: 8.5
-    :name: eq:8.5
+    :label: 8.1
+    :name: eq:8.1
 
     \cos\psi = \sin\varphi\sin\delta + \cos\varphi\cos\delta\cos h
 
@@ -65,8 +65,8 @@ These two quantities help define the orientation of the true equator and equinox
 For instance, the instantaneous (true) obliquity of the ecliptic is:
 
 .. math::
-    :label: 8.4
-    :name: eq:8.4
+    :label: 8.2
+    :name: eq:8.2
 
     \varepsilon = \bar\varepsilon + \Delta\varepsilon
 
@@ -157,8 +157,8 @@ The rates of change of these arguments are the fundamental frequencies of the as
 The lunar hour angle (:math:`\tau`) in degrees can be determined from the solar time (:math:`t`) in hours using the mean longitudes of the Moon (:math:`S`) and Sun (:math:`H`):
 
 .. math::
-    :label: 8.1
-    :name: eq:8.1
+    :label: 8.3
+    :name: eq:8.3
 
     \tau = \frac{360}{24} t - S + H
 
@@ -193,8 +193,8 @@ When calculating :term:`nutation <Nutation>`, IERS conventions use Delaunay argu
 From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arguments using the following relationships:
 
 .. math::
-    :label: 8.2
-    :name: eq:8.2
+    :label: 8.4
+    :name: eq:8.4
 
     \gamma &= \tau + S \\
     l &= S - P \\
@@ -206,8 +206,8 @@ From :cite:t:`Dehant:2015vb`, these arguments can be calculated from Doodson arg
 And conversely:
 
 .. math::
-    :label: 8.3
-    :name: eq:8.3
+    :label: 8.5
+    :name: eq:8.5
 
     S &= F + \Omega \\
     H &= F + \Omega - D \\

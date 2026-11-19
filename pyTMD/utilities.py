@@ -934,7 +934,7 @@ def progress_bar(
     return pb
 
 
-def content_length(response) -> int | None:
+def content_length(response: object) -> int | None:
     """
     Get the content length in bytes from a ``http`` response
 
@@ -1275,7 +1275,11 @@ def from_ftp(
         # copy remote file contents to bytesIO object
         remote_buffer = io.BytesIO()
         retrbinary(
-            ftp, ftp_remote_path, remote_buffer, chunk=chunk, progress=progress
+            ftp,
+            ftp_remote_path,
+            remote_buffer,
+            chunk=chunk,
+            progress=progress,
         )
         # rewind to start of file object
         remote_buffer.seek(0)

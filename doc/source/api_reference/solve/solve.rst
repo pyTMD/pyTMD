@@ -2,7 +2,7 @@
 ``pyTMD.solve``
 ===============
 
-Solve functions for estimating ocean and load tides
+Solve functions for estimating or modeling tides
 
 .. toctree::
     :maxdepth: 1
