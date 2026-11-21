@@ -241,6 +241,7 @@ Requesting the ``'u'`` or ``'v'`` groups from a model that only provides transpo
 
 .. note::
     Definition files from version 2 (and the database from earlier version 3 releases) that define transports under lowercase ``u`` and ``v`` groups are automatically moved to the ``U`` and ``V`` groups when loaded.
+    Accessing the transports of a model object with the lowercase groups (``m.u``, ``m['u']``) still works but is deprecated and issues a ``DeprecationWarning``: use ``m.U`` and ``m['U']``.
 
 .. note::
     The ``transport`` option is only available for models that provide transports and bathymetry (OTIS, ATLAS and TMD3).

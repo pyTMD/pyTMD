@@ -115,7 +115,7 @@ def reduce_otis(
         dsg, dtg = pyTMD.io.OTIS.open_atlas_grid(m["z"].grid_file)
         dsz, dtz = pyTMD.io.OTIS.open_atlas_elevation(m["z"].model_file)
         dsu, dsv, dtu, dtv = pyTMD.io.OTIS.open_atlas_transport(
-            m["u"].model_file
+            m["U"].model_file
         )
         # combine local solutions with global solution
         dsg = dsg.tmd.compact.combine_local(dtg)
@@ -126,7 +126,7 @@ def reduce_otis(
         # if reading a pure global solution
         dsg = pyTMD.io.OTIS.open_otis_grid(m["z"].grid_file)
         dsz = pyTMD.io.OTIS.open_otis_grid(m["z"].model_file)
-        dsu, dsv = pyTMD.io.OTIS.open_otis_transport(m["u"].model_file)
+        dsu, dsv = pyTMD.io.OTIS.open_otis_transport(m["U"].model_file)
 
     # convert bounds to model coordinates
     # bounds is in the form [xmin,xmax,ymin,ymax]
@@ -142,7 +142,7 @@ def reduce_otis(
     # create unique filenames for reduced datasets
     new_grid_file = _unique_filename(m["z"].grid_file)
     new_elevation_file = _unique_filename(m["z"].model_file)
-    new_transport_file = _unique_filename(m["u"].model_file)
+    new_transport_file = _unique_filename(m["U"].model_file)
     # output reduced datasets to file
     dtree.tmd.otis.to_grid(new_grid_file)
     dtree.tmd.otis.to_elevation(new_elevation_file)

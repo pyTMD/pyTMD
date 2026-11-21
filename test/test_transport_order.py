@@ -10,6 +10,7 @@ differs from interpolating transports and bathymetry and then dividing
 very different depths
 """
 import json
+import warnings
 import numpy as np
 import xarray as xr
 import pytest
@@ -164,10 +165,17 @@ def test_legacy_groups_are_moved(tmp_path):
     m = pyTMD.io.model().from_dict(_params(tmp_path, ("u", "v")), validate=False)
     assert all(g in m.__dict__ for g in ("U", "V"))
     assert not any(g in m.__dict__ for g in ("u", "v"))
-    # legacy attribute access still works
-    assert m.u is m.U
-    assert m["v"] is m["V"]
     assert m.to_dict()["U"] is m.U
+    # legacy attribute access still works, but warns
+    with pytest.warns(DeprecationWarning, match="'U' group"):
+        assert m.u is m.U
+    with pytest.warns(DeprecationWarning, match="'V' group"):
+        assert m["v"] is m["V"]
+    # uppercase groups do not warn
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert m["U"].units == "m^2/s"
+        assert m.V.units == "m^2/s"
 
 
 def test_currents_groups_are_kept():
@@ -210,3 +218,17 @@ def test_open_uppercase_groups(tmp_path, groups):
     assert dtree["u"]["m2"].tmd.group == "current"
     dtree = m.open_datatree(group=["U", "V"])
     assert dtree["U"]["m2"].tmd.group == "transport"
+
+
+def test_no_internal_deprecation_warnings(tmp_path):
+    # reading models should not use the legacy aliases internally
+    _write_model(tmp_path)
+    for groups in (("U", "V"), ("u", "v")):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            m = pyTMD.io.model().from_dict(_params(tmp_path, groups))
+            m.open_datatree(group=["z", "u", "v"])
+            m.open_datatree(group=["U", "V"])
+            m.open_dataset(group="u", transport=True)
+            m.to_dict(serialize=True)
+            _ = m.multifile

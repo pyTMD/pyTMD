@@ -352,8 +352,9 @@ class model:
         d = {}
         # for each field
         for key in kwargs["fields"]:
-            if hasattr(self, key) and getattr(self, key) is not None:
-                d[key] = getattr(self, key)
+            # (using the instance dictionary avoids legacy group aliases)
+            if self.__dict__.get(key) is not None:
+                d[key] = self.__dict__[key]
         # serialize dictionary for JSON output
         if kwargs["serialize"]:
             d = self.serialize(d)
@@ -678,10 +679,23 @@ class model:
                 return key
         return None
 
+    def _legacy_group(self, key: str):
+        """Transports accessed with the legacy lowercase groups"""
+        if key in ("u", "v") and key.upper() in self.__dict__:
+            warnings.warn(
+                f"Transports are defined in the '{key.upper()}' group: "
+                f"accessing them with '{key}' is deprecated",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            return self.__dict__[key.upper()]
+        return None
+
     def __getattr__(self, key):
         # legacy access to transports with lowercase groups
-        if key in ("u", "v") and key.upper() in self.__dict__:
-            return self.__dict__[key.upper()]
+        group = self._legacy_group(key)
+        if group is not None:
+            return group
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{key}'"
         )
@@ -1078,6 +1092,10 @@ class model:
         return getattr(self, key, default) or default
 
     def __getitem__(self, key):
+        # legacy access to transports with lowercase groups
+        group = self._legacy_group(key)
+        if group is not None:
+            return group
         return getattr(self, key)
 
     def __setitem__(self, key, value):

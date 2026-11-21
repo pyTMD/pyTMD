@@ -172,7 +172,7 @@ class Test_CATS2008:
     def update_tidal_ellipse(self, directory):
         # model parameters for CATS2008
         model = pyTMD.io.model(directory).from_database('CATS2008')
-        modelpath = model['u'].grid_file.parent
+        modelpath = model['U'].grid_file.parent
         GROUPS = ['U','V']
 
         # compute validation data from Matlab TMD program using octave
