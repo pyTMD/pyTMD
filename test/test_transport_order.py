@@ -146,3 +146,67 @@ def test_compute_tide_currents(tmp_path):
         x, y, t, transport=True, min_depth=1000.0, **kwargs
     )
     assert abs(floor["u"].values.item()) < abs(after["u"].values.item())
+
+
+def _params(path, transport_groups=("U", "V")):
+    """Model parameters with transports in the given groups"""
+    d = dict(format="ATLAS-netcdf", name="synthetic", compressed=False)
+    d["z"] = dict(model_file=[str(path / "h_m2.nc")],
+        grid_file=str(path / "grid.nc"), units="mm")
+    for g in transport_groups:
+        d[g] = dict(model_file=[str(path / f"{g.lower()}_m2.nc")],
+            grid_file=str(path / "grid.nc"), units="m^2/s")
+    return d
+
+
+def test_legacy_groups_are_moved(tmp_path):
+    # lowercase transports (legacy definitions) are moved to U and V
+    m = pyTMD.io.model().from_dict(_params(tmp_path, ("u", "v")), validate=False)
+    assert all(g in m.__dict__ for g in ("U", "V"))
+    assert not any(g in m.__dict__ for g in ("u", "v"))
+    # legacy attribute access still works
+    assert m.u is m.U
+    assert m["v"] is m["V"]
+    assert m.to_dict()["U"] is m.U
+
+
+def test_currents_groups_are_kept():
+    # true currents (not transports) stay in lowercase groups
+    d = dict(format="FES-netcdf", name="x",
+        z=dict(model_file="a", units="cm"), u=dict(model_file="a", units="cm/s"),
+        v=dict(model_file="a", units="cm/s"))
+    m = pyTMD.io.model().from_dict(d, validate=False)
+    assert all(g in m.__dict__ for g in ("u", "v"))
+    assert not any(g in m.__dict__ for g in ("U", "V"))
+    with pytest.raises(ValueError):
+        m.open_dataset(group="U")
+
+
+def test_database_transports():
+    # transports in the database are in the uppercase groups
+    m = pyTMD.io.model(verify=False).from_database("CATS2008")
+    assert m["U"].units == "m^2/s" and m["V"].units == "m^2/s"
+    assert not any(g in m.__dict__ for g in ("u", "v"))
+    # FES currents are in the lowercase groups
+    m = pyTMD.io.model(verify=False).from_database("FES2014")
+    assert "u" in m.__dict__ and "U" not in m.__dict__
+    assert "CATS2008" in pyTMD.io.model.ocean_current()
+    assert "FES2014" in pyTMD.io.model.ocean_current()
+
+
+@pytest.mark.parametrize("groups", [("U", "V"), ("u", "v")])
+def test_open_uppercase_groups(tmp_path, groups):
+    _write_model(tmp_path)
+    m = pyTMD.io.model().from_dict(_params(tmp_path, groups), validate=False)
+    ds_u = m.open_dataset(group="u")
+    ds_U = m.open_dataset(group="U")
+    ds_t = m.open_dataset(group="u", transport=True)
+    assert ds_u["m2"].tmd.group == "current"
+    assert ds_U["m2"].tmd.group == "transport"
+    xr.testing.assert_identical(ds_U, ds_t)
+    # datatree keys follow the requested groups
+    dtree = m.open_datatree(group=["u", "v"])
+    assert set(dtree.children) == {"u", "v"}
+    assert dtree["u"]["m2"].tmd.group == "current"
+    dtree = m.open_datatree(group=["U", "V"])
+    assert dtree["U"]["m2"].tmd.group == "transport"

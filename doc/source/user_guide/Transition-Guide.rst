@@ -229,6 +229,19 @@ The same can be done with the lower-level interface:
     # divide by the interpolated bathymetry (optionally limiting the depth)
     local = local.tmd.to_currents(min_depth=None).tmd.to_default_units()
 
+Transports are defined in the ``U`` and ``V`` groups of the model database and definition files, while currents are defined in the ``u`` and ``v`` groups.
+Requesting the ``'u'`` or ``'v'`` groups from a model that only provides transports converts them to currents, and the ``'U'`` or ``'V'`` groups can be requested directly to read the transports:
+
+.. code-block:: python
+
+    # transports with bathymetry (no conversion to currents)
+    ds_U = m.open_dataset(group="U")
+    # currents (transports divided by the bathymetry on the model grid)
+    ds_u = m.open_dataset(group="u")
+
+.. note::
+    Definition files from version 2 (and the database from earlier version 3 releases) that define transports under lowercase ``u`` and ``v`` groups are automatically moved to the ``U`` and ``V`` groups when loaded.
+
 .. note::
     The ``transport`` option is only available for models that provide transports and bathymetry (OTIS, ATLAS and TMD3).
     The ``min_depth`` argument (in meters) sets a lower limit on the depth used in the division.

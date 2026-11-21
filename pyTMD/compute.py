@@ -633,7 +633,9 @@ def tide_currents(
         )
         # convert interpolated transports to currents
         if transport:
-            local = local.tmd.to_currents(min_depth=min_depth).tmd.to_default_units()
+            local = local.tmd.to_currents(
+                min_depth=min_depth
+            ).tmd.to_default_units()
         # calculate tide values for input data type
         tpred[key] = local.tmd.predict(
             ts.tide, deltat=deltat, corrections=nodal_corrections

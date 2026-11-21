@@ -86,6 +86,7 @@ UPDATE HISTORY:
 from __future__ import annotations
 
 import io
+import re
 import copy
 import json
 import pyproj
@@ -102,6 +103,17 @@ __all__ = ["DataBase", "load_database", "model"]
 
 # default working data directory for tide models
 _default_directory = pyTMD.utilities.get_cache_path()
+# model groups: elevations (z), currents (u, v) and transports (U, V)
+_groups = ("z", "u", "v", "U", "V")
+# model formats that provide transports and bathymetry
+_transport_formats = (
+    "OTIS",
+    "ATLAS",
+    "ATLAS-compact",
+    "ATLAS-netcdf",
+    "netcdf",
+    "TMD3",
+)
 
 
 # allow model database to be subscriptable
@@ -258,12 +270,7 @@ class model:
         if isinstance(group, str):
             group = (group,)
         # verify paths
-        for g in group:
-            # verify model group is valid
-            g = g.lower()
-            # skip if model group is unavailable
-            if not hasattr(self, g):
-                continue
+        for g in self._available_groups(group):
             # validate paths: grid file for OTIS, ATLAS models
             if hasattr(self[g], "grid_file"):
                 self[g].grid_file = self.pathfinder(self[g].grid_file)
@@ -312,6 +319,7 @@ class model:
             Validate the model parameters after loading
         """
         # copy model parameters
+        d = self._normalize_groups(copy.deepcopy(d))
         self.__parameters__ = copy.deepcopy(d)
         for key, val in d.items():
             if isinstance(val, dict) and key not in ("projection",):
@@ -336,7 +344,7 @@ class model:
             Serialize dictionary for ``JSON`` output
         """
         # default fields
-        keys = ["name", "format", "projection", "reference", "z", "u", "v"]
+        keys = ["name", "format", "projection", "reference", *_groups]
         # set default keyword arguments
         kwargs.setdefault("fields", keys)
         kwargs.setdefault("serialize", False)
@@ -385,12 +393,7 @@ class model:
     def multifile(self) -> bool:
         """Returns if the model uses individual files for constituents"""
         # try to find a valid mode group
-        for g in ("z", "u", "v"):
-            # verify case of model group
-            g = g.lower()
-            # skip if model group is unavailable
-            if not hasattr(self, g):
-                continue
+        for g in self._available_groups(("z", "u", "v")):
             return isinstance(self[g].model_file, list)
 
     @property
@@ -456,7 +459,7 @@ class model:
         # extract all known ocean tide current models
         model_list = []
         for model, val in parameters.items():
-            if ("u" in val) or ("v" in val):
+            if any(g in val for g in ("u", "v", "U", "V")):
                 model_list.append(model)
         # return unique list of models
         return sorted(set(model_list))
@@ -603,6 +606,86 @@ class model:
         # set model parameters from dictionary
         self.from_dict(parameters)
 
+    @staticmethod
+    def _is_transport(d: dict, params: dict) -> bool:
+        """Checks if a model group in a definition provides transports"""
+        units = str(params.get("units") or "")
+        if units:
+            # transports have squared length units (e.g. ``m^2/s``)
+            return bool(re.search(r"\^2|\*\*2|\u00b2", units))
+        # no units: infer from model format
+        return d.get("format") in _transport_formats
+
+    @classmethod
+    def _normalize_groups(cls, d: dict) -> dict:
+        """
+        Moves transports defined under the ``'u'`` and ``'v'`` groups
+        (legacy definitions) to the ``'U'`` and ``'V'`` groups
+
+        Currents are kept under ``'u'`` and ``'v'``
+        """
+        for g in ("u", "v"):
+            if not isinstance(d.get(g), dict) or (g.upper() in d):
+                continue
+            if cls._is_transport(d, d[g]):
+                # preserve the order of the keys
+                d = {(g.upper() if k == g else k): v for k, v in d.items()}
+        return d
+
+    def _available_groups(self, group: tuple | list | str = _groups):
+        """
+        Model groups (as defined in the model) for the requested groups
+
+        Requesting ``'u'`` or ``'v'`` includes transports
+        (``'U'`` or ``'V'``) when no currents are available
+        """
+        if isinstance(group, str):
+            group = (group,)
+        keys = []
+        for g in group:
+            key = self._resolve_group(g)
+            if key is not None and key not in keys:
+                keys.append(key)
+        return keys
+
+    def _resolve_group(self, group: str, transport: bool = False):
+        """
+        Find the model group that provides a requested variable
+
+        Parameters
+        ----------
+        group: str
+            Requested group (``'z'``, ``'u'``, ``'v'``, ``'U'`` or ``'V'``)
+        transport: bool, default False
+            Require transports for ``'u'`` and ``'v'``
+
+        Returns
+        -------
+        key: str or None
+            Group defined in the model (None if unavailable)
+        """
+        defined = self.__dict__
+        if group.lower() == "z":
+            return "z" if "z" in defined else None
+        # transports are requested explicitly (uppercase)
+        # or with the transport option
+        if transport or group in ("U", "V"):
+            key = group.upper()
+            return key if key in defined else None
+        # currents are preferred, but transports can be converted
+        for key in (group.lower(), group.upper()):
+            if key in defined:
+                return key
+        return None
+
+    def __getattr__(self, key):
+        # legacy access to transports with lowercase groups
+        if key in ("u", "v") and key.upper() in self.__dict__:
+            return self.__dict__[key.upper()]
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{key}'"
+        )
+
     def validate_model(self):
         """Validates the model parameters for a model object"""
         # validate model name
@@ -644,10 +727,7 @@ class model:
         """Resolves paths to model files for specific model formats"""
         # resolve grid files for projected (OTIS, ATLAS) model formats
         if self.format in ("OTIS", "ATLAS-compact", "ATLAS-netcdf"):
-            for g in ("z", "u", "v"):
-                # check that model group is available
-                if not hasattr(self, g):
-                    continue
+            for g in self._available_groups(_groups):
                 if (
                     not hasattr(self[g], "grid_file")
                     or self[g].grid_file is None
@@ -663,10 +743,7 @@ class model:
                 else:
                     self[g].grid_file = pyTMD.utilities.Path(self[g].grid_file)
         # resolve model constituent files
-        for g in ("z", "u", "v"):
-            # check that model group is available
-            if not hasattr(self, g):
-                continue
+        for g in self._available_groups(_groups):
             # get model files for model group
             if self.directory is not None:
                 # use glob strings to find files in directory
@@ -854,25 +931,32 @@ class model:
         # read transports rather than converting to currents
         transport = kwargs.pop("transport", False)
         # model group
-        group = kwargs["group"].lower()
-        if group not in ("z", "u", "v"):
+        group = kwargs["group"]
+        if group.lower() not in ("z", "u", "v"):
             raise ValueError(f"Invalid model group {group}")
-        if transport and (group != "z"):
-            if self.format not in ("OTIS", "ATLAS-compact", "TMD3", "ATLAS-netcdf"):
-                raise ValueError(
-                    f"Transports and bathymetry unavailable for {self.format}"
-                )
-            # uppercase groups are transports (not converted to currents)
-            kwargs["group"] = group.upper()
+        # uppercase groups are transports
+        transport = transport or (group in ("U", "V"))
+        # find the model group providing the variable
+        key = self._resolve_group(group, transport=transport)
+        if key is None and transport:
+            raise ValueError(
+                f"Transports and bathymetry unavailable for group {group}"
+            )
+        elif key is None:
+            raise ValueError(f"Model group {group} is unavailable")
+        # groups for the file readers: uppercase groups are not
+        # converted to currents, lowercase groups are converted
+        # (transports in the model are converted for ``'u'`` and ``'v'``)
+        kwargs["group"] = key if (key == "z" or transport) else group.lower()
         # extract model file
-        model_file = self[group].get("model_file")
+        model_file = self[key].get("model_file")
         # reduce constituents if specified
         self.reduce_constituents(kwargs["constituents"])
         if self.format in ("OTIS", "ATLAS-compact", "TMD3"):
             # open OTIS/TMD3/ATLAS-compact files as xarray Dataset
             ds = OTIS.open_dataset(
                 model_file,
-                grid_file=self[group].get("grid_file"),
+                grid_file=self[key].get("grid_file"),
                 format=self.file_format,
                 crs=self.crs,
                 **kwargs,
@@ -881,7 +965,7 @@ class model:
             # open ATLAS netCDF4 files as xarray Dataset
             ds = ATLAS.open_dataset(
                 model_file,
-                grid_file=self[group].get("grid_file"),
+                grid_file=self[key].get("grid_file"),
                 format=self.file_format,
                 **kwargs,
             )
@@ -907,7 +991,7 @@ class model:
         # if units cannot be parsed: use value defined in the model database
         for c in ds.tmd.constituents:
             if not ds[c].tmd._has_compatible_units:
-                ds[c].attrs["units"] = self[group].units
+                ds[c].attrs["units"] = self[key].units
         # convert to default units
         if kwargs["use_default_units"]:
             ds = ds.tmd.to_default_units()
@@ -939,7 +1023,10 @@ class model:
         # try to read model files
         for g in group:
             # skip if model group is unavailable
-            if not hasattr(self, g.lower()):
+            if (
+                self._resolve_group(g, transport=kwargs.get("transport", False))
+                is None
+            ):
                 continue
             # open xarray Dataset
             ds[g] = self.open_dataset(group=g, **kwargs)
@@ -985,7 +1072,7 @@ class model:
     @property
     def __variables__(self):
         """List of model variables"""
-        return [k for k in ("z", "u", "v") if k in self.__parameters__]
+        return [k for k in _groups if k in self.__parameters__]
 
     def get(self, key, default=None):
         return getattr(self, key, default) or default
