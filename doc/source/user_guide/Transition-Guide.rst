@@ -195,6 +195,46 @@ The variables are then converted to default sets of units: meters for elevation 
     ds_u_mps = ds_u.tmd.to_units('m/s')
     ds_v_mps = ds_v.tmd.to_units('m/s')
 
+.. _transport-currents:
+
+Currents from OTIS and ATLAS Transports
+=======================================
+
+OTIS and ATLAS models provide depth-averaged transports (:math:`U`, :math:`V`) rather than currents.
+Currents are obtained by dividing the transports by the bathymetry at the corresponding grid nodes.
+In version 2, transports and bathymetry were interpolated separately to the output points and then divided (as done in ``OTPS`` and ``TMD2.5``).
+In version 3, the default is to divide on the model grid when the ``'u'`` and ``'v'`` groups are read, and the resulting currents are then interpolated.
+This allows the same interpolation code to be used for all models, including those that only provide currents.
+
+The two orders agree in deep water, but can differ substantially at points where the interpolation stencil contains both shallow and deep cells (e.g. near the coast).
+Transports vary smoothly, but a current calculated on the grid can be dominated by a single shallow node.
+To reproduce the version 2 behavior, use the ``transport`` option:
+
+.. code-block:: python
+
+    # interpolate transports and bathymetry, then divide
+    tpred = pyTMD.compute.tide_currents(
+        x, y, delta_time, model="TPXO9-atlas-v5", transport=True
+    )
+
+The same can be done with the lower-level interface:
+
+.. code-block:: python
+
+    m = pyTMD.io.model(directory).from_database("TPXO9-atlas-v5")
+    # read transports and bathymetry instead of currents
+    ds = m.open_dataset(group="u", transport=True)
+    # interpolate to the output points
+    local = ds.tmd.interp(x, y)
+    # divide by the interpolated bathymetry (optionally limiting the depth)
+    local = local.tmd.to_currents(min_depth=None).tmd.to_default_units()
+
+.. note::
+    The ``transport`` option is only available for models that provide transports and bathymetry (OTIS, ATLAS and TMD3).
+    The ``min_depth`` argument (in meters) sets a lower limit on the depth used in the division.
+    It is not used by default, but a minimum depth is applied in ``OTPS`` (1 m) and ``TMD3`` (10 m).
+    Note that a limit larger than the depth of the shallowest nodes will reduce the amplitude of the output currents.
+
 Removed Functions
 =================
 
