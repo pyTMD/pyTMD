@@ -77,7 +77,9 @@ Users registered with AVISO [see :ref:`aviso-registration`] can download FES mod
 
 Other tide models may require manual downloading due to licensing agreements or limitations on programmatic access.
 TPXO models (OTIS and ATLAS formats) can be requested from the data producers after `registration <https://www.tpxo.net/tpxo-products-and-registration>`_.
+After registering, the TPXO models can be downloaded from their box account using the :py:func:`pyTMD.datasets.fetch_box_tpxo` function.
 OTIS-formatted Antarctic models are available from the U.S. Antarctic Program Data Center (USAP-DC), which uses a reCAPTCHA security system to prevent automated access.
+Users can *now* get an API access token for USAP-DC [see :ref:`usap-dc-registration`] to download CATS models using the :py:func:`pyTMD.datasets.fetch_usap_cats` function.
 See the model links in :ref:`directories` for the references to specific tide models.
 
 
@@ -243,7 +245,7 @@ The default time in ``pyTMD`` is days (UTC) since a given epoch.
 For ocean, load and equilibrium tide programs, the epoch is 1992-01-01T00:00:00.
 For pole tide programs, the epoch is 1858-11-17T00:00:00 (Modified Julian Days).
 ``pyTMD`` uses the ``timescale`` library to convert different time formats to the necessary time format of a given program.
-``timescale`` can also parse date strings describing the units and epoch of relative times, or the calendar date of measurement for geotiff formats.
+``timescale`` can also parse strings containing the calendar date, or the units and epoch of relative times.
 
 
 .. _spatial-coordinates:
@@ -262,7 +264,8 @@ For other projected models, a formatted coordinate reference system (CRS) descri
 Interpolation
 =============
 
-For converting from model coordinates, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray``.
+For structured grids, ``pyTMD`` uses the ``linear`` and ``nearest`` spatial interpolation routines from ``xarray`` to compute the tidal constituents at the specified locations.
+For unstructured (finite-element) grids, ``pyTMD`` uses either a linear or quadratic barycentric interpolation scheme to compute the local tidal constituents [see :ref:`barycentric-coordinates`].
 
 .. important::
     If the model domain does not contain the coordinates, the interpolation will return ``NaN`` values.

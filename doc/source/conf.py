@@ -31,7 +31,7 @@ on_github = os.environ.get("GITHUB_ACTIONS") == "true"
 metadata = importlib.metadata.metadata("pyTMD")
 project = metadata["Name"]
 year = datetime.date.today().year
-copyright = f"2017\u2013{year}, Tyler C. Sutterley"
+copyright = f"2017\u2013{year}, {project} Developers"
 author = "Tyler C. Sutterley"
 
 # software version
@@ -54,8 +54,9 @@ class numfig_filter(logging.Filter):
         return not suppress_warning
 
 
-# add filter to logger
+# add filter to loggers
 logging.getLogger("sphinx").addFilter(numfig_filter())
+logging.getLogger("sphinx-autobuild").addFilter(numfig_filter())
 
 # suppress warnings in examples and documentation
 if on_rtd:
@@ -138,12 +139,17 @@ plot_html_show_formats = False
 plot_html_show_source_link = False
 numfig = True
 numfig_secnum_depth = 1
+linkcheck_ignore = [
+    r"http://dx.doi\.org/.+",
+    r"https://doi\.org/.+",
+    r"https://ui.adsabs.harvard.edu/.+",
+]
 
 # -- Options for HTML output -------------------------------------------------
 
 # html_title = metadata["Name"]
 html_short_title = metadata["Name"]
-html_show_sourcelink = False
+html_show_sourcelink = True
 html_show_sphinx = True
 html_show_copyright = True
 

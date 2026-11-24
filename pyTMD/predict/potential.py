@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 potential.py
-Written by Tyler Sutterley (06/2026)
+Written by Tyler Sutterley (09/2026)
 Prediction routines for gravity tides and tide-generating forces
 
 PYTHON DEPENDENCIES:
@@ -18,9 +18,10 @@ PROGRAM DEPENDENCIES:
     constituents.py: calculates constituent parameters and nodal arguments
     earth.py: calculates Earth parameters and Body Tide Love numbers
     math.py: Special functions of mathematical physics
-    spatial.py: utilities for working with geospatial data
 
 UPDATE HISTORY:
+    Updated 09/2026: added functions to predict gravitational perturbations
+        induced by ocean tides via spherical harmonic expansion
     Updated 06/2026: standardize use of lambda (lmda) to denote longitudes
         added citations to W. E. Farrell's PhD thesis on gravity tides
     Updated 05/2026: use numpy hypot function to calculate magnitudes
@@ -36,7 +37,9 @@ import xarray as xr
 import pyTMD.astro
 import pyTMD.constituents
 import pyTMD.math
-import pyTMD.spatial
+
+# get ellipsoidal parameters
+from pyTMD.earth import _iers
 
 __all__ = [
     "generating_force",
@@ -47,13 +50,12 @@ __all__ = [
     "_frequency_dependence",
     "_frequency_dependence_diurnal",
     "_frequency_dependence_long_period",
+    "time_series",
+    "infer_minor",
 ]
 
 # number of days between MJD and the tide epoch (1992-01-01T00:00:00)
 _mjd_tide = 48622.0
-
-# get ellipsoidal parameters
-_iers = pyTMD.earth.datum(ellipsoid="IERS", units="MKS")
 
 
 def generating_force(
@@ -777,3 +779,177 @@ def _frequency_dependence_long_period(
     G["Z"] = -1e-6 * l * GZ / radius
     # return the corrections
     return G
+
+
+def time_series(
+    t: np.ndarray,
+    Ylms: xr.Dataset,
+    **kwargs,
+):
+    """
+    Predict tides from a spherical harmonic ``Dataset`` at times
+    :cite:p:`Petit:2010tp,Ray:1989wf`
+
+    Parameters
+    ----------
+    t: float or np.ndarray
+        Days relative to 1992-01-01T00:00:00
+    Ylms: xarray.Dataset
+        Dataset with spherical harmonic coefficients
+
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
+    deltat: float or np.ndarray, default 0.0
+        Time correction for converting to Ephemeris Time (days)
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.constituents.arguments`
+
+    Returns
+    -------
+    tpred: xarray.Dataset
+        Predicted spherical harmonic tidal time series
+    """
+    # set default keyword arguments
+    kwargs.setdefault("deltat", 0.0)
+    kwargs.setdefault("corrections", "GOT")
+
+    # list of constituents
+    constituents = np.array(Ylms.constituent.values)
+    # convert time to Modified Julian Days (MJD)
+    MJD = t + _mjd_tide
+
+    # load the nodal corrections
+    pu, pf, G = pyTMD.constituents.arguments(MJD, constituents, **kwargs)
+
+    # calculate constituent phase angles
+    if kwargs["corrections"] in ("OTIS", "ATLAS", "TMD3"):
+        # verify time is (at least) 1D
+        t = np.atleast_1d(t)
+        # load parameters for constituents
+        _, p, o, _, _ = pyTMD.constituents._constituent_parameters(constituents)
+        # broadcast parameters to time and constituent dimensions
+        omega, phase0, t0 = np.broadcast_arrays(
+            o[None, :], p[None, :], t[:, None], subok=True
+        )
+        # calculate phase angle from frequency and phase-0
+        # convert angular frequency to radians per day
+        theta = 86400.0 * omega * t0 + phase0 + pu
+    else:
+        # phase angle from arguments
+        theta = np.radians(G) + pu
+    # dataset of arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(["time", "constituent"], pu),
+            f=(["time", "constituent"], pf),
+            G=(["time", "constituent"], G),
+            theta=(["time", "constituent"], np.exp(1j * theta)),
+        ),
+        coords=dict(time=np.atleast_1d(MJD), constituent=constituents),
+    )
+
+    # sum over tidal constituents
+    tpred = xr.Dataset()
+    # add together the in-phase and out-of-phase components
+    tpred["clm"] = (
+        Ylms.clm.real * arguments.f * arguments.theta.real
+        - Ylms.clm.imag * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    tpred["slm"] = (
+        Ylms.slm.real * arguments.f * arguments.theta.real
+        - Ylms.slm.imag * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    # add attributes for spherical harmonics
+    tpred.clm.attrs["long_name"] = "cosine spherical harmonics"
+    tpred.slm.attrs["long_name"] = "sine spherical harmonics"
+    # copy attributes from original dataset
+    tpred.attrs.update(Ylms.attrs)
+    tpred.attrs["constituents"] = constituents
+
+    # return the spherical harmonic tide predictions
+    return tpred
+
+
+# PURPOSE: infer the minor corrections from the major constituents
+def infer_minor(
+    t: float | np.ndarray,
+    Ylms: xr.Dataset,
+    **kwargs,
+):
+    """
+    Infer the spherical harmonic tidal values for minor constituents
+    using their relation with major constituents
+    :cite:p:`Doodson:1941td,Schureman:1958ty,Foreman:1989dt,Egbert:2002ge`
+
+    Parameters
+    ----------
+    t: float or np.ndarray
+        Days relative to 1992-01-01T00:00:00
+    Ylms: xarray.Dataset
+        Dataset with spherical harmonic coefficients
+
+            - ``clm``: cosine spherical harmonics (complex)
+            - ``slm``: sine spherical harmonics (complex)
+    deltat: float or np.ndarray, default 0.0
+        Time correction for converting to Ephemeris Time (days)
+    kwargs: dict
+        Keyword arguments for :py:func:`pyTMD.predict.minor_admittance`
+
+    Returns
+    -------
+    tinfer: xr.DataArray
+        Inferred spherical harmonic tidal time series
+    """
+    from .ocean_load import minor_admittance
+
+    # set default keyword arguments
+    kwargs.setdefault("deltat", 0.0)
+    kwargs.setdefault("corrections", "GOT")
+    # extract harmonics and convert to datasets
+    clm = Ylms.clm.to_dataset(dim="constituent")
+    slm = Ylms.slm.to_dataset(dim="constituent")
+    # get admittances and convert to data arrays
+    Cadm = minor_admittance(clm, **kwargs).tmd.to_dataarray()
+    Sadm = minor_admittance(slm, **kwargs).tmd.to_dataarray()
+
+    # list of constituents to infer
+    constituents = np.array(Cadm.coords["constituent"].values)
+    # convert time to Modified Julian Days (MJD)
+    MJD = t + _mjd_tide
+    # load the nodal corrections for minor constituents
+    pu, pf, G = pyTMD.constituents.arguments(
+        MJD,
+        constituents,
+        deltat=kwargs["deltat"],
+        corrections=kwargs["corrections"],
+    )
+    # phase angle from arguments
+    theta = np.radians(G) + pu
+    # dataset of arguments
+    arguments = xr.Dataset(
+        data_vars=dict(
+            u=(["time", "constituent"], pu),
+            f=(["time", "constituent"], pf),
+            theta=(["time", "constituent"], np.exp(1j * theta)),
+        ),
+        coords=dict(time=np.atleast_1d(MJD), constituent=constituents),
+    )
+    # sum over tidal constituents
+    tinfer = xr.Dataset()
+    tinfer["clm"] = (
+        Cadm.real * arguments.f * arguments.theta.real
+        - Cadm.imag * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    tinfer["slm"] = (
+        Sadm.real * arguments.f * arguments.theta.real
+        - Sadm.imag * arguments.f * arguments.theta.imag
+    ).sum(dim="constituent", skipna=False)
+    # add attributes for spherical harmonics
+    tinfer.clm.attrs["long_name"] = "cosine spherical harmonics"
+    tinfer.slm.attrs["long_name"] = "sine spherical harmonics"
+    # copy attributes from original dataset
+    tinfer.attrs.update(Ylms.attrs)
+    tinfer.attrs["constituents"] = constituents
+
+    # return the inferred spherical harmonic tide values
+    return tinfer

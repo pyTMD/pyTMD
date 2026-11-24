@@ -25,7 +25,7 @@ Spherical harmonics of degree :math:`l` and order :math:`m` are defined as:
     Y_l^m(\theta, \lambda) = N_l^m\, P_l^m(\cos\theta)\, e^{im\lambda}
 
 where :math:`P_l^m(x)` are the associated Legendre polynomials and :math:`N_l^m` is a normalization factor :cite:p:`HofmannWellenhof:2006hy,Munk:1960uk`.
-:py:func:`pyTMD.math.sph_harm` calculates spherical harmonics using the normalization factor from Equation A5 in :cite:t:`Munk:1966go`.
+:py:func:`pyTMD.math.sph_harm` calculates spherical harmonics using the normalization factor from Equation A5 in :cite:t:`Munk:1966go` following :cite:t:`Schmidt:1917vh`.
 The associated Legendre polynomials of degree :math:`l` and order :math:`m` are calculated in :py:func:`pyTMD.math.legendre` using the explicit formula (1-67) from :cite:t:`HofmannWellenhof:2006hy`:
 
 .. math::
@@ -52,6 +52,19 @@ The first few (unnormalized) Legendre polynomials are:
       - :math:`P_2^1(x) = 3x\sqrt{1-x^2}`
       - :math:`P_2^2(x) = 3(1-x^2)`
 
+The infinite sums of the Legendre polynomials as given in :cite:t:`Hobson:1955ur` and :cite:t:`Farrell:1972cm` are:
+
+.. math::
+    :label: 9.3
+    :name: eq:9.3
+
+    \sum_{l=0}^\infty P_l(\cos{\theta}) &= \frac{1}{\sin{(\theta/2)}}\\
+    \sum_{l=0}^\infty l\,P_l(\cos{\theta}) &= -\frac{1}{4\sin{(\theta/2)}}\\
+    \sum_{l=1}^\infty \frac{\partial P_l(\cos{\theta})}{\partial\theta} &= -\frac{\cos{(\theta/2)}}{4\sin^2{(\theta/2)}}\\
+    \sum_{l=1}^\infty \frac{1}{l}\frac{\partial P_l(\cos{\theta})}{\partial\theta} &= -\frac{\cos{(\theta/2)}\left[1 + 2\sin{(\theta/2)}\right]}{2\sin{(\theta/2)}\left[1 + \sin{(\theta/2)}\right]}
+
+These infinite sums can be used to calculate the :ref:`greens-functions` of deformation using a truncated set of Legendre polynomials.
+
 .. _tide-generating-potential:
 
 Tide-Generating Potential
@@ -60,8 +73,8 @@ Tide-Generating Potential
 The gravitational potential :math:`W` at a location on Earth's surface :math:`(\varphi, \lambda)` from a planetary body (such as the Moon or Sun) can be expanded into spherical harmonics as the following:
 
 .. math::
-    :label: 9.3
-    :name: eq:9.3
+    :label: 9.4
+    :name: eq:9.4
 
     W(\varphi, \lambda) = \frac{G M}{R} \sum_{l=2}^{\infty} \left(\frac{r}{R}\right)^l P_l(\cos\psi)
 
@@ -70,8 +83,8 @@ The *standard gravitational parameter* (:math:`GM`) of the planetary body can be
 The cosine of the :ref:`zenith angle <zenith-angle>` (:math:`\cos\psi`) can also be calculated using the dot product between the geocentric unit vectors of the :ref:`tide-generating body <ephemerides>` (:math:`\hat{\mathbf{R}}`) and the point on the Earth's surface (:math:`\hat{\mathbf{r}}`) :cite:p:`Mathews:1997js`:
 
 .. math::
-    :label: 9.4
-    :name: eq:9.4
+    :label: 9.5
+    :name: eq:9.5
 
     \cos\psi = \hat{\mathbf{r}}\cdot\hat{\mathbf{R}}
              = \frac{\mathbf{r}\cdot\mathbf{R}}{|\mathbf{r}\mathbf{R}|}

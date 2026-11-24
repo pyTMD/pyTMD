@@ -36,6 +36,7 @@ octave-workspace
 __pycache__
 build/
 _build/
+jupyter_execute/
 dist/
 develop-eggs/
 run/

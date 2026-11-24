@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_test_data.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (11/2026)
 Download files necessary to run the test suite
 
 CALLING SEQUENCE:
@@ -12,6 +12,7 @@ COMMAND LINE OPTIONS:
     -D X, --directory X: working data directory
     -p X, --provider X: data provider ('figshare' or 'zenodo')
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -22,6 +23,11 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
+    Updated 09/2026: put try/except in fetch_test_data function
+        verify existence of output directory in the download functions
+        added option to not extract contents from zip files
+    Updated 08/2026: use logging.getLogger in individual functions
     Updated 04/2026: check if needing to include algorithm in the hash
     Updated 03/2026: try multiple providers for fetching data
     Updated 12/2025: use URL class to build and operate on URLs
@@ -44,6 +50,8 @@ import pyTMD.utilities
 _default_directory = pyTMD.utilities.get_cache_path()
 # default ssl context
 _default_ssl_context = pyTMD.utilities._default_ssl_context
+# available providers
+_default_providers = ["zenodo", "figshare"]
 # repository API urls
 _figshare_api_url = "https://api.figshare.com/v2"
 _zenodo_api_url = "https://zenodo.org/api"
@@ -51,7 +59,7 @@ _zenodo_api_url = "https://zenodo.org/api"
 
 def fetch_test_data(
     directory: str | pathlib.Path = _default_directory,
-    provider: str = "zenodo",
+    provider: list[str] = _default_providers,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -62,7 +70,7 @@ def fetch_test_data(
     ----------
     directory: str or pathlib.Path
         Download directory
-    provider: str, default 'zenodo'
+    provider: list[str], default ['zenodo', 'figshare']
         Data provider
 
         - ``'figshare'``
@@ -77,22 +85,37 @@ def fetch_test_data(
     directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # create logger for verbosity level
     logger = pyTMD.utilities.build_logger(__name__, level=logging.INFO)
-    if provider == "figshare":
-        _figshare(directory=directory, logger=logger, **kwargs)
-    elif provider == "zenodo":
-        _zenodo(directory=directory, logger=logger, **kwargs)
-    else:
-        raise ValueError(f"Unknown data provider: {provider}")
+    # verify providers is list
+    if isinstance(provider, str):
+        provider = [provider]
+    # fetch test data
+    for p in provider:
+        if p not in _default_providers:
+            raise ValueError(f"Unknown data provider: {p}")
+        # try to fetch data from provider
+        try:
+            if p.lower() == "figshare":
+                _figshare(directory=directory, **kwargs)
+            elif p.lower() == "zenodo":
+                _zenodo(directory=directory, **kwargs)
+        except Exception as exc:
+            # output error message and continue to next provider
+            logger.debug(f"Error fetching data from {p}: {exc}")
+            continue
+        else:
+            # break loop if successful
+            break
 
 
 # PURPOSE: download data files from figshare
 def _figshare(
     directory: str | pathlib.Path = _default_directory,
     article: str = "30260326",
+    extract: bool = True,
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
-    logger: logging.Logger | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -105,17 +128,24 @@ def _figshare(
         Download directory
     article: str, default '30260326'
         figshare article number
+    extract: bool, default True
+        Extract contents from compressed files
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
-    logger: logging.logger object
-        Logger for outputting file transfer information
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Permissions mode of output local file
     """
+    # get logger
+    logger = logging.getLogger(__name__)
+    # create download directory if it doesn't exist
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # figshare API host
     HOST = pyTMD.utilities.URL(_figshare_api_url)
     articles_api = HOST.joinpath("articles", article)
@@ -138,7 +168,9 @@ def _figshare(
         # output file information
         logger.info(download.urlname)
         # get remote file as a byte-stream
-        remote_buffer = download.get(timeout=timeout, context=context)
+        remote_buffer = download.get(
+            timeout=timeout, context=context, progress=progress
+        )
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(
             remote_buffer, include_algorithm=include_algorithm
@@ -147,7 +179,7 @@ def _figshare(
         if computed_md5 != f["supplied_md5"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
         # download file or extract files from zip
-        if pathlib.Path(f["name"]).suffix == ".zip":
+        if extract and pathlib.Path(f["filename"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
@@ -167,10 +199,11 @@ def _figshare(
 def _zenodo(
     directory: str | pathlib.Path = _default_directory,
     record: str = "18091740",
+    extract: bool = True,
     timeout: int | None = None,
     context: ssl.SSLContext = _default_ssl_context,
     chunk: int = 16384,
-    logger: logging.Logger | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -183,17 +216,24 @@ def _zenodo(
         Download directory
     record: str, default '18091740'
         Zenodo record number
+    extract: bool, default True
+        Extract contents from compressed files
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     context: obj, default pyTMD.utilities._default_ssl_context
         ``SSL`` context for ``urllib`` opener object
     chunk: int, default 16384
         Chunk size for transfer encoding
-    logger: logging.logger object
-        Logger for outputting file transfer information
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Permissions mode of output local file
     """
+    # get logger
+    logger = logging.getLogger(__name__)
+    # create download directory if it doesn't exist
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(parents=True, exist_ok=True, mode=mode)
     # zenodo API host
     HOST = pyTMD.utilities.URL(_zenodo_api_url)
     records_api = HOST.joinpath("records", record)
@@ -221,7 +261,9 @@ def _zenodo(
         # output file information
         logger.info(download.urlname)
         # get remote file as a byte-stream
-        remote_buffer = download.get(timeout=timeout, context=context)
+        remote_buffer = download.get(
+            timeout=timeout, context=context, progress=progress
+        )
         # verify MD5 checksums
         computed_md5 = pyTMD.utilities.get_hash(
             remote_buffer, include_algorithm=include_algorithm
@@ -230,7 +272,7 @@ def _zenodo(
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
         # download file or extract files from zip
-        if pathlib.Path(f["filename"]).suffix == ".zip":
+        if extract and pathlib.Path(f["filename"]).suffix == ".zip":
             # extract the zip file into the local directory
             with zipfile.ZipFile(remote_buffer) as z:
                 # extract each file and set permissions
@@ -282,6 +324,13 @@ def arguments():
         default=3600,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -301,22 +350,13 @@ def main():
     args, _ = parser.parse_known_args()
 
     # fetch test data
-    for provider in args.provider:
-        # try to fetch data from provider
-        try:
-            fetch_test_data(
-                directory=args.directory,
-                provider=provider,
-                timeout=args.timeout,
-                mode=args.mode,
-            )
-        except Exception as exc:
-            # output error message and continue to next provider
-            logging.error(f"Error fetching data from {provider}: {exc}")
-            continue
-        else:
-            # break loop if successful
-            break
+    fetch_test_data(
+        directory=args.directory,
+        provider=args.provider,
+        timeout=args.timeout,
+        progress=args.progress,
+        mode=args.mode,
+    )
 
 
 # run main program

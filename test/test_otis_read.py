@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-test_otis_read.py (11/2025)
+test_otis_read.py (11/2026)
 Tests for OTIS-formatted tide model data
 
 Tests that constituents are being extracted
@@ -19,6 +19,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/timescale/
 
 UPDATE HISTORY:
+    Updated 11/2026: using new xarray-based AntTG read function
     Updated 11/2025: using new xarray interface for tidal model data
     Updated 10/2025: split directories between validation and model data
         fetch data from pyTMD developers test data repository
@@ -112,34 +113,7 @@ class Test_CATS2008:
 
             # open Antarctic Tide Gauge (AntTG) database
             AntTG = directory.joinpath('AntTG_ocean_height_v1.txt')
-            with AntTG.open(mode='r', encoding='utf8') as f:
-                file_contents = f.read().splitlines()
-            # counts the number of lines in the header
-            count = 0
-            HEADER = True
-            # Reading over header text
-            while HEADER:
-                # check if file line at count starts with matlab comment string
-                HEADER = file_contents[count].startswith('%')
-                # add 1 to counter
-                count += 1
-            # rewind 1 line
-            count -= 1
-            # iterate over number of stations
-            antarctic_stations = (len(file_contents) - count)//10
-            stations = [None]*antarctic_stations
-            shortname = [None]*antarctic_stations
-            station_type = [None]*antarctic_stations
-            station_lon = np.zeros((antarctic_stations))
-            station_lat = np.zeros((antarctic_stations))
-            for s in range(antarctic_stations):
-                i = count + s*10
-                stations[s] = file_contents[i + 1].strip()
-                shortname[s] = file_contents[i + 3].strip()
-                lat,lon,_,_ = file_contents[i + 4].split()
-                station_type[s] = file_contents[i + 6].strip()
-                station_lon[s] = np.float64(lon)
-                station_lat[s] = np.float64(lat)
+            TG = pyTMD.io.AntTG.open_dataset(AntTG)
 
             # calculate daily results for a time period
             # serial dates for matlab program (days since 0000-01-01T00:00:00)
@@ -148,19 +122,20 @@ class Test_CATS2008:
 
             # run Matlab TMD program with octave
             # MODE: OB time series
-            validation,_ = octave.tmd_tide_pred_plus(str(CFname), SDtime,
-                station_lat, station_lon,
-                group, nout=2)
+            validation,_ = octave.tmd_tide_pred_plus(
+                str(CFname), SDtime, TG.y.values, TG.x.values, group, nout=2
+            )
             
             # create dataframe for validation data
-            df = pd.DataFrame(data=validation, index=SDtime, columns=shortname)
+            columns = TG.shortname.values
+            df = pd.DataFrame(data=validation, index=SDtime, columns=columns)
 
             # add attributes for each valid station
-            for i,s in enumerate(shortname):
-                df[s].attrs['station'] = stations[i]
-                df[s].attrs['type'] = station_type[i]
-                df[s].attrs['latitude'] = station_lat[i]
-                df[s].attrs['longitude'] = station_lon[i]
+            for i,s in enumerate(columns):
+                df[s].attrs['station'] = TG.station.values[i]
+                df[s].attrs['type'] = TG.sensor.values[i]
+                df[s].attrs['latitude'] = TG.y.values[i]
+                df[s].attrs['longitude'] = TG.x.values[i]
 
             # save to (gzipped) csv
             output_file = filepath.joinpath(f'TMDv2.5_CATS2008_{group}.csv.gz')
@@ -190,34 +165,7 @@ class Test_CATS2008:
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = directory.joinpath('AntTG_ocean_height_v1.txt')
-        with AntTG.open(mode='r', encoding='utf8') as f:
-            file_contents = f.read().splitlines()
-        # counts the number of lines in the header
-        count = 0
-        HEADER = True
-        # Reading over header text
-        while HEADER:
-            # check if file line at count starts with matlab comment string
-            HEADER = file_contents[count].startswith('%')
-            # add 1 to counter
-            count += 1
-        # rewind 1 line
-        count -= 1
-        # iterate over number of stations
-        antarctic_stations = (len(file_contents) - count)//10
-        stations = [None]*antarctic_stations
-        shortname = [None]*antarctic_stations
-        station_type = [None]*antarctic_stations
-        station_lon = np.zeros((antarctic_stations))
-        station_lat = np.zeros((antarctic_stations))
-        for s in range(antarctic_stations):
-            i = count + s*10
-            stations[s] = file_contents[i + 1].strip()
-            shortname[s] = file_contents[i + 3].strip()
-            lat,lon,_,_ = file_contents[i + 4].split()
-            station_type[s] = file_contents[i + 6].strip()
-            station_lon[s] = np.float64(lon)
-            station_lat[s] = np.float64(lat)
+        TG = pyTMD.io.AntTG.open_dataset(AntTG)
 
         # save complex amplitude for each current
         hc = {}
@@ -225,7 +173,7 @@ class Test_CATS2008:
         for group in GROUPS:
             # extract tidal harmonic constants out of a tidal model
             amp,ph,D,cons = octave.tmd_extract_HC(str(CFname),
-                station_lat, station_lon, group, nout=4)
+                TG.y.values, TG.x.values, group, nout=4)
             # calculate complex phase in radians for Euler's
             cph = -1j*ph*np.pi/180.0
             # calculate constituent oscillation for station
@@ -243,14 +191,15 @@ class Test_CATS2008:
             index.extend(cindex)
 
         # create dataframe for validation data
-        df = pd.DataFrame(data=ellipse, index=index, columns=shortname)
+        columns = TG.shortname.values
+        df = pd.DataFrame(data=ellipse, index=index, columns=columns)
 
         # add attributes for each valid station
-        for i,s in enumerate(shortname):
-            df[s].attrs['station'] = stations[i]
-            df[s].attrs['type'] = station_type[i]
-            df[s].attrs['latitude'] = station_lat[i]
-            df[s].attrs['longitude'] = station_lon[i]
+        for i,s in enumerate(columns):
+            df[s].attrs['station'] = TG.station.values[i]
+            df[s].attrs['type'] = TG.sensor.values[i]
+            df[s].attrs['latitude'] = TG.y.values[i]
+            df[s].attrs['longitude'] = TG.x.values[i]
 
         # save to (gzipped) csv
         output_file = filepath.joinpath(f'TMDv2.5_CATS2008_ellipse.csv.gz')
@@ -279,58 +228,19 @@ class Test_CATS2008:
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
-        with AntTG.open(mode='r', encoding='utf8') as f:
-            file_contents = f.read().splitlines()
-        # counts the number of lines in the header
-        count = 0
-        HEADER = True
-        # Reading over header text
-        while HEADER:
-            # check if file line at count starts with matlab comment string
-            HEADER = file_contents[count].startswith('%')
-            # add 1 to counter
-            count += 1
-        # rewind 1 line
-        count -= 1
-        # iterate over number of stations
-        constituents = ['q1','o1','p1','k1','n2','m2','s2','k2']
-        antarctic_stations = (len(file_contents) - count)//10
-        stations = [None]*antarctic_stations
-        shortname = [None]*antarctic_stations
-        station_lon = np.zeros((antarctic_stations))
-        station_lat = np.zeros((antarctic_stations))
-        station_amp = np.ma.zeros((antarctic_stations,len(constituents)))
-        station_ph = np.ma.zeros((antarctic_stations,len(constituents)))
-        for s in range(antarctic_stations):
-            i = count + s*10
-            stations[s] = file_contents[i + 1].strip()
-            shortname[s] = file_contents[i + 3].strip()
-            lat,lon,_,_ = file_contents[i + 4].split()
-            station_lon[s] = np.float64(lon)
-            station_lat[s] = np.float64(lat)
-            amp = file_contents[i + 7].split()
-            ph = file_contents[i + 8].split()
-            station_amp.data[s,:] = np.array(amp,dtype=np.float64)
-            station_ph.data[s,:] = np.array(ph,dtype=np.float64)
-        # update masks where NaN
-        station_amp.mask = np.isnan(station_amp.data) | \
-            (station_amp.data == 0.0)
-        station_ph.mask = np.isnan(station_ph.data)
-        # replace nans with fill values
-        station_amp.data[station_amp.mask] = station_amp.fill_value
-        station_ph.data[station_ph.mask] = station_ph.fill_value
-        # calculate complex constituent oscillations
-        station_z = station_amp*np.exp(-1j*station_ph*np.pi/180.0)
+        TG = pyTMD.io.AntTG.open_dataset(AntTG)
+        constituents = TG.attrs['constituents']
 
         # convert data to coordinate reference system of model
-        X, Y = ds.tmd.coords_as(station_lon, station_lat,
-            type='time series', crs=4326)
+        X, Y = ds.tmd.coords_as(TG.x, TG.y,
+            type='time series', crs=TG.attrs['crs'])
         # extract amplitude and phase from tide model
         local = ds.tmd.interp(X, Y, extrapolate=True)
 
         # find stations with all constituents valid
-        valid_stations = np.all(np.logical_not(station_z.mask), axis=1)
+        valid_stations = np.ones_like(TG.x, dtype=bool)
         for i,c in enumerate(constituents):
+            valid_stations &= np.isfinite(TG[c].values)
             valid_stations &= np.isfinite(local[c].values)
         # valid stations for all constituents
         invalid_list = ['Ablation Lake','Amery','Bahia Esperanza','Beaver Lake',
@@ -340,7 +250,7 @@ class Test_CATS2008:
             'Mikkelsen','Palmer','Primavera','Rutford GL','Rutford GPS',
             'Rothera','Scott Base','Seymour Is','Terra Nova Bay']
         # remove coastal stations from the list
-        invalid_stations = [i for i,s in enumerate(shortname)
+        invalid_stations = [i for i,s in enumerate(TG.shortname)
             if s in invalid_list]
         valid_stations[invalid_stations] = False
         nv = len(valid_stations)
@@ -353,8 +263,9 @@ class Test_CATS2008:
         for i,c in enumerate(constituents):
             # reduce to valid stations
             model_z = local[c].values[valid]
+            station_z = TG[c].values[valid]
             # calculate difference and rms
-            difference = np.abs(station_z[valid,i] - model_z)
+            difference = np.abs(station_z - model_z)
             variance = np.sum(difference**2)/(2.0*nv)
             # round to precision of King et al. (2011)
             rms[i] = np.round(np.sqrt(variance), decimals=1)
@@ -373,38 +284,11 @@ class Test_CATS2008:
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
-        with AntTG.open(mode='r', encoding='utf8') as f:
-            file_contents = f.read().splitlines()
-        # counts the number of lines in the header
-        count = 0
-        HEADER = True
-        # Reading over header text
-        while HEADER:
-            # check if file line at count starts with matlab comment string
-            HEADER = file_contents[count].startswith('%')
-            # add 1 to counter
-            count += 1
-        # rewind 1 line
-        count -= 1
-        # iterate over number of stations
-        antarctic_stations = (len(file_contents) - count)//10
-        stations = [None]*antarctic_stations
-        shortname = [None]*antarctic_stations
-        station_type = [None]*antarctic_stations
-        station_lon = np.zeros((antarctic_stations))
-        station_lat = np.zeros((antarctic_stations))
-        for s in range(antarctic_stations):
-            i = count + s*10
-            stations[s] = file_contents[i + 1].strip()
-            shortname[s] = file_contents[i + 3].strip()
-            lat,lon,_,_ = file_contents[i + 4].split()
-            station_type[s] = file_contents[i + 6].strip()
-            station_lon[s] = np.float64(lon)
-            station_lat[s] = np.float64(lat)
+        TG = pyTMD.io.AntTG.open_dataset(AntTG)
 
         # convert data to coordinate reference system of model
-        X, Y = dtree.tmd.coords_as(station_lon, station_lat,
-            type='time series', crs=4326)
+        X, Y = dtree.tmd.coords_as(TG.x, TG.y,
+            type='time series', crs=TG.attrs['crs'])
         # extract amplitude and phase from tide model
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
@@ -416,7 +300,7 @@ class Test_CATS2008:
             'Mikkelsen','Palmer','Primavera','Rutford GL','Rutford GPS',
             'Rothera','Scott Base','Seymour Is','Terra Nova Bay']
         # remove coastal stations from the list
-        valid_stations=[i for i,s in enumerate(shortname)
+        valid_stations=[i for i,s in enumerate(TG.shortname.values)
             if s not in invalid_list]
         # will verify differences between model outputs are within tolerance
         eps = np.finfo(np.float16).eps
@@ -444,7 +328,7 @@ class Test_CATS2008:
             # for each valid station
             for i,s in enumerate(valid_stations):
                 # get station name
-                station = shortname[s]
+                station = TG.shortname.values[s]
                 # calculate differences between matlab and python version
                 difference = tide.isel(station=s) - df[station].values
                 difference = difference.where(~np.isnan(difference), other=0.0)
@@ -461,34 +345,7 @@ class Test_CATS2008:
 
         # open Antarctic Tide Gauge (AntTG) database
         AntTG = self.directory.joinpath('AntTG_ocean_height_v1.txt')
-        with AntTG.open(mode='r', encoding='utf8') as f:
-            file_contents = f.read().splitlines()
-        # counts the number of lines in the header
-        count = 0
-        HEADER = True
-        # Reading over header text
-        while HEADER:
-            # check if file line at count starts with matlab comment string
-            HEADER = file_contents[count].startswith('%')
-            # add 1 to counter
-            count += 1
-        # rewind 1 line
-        count -= 1
-        # iterate over number of stations
-        antarctic_stations = (len(file_contents) - count)//10
-        stations = [None]*antarctic_stations
-        shortname = [None]*antarctic_stations
-        station_type = [None]*antarctic_stations
-        station_lon = np.zeros((antarctic_stations))
-        station_lat = np.zeros((antarctic_stations))
-        for s in range(antarctic_stations):
-            i = count + s*10
-            stations[s] = file_contents[i + 1].strip()
-            shortname[s] = file_contents[i + 3].strip()
-            lat,lon,_,_ = file_contents[i + 4].split()
-            station_type[s] = file_contents[i + 6].strip()
-            station_lon[s] = np.float64(lon)
-            station_lat[s] = np.float64(lat)
+        TG = pyTMD.io.AntTG.open_dataset(AntTG)
 
         # compare outputs at each station point
         invalid_list = ['Ablation Lake','Amery','Bahia Esperanza','Beaver Lake',
@@ -498,7 +355,7 @@ class Test_CATS2008:
             'Mikkelsen','Palmer','Primavera','Rutford GL','Rutford GPS',
             'Rothera','Scott Base','Seymour Is','Terra Nova Bay']
         # remove coastal stations from the list
-        valid_stations=[i for i,s in enumerate(shortname)
+        valid_stations=[i for i,s in enumerate(TG.shortname.values)
             if s not in invalid_list]
         # will verify differences between model outputs are within tolerance
         eps = np.finfo(np.float16).eps
@@ -512,8 +369,8 @@ class Test_CATS2008:
         nc = int(df.shape[0]//4)
 
         # convert data to coordinate reference system of model
-        X, Y = dtree.tmd.coords_as(station_lon, station_lat,
-            type='time series', crs=4326)
+        X, Y = dtree.tmd.coords_as(TG.x, TG.y,
+            type='time series', crs=TG.attrs['crs'])
         # extract amplitude and phase from tide model
         local = dtree.tmd.interp(X, Y, extrapolate=True)
 
@@ -526,7 +383,7 @@ class Test_CATS2008:
 
         # for each valid station
         for i,s in enumerate(valid_stations):
-            station = shortname[s]
+            station = TG.shortname.values[s]
             # extract ellipse parameters from dataframe
             umajor,uminor,uincl,uphase = df[station].values.reshape(4,nc)
             # calculate differences between matlab and python version

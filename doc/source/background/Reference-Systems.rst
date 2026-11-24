@@ -14,6 +14,7 @@ The :math:`xy` plane is also called the equatorial plane.
     :caption: Geocentric Cartesian Coordinate System
     :align: center
 
+As the shape of the Earth can be well approximated by an ellipsoid, positions on the Earth's surface are often described in terms of *geodetic coordinates*.
 Geodetic coordinates (longitude :math:`\lambda`, latitude :math:`\varphi`, and height :math:`h`) are used to describe the position of a point on the Earth with respect to a defined ellipsoid.
 Changing the terrestrial reference system can involve both translations and rotations of the reference system :cite:p:`Urban:2013vl`.
 One method of transformation involves converting from a geographic coordinate system into a Cartesian coordinate system, and then performing matrix transformations [:ref:`Equation 6.1 <eq:6.1>`].
@@ -56,13 +57,36 @@ Coordinate system definitions, such as the International Terrestrial Reference F
 Geocentric Coordinates
 ======================
 
-Similar to ECEF cartesian coordinates, geocentric coordinates are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
+Similar to ECEF cartesian coordinates, *geocentric coordinates* are defined with respect to the center of the Earth :cite:p:`HofmannWellenhof:2006hy,Snyder:1982gf`.
+This is in contrast to geodetic coordinates, which are defined to have latitudes *normal* to the surface of the Earth.
+
+.. plot:: ./background/geodetic-coordinates.py
+    :caption: Geodetic and Geocentric Coordinates
+    :align: center
+
 Geocentric coordinates are used to estimate :ref:`spherical-harmonics` coefficients, and for performing coordinate system rotations.
 Geocentric longitudes are identical to geodetic longitudes, but geocentric latitudes can differ from geodetic latitudes by approximately 0.2 degrees.
+For applications using a spherical Earth model, the geocentric and geodetic latitudes are identical.
 
 .. plot:: ./background/geocentric-latitude.py
     :caption: Difference between Geodetic and Geocentric Latitude
     :align: center
+
+Geoid Height
+============
+
+Compared to the reference ellipsoid, a better representation of the figure of the Earth can be defined based on the Earth's gravitational field :cite:p:`Torge:2023bu`.
+The :term:`geoid <Geoid>` is an *equipotential surface* set to coincide with an idealized global mean sea level (i.e. if the oceans were at rest) :cite:p:`HofmannWellenhof:2006hy`.
+It serves as the reference surface to describe any topographic heights above (or below) mean sea level.
+As with :ref:`solid-earth-tides`, the geoid has a :ref:`permanent tide <permanent-tide>` component due to the Earth being in the presence of the Sun and Moon :cite:p:`Makinen:2009dm,Torge:2023bu`.
+
+The distances between the geoid and the reference ellipsoid are called *geoid height* or geoidal undulations (:math:`N`), and the distances between the geoid and points on the Earth's surface are called *orthometric heights* (:math:`H`) :cite:p:`HofmannWellenhof:2006hy`.
+
+.. figure:: ../_assets/geoid_height.svg
+    :width: 400
+    :align: center
+
+    Relationship between the reference ellipsoid, geoid, and surface topography :cite:p:`NRC:1997ea,Torge:2023bu`
 
 .. _celestial-reference:
 
@@ -80,18 +104,64 @@ Transforming between celestial (:math:`\mathbf{x}_{CRS}`) and terrestrial (:math
 
 In ``pyTMD``, these transformations are used to convert planetary :term:`ephemerides <Ephemerides>` from a celestial reference frame to a terrestrial reference frame.
 
-Geoid Height
-============
+.. _barycentric-coordinates:
 
-The height above mean sea level of a point on the Earth is defined with respect to an irregular surface known as the :term:`geoid <Geoid>`.
-The :term:`geoid <Geoid>` is the instantaneous shape of the Earth's gravitational field, which would coincide with global mean sea level if the oceans were at rest.
-It is an equipotential surface, or a surface of constant potential energy :cite:p:`HofmannWellenhof:2006hy`.
-The distance between the geoid and the reference ellipsoid is called the geoid height (:math:`N`) :cite:p:`HofmannWellenhof:2006hy`.
+Barycentric Coordinates
+=======================
 
-.. figure:: ../_assets/geoid_height.svg
-    :width: 400
+Some tide models are computed using the finite-element method and defined on unstructured meshes.
+These finite element meshes can use first-order (linear) or higher-order elements.
+Linear triangular elements have their three nodes at the vertices (:math:`N_1`, :math:`N_2`, :math:`N_3`).
+Quadratic triangular elements have three additional nodes at the edge midpoints.
+The position of any point :math:`P` within a triangle can be expressed in terms areal weights known as **barycentric coordinates** :math:`(\xi, \eta, \lambda)`:
+
+.. math::
+    :label: 6.6
+    :name: eq:6.6
+
+    P = \xi \, P_1 + \eta \, P_2 + \lambda \, P_3
+
+Geometrically, these weights are derived from the ratios of sub-triangle areas (:math:`A_1`, :math:`A_2`, :math:`A_3`) with respect to the total triangle area (:math:`A`):
+
+.. math::
+    :label: 6.7
+    :name: eq:6.7
+
+    \xi = \frac{A_1}{A}, \qquad
+    \eta = \frac{A_2}{A}, \qquad
+    \lambda = \frac{A_3}{A} = 1 - \xi - \eta
+
+Here, :math:`A_1` is the area of the sub-triangle opposite :math:`N_1`, :math:`A_2` is the area of the sub-triangle opposite :math:`N_2`, and :math:`A_3` is the area of the sub-triangle opposite :math:`N_3`.
+
+.. plot:: ./background/finite-elements.py
+    :caption: Linear and quadratic triangular finite elements
+    :width: 80%
     :align: center
 
-    Relationship between ellipsoid height, geoid height, and topographic height :cite:p:`NRC:1997ea`
+The shape functions of finite elements have two important properties:
+
+- **Kronecker delta property**: the shape functions are equal to one at their respective nodes and equal to zero at all other nodes
+- **Partition of unity property**: the sum of the shape functions is equal to 1 for all points within the element
+
+Because of these properties, barycentric coordinates can be used to help determine if a point is inside any given triangle:
+
+- If all three barycentric coordinates are within :math:`[0, 1]`, then the point is inside the element.
+- If any coordinate is negative or beyond that range, then the point lies outside that element.
+
+.. important::
+    Knowing the order of the nodes for each element is *crucial* for calculating the triangle areas and interpolation shape functions.
+
+The standard order for nodes in linear triangular elements is counterclockwise.
+For a global finite element mesh, an element with a clockwise order might straddle the model boundary.
+``pyTMD`` checks the *winding number* of each element to determine the polygon orientation (clockwise or counterclockwise).
+Quadratic elements can be more complicated and have different node orderings between the vertices and midside edges.
+Some standard node orderings for quadratic elements are:
+
+- counterclockwise (:math:`V_1\rightarrow` :math:`E_{12}\rightarrow` :math:`V_2\rightarrow` :math:`E_{23}\rightarrow` :math:`V_3\rightarrow` :math:`E_{31}`)
+- vertices-to-midpoints (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{12}\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}`)
+- vertices-to-opposite-midpoints (:math:`V_1\rightarrow` :math:`V_2\rightarrow` :math:`V_3\rightarrow` :math:`E_{23}\rightarrow` :math:`E_{31}\rightarrow` :math:`E_{12}`)
+
+.. note::
+    For quadratic elements, ``pyTMD`` presently only supports the counterclockwise node order for the unstructured ("native") FES models :cite:p:`Lyard:2025tr`.
 
 .. |degree|    unicode:: U+00B0 .. DEGREE SIGN

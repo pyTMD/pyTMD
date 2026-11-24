@@ -56,6 +56,16 @@ General Methods
 
 .. autofunction:: pyTMD.utilities.symlink
 
+.. autofunction:: pyTMD.utilities.progress_bar
+
+.. autofunction:: pyTMD.utilities.content_length
+
+.. autofunction:: pyTMD.utilities.ftp_size
+
+.. autofunction:: pyTMD.utilities.copyfileobj
+
+.. autofunction:: pyTMD.utilities.retrbinary
+
 .. autofunction:: pyTMD.utilities.check_ftp_connection
 
 .. autofunction:: pyTMD.utilities.ftp_list

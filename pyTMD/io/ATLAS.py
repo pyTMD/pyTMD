@@ -122,6 +122,8 @@ def open_dataset(
             ds2[c].attrs["units"] = units
     # merge datasets
     ds = xr.merge([ds1, ds2], combine_attrs=combine_attrs, compat="override")
+    # mask where there are invalid bathymetries
+    ds = ds.where(ds.bathymetry.notnull(), None, drop=False)
     # return xarray dataset
     return ds
 

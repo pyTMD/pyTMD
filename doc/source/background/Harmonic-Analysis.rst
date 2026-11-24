@@ -117,6 +117,17 @@ Assuming that the :term:`tidal admittance <Admittance>` varies smoothly with fre
 This can be the case when the record of observations is too short to independently resolve constituents that are close in frequency :cite:p:`Foreman:2009bg`.
 Including inference as part of the fitting process can avoid contaminating the regression of major constituents, and can improve their overall estimation :cite:p:`Foreman:1989dt,Foreman:2009bg`.
 
-In :py:func:`pyTMD.solve.constants`, this inference is performed *after* the primary regression using a bootstrap iteration procedure.
+In :py:func:`pyTMD.solve.constants`, this inference can be performed *after* the primary regression using a bootstrap iteration procedure.
 After each fit, the time series of the inferred minor constituents is reconstructed and then removed from the observation time series.
 The process is repeated and the observation vector :math:`\mathbf{h}` is continually modified until the specified number of iterations has been reached.
+
+Alternatively, the inferred minor constituents can be included *directly* in the design matrix using a sensitivity kernel approach.
+Each inferred minor constituent :math:`j` is a linear combination of the complex amplitudes of the major constituents, where the coefficients are found from either fixed relationships or interpolated admittances.
+The contribution of every minor constituent is then added to the cosine (real) and sine (imaginary) rows of each major constituent :math:`k` :cite:p:`Foreman:2009bg`:
+
+.. math::
+    :label: 5.5
+    :name: eq:5.5
+
+    \mathbf{M}_{c_k} &= f_k(t)\cos(G_k(t) + u_k(t)) + \sum_j a_{jk} f_j(t)\cos(G_j(t) + u_j(t)) \\
+    \mathbf{M}_{s_k} &= -f_k(t)\sin(G_k(t) + u_k(t)) - \sum_j a_{jk} f_j(t)\sin(G_j(t) + u_j(t))

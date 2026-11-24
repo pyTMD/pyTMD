@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 fetch_aviso_fes.py
-Written by Tyler Sutterley (03/2026)
+Written by Tyler Sutterley (11/2026)
 Downloads the FES (Finite Element Solution) global tide model from AVISO
 Decompresses the model tar files into the constituent files and auxiliary files
     https://www.aviso.altimetry.fr/data/products/auxiliary-products/
@@ -33,6 +33,7 @@ COMMAND LINE OPTIONS:
         (FES2014 and FES2022)
     -G, --gzip: compress output ASCII and netCDF4 tide files
     -t X, --timeout X: timeout in seconds for blocking operations
+    --progress: display progress bars for file transfers
     -M X, --mode X: Local permissions mode of the files downloaded
 
 PYTHON DEPENDENCIES:
@@ -43,6 +44,8 @@ PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
+    Updated 11/2026: add option to display progress bars for transfers
+    Updated 08/2026: use logging.getLogger in individual functions
     Updated 03/2026: added option to download FES2022_native
     Updated 12/2025: simplify function call signatures
     Updated 10/2025: change default directory for tide models to cache
@@ -109,6 +112,7 @@ def fetch_aviso_fes(
     extrapolated: bool = False,
     compressed: bool = False,
     timeout: int | None = None,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -134,6 +138,8 @@ def fetch_aviso_fes(
         Compress output ASCII and netCDF4 tide files
     timeout: int, default None
         Timeout in seconds for blocking operations
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -150,24 +156,24 @@ def fetch_aviso_fes(
         _fes_tar(
             model,
             f,
-            logger,
             directory=directory,
             load=load,
             currents=currents,
             extrapolated=extrapolated,
             compressed=compressed,
+            progress=progress,
             mode=mode,
         )
     elif model in ("FES2022", "FES2022_native"):
         _fes_list(
             model,
             f,
-            logger,
             directory=directory,
             load=load,
             currents=currents,
             extrapolated=extrapolated,
             compressed=compressed,
+            progress=progress,
             mode=mode,
         )
     else:
@@ -182,12 +188,12 @@ def fetch_aviso_fes(
 def _fes_tar(
     model: str,
     f: ftplib.FTP,
-    logger: logging.Logger,
     directory: str | pathlib.Path | None = _default_directory,
     load: bool = False,
     currents: bool = False,
     extrapolated: bool = False,
     compressed: bool = False,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -199,8 +205,6 @@ def _fes_tar(
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
-    logger: logging.logger object
-        Logger for outputting file transfer information
     directory: str or pathlib.Path
         Working data directory
     load: bool, default False
@@ -211,6 +215,8 @@ def _fes_tar(
         Download extrapolated tide model outputs
     compressed: bool, default False
         Compress output ASCII and netCDF4 tide files
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
@@ -308,13 +314,13 @@ def _fes_tar(
     ):
         # download file from ftp and decompress tar files
         _ftp_download(
-            logger,
             f,
             remotepath,
             localpath,
             decompress=tarmode,
             flatten=flatten,
             compressed=compressed,
+            progress=progress,
             mode=mode,
         )
 
@@ -324,12 +330,12 @@ def _fes_tar(
 def _fes_list(
     model: str,
     f: ftplib.FTP,
-    logger: logging.Logger,
     directory: str | pathlib.Path | None = _default_directory,
     load: bool = False,
     currents: bool = False,
     extrapolated: bool = False,
     compressed: bool = False,
+    progress: bool = False,
     mode: oct = 0o775,
 ):
     """
@@ -341,8 +347,6 @@ def _fes_list(
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
-    logger: logging.logger object
-        Logger for outputting file transfer information
     directory: str or pathlib.Path
         Working data directory
     load: bool, default False
@@ -353,12 +357,15 @@ def _fes_list(
         Download extrapolated tide model outputs
     compressed: bool, default False
         Compress output ASCII and netCDF4 tide files
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
 
     # validate local directory
     directory = pyTMD.utilities.Path(directory).resolve()
+    logger = logging.getLogger(__name__)
 
     # path to remote directory for FES
     FES = {}
@@ -386,13 +393,13 @@ def _fes_list(
             decompress = "lzma" if fi.endswith(".xz") else None
             # download file
             _ftp_download(
-                logger,
                 f,
                 remote_path,
                 local_dir,
                 compressed=compressed,
                 decompress=decompress,
                 chunk=32768,
+                progress=progress,
                 mode=mode,
             )
 
@@ -436,7 +443,6 @@ def _ftp_list(f, remote_path, basename=False, pattern=None, sort=False):
 
 # PURPOSE: pull file from a remote ftp server and potentially decompress
 def _ftp_download(
-    logger,
     f,
     remote_path,
     local_dir,
@@ -444,6 +450,7 @@ def _ftp_download(
     decompress=None,
     flatten=None,
     chunk=8192,
+    progress=False,
     mode=0o775,
 ):
     """
@@ -451,8 +458,6 @@ def _ftp_download(
 
     Parameters
     ----------
-    logger: logging.logger object
-        Logger for outputting file transfer information
     f: ftplib.FTP object
         Active ftp connection to AVISO server
     remote_path: list
@@ -467,9 +472,13 @@ def _ftp_download(
         Flatten tar file structure when extracting files
     chunk: int, default 8192
         Block size for downloading files from ftp server
+    progress: bool, default False
+        Display progress bars for file transfers
     mode: oct, default 0o775
         Local permissions mode of the files downloaded
     """
+    # get logger
+    logger = logging.getLogger(__name__)
     # remote and local directory for data product
     remote_file = posixpath.join("auxiliary", "tide_model", *remote_path)
     # if compressing the output file
@@ -508,7 +517,10 @@ def _ftp_download(
         output.parent.mkdir(mode=mode, parents=True, exist_ok=True)
         # copy remote file contents to bytesIO object
         fileobj = io.BytesIO()
-        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=chunk)
+        pyTMD.utilities.retrbinary(
+            f, remote_file, fileobj, chunk=chunk, progress=progress
+        )
+        # rewind to start of the lzma file
         fileobj.seek(0)
         # decompress lzma file and extract contents to local directory
         with lzma.open(fileobj) as f_in, opener(output, "wb") as f_out:
@@ -521,7 +533,10 @@ def _ftp_download(
         # decompress data from tar file
         # copy remote file contents to bytesIO object
         fileobj = io.BytesIO()
-        f.retrbinary(f"RETR {remote_file}", fileobj.write, blocksize=chunk)
+        pyTMD.utilities.retrbinary(
+            f, remote_file, fileobj, chunk=chunk, progress=progress
+        )
+        # rewind to start of the tar file
         fileobj.seek(0)
         # open the tar file
         tar = tarfile.open(
@@ -584,7 +599,9 @@ def _ftp_download(
         output.parent.mkdir(mode=mode, parents=True, exist_ok=True)
         # copy remote file contents to local file
         with opener(output, "wb") as f_out:
-            f.retrbinary(f"RETR {remote_file}", f_out.write, blocksize=chunk)
+            pyTMD.utilities.retrbinary(
+                f, remote_file, f_out, chunk=chunk, progress=progress
+            )
         # keep remote modification time of file and local access time
         os.utime(output, (output.stat().st_atime, mtime))
         output.chmod(mode=mode)
@@ -693,6 +710,13 @@ def arguments():
         default=360,
         help="Timeout in seconds for blocking operations",
     )
+    # display progress bars for file transfers
+    parser.add_argument(
+        "--progress",
+        default=False,
+        action="store_true",
+        help="Display progress bars for file transfers",
+    )
     # permissions mode of the local directories and files (number in octal)
     parser.add_argument(
         "--mode",
@@ -740,6 +764,7 @@ def main():
                 extrapolated=args.extrapolated,
                 compressed=args.gzip,
                 timeout=args.timeout,
+                progress=args.progress,
                 mode=args.mode,
             )
 

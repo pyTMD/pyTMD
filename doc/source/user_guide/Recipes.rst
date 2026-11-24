@@ -40,6 +40,12 @@ Recipes
 
       :material-outlined:`auto_fix_high;5em`
 
+    .. grid-item-card:: Load Tides
+      :text-align: center
+      :link: ./Load-Tides.html
+
+      :material-outlined:`scale;5em`
+
     .. grid-item-card:: Tidal Aliasing
       :text-align: center
       :link: ./Tidal-Aliasing.html
@@ -63,5 +69,6 @@ Recipes
     ./Cloud-Access.rst
     ./Cropping.ipynb
     ./Extrapolation.ipynb
+    ./Load-Tides.rst
     ./Tidal-Aliasing.ipynb
     ./Time-Zones.ipynb

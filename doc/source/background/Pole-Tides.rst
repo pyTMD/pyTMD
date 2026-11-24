@@ -42,3 +42,11 @@ The time-dependent offsets from the reference rotation pole position, also known
 .. plot:: ./background/polar-motion.py
     :caption: Polar motion estimates from the IERS
     :align: center
+
+Mean and Secular Pole Conventions
+=================================
+
+The wobble parameters are offsets from a *reference* pole, and that reference has been redefined several times.
+Some older conventions used a "conventional mean pole" computed using a modified moving average of the daily pole positions.
+The IERS 2018 update replaced it with a "secular pole", which included only the long-term linear drift of the Earth's figure axis :cite:p:`Desai:2015jr,Wahr:2015dg`.
+The secular pole is intended to keep slower variations, such as those from changes in ice and water storage, within the pole tide rather than being absorbed into the reference.

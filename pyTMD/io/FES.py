@@ -15,6 +15,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 08/2026: regional windows via chunked open + Dataset.tmd.crop
+        (isel_bounds lives in io.dataset; no open-time bounds kwarg)
     Updated 04/2026: added lineage attributes to save model filename(s)
     Updated 03/2026: add reader for FES-native (unstructured) netCDF4 files
     Updated 02/2026: make dataset accessor for FES be a subaccessor from dataset
@@ -107,6 +109,9 @@ def open_mfdataset(
         Open files in parallel using ``dask.delayed``
     kwargs: dict
         Additional keyword arguments for opening FES files
+
+        For regional extracts, pass ``chunks`` and crop after open with
+        :meth:`xarray.Dataset.tmd.crop` (or ``DataTree.tmd.crop``).
 
     Returns
     -------
@@ -294,7 +299,9 @@ def open_fes_netcdf(
             - ``'u'``: zonal currents
             - ``'v'``: meridional currents
     chunks: int, dict, str, or None, default None
-        Variable chunk sizes for dask [see ``xarray.open_dataset``]
+        Variable chunk sizes for dask [see ``xarray.open_dataset``].
+        Pass a non-``None`` value (e.g. ``{}``) for regional workflows so
+        :meth:`xarray.Dataset.tmd.crop` can hyperslab before compute.
     compressed: bool, default False
         Input file is ``gzip`` compressed
 
@@ -338,8 +345,8 @@ def open_fes_netcdf(
     # amplitude and phase variable names
     amp_key = mapping_amp[kwargs["group"]]
     phase_key = mapping_ph[kwargs["group"]]
-    # mask where amplitude or phase are zero
-    valid_values = (tmp[amp_key] != 0) & (tmp[phase_key] != 0)
+    # valid where amplitude or phase is nonzero
+    valid_values = (tmp[amp_key] != 0) | (tmp[phase_key] != 0)
     amplitude = tmp[amp_key].where(valid_values, drop=False)
     phase = tmp[phase_key].where(valid_values, drop=False)
     # create output xarray dataset for file

@@ -8,6 +8,10 @@
 
 .. __: https://github.com/pyTMD/pyTMD/blob/main/pyTMD/math.py
 
+.. autofunction:: pyTMD.math.greater_close
+
+.. autofunction:: pyTMD.math.less_close
+
 .. autofunction:: pyTMD.math.asec2rad
 
 .. autofunction:: pyTMD.math.masec2rad
@@ -37,5 +41,7 @@
 .. autofunction:: pyTMD.math._kronecker_delta
 
 .. autofunction:: pyTMD.math._legendre_norm
+
+.. autofunction:: pyTMD.math.legendreP
 
 .. autofunction:: pyTMD.math.sph_harm

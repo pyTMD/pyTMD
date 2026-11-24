@@ -77,10 +77,13 @@ Internally, ``pyTMD`` includes datasets from the following:
     Cartwright:1971iz
     Cartwright:1973em
     Desai:2015jr
+    Gegout:2010gc
+    Han:1995go
     Hartmann:1995jp
     Petit:2010tp
     Ray:2014fu
     Tamura:1987tp
+    Wang:2012gc
 
 
 Disclaimer
