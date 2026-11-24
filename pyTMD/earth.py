@@ -307,7 +307,7 @@ class EarthDatum:
         if kwargs["omega"] is not None:
             # user defined angular velocity of the Earth
             self.omega = np.float64(kwargs["omega"])
-        elif self.name not in ("GRS67"):
+        elif self.name not in ("GRS67",):
             # for ellipsoids not listing the angular velocity of the Earth
             self.omega = 7292115e-11  # [rad/s]
 

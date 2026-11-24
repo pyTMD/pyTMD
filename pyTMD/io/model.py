@@ -378,7 +378,7 @@ class model:
         Returns the file format for the model
         """
         part1, _, part2 = self.format.partition("-")
-        if self.format in ("ATLAS-compact"):
+        if self.format in ("ATLAS-compact",):
             return part1
         elif "-" in self.format:
             return part2

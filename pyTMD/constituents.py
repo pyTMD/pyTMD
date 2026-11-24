@@ -932,7 +932,7 @@ def nodal_modulation(
             # Linear 3rd degree terms
             term1 = 0.1705 * sinn - 0.0035 * sin2n - 0.0176 * sin2p
             term2 = 1.0 + 0.1705 * cosn - 0.0035 * cos2n - 0.0176 * cos2p
-        elif c in ("l2'"):
+        elif c in ("l2'",):
             # Linear 3rd degree terms
             term1 = -0.2495 * sinn
             term2 = 1.0 + 0.1315 * cosn
@@ -971,42 +971,42 @@ def nodal_modulation(
             f[:, i] = ftmp[:, 0] ** 3
             u[:, i] = 3.0 * utmp[:, 0]
             continue
-        elif c in ("2k2"):
+        elif c in ("2k2",):
             # compound tides calculated using recursion
             parents = ["k1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0] ** 2
             u[:, i] = 2.0 * utmp[:, 0]
             continue
-        elif c in ("tk1"):
+        elif c in ("tk1",):
             # compound tides calculated using recursion
             parents = ["k1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0]
             u[:, i] = -utmp[:, 0]
             continue
-        elif c in ("2oop1"):
+        elif c in ("2oop1",):
             # compound tides calculated using recursion
             parents = ["oo1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0] ** 2
             u[:, i] = 2.0 * utmp[:, 0]
             continue
-        elif c in ("oq2"):
+        elif c in ("oq2",):
             # compound tides calculated using recursion
             parents = ["o1", "q1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0] * ftmp[:, 1]
             u[:, i] = utmp[:, 0] + utmp[:, 1]
             continue
-        elif c in ("2oq1"):
+        elif c in ("2oq1",):
             # compound tides calculated using recursion
             parents = ["o1", "q1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0] ** 2 * ftmp[:, 1]
             u[:, i] = 2.0 * utmp[:, 0] - utmp[:, 1]
             continue
-        elif c in ("ko2"):
+        elif c in ("ko2",):
             # compound tides calculated using recursion
             parents = ["o1", "k1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
@@ -1034,7 +1034,7 @@ def nodal_modulation(
             f[:, i] = ftmp[:, 0] * ftmp[:, 1]
             u[:, i] = utmp[:, 0] + utmp[:, 1]
             continue
-        elif c in ("kjq1"):
+        elif c in ("kjq1",):
             # compound tides calculated using recursion
             parents = ["k1", "j1", "q1"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
@@ -1268,12 +1268,19 @@ def nodal_modulation(
             f[:, i] = ftmp[:, 0] * ftmp[:, 1]
             u[:, i] = utmp[:, 0] + utmp[:, 1]
             continue
-        elif c in ("msk2", "2smk4", "msk6", "snk6"):
+        elif c in ("msk2", "2smk4"):
             # compound tides calculated using recursion
             parents = ["m2", "k2"]
             utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
             f[:, i] = ftmp[:, 0] * ftmp[:, 1]
             u[:, i] = utmp[:, 0] - utmp[:, 1]
+            continue
+        elif c in ("msk6", "snk6"):
+            # compound tides calculated using recursion
+            parents = ["m2", "k2"]
+            utmp, ftmp = nodal_modulation(n, p, parents, **kwargs)
+            f[:, i] = ftmp[:, 0] * ftmp[:, 1]
+            u[:, i] = utmp[:, 0] + utmp[:, 1]
             continue
         elif c in ("mnk6", "2mk6", "2msk8", "msnk8"):
             # compound tides calculated using recursion

@@ -28,7 +28,7 @@ Introduction
       :material-outlined:`hiking;5em`
 
 User Guide
-===========
+==========
 
 .. grid:: 2 2 4 4
     :padding: 0
