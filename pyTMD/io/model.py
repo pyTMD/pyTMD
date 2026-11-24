@@ -832,15 +832,17 @@ class model:
         group: str, default 'z'
             Model group
         """
-        if isinstance(self[group].model_file, (str, pathlib.Path)):
+        # find the model group (transports are defined in 'U' and 'V')
+        key = self._resolve_group(group) or group
+        if isinstance(self[key].model_file, (str, pathlib.Path)):
             # single file case
             self.constituents = [
-                self.parse_file(self[group].model_file, **kwargs)
+                self.parse_file(self[key].model_file, **kwargs)
             ]
-        elif isinstance(self[group].model_file, list):
+        elif isinstance(self[key].model_file, list):
             # multiple file case
             self.constituents = [
-                self.parse_file(f, **kwargs) for f in self[group].model_file
+                self.parse_file(f, **kwargs) for f in self[key].model_file
             ]
         # return the model parameters
         return self
@@ -907,12 +909,14 @@ class model:
             self.parse_constituents(group=group, raise_error=True)
         except ValueError as exc:
             return None
+        # find the model group (transports are defined in 'U' and 'V')
+        key = self._resolve_group(group) or group
         # only run for multiple files
-        if isinstance(self[group].model_file, list):
+        if isinstance(self[key].model_file, list):
             # multiple file case
             # filter model files to constituents
-            self[group].model_file = [
-                self[group].model_file[self.constituents.index(c)]
+            self[key].model_file = [
+                self[key].model_file[self.constituents.index(c)]
                 for c in constituents
                 if (c in self.constituents)
             ]

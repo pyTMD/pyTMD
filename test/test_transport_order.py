@@ -232,3 +232,24 @@ def test_no_internal_deprecation_warnings(tmp_path):
             m.open_dataset(group="u", transport=True)
             m.to_dict(serialize=True)
             _ = m.multifile
+
+
+@pytest.mark.parametrize("groups", [("U", "V"), ("u", "v")])
+def test_parse_and_reduce_constituents(tmp_path, groups):
+    # parsing and reducing constituents of transports should not warn
+    for c in ("m2", "s2"):
+        (tmp_path / f"u_{c}_tpxo9_atlas_30_v2.nc").touch()
+    d = _params(tmp_path, groups)
+    for g in groups:
+        d[g]["model_file"] = [
+            str(tmp_path / f"u_{c}_tpxo9_atlas_30_v2.nc") for c in ("m2", "s2")
+        ]
+    m = pyTMD.io.model().from_dict(d, validate=False)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        for g in ("u", "U"):
+            m.parse_constituents(group=g)
+            assert m.constituents == ["m2", "s2"]
+        m.reduce_constituents(["s2"], group="u")
+        assert m.constituents == ["s2"]
+        assert len(m["U"].model_file) == 1
