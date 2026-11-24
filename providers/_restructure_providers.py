@@ -102,6 +102,10 @@ def main():
                     else:
                         tree[model]["u"]["units"] = "m^2/s"
                         tree[model]["v"]["units"] = "m^2/s"
+                    # transports are defined in the uppercase groups
+                    if "^2" in tree[model]["u"]["units"]:
+                        tree[model]["U"] = tree[model].pop("u")
+                        tree[model]["V"] = tree[model].pop("v")
 
         # writing model parameters back to provider JSON file
         with provider.open("w", encoding="utf-8") as fid:

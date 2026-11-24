@@ -13,13 +13,13 @@
             "y_0": 0
         },
         "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aodtm-5/",
-        "u": {
+        "U": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "aodtm5_tmd/grid_Arc5km",
             "model_file": "aodtm5_tmd/UV0_Arc5km",
             "units": "m^2/s",
@@ -46,13 +46,13 @@
             "y_0": 0
         },
         "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-        "u": {
+        "U": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "aotim5_tmd/grid_Arc5km",
             "model_file": "aotim5_tmd/UV_Arc5km",
             "units": "m^2/s",
@@ -79,13 +79,13 @@
             "y_0": 0
         },
         "reference": "https://www.esr.org/research/polar-tide-models/list-of-polar-tide-models/aotim-5/",
-        "u": {
+        "U": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "Arc5km2018/grid_Arc5km2018",
             "model_file": "Arc5km2018/UV_Arc5km2018",
             "units": "m^2/s",
@@ -114,13 +114,13 @@
             "y_0": 0
         },
         "reference": "https://doi.org/10.18739/A2D21RK6K",
-        "u": {
+        "U": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "Arc2kmTM/grid_Arc2kmTM_v1",
             "model_file": "Arc2kmTM/UV_Arc2kmTM_v1",
             "units": "m^2/s",
@@ -139,13 +139,13 @@
         "name": "CATS0201",
         "projection": "EPSG:4326",
         "reference": "https://mail.esr.org/polar_tide_models/Model_CATS0201.html",
-        "u": {
+        "U": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "cats0201_tmd/grid_CATS",
             "model_file": "cats0201_tmd/UV0_CATS02_01",
             "units": "m^2/s",
@@ -173,13 +173,13 @@
             "y_0": 0
         },
         "reference": "https://doi.org/10.15784/601235",
-        "u": {
+        "U": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "CATS2008/grid_CATS2008",
             "model_file": "CATS2008/uv.CATS2008.out",
             "units": "m^2/s",
@@ -229,13 +229,13 @@
             "y_0": 0
         },
         "reference": "https://doi.org/10.1002/2016RG000546",
-        "u": {
+        "U": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "greenlandTMD_v2/grid_Greenland8.v2",
             "model_file": "greenlandTMD_v2/u_Greenland8_rot.v2",
             "units": "m^2/s",
@@ -264,13 +264,13 @@
             "y_0": 0
         },
         "reference": "https://doi.org/10.18739/A2B853K18",
-        "u": {
+        "U": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "Gr1kmTM/grid_Gr1kmTM_v1",
             "model_file": "Gr1kmTM/UV_Gr1kmTM_v1",
             "units": "m^2/s",
