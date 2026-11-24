@@ -14876,7 +14876,7 @@ packages:
   - pytest>=4.6 ; extra == 'dev'
   - pytest-cov ; extra == 'dev'
   - pytest-xdist ; extra == 'dev'
-  requires_python: ~=3.9
+  requires_python: ~=3.10
 - pypi: https://files.pythonhosted.org/packages/01/61/d4b89fec821f72385526e1b9d9a3a0385dda4a72b206d28049e2c7cd39b8/gitpython-3.1.45-py3-none-any.whl
   name: gitpython
   version: 3.1.45
