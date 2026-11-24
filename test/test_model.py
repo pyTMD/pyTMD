@@ -580,15 +580,16 @@ def test_definition_TPXO9_currents():
     # test read variables
     assert m.format == 'ATLAS-netcdf'
     assert m.name == 'TPXO9-atlas-v5'
+    # transports are defined in the uppercase groups
     for t in ['u','v']:
-        assert sorted(m[t].model_file) == \
+        assert sorted(m[t.upper()].model_file) == \
             [pathlib.Path(f) for f in model_files[t]]
-        assert m[t].grid_file == grid_file
-        assert m[t].units == 'm^2/s'
+        assert m[t.upper()].grid_file == grid_file
+        assert m[t.upper()].units == 'm^2/s'
     assert m.compressed is False
     # test derived properties
-    assert m['u'].variable == 'zonal_tidal_current'
-    assert m['v'].variable == 'meridional_tidal_current'
+    assert m['U'].variable == 'zonal_tidal_current'
+    assert m['V'].variable == 'meridional_tidal_current'
 
 # PURPOSE: test glob file functionality
 def test_definition_TPXO9_currents_glob(cleanup=False):
@@ -649,7 +650,7 @@ def test_definition_TPXO9_currents_glob(cleanup=False):
     # create JSON definition file
     d = {attr:getattr(m,attr) for attr in attrs}
     for t in ['u','v']:
-        d[t] = m[t].__dict__
+        d[t] = m[t.upper()].__dict__
         d[t]['model_file'] = glob_string[t]
         d[t]['grid_file'] = str(grid_file)
     json.dump(d, fid)
@@ -661,9 +662,10 @@ def test_definition_TPXO9_currents_glob(cleanup=False):
         assert getattr(model,attr) == getattr(m,attr)
     # verify that the model files match
     for t in ['u','v']:
-        assert (len(model[t].model_file) == len(model_files[t]))
+        assert (len(model[t.upper()].model_file) == len(model_files[t]))
         for f in model_files[t]:
-            assert pathlib.Path(filepath).joinpath(f) in model[t].model_file
+            assert pathlib.Path(filepath).joinpath(f) in \
+                model[t.upper()].model_file
     # close the glob definition file
     fid.close()
     # clean up model

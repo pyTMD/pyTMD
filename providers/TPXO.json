@@ -10,7 +10,7 @@
             "type": "crs"
         },
         "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
             "model_file": [
                 "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2",
@@ -32,7 +32,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10_atlas_30_v2",
             "model_file": [
                 "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2",
@@ -89,7 +89,7 @@
             "type": "crs"
         },
         "reference": "https://www.tpxo.net/global/tpxo10-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
             "model_file": [
                 "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
@@ -111,7 +111,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO10_atlas_v2/grid_tpxo10atlas_v2.nc",
             "model_file": [
                 "TPXO10_atlas_v2/u_2n2_tpxo10_atlas_30_v2.nc",
@@ -168,13 +168,13 @@
             "type": "crs"
         },
         "reference": "http://volkov.oce.orst.edu/tides/global.html",
-        "u": {
+        "U": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/u_tpxo7.2",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO7.2_tmd/grid_tpxo7.2",
             "model_file": "TPXO7.2_tmd/u_tpxo7.2",
             "units": "m^2/s",
@@ -218,13 +218,13 @@
             "type": "crs"
         },
         "reference": "http://volkov.oce.orst.edu/tides/tpxo8_atlas.html",
-        "u": {
+        "U": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "tpxo8_atlas/grid_tpxo8atlas_30_v1",
             "model_file": "tpxo8_atlas/uv.tpxo8_atlas_30_v1",
             "units": "m^2/s",
@@ -278,7 +278,7 @@
             "type": "crs"
         },
         "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
             "model_file": [
                 "TPXO9_atlas/u_q1_tpxo9_atlas_30",
@@ -297,7 +297,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas",
             "model_file": [
                 "TPXO9_atlas/u_q1_tpxo9_atlas_30",
@@ -348,7 +348,7 @@
             "type": "crs"
         },
         "reference": "http://volkov.oce.orst.edu/tides/tpxo9_atlas.html",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
             "model_file": [
                 "TPXO9_atlas/u_q1_tpxo9_atlas_30.nc",
@@ -367,7 +367,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas/grid_tpxo9_atlas.nc",
             "model_file": [
                 "TPXO9_atlas/v_q1_tpxo9_atlas_30.nc",
@@ -412,7 +412,7 @@
         "name": "TPXO9-atlas-v2",
         "projection": "EPSG:4326",
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
             "model_file": [
                 "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2",
@@ -431,7 +431,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2",
             "model_file": [
                 "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2",
@@ -482,7 +482,7 @@
             "type": "crs"
         },
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
             "model_file": [
                 "TPXO9_atlas_v2/u_q1_tpxo9_atlas_30_v2.nc",
@@ -501,7 +501,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v2/grid_tpxo9_atlas_30_v2.nc",
             "model_file": [
                 "TPXO9_atlas_v2/v_q1_tpxo9_atlas_30_v2.nc",
@@ -546,7 +546,7 @@
         "name": "TPXO9-atlas-v3",
         "projection": "EPSG:4326",
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
             "model_file": [
                 "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3",
@@ -567,7 +567,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3",
             "model_file": [
                 "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3",
@@ -622,7 +622,7 @@
             "type": "crs"
         },
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
             "model_file": [
                 "TPXO9_atlas_v3/u_q1_tpxo9_atlas_30_v3.nc",
@@ -643,7 +643,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v3/grid_tpxo9_atlas_30_v3.nc",
             "model_file": [
                 "TPXO9_atlas_v3/v_q1_tpxo9_atlas_30_v3.nc",
@@ -698,7 +698,7 @@
             "type": "crs"
         },
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
             "model_file": [
                 "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4",
@@ -719,7 +719,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4",
             "model_file": [
                 "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4",
@@ -768,7 +768,7 @@
         "name": "TPXO9-atlas-v4",
         "projection": "EPSG:4326",
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
             "model_file": [
                 "TPXO9_atlas_v4/u_q1_tpxo9_atlas_30_v4.nc",
@@ -789,7 +789,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v4/grid_tpxo9_atlas_30_v4.nc",
             "model_file": [
                 "TPXO9_atlas_v4/v_q1_tpxo9_atlas_30_v4.nc",
@@ -838,7 +838,7 @@
         "name": "TPXO9-atlas-v5",
         "projection": "EPSG:4326",
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
             "model_file": [
                 "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5",
@@ -860,7 +860,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5",
             "model_file": [
                 "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5",
@@ -911,7 +911,7 @@
         "name": "TPXO9-atlas-v5",
         "projection": "EPSG:4326",
         "reference": "https://www.tpxo.net/global/tpxo9-atlas",
-        "u": {
+        "U": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
             "model_file": [
                 "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
@@ -933,7 +933,7 @@
             "units": "cm^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9_atlas_v5/grid_tpxo9_atlas_30_v5.nc",
             "model_file": [
                 "TPXO9_atlas_v5/u_q1_tpxo9_atlas_30_v5.nc",
@@ -990,13 +990,13 @@
             "type": "crs"
         },
         "reference": "http://volkov.oce.orst.edu/tides/global.html",
-        "u": {
+        "U": {
             "grid_file": "TPXO9.1/grid_tpxo9",
             "model_file": "TPXO9.1/u_tpxo9.v1",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "grid_file": "TPXO9.1/grid_tpxo9",
             "model_file": "TPXO9.1/u_tpxo9.v1",
             "units": "m^2/s",

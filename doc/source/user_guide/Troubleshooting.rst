@@ -61,6 +61,12 @@ Additionally, for ocean and load tides, unless there is a ``z0`` term, the defau
 For solid Earth tides, the default :ref:`tide system <permanent-tide>` is ``tide-free`` and not ``mean-tide`` as ``pyTMD`` tries to follow IERS conventions where possible.
 Check that the reference frame and datum of the output variables matches those expected.
 
+- **Check 5:** Are the currents from an OTIS or ATLAS model close to the coast?
+
+Currents are calculated from transports and bathymetry.
+The default in version 3 divides by the bathymetry on the model grid before interpolating, which can give different amplitudes and phases to version 2 and ``OTPS`` at shallow nodes.
+Try :py:func:`pyTMD.compute.tide_currents` with ``transport=True`` [see :ref:`transport-currents`].
+
 Model Not Found
 ===============
 

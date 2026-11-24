@@ -132,7 +132,10 @@ The JSON definition files follow a similar structure as the main ``pyTMD`` datab
 The JSON format directly maps the parameter names with their values stored in the appropriate data type (strings, lists, numbers, booleans, etc).
 While still human readable, the JSON format is both interoperable and more easily machine readable.
 
-Each definition file should have ``name`` and ``format`` parameters as well as the parameters for the data groups (``z``, ``u``, ``v``).
+Each definition file should have ``name`` and ``format`` parameters as well as the parameters for the data groups (``z`` for elevations, ``u`` and ``v`` for currents, and ``U`` and ``V`` for transports).
+Models that provide depth-averaged transports and bathymetry (``OTIS``, ``ATLAS-compact``, ``ATLAS-netcdf`` and ``TMD3``) define them in the ``U`` and ``V`` groups.
+Currents (``u`` and ``v``) are calculated from the transports when these models are read [see :ref:`transport-currents`].
+Definition files that define transports under lowercase ``u`` and ``v`` groups (with transport units, e.g. ``m^2/s``) are still accepted.
 Each model type may also require specific sets of parameters for the individual model reader.
 For models with multiple constituent files, the files can be found using a ``glob`` string to search a directory.
 
@@ -146,12 +149,12 @@ For models with multiple constituent files, the files can be found using a ``glo
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent file(s) or a ``glob`` string
         - ``units``: units of the model constituent data
-    * ``u``:
+    * ``U``:
 
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent file(s) or a ``glob`` string
-        - ``units``: units of the model constituent data
-    * ``v``:
+        - ``units``: units of the model constituent data (transports)
+    * ``V``:
 
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent file(s) or a ``glob`` string
@@ -167,12 +170,12 @@ For models with multiple constituent files, the files can be found using a ``glo
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
         - ``units``: units of the model constituent data
-    * ``u``:
+    * ``U``:
 
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string
-        - ``units``: units of the model constituent data
-    * ``v``:
+        - ``units``: units of the model constituent data (transports)
+    * ``V``:
 
         - ``grid_file``: path to model grid file
         - ``model_file``: path to model constituent files or a ``glob`` string

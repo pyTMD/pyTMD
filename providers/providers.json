@@ -14,12 +14,12 @@
             "y_0": 0
         },
         "reference": "https://doi.org/10.15784/601772",
-        "u": {
+        "U": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
             "units": "m^2/s",
             "variable": "zonal_tidal_current"
         },
-        "v": {
+        "V": {
             "model_file": "CATS2008_v2023/CATS2008_v2023.nc",
             "units": "m^2/s",
             "variable": "meridional_tidal_current"

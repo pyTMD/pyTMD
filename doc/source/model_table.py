@@ -38,11 +38,14 @@ fid = models_table.open(mode="w", encoding="utf8")
 fid.write("Model,U-Directory,V-Directory\n")
 for model, parameters in models.items():
     # skip elevation models
-    if "u" not in parameters:
+    # (transports are defined with uppercase groups)
+    groups = [("u", "v"), ("U", "V")]
+    groups = [g for g in groups if g[0] in parameters]
+    if not groups:
         continue
     # extract the model directory
     model_directories = []
-    for t in ("u", "v"):
+    for t in groups[0]:
         if isinstance(parameters[t]["model_file"], str):
             d = pathlib.Path(parameters[t]["model_file"]).parent
         elif isinstance(parameters[t]["model_file"], list):
