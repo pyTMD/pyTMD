@@ -201,7 +201,7 @@ def _fes_tar(
 
     Parameters
     ----------
-    MODEL: str
+    model: str
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
@@ -343,7 +343,7 @@ def _fes_list(
 
     Parameters
     ----------
-    MODEL: str
+    model: str
         FES tide model to download
     f: ftplib.FTP object
         Active ftp connection to AVISO server
